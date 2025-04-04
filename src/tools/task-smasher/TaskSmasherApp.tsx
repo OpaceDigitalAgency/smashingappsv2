@@ -767,19 +767,27 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             isVisible={taskMismatch.showing}
             reason={taskMismatch.reason}
             suggestedUseCase={taskMismatch.suggestedUseCase}
-            onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined })}
+            onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' })}
             onSwitchUseCase={(useCase) => {
-              // Get the use case label for navigation
+              // First, handle the use case switch in the context
+              // This will preserve the task and add it to the new use case
+              handleSelectUseCase(useCase);
+              
+              // Then, get the use case label for navigation
               const useCaseLabel = useCaseDefinitions[useCase]?.label;
               if (useCaseLabel) {
                 // Format the URL path
                 const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
-                // Navigate to the new URL
-                window.location.href = path;
+                
+                // Use a small delay to ensure the state is updated before navigation
+                setTimeout(() => {
+                  // Navigate to the new URL
+                  window.location.href = path;
+                }, 100);
               }
-              // Still update the use case in the context
-              handleSelectUseCase(useCase);
-              setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined });
+              
+              // Clear the task mismatch state
+              setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
             }}
           />
         </div>

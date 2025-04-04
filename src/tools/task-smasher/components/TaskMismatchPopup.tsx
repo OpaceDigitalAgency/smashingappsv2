@@ -57,69 +57,81 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
   
   return (
     <div
-      className={`fixed top-1/2 left-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-md w-full z-[9999] ${animation}`}
+      className={`fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center z-[9999] ${animation}`}
       style={{
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        transform: animation === 'animate-in'
-          ? 'translate(-50%, -50%) scale(1)'
-          : 'translate(-50%, -30%) scale(0.95)',
-        opacity: animation === 'animate-in' ? 1 : 0,
-        transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        maxWidth: '90%'
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(4px)'
       }}
     >
-      <div className="flex items-start">
-        <div className="flex-shrink-0 mr-4">
-          <div className="bg-yellow-50 p-2 rounded-full">
-            <AlertTriangle className="w-6 h-6 text-yellow-500" />
+      <div
+        className="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-w-sm w-full mx-4"
+        style={{
+          transform: animation === 'animate-in'
+            ? 'scale(1)'
+            : 'scale(0.95)',
+          opacity: animation === 'animate-in' ? 1 : 0,
+          transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+        }}
+      >
+        {/* Header */}
+        <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-100">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 mr-3">
+              <div className="bg-white p-2 rounded-full shadow-sm">
+                <AlertTriangle className="w-5 h-5 text-yellow-500" />
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">Task Mismatch Detected!</h3>
           </div>
         </div>
         
-        <div className="flex-1">
-          <h3 className="text-lg font-medium text-gray-900 mb-1">Task Mismatch Detected!</h3>
-          <p className="text-gray-600 mb-3">{reason}</p>
+        {/* Content */}
+        <div className="px-4 py-4">
+          <p className="text-gray-600 mb-4 text-sm leading-relaxed">{reason}</p>
           
           {suggestedUseCase && (
-            <div className="bg-gray-50 rounded-md p-3 mb-3 border border-gray-100">
-              <p className="text-sm text-gray-700">
-                Would you like to switch to <span className="font-semibold">{suggestedUseCaseName}</span> instead?
+            <div className="bg-indigo-50 rounded-md p-4 mb-4 border border-indigo-100">
+              <p className="text-sm text-gray-700 text-center">
+                Would you like to switch to <span className="font-semibold text-indigo-700">{suggestedUseCaseName}</span> instead?
               </p>
             </div>
           )}
-          
-          <div className="flex justify-end space-x-2 mt-2">
-            <button
-              onClick={handleIgnore}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              Ignore
-            </button>
-            
-            {suggestedUseCase && (
-              <button
-                onClick={handleSwitch}
-                className="px-4 py-1.5 text-sm font-medium text-white rounded-md"
-                style={{
-                  background: `linear-gradient(135deg, #6366f1, #8b5cf6)`,
-                  boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)'
-                }}
-              >
-                Switch Now
-              </button>
-            )}
-          </div>
         </div>
-      </div>
-      
-      {/* Progress bar for auto-close */}
-      <div className="absolute bottom-0 left-0 h-1 bg-gray-200 w-full rounded-b-lg overflow-hidden">
-        <div 
-          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
-          style={{
-            width: '100%',
-            animation: 'shrink 8s linear forwards'
-          }}
-        />
+        
+        {/* Footer with buttons */}
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
+          <button
+            onClick={handleIgnore}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          >
+            Ignore
+          </button>
+          
+          {suggestedUseCase && (
+            <button
+              onClick={handleSwitch}
+              className="px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all hover:shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, #6366f1, #8b5cf6)`,
+                boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)'
+              }}
+            >
+              Switch Now
+            </button>
+          )}
+        </div>
+        
+        {/* Progress bar for auto-close */}
+        <div className="h-1 bg-gray-200 w-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+            style={{
+              width: '100%',
+              animation: 'shrink 8s linear forwards'
+            }}
+          />
+        </div>
       </div>
     </div>
   );
