@@ -1,3 +1,25 @@
+/**
+ * Main Application Router
+ *
+ * This is the entry point for the SmashingApps.ai unified application.
+ * It handles routing for both the main homepage and all integrated tools.
+ *
+ * Architecture Overview:
+ * - The application follows a unified architecture where multiple tools are integrated
+ *   into a single React application.
+ * - Each tool is contained in its own directory under src/tools/
+ * - The main router (this file) handles routing to all tools
+ *
+ * Adding a new tool:
+ * 1. Create a new directory in src/tools/ with your tool name (kebab-case)
+ * 2. Create a main component for your tool (PascalCase + "App.tsx")
+ * 3. Import the component here
+ * 4. Add routes for your tool following the pattern below
+ * 5. Update src/components/Tools.tsx to include your tool in the tools list
+ *
+ * See CONTRIBUTING.md for more detailed guidelines.
+ */
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
@@ -11,8 +33,10 @@ import Testimonials from './components/Testimonials';
 import CTA from './components/CTA';
 import Footer from './components/Footer';
 
-// Import simplified TaskSmasher component
+// Import tool components
+// When adding a new tool, import its main component here
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
+// import YourNewToolApp from './tools/your-new-tool/YourNewToolApp';
 
 // Define placeholder use cases for routing
 const useCaseDefinitions = {
@@ -47,7 +71,14 @@ const HomePage = () => (
   </div>
 );
 
-// Main App component that handles all routing
+/**
+ * Main App component that handles all routing
+ *
+ * This component sets up the router and defines all routes for the application.
+ * When adding a new tool, follow the pattern established for TaskSmasher:
+ * 1. Add routes for the base path (both with and without trailing slash)
+ * 2. Add routes for any specialized sub-paths if needed
+ */
 function App() {
   return (
     <HelmetProvider>
@@ -56,9 +87,25 @@ function App() {
           {/* Main homepage route */}
           <Route path="/" element={<HomePage />} />
           
+          {/*
+            Tool Routes Section
+            
+            Each tool should have at least two routes:
+            - One without trailing slash: /tools/tool-name
+            - One with trailing slash: /tools/tool-name/
+            
+            This ensures URLs work consistently regardless of how they're entered.
+          */}
+          
           {/* TaskSmasher base routes - handle both with and without trailing slash */}
           <Route path="/tools/task-smasher" element={<TaskSmasherApp />} />
           <Route path="/tools/task-smasher/" element={<TaskSmasherApp />} />
+          
+          {/* Add new tool routes here following the same pattern */}
+          {/* Example:
+          <Route path="/tools/your-new-tool" element={<YourNewToolApp />} />
+          <Route path="/tools/your-new-tool/" element={<YourNewToolApp />} />
+          */}
           
           {/* TaskSmasher use case routes - handle both with and without trailing slash */}
           {Object.entries(useCaseDefinitions).flatMap(([id, definition]) => {
