@@ -46,7 +46,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         </div>
       ) : (
         <div
-          className={`flex-grow text-[10px] ${
+          className={`flex-grow text-xs ${
             subtask.completed
               ? 'line-through text-gray-400'
               : 'text-gray-700 hover:text-gray-900'
@@ -65,7 +65,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           }}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <span className="truncate mr-1">{subtask.title}</span>
+          <span className="truncate mr-1 max-w-[90%]">{subtask.title}</span>
           {subtask.title.length > 25 && (
             <span className="text-xs text-indigo-500 flex-shrink-0" title="Click to see full text">
               •••

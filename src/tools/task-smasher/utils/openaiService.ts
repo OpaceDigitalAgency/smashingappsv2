@@ -107,7 +107,7 @@ export const OpenAIService = {
 
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '40', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),
         remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
@@ -230,7 +230,7 @@ export const OpenAIService = {
       
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '40', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),
         remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
@@ -263,7 +263,7 @@ export const OpenAIService = {
       
       // Fallback to default values
       return {
-        limit: 40,
+        limit: 60,
         remaining: 19,
         reset: new Date(Date.now() + 3600000),
         used: 1

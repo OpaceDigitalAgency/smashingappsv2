@@ -147,7 +147,7 @@ function Task({
                 }}
                 onMouseLeave={() => setShowTooltip(false)}
               >
-                <span className="truncate mr-1">{task.title}</span>
+                <span className="truncate mr-1 max-w-[90%]">{task.title}</span>
                 {task.title.length > 30 && (
                   <span className="text-xs text-indigo-500 flex-shrink-0" title="Click to see full text">
                     •••
@@ -261,7 +261,7 @@ function Task({
           )}
           
           {task.subtasks.length > 0 && task.expanded && (
-            <div className="mt-4 space-y-1.5 border-l-2 border-indigo-100 pl-1">
+            <div className="mt-4 space-y-1.5 border-l-2 border-indigo-100 pl-2 ml-1">
               {task.subtasks.map((subtask) => (
                 <Subtask
                   key={subtask.id}
