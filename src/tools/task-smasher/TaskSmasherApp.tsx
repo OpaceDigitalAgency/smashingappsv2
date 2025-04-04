@@ -554,19 +554,36 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             onDragOver={handleDragOver}
           >
             <SortableContext items={boards.map(board => board.id)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {boards.map(board => (
-                  <div id={board.id} key={board.id}>
-                    <Board
-                      board={board}
-                      onUpdateTitle={updateBoardTitle}
-                      onEditingBoard={editingBoardId === board.id}
-                      setEditingBoardId={setEditingBoardId}
-                      isDraggingOver={isDraggingOver === board.id}
-                      filteredTasks={getFilteredTasks(board.id)}
-                    />
-                  </div>
-                ))}
+              <div className="flex flex-col space-y-6">
+                {/* Board titles row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {boards.map(board => (
+                    <div key={`title-${board.id}`} className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-gray-900">{board.title}</h2>
+                        <div className="text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                          {getFilteredTasks(board.id).length} {getFilteredTasks(board.id).length === 1 ? 'task' : 'tasks'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Board content row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {boards.map(board => (
+                    <div id={board.id} key={board.id}>
+                      <Board
+                        board={board}
+                        onUpdateTitle={updateBoardTitle}
+                        onEditingBoard={editingBoardId === board.id}
+                        setEditingBoardId={setEditingBoardId}
+                        isDraggingOver={isDraggingOver === board.id}
+                        filteredTasks={getFilteredTasks(board.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </SortableContext>
             

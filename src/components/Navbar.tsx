@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center">
             <a href="/" className="flex items-center">
               <img
-                src="/smashingapps-ai.png"
+                src="/smashingapps-ai-small.png"
                 alt="SmashingApps.ai Logo"
                 className="h-24 w-auto"
               />

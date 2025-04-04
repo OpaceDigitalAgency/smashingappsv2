@@ -8,10 +8,10 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <a href="/" className="flex items-center">
-              <img 
-                src="/smashingapps-ai.png" 
-                alt="SmashingApps.ai Logo" 
-                className="h-20 w-auto" 
+              <img
+                src="/smashingapps-ai-small.png"
+                alt="SmashingApps.ai Logo"
+                className="h-20 w-auto"
               />
             </a>
             <p className="mt-4 text-gray-400 max-w-md">
