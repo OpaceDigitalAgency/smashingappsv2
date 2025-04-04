@@ -247,12 +247,12 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
       )}
       
       <Sidebar selectedUseCase={selectedUseCase} onSelectUseCase={handleSelectUseCase} />
-      <div className="flex-1 bg-gradient-to-br from-indigo-50 via-white to-purple-50 px-4 sm:px-6 lg:px-8 py-6 overflow-auto transition-colors duration-500 flex justify-center"
+      <div className="flex-1 bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-auto transition-colors duration-500"
            style={{
              background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`
            }}>
-        <div className="max-w-[1400px] w-full mx-auto">
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300 w-full">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                 {/* API key input removed - now using secure backend proxy */}
@@ -508,7 +508,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     {[5, 4, 3, 2, 1].map(rating => (
                       <button
                         key={rating}
-                        onClick={() => setFilterRating(rating)}
+                        onClick={() => setFilterRating(rating as 0 | 1 | 2 | 3 | 4 | 5)}
                         className={`px-3 py-1 text-sm border ${
                           rating === 1 ? 'rounded-r-md' : 'border-r-0'
                         } ${
@@ -554,9 +554,9 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             onDragOver={handleDragOver}
           >
             <SortableContext items={boards.map(board => board.id)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                 {boards.map(board => (
-                  <div key={board.id} className="flex flex-col">
+                  <div key={board.id} className="flex flex-col w-full">
                     {/* Board header */}
                     <div id={board.id} className="bg-white rounded-t-lg p-4 border border-gray-200 shadow-sm mb-1 flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -591,7 +591,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     </div>
                     
                     {/* Board content */}
-                    <div className="flex-grow">
+                    <div className="flex-grow w-full">
                       <Board
                         board={board}
                         filteredTasks={getFilteredTasks(board.id)}
@@ -616,7 +616,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                         startEditing={startEditing}
                         handleEditSave={handleEditSave}
                         updateTaskPriority={updateTaskPriority}
-                        isDraggingOver={isDraggingOver === board.id}
+                        isDraggingOver={isDraggingOver === board.id ? board.id : ""}
                       />
                     </div>
                   </div>
@@ -667,6 +667,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     </button>
                   ))}
                 </div>
+                
                 <button
                   onClick={() => setFeedback({ taskId: '', showing: false })}
                   className="w-full mt-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
@@ -674,8 +675,38 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                   Cancel
                 </button>
               </div>
+              
+              {/* OpenAI Example Modal */}
+              {showOpenAIExample && (
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mx-auto">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">OpenAI API Proxy</h3>
+                      <button
+                        onClick={() => setShowOpenAIExample(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <OpenAIExample onClose={() => setShowOpenAIExample(false)} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
+          
+          {/* Task Mismatch Popup */}
+          <TaskMismatchPopup
+            isVisible={taskMismatch.showing}
+            reason={taskMismatch.reason}
+            suggestedUseCase={taskMismatch.suggestedUseCase}
+            onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined })}
+            onSwitchUseCase={(useCase) => {
+              handleSelectUseCase(useCase);
+              setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined });
+            }}
+          />
         </div>
       </div>
     </div>
