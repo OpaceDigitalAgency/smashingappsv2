@@ -676,12 +676,75 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         try {
           setNewTask('Processing audio...');
           
-          // Use local transcription or disable this feature
-          setNewTask('Voice transcription is not available without direct API access');
-          setIsListening(false);
-          return;
+          // Use browser's SpeechRecognition API for client-side transcription
+          if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            // TypeScript declarations for Web Speech API
+            interface SpeechRecognitionEvent extends Event {
+              results: {
+                [index: number]: {
+                  [index: number]: {
+                    transcript: string;
+                    confidence: number;
+                  };
+                };
+              };
+            }
+            
+            interface SpeechRecognitionErrorEvent extends Event {
+              error: string;
+            }
+            
+            interface SpeechRecognition extends EventTarget {
+              lang: string;
+              continuous: boolean;
+              interimResults: boolean;
+              start(): void;
+              stop(): void;
+              onresult: (event: SpeechRecognitionEvent) => void;
+              onerror: (event: SpeechRecognitionErrorEvent) => void;
+            }
+            
+            interface SpeechRecognitionConstructor {
+              new(): SpeechRecognition;
+            }
+            
+            // Get the appropriate constructor
+            const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition ||
+                                         (window as any).SpeechRecognition;
+            
+            const recognition = new SpeechRecognitionAPI() as SpeechRecognition;
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onresult = (event: SpeechRecognitionEvent) => {
+              const transcript = event.results[0][0].transcript;
+              setNewTask(transcript);
+              
+              // Auto submit after a short delay
+              setTimeout(() => {
+                if (transcript.trim()) {
+                  const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
+                  handleAddTask(formEvent);
+                }
+              }, 1000);
+            };
+            
+            recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+              console.error('Speech recognition error:', event.error);
+              setNewTask('Error recognizing speech. Please try typing instead.');
+            };
+            
+            // Start recognition with the recorded audio
+            recognition.start();
+            return;
+          }
           
-          /* Voice transcription requires direct API access and can't be proxied easily
+          // Fallback message if SpeechRecognition is not available
+          setNewTask('Voice transcription is not available in this browser');
+          setIsListening(false);
+          
+          /* Original OpenAI Whisper implementation (requires direct API access)
           // This feature is disabled when using the proxy
           
           if (!response.ok) {

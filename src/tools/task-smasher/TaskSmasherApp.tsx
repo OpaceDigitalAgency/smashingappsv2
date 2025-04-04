@@ -297,7 +297,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <img src="/tools/task-smasher/assets/AITaskSmasher-small.png" alt="TaskSmasher Logo" className="w-8 h-8" />
               <h1 className="text-2xl font-bold text-gray-900">
-                TaskSmasher {selectedUseCase && useCaseDefinitions[selectedUseCase]?.label} YY
+                TaskSmasher {selectedUseCase && useCaseDefinitions[selectedUseCase]?.label}
               </h1>
               <div className="ml-4 text-sm text-gray-500">AI-powered task management</div>
             </div>
