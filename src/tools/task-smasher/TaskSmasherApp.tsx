@@ -247,18 +247,11 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
       )}
       
       <Sidebar selectedUseCase={selectedUseCase} onSelectUseCase={handleSelectUseCase} />
-      
-      <div className="flex-1 flex justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 overflow-auto transition-colors duration-500"
+      <div className="flex-1 bg-gradient-to-br from-indigo-50 via-white to-purple-50 px-4 sm:px-6 lg:px-8 py-6 overflow-auto transition-colors duration-500 flex justify-center"
            style={{
-             background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`,
-             display: 'flex',
-             justifyContent: 'center'
+             background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`
            }}>
-        <div style={{
-          maxWidth: '1280px',
-          width: '100%',
-          margin: '0 auto'
-        }}>
+        <div className="max-w-[1400px] w-full mx-auto">
           <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">

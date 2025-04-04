@@ -17,7 +17,7 @@ const Hero: React.FC = () => {
               <a href="#tools" className="btn-primary">
                 Explore Tools
               </a>
-              <a href="#task-smasher" className="btn-secondary">
+              <a href="/tools/task-smasher/" className="btn-secondary">
                 Try TaskSmasher Now
               </a>
             </div>

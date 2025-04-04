@@ -10,10 +10,10 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between h-24">
           <div className="flex items-center">
             <a href="/" className="flex items-center">
-              <img 
-                src="/smashingapps-ai.png" 
-                alt="SmashingApps.ai Logo" 
-                className="h-20 w-auto" 
+              <img
+                src="/smashingapps-ai.png"
+                alt="SmashingApps.ai Logo"
+                className="h-24 w-auto"
               />
             </a>
           </div>
@@ -28,8 +28,8 @@ const Navbar: React.FC = () => {
             <a href="#testimonials" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
               Testimonials
             </a>
-            <a href="#contact" className="btn-primary !py-2 !px-4 text-sm">
-              Get Started
+            <a href="/contact" className="btn-primary !py-2 !px-4 text-sm">
+              Get in Touch
             </a>
           </div>
           
@@ -69,12 +69,12 @@ const Navbar: React.FC = () => {
             Testimonials
           </a>
           <div className="mt-2 pt-2 border-t border-gray-200">
-            <a 
-              href="#contact" 
+            <a
+              href="/contact"
               className="block btn-primary !py-2 !px-4 text-center"
               onClick={() => setIsOpen(false)}
             >
-              Get Started
+              Get in Touch
             </a>
           </div>
         </div>

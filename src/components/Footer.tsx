@@ -36,7 +36,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold text-white">Tools</h3>
             <ul className="mt-4 space-y-2">
-              <li><a href="#task-smasher" className="text-gray-400 hover:text-white">TaskSmasher</a></li>
+              <li><a href="/tools/task-smasher/" className="text-gray-400 hover:text-white">TaskSmasher</a></li>
               <li><a href="#recipe-smasher" className="text-gray-400 hover:text-white">RecipeSmasher</a></li>
               <li><a href="#idea-smasher" className="text-gray-400 hover:text-white">IdeaSmasher</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Coming Soon</a></li>
@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
               <li><a href="#" className="text-gray-400 hover:text-white">About</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Privacy</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Terms</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
+              <li><a href="/contact" className="text-gray-400 hover:text-white">Contact</a></li>
             </ul>
           </div>
         </div>

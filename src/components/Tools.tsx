@@ -10,7 +10,16 @@ const Tools: React.FC = () => {
       useCases: [
         { name: 'Marketing Tasks', path: '/tools/task-smasher/marketing-tasks/' },
         { name: 'Daily Organizer', path: '/tools/task-smasher/daily-organizer/' },
-        { name: 'Goal Planner', path: '/tools/task-smasher/goal-planner/' }
+        { name: 'Goal Planner', path: '/tools/task-smasher/goal-planner/' },
+        { name: 'Recipe Steps', path: '/tools/task-smasher/recipe-steps/' },
+        { name: 'Home Chores', path: '/tools/task-smasher/home-chores/' },
+        { name: 'Freelancer Projects', path: '/tools/task-smasher/freelancer-projects/' },
+        { name: 'Trip Planner', path: '/tools/task-smasher/trip-planner/' },
+        { name: 'Shopping Tasks', path: '/tools/task-smasher/shopping-tasks/' },
+        { name: 'Study Plan', path: '/tools/task-smasher/study-plan/' },
+        { name: 'Event Planning', path: '/tools/task-smasher/event-planning/' },
+        { name: 'DIY Projects', path: '/tools/task-smasher/diy-projects/' },
+        { name: 'Creative Projects', path: '/tools/task-smasher/creative-projects/' }
       ],
       icon: ListChecks,
       color: 'from-purple-500 to-purple-600',

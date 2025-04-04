@@ -31,6 +31,7 @@ import Tools from './components/Tools';
 import Features from './components/Features';
 import Testimonials from './components/Testimonials';
 import CTA from './components/CTA';
+import Contact from './components/Contact';
 import Footer from './components/Footer';
 
 // Import tool components
@@ -89,6 +90,9 @@ function App() {
             <Routes>
             {/* Main homepage route */}
             <Route path="/" element={<HomePage />} />
+            
+            {/* Contact page route */}
+            <Route path="/contact" element={<Contact />} />
             
             {/*
               Tool Routes Section
