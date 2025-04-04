@@ -207,11 +207,24 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       // Call the OpenAI Whisper API
       console.log("Calling Whisper API with model:", formData.fields.model || "whisper-1");
       
+      // Create a temporary file path
+      const fs = require('fs');
+      const os = require('os');
+      const path = require('path');
+      const tempFilePath = path.join(os.tmpdir(), formData.fileName);
+      
+      // Write the buffer to a temporary file
+      fs.writeFileSync(tempFilePath, formData.fileBuffer);
+      
+      // Use the file path with OpenAI
       response = await openai.audio.transcriptions.create({
-        file: new File([formData.fileBuffer], formData.fileName),
+        file: fs.createReadStream(tempFilePath),
         model: formData.fields.model || "whisper-1",
         language: formData.fields.language || "en"
       });
+      
+      // Clean up the temporary file
+      fs.unlinkSync(tempFilePath);
       
       console.log("Whisper API response:", response);
     } else {
