@@ -240,16 +240,32 @@ button {
 }
 
 /* Center the main content area relative to the header/logo */
-#root > div.flex-1.flex {
-  justify-content: center; /* centre horizontally */
-  align-items: flex-start; /* optional - aligns items to the top */
+#root > div.flex-1.flex,
+#root > div.min-h-screen > div.flex-1,
+div[class*="flex-1"][class*="flex"],
+.fade-in-app > div.flex-1 {
+  display: flex !important;
+  justify-content: center !important; /* centre horizontally */
+  align-items: flex-start !important; /* optional - aligns items to the top */
 }
 
 /* Optional: If you're experiencing content overflow or need a tighter alignment */
-#root > div.flex-1.flex > div {
-  max-width: 1280px;
-  width: 100%;
-  margin: 0 auto; /* ensures horizontal centring */
+#root > div.flex-1.flex > div,
+#root > div.min-h-screen > div.flex-1 > div,
+div[class*="flex-1"][class*="flex"] > div,
+.fade-in-app > div.flex-1 > div {
+  max-width: 1280px !important;
+  width: 100% !important;
+  margin: 0 auto !important; /* ensures horizontal centring */
+}
+
+/* Force centering for all content containers */
+.content-container {
+  max-width: 1280px !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
 }
 
 @media (min-width: 640px) {
