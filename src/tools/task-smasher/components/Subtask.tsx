@@ -46,21 +46,36 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         </div>
       ) : (
         <div
-          className={`flex-grow text-sm ${
+          className={`flex-grow text-[10px] ${
             subtask.completed
               ? 'line-through text-gray-400'
               : 'text-gray-700 hover:text-gray-900'
-          } cursor-pointer transition-colors duration-200 truncate mr-1 relative`}
+          } cursor-pointer transition-colors duration-200 mr-1 relative flex items-center`}
           onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
-          onMouseEnter={() => setShowTooltip(true)}
+          onMouseEnter={(e) => {
+            setShowTooltip(true);
+            // Position the tooltip near the cursor
+            setTimeout(() => {
+              const tooltip = document.querySelector('.subtask-tooltip') as HTMLElement;
+              if (tooltip) {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+              }
+            }, 0);
+          }}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          {subtask.title}
+          <span className="truncate mr-1">{subtask.title}</span>
+          {subtask.title.length > 25 && (
+            <span className="text-xs text-indigo-500 flex-shrink-0" title="Click to see full text">
+              •••
+            </span>
+          )}
           {subtask.feedback && renderRating()}
           
           {/* Prominent tooltip that appears immediately on hover */}
           {showTooltip && (
-            <div style={{animation: 'fadeIn 0.15s ease-out forwards'}} className="absolute left-0 top-full mt-1 z-50 bg-gray-800 text-white text-xs rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
+            <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="subtask-tooltip bg-gray-800 text-white text-xs rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
               <div className="font-medium mb-1">Full Text:</div>
               {subtask.title}
             </div>

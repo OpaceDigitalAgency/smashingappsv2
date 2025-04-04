@@ -132,16 +132,31 @@ function Task({
                   task.completed
                     ? 'line-through text-gray-400'
                     : 'text-gray-700 hover:text-gray-900'
-                } cursor-pointer transition-colors duration-200 truncate relative`}
+                } cursor-pointer transition-colors duration-200 relative flex items-center`}
                 onClick={() => startEditing(task.id, null, 'title', task.title)}
-                onMouseEnter={() => setShowTooltip(true)}
+                onMouseEnter={(e) => {
+                  setShowTooltip(true);
+                  // Position the tooltip near the cursor
+                  setTimeout(() => {
+                    const tooltip = document.querySelector('.task-tooltip') as HTMLElement;
+                    if (tooltip) {
+                      tooltip.style.left = `${e.clientX + 10}px`;
+                      tooltip.style.top = `${e.clientY + 10}px`;
+                    }
+                  }, 0);
+                }}
                 onMouseLeave={() => setShowTooltip(false)}
               >
-                {task.title}
+                <span className="truncate mr-1">{task.title}</span>
+                {task.title.length > 30 && (
+                  <span className="text-xs text-indigo-500 flex-shrink-0" title="Click to see full text">
+                    •••
+                  </span>
+                )}
                 
                 {/* Prominent tooltip that appears immediately on hover */}
                 {showTooltip && (
-                  <div style={{animation: 'fadeIn 0.15s ease-out forwards'}} className="absolute left-0 top-full mt-1 z-50 bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
+                  <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="task-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
                     <div className="font-medium mb-1">Full Text:</div>
                     {task.title}
                   </div>
@@ -246,7 +261,7 @@ function Task({
           )}
           
           {task.subtasks.length > 0 && task.expanded && (
-            <div className="mt-4 space-y-1.5 border-l-2 border-indigo-100 pl-3">
+            <div className="mt-4 space-y-1.5 border-l-2 border-indigo-100 pl-1">
               {task.subtasks.map((subtask) => (
                 <Subtask
                   key={subtask.id}
