@@ -1,15 +1,19 @@
 import React from 'react';
 import { CheckCircle2, Hammer } from 'lucide-react';
+import SemanticSection from './SemanticSection';
 
 const Hero: React.FC = () => {
   return (
-    <section className="hero-gradient py-16 sm:py-24">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center">
-          <div className="lg:w-1/2 lg:pr-12">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
-              Smash through tasks with <span className="text-primary">AI-powered</span> <span className="text-secondary">simplicity</span>.
-            </h1>
+    <SemanticSection
+      as="section"
+      className="hero-gradient py-16 sm:py-24"
+      title="Smash through tasks with AI-powered simplicity."
+      titleAs="h1"
+      titleClassName="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight"
+      contentClassName="w-full px-4 sm:px-6 lg:px-8"
+    >
+      <div className="flex flex-col lg:flex-row items-center">
+        <div className="lg:w-1/2 lg:pr-12">
             <p className="mt-6 text-xl text-gray-600 max-w-2xl">
               SmashingApps.ai is your playful productivity toolbox. AI tools that get things done — without the overwhelm.
             </p>
@@ -35,8 +39,8 @@ const Hero: React.FC = () => {
                 <span>Instant results</span>
               </div>
             </div>
-          </div>
-          <div className="lg:w-1/2 mt-12 lg:mt-0 relative">
+        </div>
+        <div className="lg:w-1/2 mt-12 lg:mt-0 relative">
             <div className="relative mx-auto w-full max-w-md">
               <div className="bg-white rounded-2xl shadow-xl p-6 relative z-10">
                 <div className="flex items-center mb-4">
@@ -77,10 +81,9 @@ const Hero: React.FC = () => {
               <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-secondary opacity-30 rounded-full blur-3xl"></div>
               <div className="absolute -top-6 -left-6 w-64 h-64 bg-primary opacity-30 rounded-full blur-3xl"></div>
             </div>
-          </div>
         </div>
       </div>
-    </section>
+    </SemanticSection>
   );
 };
 

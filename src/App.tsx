@@ -22,7 +22,9 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+import { HelmetProvider } from 'react-helmet-async';
+import SEO from './components/SEO';
+import StructuredData from './components/StructuredData';
 
 // Import main site components
 import Navbar from './components/Navbar';
@@ -58,11 +60,20 @@ const useCaseDefinitions = {
 // HomePage component for the root route (without Navbar since it's now global)
 const HomePage = () => (
   <div className="min-h-screen bg-gray-50">
-    <Helmet>
-      <title>SmashingApps.ai | AI-powered tools for getting things done</title>
-      <meta name="description" content="SmashingApps.ai provides intuitive AI tools that help you get things done faster and more efficiently." />
-      <link rel="canonical" href="https://smashingapps.ai/" />
-    </Helmet>
+    <StructuredData
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        'name': 'SmashingApps.ai',
+        'url': 'https://smashingapps.ai',
+        'description': 'AI-powered micro-apps that help you smash through tasks with smart, fun, and focused tools',
+        'potentialAction': {
+          '@type': 'SearchAction',
+          'target': 'https://smashingapps.ai/search?q={search_term_string}',
+          'query-input': 'required name=search_term_string'
+        }
+      }}
+    />
     <main>
       <Hero />
       <Tools />
@@ -86,6 +97,8 @@ function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+        {/* Global SEO component - manages all meta tags */}
+        <SEO />
         {/* Global Navbar - appears on all pages */}
         <Navbar />
         <div className="pt-0 min-h-screen flex flex-col"> {/* Add padding to account for the navbar */}

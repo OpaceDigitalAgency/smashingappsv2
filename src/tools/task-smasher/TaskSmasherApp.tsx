@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
+import SemanticSection from '../../components/SemanticSection';
 import {
   DndContext,
   DragEndEvent,
@@ -16,6 +18,7 @@ import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { TasksProvider, useTasksContext } from './hooks/useTasksContext'; // Import TasksProvider
 import { exportToExcel, exportToPDF } from './utils/taskUtils';
 import { useCaseDefinitions } from './utils/useCaseDefinitions';
+import SEO from '../../components/SEO';
 import Board from './components/Board';
 import Task from './components/Task';
 import Sidebar from './components/Sidebar';
@@ -45,6 +48,7 @@ const TaskSmasherApp: React.FC = () => {
 
 // Separate component to use the TasksContext
 function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
+  const location = useLocation();
   const {
     selectedModel,
     setSelectedModel,
@@ -232,8 +236,65 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
     }
   }, []);
 
+  // Determine the current use case from the URL path or the selected use case
+  const getCurrentUseCase = () => {
+    const path = location.pathname;
+    // Check if the path matches a specific use case
+    for (const [id, definition] of Object.entries(useCaseDefinitions)) {
+      const useCasePath = `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}`;
+      if (path.startsWith(useCasePath)) {
+        return { id, definition };
+      }
+    }
+    // Fallback to the selected use case or default
+    if (selectedUseCase && useCaseDefinitions[selectedUseCase]) {
+      return {
+        id: selectedUseCase,
+        definition: useCaseDefinitions[selectedUseCase]
+      };
+    }
+    
+    // Default to daily if no use case is found
+    return {
+      id: 'daily',
+      definition: useCaseDefinitions['daily']
+    };
+  };
+
+  const currentUseCase = getCurrentUseCase();
+  
+  // Create SEO overrides based on the current use case
+  const seoOverrides = currentUseCase ? {
+    title: `${currentUseCase.definition.label} - TaskSmasher | SmashingApps.ai`,
+    description: currentUseCase.definition.description
+  } : undefined;
+
   return (
     <div className="min-h-screen w-full flex fade-in-app relative pt-0"> {/* pt-0 to work with global navbar */}
+      {/* Apply SEO overrides for the current use case */}
+      {seoOverrides && <SEO overrides={seoOverrides} />}
+      
+      {/* Add structured data for the current use case */}
+      {currentUseCase && (
+        <>
+          <StructuredData
+            data={createSoftwareAppData(
+              `TaskSmasher - ${currentUseCase.definition.label}`,
+              currentUseCase.definition.description,
+              `https://smashingapps.ai/tools/task-smasher/${currentUseCase.definition.label.toLowerCase().replace(/\s+/g, '-')}/`,
+              `https://smashingapps.ai/og/task-smasher-${currentUseCase.id}.png`
+            )}
+          />
+          <StructuredData
+            data={createBreadcrumbData([
+              { name: 'Home', url: 'https://smashingapps.ai/' },
+              { name: 'Tools', url: 'https://smashingapps.ai/#tools' },
+              { name: 'TaskSmasher', url: 'https://smashingapps.ai/tools/task-smasher/' },
+              { name: currentUseCase.definition.label, url: `https://smashingapps.ai/tools/task-smasher/${currentUseCase.definition.label.toLowerCase().replace(/\s+/g, '-')}/` }
+            ])}
+          />
+        </>
+      )}
       {/* Global Loading Indicator for OpenAI API calls - not shown during voice processing */}
       {generating && !isListening && !processingVoice && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -307,14 +368,18 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             </div>
           </div>
 
-          <header className="mb-8">
+          <SemanticSection
+            as="header"
+            className="mb-8"
+            title={`TaskSmasher ${selectedUseCase && useCaseDefinitions[selectedUseCase]?.label}`}
+            titleAs="h1"
+            titleClassName="text-2xl font-bold text-gray-900"
+            subtitle="AI-powered task management"
+            subtitleAs="p"
+            subtitleClassName="text-sm text-gray-500 ml-4"
+            contentClassName="w-full"
+          >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  TaskSmasher {selectedUseCase && useCaseDefinitions[selectedUseCase]?.label}
-                </h1>
-                <div className="ml-4 text-sm text-gray-500">AI-powered task management</div>
-              </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => exportToExcel(boards)}
@@ -400,6 +465,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 </div>
               </div>
             </div>
+          </SemanticSection>
             
             <div className="flex flex-wrap items-center gap-4 mt-4">
               {/* Filters Button */}
@@ -545,7 +611,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 </div>
               </div>
             )}
-          </header>
+          </SemanticSection>
 
           <DndContext
             sensors={sensors}

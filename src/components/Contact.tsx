@@ -1,9 +1,39 @@
 import React from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import StructuredData from './StructuredData';
+import SEO from './SEO';
 
 const Contact: React.FC = () => {
   return (
     <section id="contact-page" className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <SEO overrides={{
+        title: 'Contact Us | SmashingApps.ai',
+        description: 'Get in touch with the SmashingApps.ai team. We\'d love to hear from you!'
+      }} />
+      
+      <StructuredData
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'ContactPage',
+          'name': 'Contact SmashingApps.ai',
+          'url': 'https://smashingapps.ai/contact',
+          'description': 'Contact information for SmashingApps.ai',
+          'mainEntity': {
+            '@type': 'Organization',
+            'name': 'Opace Ltd',
+            'url': 'https://opace.digital',
+            'logo': 'https://smashingapps.ai/smashingapps-ai-small.png',
+            'address': {
+              '@type': 'PostalAddress',
+              'streetAddress': 'Level 1, The Mailbox, Spaces, 3 Wharfside Street',
+              'addressLocality': 'Birmingham',
+              'postalCode': 'B1 1RD',
+              'addressCountry': 'UK'
+            },
+            'email': 'hello@opace.digital'
+          }
+        }}
+      />
       <div className="w-full px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">

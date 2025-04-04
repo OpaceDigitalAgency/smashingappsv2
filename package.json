@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npx tsc && npx vite build && node tools/task-smasher/scripts/generate-static-pages.js",
+    "build": "npx tsc && npx vite build && node tools/task-smasher/scripts/generate-static-pages.js && node scripts/generate-seo-files.js",
+    "generate-seo": "node scripts/generate-seo-files.js",
+    "generate-og": "node scripts/generate-og-images.js",
+    "generate-favicons": "node scripts/generate-favicons.js",
+    "prerender": "vite preview --port 5173 & node scripts/prerender-routes.js && pkill -f 'vite preview'",
+    "build:seo": "npm run build && npm run generate-og && npm run generate-favicons && npm run prerender",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -28,7 +33,9 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "vite": "^5.4.2",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "puppeteer": "^22.0.0",
+    "sharp": "^0.33.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
