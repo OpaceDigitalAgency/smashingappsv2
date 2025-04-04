@@ -232,7 +232,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
   }, []);
 
   return (
-    <div className="min-h-screen w-full flex fade-in-app relative">
+    <div className="min-h-screen w-full flex fade-in-app relative pt-0"> {/* pt-0 to work with global navbar */}
       {/* Global Loading Indicator for OpenAI API calls - not shown during voice processing */}
       {generating && !isListening && !processingVoice && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -309,7 +309,6 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
         <header className="mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <img src="/tools/task-smasher/assets/AITaskSmasher-small.png" alt="TaskSmasher Logo" className="w-8 h-8" />
               <h1 className="text-2xl font-bold text-gray-900">
                 TaskSmasher {selectedUseCase && useCaseDefinitions[selectedUseCase]?.label}
               </h1>

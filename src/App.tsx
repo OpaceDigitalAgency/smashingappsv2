@@ -51,7 +51,7 @@ const useCaseDefinitions = {
   freelance: { label: "Freelancer Projects", description: "Client work" }
 };
 
-// HomePage component for the root route
+// HomePage component for the root route (without Navbar since it's now global)
 const HomePage = () => (
   <div className="min-h-screen bg-gray-50">
     <Helmet>
@@ -59,7 +59,6 @@ const HomePage = () => (
       <meta name="description" content="SmashingApps.ai provides intuitive AI tools that help you get things done faster and more efficiently." />
       <link rel="canonical" href="https://smashingapps.ai/" />
     </Helmet>
-    <Navbar />
     <main>
       <Hero />
       <Tools />
@@ -79,48 +78,53 @@ const HomePage = () => (
  * 1. Add routes for the base path (both with and without trailing slash)
  * 2. Add routes for any specialized sub-paths if needed
  */
+
 function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
-        <Routes>
-          {/* Main homepage route */}
-          <Route path="/" element={<HomePage />} />
-          
-          {/*
-            Tool Routes Section
+        {/* Global Navbar - appears on all pages */}
+        <Navbar />
+        <div className="pt-0"> {/* Add padding to account for the navbar */}
+          <Routes>
+            {/* Main homepage route */}
+            <Route path="/" element={<HomePage />} />
             
-            Each tool should have at least two routes:
-            - One without trailing slash: /tools/tool-name
-            - One with trailing slash: /tools/tool-name/
+            {/*
+              Tool Routes Section
+              
+              Each tool should have at least two routes:
+              - One without trailing slash: /tools/tool-name
+              - One with trailing slash: /tools/tool-name/
+              
+              This ensures URLs work consistently regardless of how they're entered.
+            */}
             
-            This ensures URLs work consistently regardless of how they're entered.
-          */}
-          
-          {/* TaskSmasher base routes - handle both with and without trailing slash */}
-          <Route path="/tools/task-smasher" element={<TaskSmasherApp />} />
-          <Route path="/tools/task-smasher/" element={<TaskSmasherApp />} />
-          
-          {/* Add new tool routes here following the same pattern */}
-          {/* Example:
-          <Route path="/tools/your-new-tool" element={<YourNewToolApp />} />
-          <Route path="/tools/your-new-tool/" element={<YourNewToolApp />} />
-          */}
-          
-          {/* TaskSmasher use case routes - handle both with and without trailing slash */}
-          {Object.entries(useCaseDefinitions).flatMap(([id, definition]) => {
-            const basePath = `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}`;
-            const pathWithSlash = `${basePath}/`;
+            {/* TaskSmasher base routes - handle both with and without trailing slash */}
+            <Route path="/tools/task-smasher" element={<TaskSmasherApp />} />
+            <Route path="/tools/task-smasher/" element={<TaskSmasherApp />} />
             
-            return [
-              <Route key={`${id}-no-slash`} path={basePath} element={<TaskSmasherApp />} />,
-              <Route key={`${id}-with-slash`} path={pathWithSlash} element={<TaskSmasherApp />} />
-            ];
-          })}
-          
-          {/* Catch-all redirect to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Add new tool routes here following the same pattern */}
+            {/* Example:
+            <Route path="/tools/your-new-tool" element={<YourNewToolApp />} />
+            <Route path="/tools/your-new-tool/" element={<YourNewToolApp />} />
+            */}
+            
+            {/* TaskSmasher use case routes - handle both with and without trailing slash */}
+            {Object.entries(useCaseDefinitions).flatMap(([id, definition]) => {
+              const basePath = `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}`;
+              const pathWithSlash = `${basePath}/`;
+              
+              return [
+                <Route key={`${id}-no-slash`} path={basePath} element={<TaskSmasherApp />} />,
+                <Route key={`${id}-with-slash`} path={pathWithSlash} element={<TaskSmasherApp />} />
+              ];
+            })}
+            
+            {/* Catch-all redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </BrowserRouter>
     </HelmetProvider>
   );
