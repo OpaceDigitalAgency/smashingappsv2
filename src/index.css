@@ -231,10 +231,12 @@ button {
 /* Content container that matches the header width */
 .content-container {
   max-width: 1280px; /* max-w-7xl in Tailwind */
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1rem;
   padding-right: 1rem;
+  box-sizing: border-box;
 }
 
 @media (min-width: 640px) {
@@ -249,4 +251,11 @@ button {
     padding-left: 2rem;
     padding-right: 2rem;
   }
+}
+
+/* Ensure the main content area doesn't exceed the header width */
+.main-content-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }

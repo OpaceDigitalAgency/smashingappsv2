@@ -248,7 +248,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
       
       <Sidebar selectedUseCase={selectedUseCase} onSelectUseCase={handleSelectUseCase} />
       
-      <div className="flex-1 flex justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 overflow-auto transition-colors duration-500"
+      <div className="flex-1 main-content-wrapper bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 overflow-auto transition-colors duration-500"
            style={{
              background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`
            }}>
