@@ -24,7 +24,10 @@ const useCaseDefinitions = {
   travel: { label: "Trip Planner", description: "Travel planning" },
   study: { label: "Study Plan", description: "Academic tasks" },
   events: { label: "Event Planning", description: "Party planning" },
-  freelance: { label: "Freelancer Projects", description: "Client work" }
+  freelance: { label: "Freelancer Projects", description: "Client work" },
+  shopping: { label: "Shopping Tasks", description: "Shopping lists" },
+  diy: { label: "DIY Projects", description: "DIY projects" },
+  creative: { label: "Creative Projects", description: "Creative projects" }
 };
 
 // HomePage component for the root route
