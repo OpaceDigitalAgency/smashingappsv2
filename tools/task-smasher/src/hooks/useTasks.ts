@@ -643,12 +643,19 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   }, [history]);
 
   const startVoiceInput = async () => {
+    // Don't show the global loading indicator for voice recording
+    // We'll use a separate indicator instead
+    setNewTask('Initializing voice recording...');
+    setIsListening(true);
+    
     if (!audioAvailable) {
-      alert('Microphone access is not available');
+      alert('Microphone access is not available in this browser');
+      setIsListening(false);
       return;
     }
 
     try {
+      // Use MediaRecorder to capture audio and send to OpenAI Whisper API
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
@@ -667,19 +674,39 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         audioChunksRef.current = [];
         
-        // Create form data to send to API
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'recording.webm');
-        formData.append('model', 'whisper-1');
-        formData.append('language', 'en');
+        setNewTask('Processing audio with Whisper...');
         
         try {
-          setNewTask('Processing audio...');
+          // Create form data to send to API
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'recording.webm');
+          formData.append('model', 'whisper-1');
+          formData.append('language', 'en');
           
-          // Use local transcription or disable this feature
-          setNewTask('Voice transcription is not available without direct API access');
-          setIsListening(false);
-          return;
+          // Send to our proxy endpoint - don't show global loading indicator
+          const response = await fetch('/.netlify/functions/openai-proxy', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.text) {
+            setNewTask(data.text);
+            // Auto submit after a short delay
+            setTimeout(() => {
+              if (data.text.trim()) {
+                const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
+                handleAddTask(formEvent);
+              }
+            }, 1000);
+          } else {
+            throw new Error('No transcription returned');
+          }
           
           /* Voice transcription requires direct API access and can't be proxied easily
           // This feature is disabled when using the proxy
