@@ -231,7 +231,20 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
   }, []);
 
   return (
-    <div className="min-h-screen w-full flex fade-in-app">
+    <div className="min-h-screen w-full flex fade-in-app relative">
+      {/* Global Loading Indicator for OpenAI API calls */}
+      {generating && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Processing...</h3>
+            <p className="text-gray-600 text-center">
+              Generating content with {selectedModel}. This may take a few seconds.
+            </p>
+          </div>
+        </div>
+      )}
+      
       <Sidebar selectedUseCase={selectedUseCase} onSelectUseCase={handleSelectUseCase} />
       
       <div className="flex-1 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 overflow-auto transition-colors duration-500" 
@@ -365,16 +378,23 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
               
               <div className="relative">
                 <button
-                  className="py-2 px-4 border border-gray-200 bg-white/80 backdrop-blur-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 h-full transition-colors duration-200"
+                  className={`py-2 px-4 border border-gray-200 rounded-lg flex items-center gap-2 h-full transition-all duration-200 ${
+                    generating
+                      ? 'bg-indigo-50/80 border-indigo-200 shadow-sm animate-pulse'
+                      : 'bg-white/80 backdrop-blur-sm hover:bg-gray-50'
+                  }`}
                   onClick={(e) => {
                     handleGenerateIdeas();
                     // Add smash effect when generating ideas
                     const buttonRect = (e.target as HTMLElement).getBoundingClientRect();
                     addSmashEffectAt(buttonRect.left + buttonRect.width/2, buttonRect.top + buttonRect.height/2);
                   }}
+                  disabled={generating}
                 >
-                  <Sparkles className="w-5 h-5 text-indigo-500" />
-                  <span className="hidden sm:inline text-gray-700">Need Ideas?</span>
+                  <Sparkles className={`w-5 h-5 ${generating ? 'text-indigo-600' : 'text-indigo-500'}`} />
+                  <span className="hidden sm:inline text-gray-700">
+                    {generating ? 'Generating...' : 'Need Ideas?'}
+                  </span>
                 </button>
               </div>
             </div>
