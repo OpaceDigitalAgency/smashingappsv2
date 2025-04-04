@@ -1,4 +1,17 @@
 @tailwind base;
+
+/* Fix for task card text display */
+.flex-grow.min-w-0 {
+  position: relative;
+  left: 0 !important; /* Override any inline styles with negative margins */
+}
+
+/* Allow text to wrap properly */
+.truncate {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
 @tailwind components;
 @tailwind utilities;
 

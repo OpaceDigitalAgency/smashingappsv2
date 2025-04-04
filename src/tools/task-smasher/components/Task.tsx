@@ -104,7 +104,7 @@ function Task({
           <CheckCircle2 className="w-5 h-5" />
         </button>
         
-        <div className="flex-grow min-w-0">
+        <div className="flex-grow min-w-0" style={{ position: 'relative' }}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onToggleExpanded(task.id)}
@@ -147,9 +147,9 @@ function Task({
                 }}
                 onMouseLeave={() => setShowTooltip(false)}
               >
-                <span className="truncate mr-1 max-w-[90%]">{task.title}</span>
-                {task.title.length > 30 && (
-                  <span className="text-xs text-indigo-500 flex-shrink-0" title="Click to see full text">
+                <span className="mr-1 max-w-[90%] break-words whitespace-normal">{task.title}</span>
+                {task.title.length > 50 && (
+                  <span className="text-xs text-indigo-500 flex-shrink-0 ml-1" title="Click to see full text">
                     •••
                   </span>
                 )}

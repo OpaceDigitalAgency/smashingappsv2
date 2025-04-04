@@ -65,9 +65,9 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           }}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <span className="truncate mr-1 max-w-[90%]">{subtask.title}</span>
-          {subtask.title.length > 25 && (
-            <span className="text-xs text-indigo-500 flex-shrink-0" title="Click to see full text">
+          <span className="mr-1 max-w-[90%] break-words whitespace-normal">{subtask.title}</span>
+          {subtask.title.length > 40 && (
+            <span className="text-xs text-indigo-500 flex-shrink-0 ml-1" title="Click to see full text">
               •••
             </span>
           )}
