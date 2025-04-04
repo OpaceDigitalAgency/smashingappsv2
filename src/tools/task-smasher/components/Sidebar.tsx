@@ -181,16 +181,13 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
         }
       </button>
       <div className={`p-4 ${isCollapsed ? 'text-center' : ''}`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''} mb-4`}>
-          <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-            <Target className="w-5 h-5 text-white" />
-          </div>
-          <h2 className={`text-lg font-bold text-gray-900 ml-3 ${isCollapsed ? 'hidden' : ''}`}>
-            Use Case Categories
+        <div className="mb-4">
+          <h2 className={`text-lg font-bold text-gray-900 ${isCollapsed ? 'hidden' : ''}`}>
+            Smash a Task
           </h2>
         </div>
         <p className={`text-sm text-gray-600 mb-4 ${isCollapsed ? 'hidden' : ''}`}>
-          Select a category below to create AI-generated tasks specific to that domain
+          Pick a category to instantly generate an AI-powered task list tailored to your goals.
         </p>
       </div>
       
@@ -213,7 +210,8 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
       )}
       
       <div className="flex flex-col gap-2 px-2 overflow-y-auto custom-scrollbar">
-        {useCases.map(useCase => {
+        {/* Main categories (first 5) */}
+        {useCases.slice(0, 5).map(useCase => {
           const Icon = useCase.icon;
           const isSelected = selectedUseCase === useCase.id;
           
@@ -247,6 +245,74 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
                   {useCaseDefinitions[useCase.id]?.description || ''}
                 </p>
               )}
+            </Link>
+          );
+        })}
+        
+        {/* More categories dropdown */}
+        {!isCollapsed && (
+          <div className="mt-2">
+            <details className="group">
+              <summary className="flex items-center justify-between px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:shadow-sm cursor-pointer">
+                <span className="font-medium">More Categories</span>
+                <ChevronRight className="w-5 h-5 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="mt-2 ml-2 space-y-1 border-l-2 border-gray-200 pl-2">
+                {useCases.slice(5).map(useCase => {
+                  const Icon = useCase.icon;
+                  const isSelected = selectedUseCase === useCase.id;
+                  
+                  return (
+                    <Link
+                      key={useCase.id}
+                      to={`/tools/task-smasher/${useCase.label.toLowerCase().replace(/\s+/g, '-')}/`}
+                      onClick={(e) => handleUseCaseClick(useCase.id, e)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200 relative no-underline
+                        ${isSelected
+                          ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50'}`}
+                      style={{
+                        backgroundColor: isSelected ? `var(--${useCase.id}-light)` : '',
+                        color: isSelected ? `var(--${useCase.id}-primary)` : ''
+                      }}
+                      title={useCase.label}
+                    >
+                      <Icon
+                        className={`w-4 h-4 transition-colors duration-300 ${isSelected ? 'text-indigo-600' : 'text-gray-600'}`}
+                        style={{ color: isSelected ? `var(--${useCase.id}-primary)` : '' }}
+                      />
+                      <span className="font-medium text-sm">{useCase.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </details>
+          </div>
+        )}
+        
+        {/* Collapsed view for remaining categories */}
+        {isCollapsed && useCases.slice(5).map(useCase => {
+          const Icon = useCase.icon;
+          const isSelected = selectedUseCase === useCase.id;
+          
+          return (
+            <Link
+              key={useCase.id}
+              to={`/tools/task-smasher/${useCase.label.toLowerCase().replace(/\s+/g, '-')}/`}
+              onClick={(e) => handleUseCaseClick(useCase.id, e)}
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-200
+                ${isSelected
+                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 shadow-sm'
+                  : 'hover:bg-gray-50'}`}
+              style={{
+                backgroundColor: isSelected ? `var(--${useCase.id}-light)` : ''
+              }}
+              title={useCase.label}
+            >
+              <Icon
+                className={`w-5 h-5 transition-colors duration-300 ${isSelected ? 'text-indigo-600' : 'text-gray-600'}`}
+                style={{ color: isSelected ? `var(--${useCase.id}-primary)` : '' }}
+              />
             </Link>
           );
         })}

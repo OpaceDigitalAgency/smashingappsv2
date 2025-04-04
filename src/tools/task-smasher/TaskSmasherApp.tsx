@@ -591,22 +591,20 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             <DragOverlay>
               {activeId && activeTaskObject ? (
                 <div className="opacity-80">
-                  <Task
-                    task={activeTaskObject}
-                    onToggleComplete={toggleComplete}
-                    onDelete={deleteTask}
-                    onEdit={startEditing}
-                    onEditSave={handleEditSave}
-                    onUpdatePriority={updateTaskPriority}
-                    onAddSubtask={addSubtask}
-                    onToggleExpanded={toggleExpanded}
-                    onRegenerate={regenerateTask}
-                    onGenerateSubtasks={handleGenerateSubtasks}
-                    isEditing={editing?.id === activeTaskObject.id}
-                    editValue={editing?.value || ''}
-                    setEditValue={(value) => editing && setTaskMismatch({ ...taskMismatch, value })}
-                    isDragging={true}
-                  />
+                  <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/60 p-3 mb-3">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-gray-300">
+                        <CheckCircle2 className="w-full h-full" />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-medium text-gray-800 truncate">
+                            {activeTaskObject.title}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : null}
             </DragOverlay>
