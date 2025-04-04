@@ -66,7 +66,6 @@ const HomePage = () => (
       <Testimonials />
       <CTA />
     </main>
-    <Footer />
   </div>
 );
 
@@ -85,8 +84,9 @@ function App() {
       <BrowserRouter>
         {/* Global Navbar - appears on all pages */}
         <Navbar />
-        <div className="pt-0"> {/* Add padding to account for the navbar */}
-          <Routes>
+        <div className="pt-0 min-h-screen flex flex-col"> {/* Add padding to account for the navbar */}
+          <div className="flex-grow">
+            <Routes>
             {/* Main homepage route */}
             <Route path="/" element={<HomePage />} />
             
@@ -123,7 +123,10 @@ function App() {
             
             {/* Catch-all redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+            </Routes>
+          </div>
+          {/* Global Footer - appears on all pages */}
+          <Footer />
         </div>
       </BrowserRouter>
     </HelmetProvider>

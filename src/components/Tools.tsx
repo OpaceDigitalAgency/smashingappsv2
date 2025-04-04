@@ -52,7 +52,7 @@ const Tools: React.FC = () => {
 
   return (
     <section id="tools" className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
             Your <span className="text-secondary">AI Toolbox</span>
