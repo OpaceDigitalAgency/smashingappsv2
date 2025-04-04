@@ -61,6 +61,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
     feedback,
     setFeedback,
     generating,
+    processingVoice,
     showContextInput,
     setShowContextInput,
     contextInput,
@@ -232,8 +233,8 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
 
   return (
     <div className="min-h-screen w-full flex fade-in-app relative">
-      {/* Global Loading Indicator for OpenAI API calls */}
-      {generating && (
+      {/* Global Loading Indicator for OpenAI API calls - not shown during voice processing */}
+      {generating && !isListening && !processingVoice && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>

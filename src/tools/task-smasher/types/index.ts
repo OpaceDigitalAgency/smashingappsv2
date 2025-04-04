@@ -69,6 +69,7 @@ export interface TasksContextType {
   feedback: FeedbackState;
   setFeedback: React.Dispatch<React.SetStateAction<FeedbackState>>;
   generating: boolean;
+  processingVoice: boolean;
   showContextInput: string | null;
   setShowContextInput: React.Dispatch<React.SetStateAction<string | null>>;
   contextInput: string;

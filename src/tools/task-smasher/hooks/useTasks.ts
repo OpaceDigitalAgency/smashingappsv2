@@ -54,6 +54,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   const [activeTask, setActiveTask] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState>({ taskId: '', showing: false });
   const [generating, setGenerating] = useState(false);
+  const [processingVoice, setProcessingVoice] = useState(false);
   const [showContextInput, setShowContextInput] = useState<string | null>(null);
   const [contextInput, setContextInput] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -643,13 +644,13 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   }, [history]);
 
   const startVoiceInput = async () => {
-    // Set generating state to true to show loading indicator
-    setGenerating(true);
+    // Set processingVoice state to true instead of generating
+    setProcessingVoice(true);
     setNewTask('Initializing voice recording...');
     
     if (!audioAvailable) {
       alert('Microphone access is not available in this browser');
-      setGenerating(false);
+      setProcessingVoice(false);
       setIsListening(false);
       return;
     }
@@ -716,10 +717,11 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         } catch (error) {
           console.error('Error processing audio:', error);
           setNewTask(error instanceof Error ? error.message : 'Error processing audio. Please try typing instead.');
-          setGenerating(false);
+          setProcessingVoice(false);
         }
         
         setIsListening(false);
+        setProcessingVoice(false);
         stream.getTracks().forEach(track => track.stop());
       };
       
@@ -738,6 +740,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       console.error('Error starting audio recording:', error);
       setNewTask('Error accessing microphone. Please check permissions.');
       setIsListening(false);
+      setProcessingVoice(false);
     }
   };
   
@@ -745,6 +748,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
+    // We don't reset processingVoice here because it will be reset in the onstop handler
   };
   
   const regenerateTask = async (taskId: string) => {
@@ -1173,6 +1177,7 @@ Make sure to include all necessary ingredients with precise measurements before 
     feedback,
     setFeedback,
     generating,
+    processingVoice,
     showContextInput,
     setShowContextInput,
     contextInput,
