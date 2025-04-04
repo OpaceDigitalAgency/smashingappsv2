@@ -3,7 +3,8 @@
 /* Fix for task card text display */
 .flex-grow.min-w-0 {
   position: relative;
-  left: 0 !important; /* Override any inline styles with negative margins */
+  left: -30px; /* Keep the negative margin to move the inner box left */
+  width: calc(100% + 30px); /* Compensate for the negative margin */
 }
 
 /* Allow text to wrap properly */

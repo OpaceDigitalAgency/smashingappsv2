@@ -144,11 +144,16 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
     
+    console.log("Initializing OpenAI client with API key:", apiKey ? "Key exists" : "No key");
+    
     // Initialize OpenAI client with timeout
     const openai = new OpenAI({
       apiKey: apiKey,
-      timeout: 30000, // 30 second timeout
-      maxRetries: 2   // Retry failed requests twice
+      timeout: 60000, // 60 second timeout (increased from 30s)
+      maxRetries: 3,  // Retry failed requests three times
+      defaultHeaders: {
+        "User-Agent": "SmashingApps/1.0"
+      }
     });
     
     // Check if this is a multipart form request (for audio transcription)
@@ -224,11 +229,42 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         };
       }
       
-      response = await openai.chat.completions.create({
-        model: requestBody.model,
-        messages: requestBody.messages,
-        ...requestBody // Include any other parameters passed in the request
-      });
+      console.log("Making OpenAI request with model:", requestBody.model);
+      
+      try {
+        // Use a more direct approach with fetch instead of the OpenAI SDK for better control
+        if (requestBody.model && requestBody.messages) {
+          // First try with the OpenAI SDK
+          response = await openai.chat.completions.create({
+            model: requestBody.model,
+            messages: requestBody.messages,
+            ...requestBody // Include any other parameters passed in the request
+          });
+        }
+      } catch (openaiError) {
+        console.error("Error with OpenAI SDK, falling back to direct API call:", openaiError);
+        
+        // If the SDK fails, try a direct API call as fallback
+        const openaiApiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "User-Agent": "SmashingApps/1.0"
+          },
+          body: JSON.stringify({
+            model: requestBody.model,
+            messages: requestBody.messages,
+            ...requestBody
+          })
+        });
+        
+        if (!openaiApiResponse.ok) {
+          throw new Error(`OpenAI API error: ${openaiApiResponse.status} ${openaiApiResponse.statusText}`);
+        }
+        
+        response = await openaiApiResponse.json();
+      }
     }
     
     // Get the API call count from the request headers or use a default value
@@ -259,6 +295,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     
     // Log more detailed error information
     console.error("Error details:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
     
     // Check if it's a timeout error
     const isTimeout = error instanceof Error &&
@@ -266,6 +303,9 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     
     // Check if it's an OpenAI API error
     const isOpenAIError = error instanceof Error && error.message.includes('OpenAI');
+    
+    // Log the error type for debugging
+    console.log("Error type:", isTimeout ? "timeout" : (isOpenAIError ? "openai_error" : "unknown"));
     
     return {
       statusCode: isTimeout ? 504 : 500, // Use 504 for timeout errors

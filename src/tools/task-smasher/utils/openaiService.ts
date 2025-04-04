@@ -88,6 +88,7 @@ export const OpenAIService = {
       }
       
       console.log('Request headers:', headers);
+      console.log('Request body:', JSON.stringify(request));
       
       // Use the Netlify function proxy instead of direct OpenAI API
       // Use relative path to ensure compatibility with all deployment environments
@@ -97,10 +98,11 @@ export const OpenAIService = {
         headers,
         body: JSON.stringify(request),
         // Add timeout handling
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(60000) // 60 second timeout (increased from 30s)
       });
       
       // Log the response headers for debugging
+      console.log('Response status:', response.status, response.statusText);
       console.log('Response headers:', {
         'X-ReCaptcha-Verified': response.headers.get('X-ReCaptcha-Verified'),
         'X-RateLimit-Used': response.headers.get('X-RateLimit-Used'),
@@ -124,16 +126,39 @@ export const OpenAIService = {
       // Handle other errors
       if (!response.ok) {
         try {
-          const errorData = await response.json() as ErrorResponse;
+          // Try to parse the error response as JSON
+          const errorText = await response.text();
+          console.error("Error response text:", errorText);
+          
+          let errorData: ErrorResponse;
+          try {
+            errorData = JSON.parse(errorText) as ErrorResponse;
+          } catch (jsonError) {
+            console.error("Failed to parse error response as JSON:", jsonError);
+            // If JSON parsing fails, create a simple error object
+            errorData = {
+              error: "Parse error",
+              message: errorText
+            };
+          }
+          
           // Include status code in error message for better debugging
           throw new Error(`${response.status} ${response.statusText}: ${errorData.message || 'Unknown error occurred'}`);
         } catch (parseError) {
-          // If we can't parse the JSON response, throw a generic error with the status
+          // If we can't parse the response at all, throw a generic error with the status
+          console.error("Error parsing response:", parseError);
           throw new Error(`${response.status} ${response.statusText}: Unable to parse error response`);
         }
       }
 
-      const data = await response.json() as ChatCompletionResponse;
+      // Parse the response
+      let data: ChatCompletionResponse;
+      try {
+        data = await response.json() as ChatCompletionResponse;
+      } catch (jsonError) {
+        console.error("Error parsing JSON response:", jsonError);
+        throw new Error("Failed to parse response from OpenAI API");
+      }
       
       // Increment the API call count in localStorage
       const newApiCallCount = apiCallCount + 1;
@@ -154,6 +179,7 @@ export const OpenAIService = {
       
       return { data, rateLimit };
     } catch (error) {
+      console.error("Error in createChatCompletion:", error);
       if (error instanceof Error) {
         throw error;
       }
