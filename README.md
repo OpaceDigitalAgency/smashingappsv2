@@ -1,29 +1,3 @@
-# SmashingApps.ai Project Structure
-
-## Important Notes on Project Structure
-
-This project has a specific structure that can be confusing:
-
-- The main app is in the root directory (`/`)
-- The TaskSmasher tool is in `/tools/task-smasher/`
-
-### File Locations
-
-- **Main App**: Files in `/src/` are for the main homepage and landing pages
-- **TaskSmasher App**: Files in `/tools/task-smasher/src/` are for the TaskSmasher tool
-
-### Common Issues
-
-If you encounter issues with the TaskSmasher tool:
-
-1. **File Path Confusion**: Make sure you're editing files in `/tools/task-smasher/src/` and not in `/src/tools/task-smasher/`
-2. **Voice Transcription**: The app uses OpenAI's Whisper API through a Netlify function proxy
-3. **Routing Issues**: Check the routes in both `/src/App.tsx` and `/tools/task-smasher/src/main.tsx`
-
-### Deployment
-
-The project is deployed on Netlify with a custom domain (smashingapps.ai). The Netlify URL is https://singular-palmier-8967b3.netlify.app/
-
 # SmashingApps.ai
 
 A modern suite of AI-powered productivity tools, hosted at [smashingapps.ai](https://smashingapps.ai).
@@ -56,7 +30,7 @@ This is a unified React application that combines:
 
 1. Clone the repository
    ```
-   git clone https://github.com/OpaceDigitalAgency/smashingapps-unified
+   git clone https://github.com/OpaceDigitalAgency/smashingapps.git
    cd smashingapps
    ```
 
