@@ -74,7 +74,8 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   const [taskMismatch, setTaskMismatch] = useState<TaskMismatchData>({
     showing: false,
     reason: '',
-    suggestedUseCase: undefined
+    suggestedUseCase: undefined,
+    taskText: ''
   });
   
   // History for undo functionality
@@ -272,7 +273,8 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         setTaskMismatch({
           showing: true,
           reason: result.reason,
-          suggestedUseCase: result.suggestedUseCase
+          suggestedUseCase: result.suggestedUseCase,
+          taskText: taskText // Store the task text for later use
         });
         return false;
       }
@@ -997,12 +999,33 @@ Make sure to include all necessary ingredients with precise measurements before 
     // Save current state to history before resetting
     setHistory(prev => [...prev, boards]);
     
-    // Reset boards to empty state
-    setBoards([
+    // Check if we're switching due to a task mismatch
+    const switchingDueToMismatch = taskMismatch.showing && taskMismatch.suggestedUseCase === useCase;
+    const taskToPreserve = switchingDueToMismatch && taskMismatch.taskText ? taskMismatch.taskText : '';
+    
+    // Create empty boards
+    const emptyBoards: Board[] = [
       { id: 'todo', title: 'To Do', tasks: [] },
       { id: 'inprogress', title: 'In Progress', tasks: [] },
       { id: 'done', title: 'Done', tasks: [] }
-    ]);
+    ];
+    
+    // If we're switching due to a task mismatch, add the task to the new use case's todo board
+    if (switchingDueToMismatch && taskToPreserve) {
+      emptyBoards[0].tasks.push({
+        id: `task-${Date.now()}`,
+        title: taskToPreserve,
+        subtasks: [],
+        completed: false,
+        priority: 'medium',
+        estimatedTime: 1,
+        expanded: false,
+        boardId: 'todo'
+      });
+    }
+    
+    // Set the new boards
+    setBoards(emptyBoards);
     
     // Reset active states
     setActiveTask(null);
@@ -1015,7 +1038,17 @@ Make sure to include all necessary ingredients with precise measurements before 
     document.documentElement.style.setProperty('--primary-color', `var(--${useCase}-primary)`);
     document.documentElement.style.setProperty('--primary-light', `var(--${useCase}-light)`);
     document.documentElement.style.setProperty('--secondary-light', `var(--${useCase}-secondary)`);
-  }, [boards]);
+    
+    // Clear the task mismatch state
+    if (switchingDueToMismatch) {
+      setTaskMismatch({
+        showing: false,
+        reason: '',
+        suggestedUseCase: undefined,
+        taskText: ''
+      });
+    }
+  }, [boards, taskMismatch]);
   
   const handleGenerateIdeas = async () => {
     // Set generating state to true to show loading indicator

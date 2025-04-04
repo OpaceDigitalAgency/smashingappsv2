@@ -330,10 +330,33 @@ div[class*="flex-1"][class*="flex"] > div,
     padding-right: 2rem;
   }
 }
-
 /* Ensure the main content area doesn't exceed the header width */
 .main-content-wrapper {
   display: flex;
   justify-content: center;
   width: 100%;
+}
+
+/* TaskMismatchPopup animations */
+@keyframes shrink {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+
+@keyframes pop-in {
+  0% { transform: translate(-50%, -30%) scale(0.95); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes pop-out {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -30%) scale(0.95); opacity: 0; }
+}
+
+.animate-in {
+  animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-out {
+  animation: pop-out 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
 }

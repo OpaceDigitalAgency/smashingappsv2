@@ -45,6 +45,7 @@ export interface TaskMismatchData {
   showing: boolean;
   reason: string;
   suggestedUseCase?: string;
+  taskText?: string;
 }
 
 export interface RateLimitInfo {

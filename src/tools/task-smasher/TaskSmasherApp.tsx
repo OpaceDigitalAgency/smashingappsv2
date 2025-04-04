@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DndContext,
   DragEndEvent,
@@ -703,6 +704,15 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             suggestedUseCase={taskMismatch.suggestedUseCase}
             onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined })}
             onSwitchUseCase={(useCase) => {
+              // Get the use case label for navigation
+              const useCaseLabel = useCaseDefinitions[useCase]?.label;
+              if (useCaseLabel) {
+                // Format the URL path
+                const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
+                // Navigate to the new URL
+                window.location.href = path;
+              }
+              // Still update the use case in the context
               handleSelectUseCase(useCase);
               setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined });
             }}

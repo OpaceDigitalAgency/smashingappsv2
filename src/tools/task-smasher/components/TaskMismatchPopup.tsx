@@ -56,15 +56,16 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
     : '';
   
   return (
-    <div 
-      className={`fixed top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-md w-full z-50 ${animation}`}
+    <div
+      className={`fixed top-1/2 left-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-md w-full z-[9999] ${animation}`}
       style={{
         boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        transform: animation === 'animate-in' 
-          ? 'translate(-50%, -50%) scale(1)' 
+        transform: animation === 'animate-in'
+          ? 'translate(-50%, -50%) scale(1)'
           : 'translate(-50%, -30%) scale(0.95)',
         opacity: animation === 'animate-in' ? 1 : 0,
-        transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        maxWidth: '90%'
       }}
     >
       <div className="flex items-start">
@@ -99,7 +100,8 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
                 onClick={handleSwitch}
                 className="px-4 py-1.5 text-sm font-medium text-white rounded-md"
                 style={{
-                  background: `linear-gradient(135deg, var(--${suggestedUseCase}-primary), color-mix(in srgb, var(--${suggestedUseCase}-primary) 70%, white))`
+                  background: `linear-gradient(135deg, #6366f1, #8b5cf6)`,
+                  boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)'
                 }}
               >
                 Switch Now
