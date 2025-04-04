@@ -233,7 +233,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
   return (
     <div className="min-h-screen w-full flex fade-in-app relative">
       {/* Global Loading Indicator for OpenAI API calls */}
-      {generating && !isListening && (
+      {generating && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -242,14 +242,6 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
               Generating content with {selectedModel}. This may take a few seconds.
             </p>
           </div>
-        </div>
-      )}
-      
-      {/* Voice Recording Indicator */}
-      {isListening && (
-        <div className="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50 flex items-center">
-          <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse mr-2"></div>
-          <span className="text-gray-800">Recording... Click mic to stop</span>
         </div>
       )}
       

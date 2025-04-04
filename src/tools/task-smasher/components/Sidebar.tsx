@@ -89,21 +89,10 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
     : 'Use Cases';
 
   return (
-    <div
+    <div 
       ref={containerRef}
       className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col gap-2 shadow-sm z-10 transition-colors duration-300 ease-in-out relative overflow-hidden"
     >
-      {/* Logo */}
-      <div className="flex justify-center mb-4">
-        <Link to="/tools/task-smasher/" className="block">
-          <img
-            src="/assets/AITaskSmasher-small.png"
-            alt="AI Task Smasher"
-            className="h-16 object-contain"
-          />
-        </Link>
-      </div>
-      
       <h2 className="text-lg font-semibold text-gray-900 mb-2">
         Use Case Categories
       </h2>
