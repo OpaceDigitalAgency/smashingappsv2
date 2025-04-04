@@ -14,8 +14,8 @@
 
 # Function configuration
 [functions]
-  # Set a reasonable timeout for functions
-  timeout = 15
+  # Node.js functions configuration
+  node_bundler = "esbuild"
 
 # SPA redirects for React Router - unified app structure
 [[redirects]]
