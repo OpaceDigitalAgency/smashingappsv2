@@ -149,28 +149,90 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
     
-    // Parse request body
-    const requestBody = JSON.parse(event.body || "{}");
-    
     // Initialize OpenAI client
     const openai = new OpenAI({
       apiKey: apiKey
     });
     
-    // Forward the request to OpenAI
-    if (!requestBody.model || !requestBody.messages) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Invalid request. 'model' and 'messages' are required." })
-      };
-    }
+    // Check if this is a multipart form request (for audio transcription)
+    const contentType = event.headers["content-type"] || "";
+    let response;
     
-    const response = await openai.chat.completions.create({
-      model: requestBody.model,
-      messages: requestBody.messages,
-      ...requestBody // Include any other parameters passed in the request
-    });
+    if (contentType.includes("multipart/form-data")) {
+      console.log("Processing audio transcription request");
+      
+      // Parse the multipart form data
+      const busboy = require('busboy');
+      const bb = busboy({ headers: event.headers });
+      
+      // Create a promise to handle the file upload
+      const formData: any = await new Promise((resolve, reject) => {
+        const fields: Record<string, string> = {};
+        let fileBuffer: Buffer | null = null;
+        let fileName: string = 'recording.webm';
+        
+        bb.on('file', (name: string, file: any, info: any) => {
+          const { filename, encoding, mimeType } = info;
+          fileName = filename;
+          
+          const chunks: Buffer[] = [];
+          file.on('data', (data: Buffer) => {
+            chunks.push(data);
+          });
+          
+          file.on('end', () => {
+            fileBuffer = Buffer.concat(chunks);
+          });
+        });
+        
+        bb.on('field', (name: string, val: string) => {
+          fields[name] = val;
+        });
+        
+        bb.on('finish', () => {
+          resolve({ fields, fileBuffer, fileName });
+        });
+        
+        bb.on('error', (error: Error) => {
+          reject(error);
+        });
+        
+        // Pass the request body to busboy
+        if (event.body) {
+          bb.write(Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8'));
+        }
+        bb.end();
+      });
+      
+      // Call the OpenAI Whisper API
+      console.log("Calling Whisper API with model:", formData.fields.model || "whisper-1");
+      
+      response = await openai.audio.transcriptions.create({
+        file: new File([formData.fileBuffer], formData.fileName),
+        model: formData.fields.model || "whisper-1",
+        language: formData.fields.language || "en"
+      });
+      
+      console.log("Whisper API response:", response);
+    } else {
+      // Parse JSON request body for chat completions
+      const requestBody = JSON.parse(event.body || "{}");
+      
+      // Forward the request to OpenAI
+      if (!requestBody.model || !requestBody.messages) {
+        return {
+          statusCode: 400,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Invalid request. 'model' and 'messages' are required." })
+        };
+      }
+      
+      response = await openai.chat.completions.create({
+        model: requestBody.model,
+        messages: requestBody.messages,
+        ...requestBody // Include any other parameters passed in the request
+      });
+    }
     
     // Get the API call count from the request headers or use a default value
     const apiCallCount = parseInt(event.headers["x-api-call-count"] || "0", 10) + 1;

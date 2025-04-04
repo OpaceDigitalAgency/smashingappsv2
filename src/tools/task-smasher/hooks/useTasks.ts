@@ -645,7 +645,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   const startVoiceInput = async () => {
     // Set generating state to true to show loading indicator
     setGenerating(true);
-    setNewTask('Initializing speech recognition...');
+    setNewTask('Initializing voice recording...');
     
     if (!audioAvailable) {
       alert('Microphone access is not available in this browser');
@@ -655,158 +655,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     }
 
     try {
-      // Direct Speech Recognition approach (no recording needed)
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        console.log('Using Web Speech API for voice recognition');
-        
-        // TypeScript declarations for Web Speech API
-        interface SpeechRecognitionEvent extends Event {
-          results: {
-            [index: number]: {
-              [index: number]: {
-                transcript: string;
-                confidence: number;
-              };
-            };
-            isFinal?: boolean;
-            length: number;
-          };
-        }
-        
-        interface SpeechRecognitionErrorEvent extends Event {
-          error: string;
-          message?: string;
-        }
-        
-        interface SpeechRecognition extends EventTarget {
-          lang: string;
-          continuous: boolean;
-          interimResults: boolean;
-          maxAlternatives: number;
-          start(): void;
-          stop(): void;
-          abort(): void;
-          onresult: (event: SpeechRecognitionEvent) => void;
-          onerror: (event: SpeechRecognitionErrorEvent) => void;
-          onend: () => void;
-          onstart: () => void;
-          onnomatch?: () => void;
-          onaudiostart?: () => void;
-          onaudioend?: () => void;
-          onsoundstart?: () => void;
-          onsoundend?: () => void;
-          onspeechstart?: () => void;
-          onspeechend?: () => void;
-        }
-        
-        interface SpeechRecognitionConstructor {
-          new(): SpeechRecognition;
-        }
-        
-        try {
-          // Get the appropriate constructor
-          const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition ||
-                                      (window as any).SpeechRecognition;
-          
-          const recognition = new SpeechRecognitionAPI() as SpeechRecognition;
-          recognition.lang = 'en-US';
-          recognition.continuous = false;
-          recognition.interimResults = true;
-          recognition.maxAlternatives = 1;
-          
-          // Add more event handlers for better debugging
-          recognition.onstart = () => {
-            console.log('Speech recognition started');
-            setNewTask('Listening...');
-            setIsListening(true);
-            // Hide the global loading indicator after a short delay
-            setTimeout(() => {
-              setGenerating(false);
-            }, 500);
-          };
-          
-          recognition.onend = () => {
-            console.log('Speech recognition ended');
-            setIsListening(false);
-            setGenerating(false);
-          };
-          
-          if (recognition.onaudiostart) {
-            recognition.onaudiostart = () => {
-              console.log('Audio capturing started');
-            };
-          }
-          
-          if (recognition.onspeechstart) {
-            recognition.onspeechstart = () => {
-              console.log('Speech started');
-            };
-          }
-          
-          if (recognition.onspeechend) {
-            recognition.onspeechend = () => {
-              console.log('Speech ended');
-            };
-          }
-          
-          recognition.onresult = (event: SpeechRecognitionEvent) => {
-            console.log('Got speech recognition result', event);
-            
-            // Get the most recent result
-            const resultIndex = event.results.length - 1;
-            const transcript = event.results[resultIndex][0].transcript;
-            const confidence = event.results[resultIndex][0].confidence;
-            
-            console.log(`Transcript: ${transcript}, Confidence: ${confidence}`);
-            
-            // Update the input field with the transcript
-            setNewTask(transcript);
-            
-            // If this is a final result, auto-submit after a short delay
-            if (event.results.isFinal || resultIndex === event.results.length - 1) {
-              setTimeout(() => {
-                if (transcript.trim()) {
-                  const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
-                  handleAddTask(formEvent);
-                }
-              }, 1000);
-            }
-          };
-          
-          recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-            console.error('Speech recognition error:', event.error, event.message);
-            setNewTask(`Speech recognition error: ${event.error}. Please try typing instead.`);
-            setIsListening(false);
-            setGenerating(false);
-          };
-          
-          // Start recognition
-          recognition.start();
-          
-          // Safety timeout - stop after 10 seconds if no result
-          setTimeout(() => {
-            if (isListening) {
-              console.log('Safety timeout - stopping recognition after 10s');
-              recognition.stop();
-            }
-          }, 10000);
-          
-          return;
-        } catch (error) {
-          console.error('Error initializing speech recognition:', error);
-          setNewTask('Error initializing speech recognition. Please try typing instead.');
-          setIsListening(false);
-          setGenerating(false);
-        }
-      } else {
-        console.warn('Web Speech API not available in this browser');
-        setNewTask('Voice recognition not supported in this browser. Please try typing instead.');
-        setIsListening(false);
-        setGenerating(false);
-        return;
-      }
-      
-      // Fall back to MediaRecorder approach
+      // Use MediaRecorder to capture audio and send to OpenAI Whisper API
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
@@ -825,11 +674,52 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         audioChunksRef.current = [];
         
-        setNewTask('Processing audio...');
-        setNewTask('Voice transcription is currently disabled. Please try typing instead.');
-        setIsListening(false);
-        setGenerating(false);
+        setNewTask('Processing audio with OpenAI Whisper...');
         
+        try {
+          // Create form data to send to API
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'recording.webm');
+          formData.append('model', 'whisper-1');
+          formData.append('language', 'en');
+          
+          // Get reCAPTCHA token
+          const recaptchaToken = await getReCaptchaToken('transcribe_audio');
+          
+          // Send to our proxy endpoint
+          const response = await fetch('/.netlify/functions/openai-proxy', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-ReCaptcha-Token': recaptchaToken || ''
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.text) {
+            setNewTask(data.text);
+            // Auto submit after a short delay
+            setTimeout(() => {
+              if (data.text.trim()) {
+                const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
+                handleAddTask(formEvent);
+              }
+            }, 1000);
+          } else {
+            throw new Error('No transcription returned');
+          }
+        } catch (error) {
+          console.error('Error processing audio:', error);
+          setNewTask(error instanceof Error ? error.message : 'Error processing audio. Please try typing instead.');
+          setGenerating(false);
+        }
+        
+        setIsListening(false);
         stream.getTracks().forEach(track => track.stop());
       };
       
