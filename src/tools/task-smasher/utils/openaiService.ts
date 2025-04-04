@@ -96,6 +96,8 @@ export const OpenAIService = {
         method: 'POST',
         headers,
         body: JSON.stringify(request),
+        // Add timeout handling
+        signal: AbortSignal.timeout(30000) // 30 second timeout
       });
       
       // Log the response headers for debugging
@@ -121,8 +123,14 @@ export const OpenAIService = {
 
       // Handle other errors
       if (!response.ok) {
-        const errorData = await response.json() as ErrorResponse;
-        throw new Error(errorData.message || 'Unknown error occurred');
+        try {
+          const errorData = await response.json() as ErrorResponse;
+          // Include status code in error message for better debugging
+          throw new Error(`${response.status} ${response.statusText}: ${errorData.message || 'Unknown error occurred'}`);
+        } catch (parseError) {
+          // If we can't parse the JSON response, throw a generic error with the status
+          throw new Error(`${response.status} ${response.statusText}: Unable to parse error response`);
+        }
       }
 
       const data = await response.json() as ChatCompletionResponse;

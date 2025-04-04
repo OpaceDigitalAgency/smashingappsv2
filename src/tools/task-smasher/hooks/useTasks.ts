@@ -1021,17 +1021,27 @@ Make sure to include all necessary ingredients with precise measurements before 
     // Set generating state to true to show loading indicator
     setGenerating(true);
     
-    try {
-      console.log("Generating ideas for use case:", selectedUseCase);
-      
-      // Get reCAPTCHA token
-      const recaptchaToken = await getReCaptchaToken('generate_ideas');
-      console.log("Got reCAPTCHA token for generate_ideas:", recaptchaToken ? "Yes" : "No");
-      
-      // Use OpenAIService to make the request through the proxy
-      // Create a prompt based on the selected use case
-      let systemPrompt = 'You are a helpful assistant that generates creative task ideas. Return a list of 5 task ideas, one per line, no numbers or bullets.';
-      let userPrompt = `Generate 5 task ideas for ${selectedUseCase || 'general productivity'}`;
+    // Add retry logic
+    const maxRetries = 2;
+    let retryCount = 0;
+    let lastError = null;
+    
+    while (retryCount <= maxRetries) {
+      try {
+        if (retryCount > 0) {
+          console.log(`Retry attempt ${retryCount} of ${maxRetries} for generating ideas`);
+        }
+        
+        console.log("Generating ideas for use case:", selectedUseCase);
+        
+        // Get reCAPTCHA token
+        const recaptchaToken = await getReCaptchaToken('generate_ideas');
+        console.log("Got reCAPTCHA token for generate_ideas:", recaptchaToken ? "Yes" : "No");
+        
+        // Use OpenAIService to make the request through the proxy
+        // Create a prompt based on the selected use case
+        let systemPrompt = 'You are a helpful assistant that generates creative task ideas. Return a list of 5 task ideas, one per line, no numbers or bullets.';
+        let userPrompt = `Generate 5 task ideas for ${selectedUseCase || 'general productivity'}`;
       
       // Customize prompts based on use case
       if (selectedUseCase === 'recipe') {
@@ -1133,20 +1143,50 @@ Make sure to include all necessary ingredients with precise measurements before 
         
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
       
-    } catch (error) {
-      console.error('Error generating ideas:', error);
-      
-      // Check if the error is due to rate limiting
-      if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
-        setRateLimited(true);
+        // Success! Break out of the retry loop
+        break;
+      } catch (error) {
+        lastError = error;
+        console.error(`Error generating ideas (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
+        
+        // Check if the error is due to rate limiting
+        if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
+          setRateLimited(true);
+          // Don't retry rate limit errors
+          break;
+        }
+        
+        // Check if it's a timeout or network error that might be worth retrying
+        const isTimeoutOrNetworkError = error instanceof Error &&
+          (error.message.includes('timeout') ||
+           error.message.includes('network') ||
+           error.message.includes('504') ||
+           error.message.includes('502'));
+        
+        if (isTimeoutOrNetworkError && retryCount < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const waitTime = Math.pow(2, retryCount) * 1000;
+          console.log(`Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          retryCount++;
+        } else {
+          // Either not a retryable error or we've exhausted our retries
+          break;
+        }
+      }
+    }
+    
+    // Handle any errors after all retries are exhausted
+    if (lastError) {
+      if (lastError instanceof Error && lastError.message.includes('Rate limit exceeded')) {
         alert('Rate limit exceeded. Please try again later.');
       } else {
         alert("Failed to generate ideas. Please try again.");
       }
-    } finally {
-      // Always set generating to false when done, regardless of success or failure
-      setGenerating(false);
     }
+    
+    // Always set generating to false when done, regardless of success or failure
+    setGenerating(false);
   };
   
   const getFilteredTasks = useCallback((boardId: string) => {

@@ -115,11 +115,23 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     console.log(`POST request reCAPTCHA token present: ${recaptchaToken ? 'Yes' : 'No'}`);
     if (recaptchaToken) {
       console.log(`POST request token starts with: ${recaptchaToken.substring(0, 10)}...`);
+      
+      // Verify the reCAPTCHA token, but don't block on verification failure
+      try {
+        const verification = await verifyReCaptchaToken(recaptchaToken);
+        recaptchaVerified = verification.success;
+        console.log('reCAPTCHA verification result:', verification);
+      } catch (error) {
+        console.error('Error verifying reCAPTCHA token:', error);
+        // Continue anyway to prevent blocking users if reCAPTCHA fails
+        recaptchaVerified = true;
+        console.log('Continuing despite reCAPTCHA verification error');
+      }
+    } else {
+      // No token provided, but continue anyway
+      recaptchaVerified = true;
+      console.log('No reCAPTCHA token provided, continuing anyway');
     }
-    
-    // Skip reCAPTCHA verification for now to fix the 502 error
-    recaptchaVerified = true;
-    console.log('Skipping reCAPTCHA verification to fix 502 error');
     
     // Get API key from environment variable
     const apiKey = process.env.OPENAI_API_KEY;
@@ -132,9 +144,11 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
     
-    // Initialize OpenAI client
+    // Initialize OpenAI client with timeout
     const openai = new OpenAI({
-      apiKey: apiKey
+      apiKey: apiKey,
+      timeout: 30000, // 30 second timeout
+      maxRetries: 2   // Retry failed requests twice
     });
     
     // Check if this is a multipart form request (for audio transcription)
@@ -243,12 +257,23 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   } catch (error) {
     console.error("Error proxying request to OpenAI:", error);
     
+    // Log more detailed error information
+    console.error("Error details:", error);
+    
+    // Check if it's a timeout error
+    const isTimeout = error instanceof Error &&
+      (error.message.includes('timeout') || error.message.includes('ETIMEDOUT') || error.message.includes('ECONNABORTED'));
+    
+    // Check if it's an OpenAI API error
+    const isOpenAIError = error instanceof Error && error.message.includes('OpenAI');
+    
     return {
-      statusCode: 500,
+      statusCode: isTimeout ? 504 : 500, // Use 504 for timeout errors
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error"
+        error: isTimeout ? "Gateway Timeout" : "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+        type: isTimeout ? "timeout" : (isOpenAIError ? "openai_error" : "unknown")
       })
     };
   }
