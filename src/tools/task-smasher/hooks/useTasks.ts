@@ -643,13 +643,12 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   }, [history]);
 
   const startVoiceInput = async () => {
-    // Set generating state to true to show loading indicator
-    setGenerating(true);
+    // Don't show the global loading indicator for voice recording
+    // We'll use a separate indicator instead
     setNewTask('Initializing voice recording...');
     
     if (!audioAvailable) {
       alert('Microphone access is not available in this browser');
-      setGenerating(false);
       setIsListening(false);
       return;
     }
@@ -674,7 +673,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         audioChunksRef.current = [];
         
-        setNewTask('Processing audio with OpenAI Whisper...');
+        setNewTask('Processing audio with Whisper...');
         
         try {
           // Create form data to send to API
@@ -686,7 +685,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
           // Get reCAPTCHA token
           const recaptchaToken = await getReCaptchaToken('transcribe_audio');
           
-          // Send to our proxy endpoint
+          // Send to our proxy endpoint - don't show global loading indicator
           const response = await fetch('/.netlify/functions/openai-proxy', {
             method: 'POST',
             body: formData,
