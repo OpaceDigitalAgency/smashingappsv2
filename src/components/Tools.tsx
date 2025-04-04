@@ -31,7 +31,7 @@ const Tools: React.FC = () => {
       description: 'Get AI-generated recipe steps from any ingredients.',
       icon: ChefHat,
       color: 'from-blue-500 to-blue-600',
-      comingSoon: false
+      comingSoon: true
     },
     {
       id: 'idea-smasher',
@@ -39,7 +39,7 @@ const Tools: React.FC = () => {
       description: 'Turn vague thoughts into step-by-step action plans.',
       icon: Lightbulb,
       color: 'from-yellow-500 to-yellow-600',
-      comingSoon: false
+      comingSoon: true
     },
     {
       id: 'schedule-smasher',
