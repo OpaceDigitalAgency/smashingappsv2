@@ -86,33 +86,33 @@ function Task({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border ${
-        isGenerating 
-          ? 'border-indigo-300 shadow-md ring-1 ring-indigo-100' 
-          : 'border-gray-200/60 hover:border-gray-300/60'
-      } p-3 mb-3 transition-all duration-200 cursor-grab active:cursor-grabbing`}
+      className={`bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border ${
+        isGenerating
+          ? 'border-indigo-300 shadow-md ring-1 ring-indigo-100'
+          : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
+      } p-4 mb-3 transition-all duration-200 cursor-grab active:cursor-grabbing`}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-3">
         <button
           onClick={() => onToggleComplete(task.id, boardId)}
-          className={`flex-shrink-0 mt-0.5 w-5 h-5 ${
-            task.completed 
-              ? 'text-green-500 hover:text-green-600' 
-              : 'text-gray-300 hover:text-gray-400'
-          } transition-colors duration-200`}
+          className={`flex-shrink-0 mt-0.5 w-6 h-6 rounded-full ${
+            task.completed
+              ? 'text-green-500 bg-green-50 hover:bg-green-100'
+              : 'text-gray-300 bg-gray-50 hover:bg-gray-100'
+          } transition-all duration-200 flex items-center justify-center`}
         >
-          <CheckCircle2 className="w-full h-full" />
+          <CheckCircle2 className="w-5 h-5" />
         </button>
         
         <div className="flex-grow min-w-0">
           <div className="flex items-center gap-2">
             <button
               onClick={() => onToggleExpanded(task.id)}
-              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 flex-shrink-0"
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 flex-shrink-0 p-1 rounded-full hover:bg-gray-100"
             >
-              {task.expanded 
-                ? <ChevronDown className="w-5 h-5" /> 
-                : <ChevronRight className="w-5 h-5" />
+              {task.expanded
+                ? <ChevronDown className="w-4 h-4" />
+                : <ChevronRight className="w-4 h-4" />
               }
             </button>
             
@@ -131,7 +131,7 @@ function Task({
                 className={`text-base font-medium ${
                   task.completed
                     ? 'line-through text-gray-400'
-                    : 'text-gray-800 hover:text-gray-900'
+                    : 'text-gray-700 hover:text-gray-900'
                 } cursor-pointer transition-colors duration-200 truncate relative`}
                 onClick={() => startEditing(task.id, null, 'title', task.title)}
                 onMouseEnter={() => setShowTooltip(true)}
@@ -151,16 +151,16 @@ function Task({
             
             {task.feedback && renderRating()}
             
-            <div className="text-gray-400 ml-auto flex-shrink-0 cursor-grab">
+            <div className="text-gray-300 ml-auto flex-shrink-0 cursor-grab p-1 rounded-full hover:bg-gray-100 hover:text-gray-500">
               <GripVertical className="w-4 h-4" />
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 mt-2 text-xs overflow-hidden">
-            <div 
-              className={`flex items-center gap-1 rounded-full px-2 py-0.5 bg-gray-50/80 border border-gray-200/60 ${
-                isEditing && editing.field === 'time' ? '' : 'cursor-pointer hover:bg-gray-100/80'
-              } transition-colors duration-200 flex-shrink-0`} 
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-xs overflow-hidden">
+            <div
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 bg-gray-50 ${
+                isEditing && editing.field === 'time' ? '' : 'cursor-pointer hover:bg-gray-100'
+              } transition-colors duration-200 flex-shrink-0`}
               onClick={() => !isEditing && startEditing(task.id, null, 'time', task.estimatedTime.toString())}
               title="Time estimate"
             >
@@ -187,17 +187,17 @@ function Task({
               )}
             </div>
             
-            <button 
+            <button
               onClick={handlePriorityChange}
-              className={`px-2 py-0.5 rounded-full border text-xs font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer`}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`}
               title="Click to change priority"
             >
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
             </button>
             
-            <div className="flex ml-auto items-center gap-1.5 flex-shrink-0">
-              <button 
-                className="text-indigo-500 hover:text-indigo-700 transition-colors px-1.5 py-0.5 rounded hover:bg-indigo-50"
+            <div className="flex ml-auto items-center gap-2 flex-shrink-0">
+              <button
+                className="text-indigo-500 hover:text-indigo-700 transition-colors px-2.5 py-1 rounded-full hover:bg-indigo-50 font-medium"
                 onClick={() => onShowFeedback(task.id)}
               >
                 Rate
@@ -222,20 +222,16 @@ function Task({
               ) : (
                 <button
                   onClick={() => setShowContextInput(task.id)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors px-1.5 py-0.5 rounded hover:bg-gray-50"
+                  className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100"
                   title={task.context ? "Edit notes" : "Add notes"}
                 >
-                  {task.context ? (
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  ) : (
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  )}
+                  <MessageCircle className="w-3.5 h-3.5" />
                 </button>
               )}
               
               <button
                 onClick={() => handleDelete && handleDelete(task.id, boardId)}
-                className="text-red-400 hover:text-red-600 transition-colors rounded p-1 hover:bg-red-50"
+                className="text-red-400 hover:text-red-600 transition-colors rounded-full p-1.5 hover:bg-red-50"
                 title="Delete task"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -244,13 +240,13 @@ function Task({
           </div>
           
           {task.context && (
-            <div className="mt-3 text-xs text-gray-600 bg-gray-50/80 border border-gray-200/60 rounded-lg p-2">
+            <div className="mt-3 text-xs text-gray-600 bg-gray-50 rounded-lg p-3 shadow-sm">
               <span className="font-medium text-gray-700">Notes:</span> {task.context}
             </div>
           )}
           
           {task.subtasks.length > 0 && task.expanded && (
-            <div className="mt-3 space-y-0.5 border-l-2 border-gray-100 pl-1">
+            <div className="mt-4 space-y-1.5 border-l-2 border-indigo-100 pl-3">
               {task.subtasks.map((subtask) => (
                 <Subtask
                   key={subtask.id}
@@ -261,17 +257,17 @@ function Task({
                   editing={editing}
                   startEditing={startEditing}
                   handleEditSave={handleEditSave}
-                  onDeleteTask={handleDelete}
+                  onDeleteTask={handleDelete || (() => {})}
                   updateTaskPriority={updateTaskPriority}
                 />
               ))}
             </div>
           )}
           
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             <button
               onClick={() => onAddSubtask(task.id, boardId)}
-              className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 px-3 rounded-lg border border-gray-200/60 hover:border-gray-300/60 hover:bg-gray-50/80 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-800 py-1.5 px-3 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Subtask</span>
@@ -279,7 +275,7 @@ function Task({
             
             <button
               onClick={() => onRegenerateTask(task.id)}
-              className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 px-3 rounded-lg border border-gray-200/60 hover:border-gray-300/60 hover:bg-gray-50/80 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-800 py-1.5 px-3 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors shadow-sm"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Regenerate</span>
@@ -287,8 +283,8 @@ function Task({
             
             <button
               onClick={() => onGenerateSubtasks(task.id)}
-              className={`flex items-center justify-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 py-1.5 px-3 rounded-lg border border-indigo-200/60 hover:border-indigo-300/60 transition-colors ${
-                isGenerating ? 'bg-indigo-50/80 animate-pulse' : 'hover:bg-indigo-50/80'
+              className={`flex items-center justify-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 py-1.5 px-3 rounded-full shadow-sm transition-colors ${
+                isGenerating ? 'bg-indigo-50 animate-pulse' : 'bg-indigo-50 hover:bg-indigo-100'
               }`}
               disabled={isGenerating}
             >

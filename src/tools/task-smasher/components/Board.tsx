@@ -36,9 +36,9 @@ function Board({
   const handleDelete = onDelete || onDeleteTask;
   return (
     <div className={`flex-1 ${isDraggingOver === board.id ? 'scale-[1.02] transition-transform duration-200' : ''}`}>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4 bg-white rounded-lg p-3 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="text-gray-400 cursor-grab mr-1">
+          <div className="text-gray-300 cursor-grab mr-1 p-1 rounded-full hover:bg-gray-100 hover:text-gray-500">
             <GripVertical className="w-4 h-4" />
           </div>
           {editingBoardId === board.id ? (
@@ -49,27 +49,27 @@ function Board({
                 onChange={(e) => updateBoardTitle(board.id, e.target.value)}
                 onBlur={() => setEditingBoardId(null)}
                 onKeyDown={(e) => e.key === 'Enter' && setEditingBoardId(null)}
-                className="py-1 px-2 text-sm font-medium rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="py-1.5 px-3 text-sm font-medium rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
                 autoFocus
               />
             </div>
           ) : (
-            <h2 className="text-lg font-medium text-gray-800">{board.title}</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{board.title}</h2>
           )}
           <button
             onClick={() => setEditingBoardId(board.id)}
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
           >
             <Pencil className="w-4 h-4" />
           </button>
         </div>
-        <div className="text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+        <div className="text-sm font-medium px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 shadow-sm">
           {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
         </div>
       </div>
-      
       <DroppableBoard board={board}>
-        <SortableContext items={filteredTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <div className="bg-gray-50/50 backdrop-blur-sm rounded-lg p-4 min-h-[200px] shadow-inner">
+          <SortableContext items={filteredTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           {filteredTasks.map(task => (
             <Task
               key={task.id}
@@ -95,7 +95,8 @@ function Board({
               updateTaskPriority={updateTaskPriority}
             />
           ))}
-        </SortableContext>
+          </SortableContext>
+        </div>
       </DroppableBoard>
     </div>
   );

@@ -556,7 +556,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             <SortableContext items={boards.map(board => board.id)}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {boards.map(board => (
-                  <div id={board.id} key={board.id} className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4">
+                  <div id={board.id} key={board.id} className="bg-transparent">
                     <Board
                       board={board}
                       filteredTasks={getFilteredTasks(board.id)}
