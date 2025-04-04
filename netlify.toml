@@ -1,0 +1,39 @@
+# Unified site configuration
+[build]
+  base = "/"
+  command = "npm run build"
+  publish = "dist"
+
+# Environment configuration
+[context.production.environment]
+  NODE_ENV = "production"
+
+# SPA redirects for React Router - unified app structure
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Route all tool paths through the SPA
+[[redirects]]
+  from = "/tools/*"
+  to = "/index.html"
+  status = 200
+
+# API redirects for serverless functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# API redirects for TaskSmasher app
+[[redirects]]
+  from = "/tools/task-smasher/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Catch-all redirect for SPA - must be at the very bottom
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

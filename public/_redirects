@@ -1,0 +1,11 @@
+# Redirects for SmashingApps.ai unified application
+
+# SPA Redirects - let React Router handle all routing
+/                 /index.html            200
+/tools/*          /index.html            200
+
+# API Redirects
+/api/*            /.netlify/functions/:splat    200
+
+# Catch all fallback
+/*                /index.html            200
