@@ -93,15 +93,8 @@ const Tools: React.FC = () => {
                       className="inline-flex items-center text-primary hover:text-primary-dark font-medium"
                       onClick={(e) => {
                         if (tool.id === 'task-smasher') {
-                          e.preventDefault();
-                          // Add a loading class to the body
-                          document.body.classList.add('page-transition');
-                          // Store the destination URL
-                          const href = e.currentTarget.getAttribute('href');
-                          // Navigate after a short delay to allow transition to show
-                          setTimeout(() => {
-                            window.location.href = href || '/tools/task-smasher/';
-                          }, 300);
+                          // Direct navigation without transition
+                          window.location.href = '/tools/task-smasher/';
                         }
                       }}
                     >
@@ -117,14 +110,9 @@ const Tools: React.FC = () => {
                             className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-1 rounded-full transition-colors"
                             onClick={(e) => {
                               e.preventDefault();
-                              // Add a loading class to the body
-                              document.body.classList.add('page-transition');
-                              // Store the destination URL
+                              // Direct navigation without transition
                               const href = e.currentTarget.getAttribute('href');
-                              // Navigate after a short delay to allow transition to show
-                              setTimeout(() => {
-                                window.location.href = href || '/tools/task-smasher/';
-                              }, 300);
+                              window.location.href = href || '/tools/task-smasher/';
                             }}
                           >
                             {useCase.name}

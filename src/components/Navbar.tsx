@@ -81,6 +81,33 @@ const Navbar: React.FC = () => {
                         <a href="/tools/task-smasher/goal-planner/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
                           Goals
                         </a>
+                        <a href="/tools/task-smasher/recipe-steps/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Recipe
+                        </a>
+                        <a href="/tools/task-smasher/home-chores/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Chores
+                        </a>
+                        <a href="/tools/task-smasher/freelancer-projects/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Freelancer
+                        </a>
+                        <a href="/tools/task-smasher/trip-planner/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Trip
+                        </a>
+                        <a href="/tools/task-smasher/shopping-tasks/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Shopping
+                        </a>
+                        <a href="/tools/task-smasher/study-plan/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Study
+                        </a>
+                        <a href="/tools/task-smasher/event-planning/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Event
+                        </a>
+                        <a href="/tools/task-smasher/diy-projects/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          DIY
+                        </a>
+                        <a href="/tools/task-smasher/creative-projects/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                          Creative
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -163,7 +190,7 @@ const Navbar: React.FC = () => {
             </a>
             
             <div className="pl-3">
-              <span className="block text-xs text-gray-500 mb-1">Popular tasks:</span>
+              <span className="block text-xs text-gray-500 mb-1">Task types:</span>
               <div className="flex flex-wrap gap-1 mb-2">
                 <a href="/tools/task-smasher/marketing-tasks/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
                   Marketing
@@ -173,6 +200,33 @@ const Navbar: React.FC = () => {
                 </a>
                 <a href="/tools/task-smasher/goal-planner/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
                   Goals
+                </a>
+                <a href="/tools/task-smasher/recipe-steps/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Recipe
+                </a>
+                <a href="/tools/task-smasher/home-chores/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Chores
+                </a>
+                <a href="/tools/task-smasher/freelancer-projects/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Freelancer
+                </a>
+                <a href="/tools/task-smasher/trip-planner/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Trip
+                </a>
+                <a href="/tools/task-smasher/shopping-tasks/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Shopping
+                </a>
+                <a href="/tools/task-smasher/study-plan/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Study
+                </a>
+                <a href="/tools/task-smasher/event-planning/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Event
+                </a>
+                <a href="/tools/task-smasher/diy-projects/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  DIY
+                </a>
+                <a href="/tools/task-smasher/creative-projects/" className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full transition-colors">
+                  Creative
                 </a>
               </div>
             </div>
