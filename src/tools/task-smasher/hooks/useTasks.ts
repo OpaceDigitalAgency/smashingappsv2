@@ -1040,29 +1040,30 @@ Make sure to include all necessary ingredients with precise measurements before 
         
         // Use OpenAIService to make the request through the proxy
         // Create a prompt based on the selected use case
-        let systemPrompt = 'You are a helpful assistant that generates creative task ideas. Return a list of 5 task ideas, one per line, no numbers or bullets.';
-        let userPrompt = `Generate 5 task ideas for ${selectedUseCase || 'general productivity'}`;
+        // Use simpler prompts to avoid timeouts
+        let systemPrompt = 'You are a helpful assistant. Generate 5 short task ideas, one per line.';
+        let userPrompt = `Generate 5 simple task ideas for ${selectedUseCase || 'general productivity'}`;
       
-      // Customize prompts based on use case
-      if (selectedUseCase === 'recipe') {
-        systemPrompt = 'You are a culinary expert that creates detailed cooking recipes. For each recipe, include a title followed by a detailed ingredients list with precise measurements (e.g., 2 eggs, 1 cup flour, 2 tbsp butter) and step-by-step instructions.';
-        userPrompt = 'Generate 5 recipe ideas with specific ingredients (including exact measurements) and cooking steps. Format each recipe with a clear title, detailed ingredients list with measurements, and numbered steps.';
-      } else if (selectedUseCase === 'marketing') {
-        systemPrompt = 'You are a marketing strategist that creates actionable marketing project plans. Each plan should have clear objectives and implementation steps.';
-        userPrompt = 'Generate 5 marketing campaign ideas with specific objectives and implementation steps. Format each as a mini project plan with timeline, deliverables, and success metrics.';
-      } else if (selectedUseCase === 'goals') {
-        systemPrompt = 'You are a goal-setting and personal development expert. Create structured goal plans with measurable targets and action steps.';
-        userPrompt = 'Generate 5 goal-setting ideas with SMART criteria (Specific, Measurable, Achievable, Relevant, Time-bound). Include milestones and tracking methods for each goal.';
-      } else if (selectedUseCase === 'home') {
-        systemPrompt = 'You are a home organization and maintenance expert. Create detailed home chore and maintenance plans.';
-        userPrompt = 'Generate 5 home maintenance or organization tasks with specific steps, required materials, and estimated time to complete each task.';
-      } else if (selectedUseCase === 'travel') {
-        systemPrompt = 'You are a travel planning expert. Create detailed travel itineraries and planning checklists.';
-        userPrompt = 'Generate 5 travel planning tasks with specific destinations, activities, accommodation options, and preparation steps for each trip idea.';
-      } else if (selectedUseCase === 'study') {
-        systemPrompt = 'You are an educational expert. Create detailed study plans and learning strategies.';
-        userPrompt = 'Generate 5 study plan ideas with specific subjects, learning objectives, study techniques, and resource recommendations for each plan.';
-      }
+        // Simplified prompts for each use case
+        if (selectedUseCase === 'recipe') {
+          systemPrompt = 'You are a culinary expert. Generate 5 recipe titles.';
+          userPrompt = 'Generate 5 recipe titles, one per line.';
+        } else if (selectedUseCase === 'marketing') {
+          systemPrompt = 'You are a marketing strategist. Generate 5 marketing task titles.';
+          userPrompt = 'Generate 5 marketing task titles, one per line.';
+        } else if (selectedUseCase === 'goals') {
+          systemPrompt = 'You are a goal-setting expert. Generate 5 goal titles.';
+          userPrompt = 'Generate 5 goal titles, one per line.';
+        } else if (selectedUseCase === 'home') {
+          systemPrompt = 'You are a home organization expert. Generate 5 home task titles.';
+          userPrompt = 'Generate 5 home task titles, one per line.';
+        } else if (selectedUseCase === 'travel') {
+          systemPrompt = 'You are a travel planning expert. Generate 5 travel task titles.';
+          userPrompt = 'Generate 5 travel task titles, one per line.';
+        } else if (selectedUseCase === 'study') {
+          systemPrompt = 'You are an educational expert. Generate 5 study task titles.';
+          userPrompt = 'Generate 5 study task titles, one per line.';
+        }
       
       console.log("Sending request to OpenAI with model:", selectedModel);
       
@@ -1077,7 +1078,9 @@ Make sure to include all necessary ingredients with precise measurements before 
             role: 'user',
             content: userPrompt
           }
-        ]
+        ],
+        max_tokens: 100, // Limit token count for faster response
+        temperature: 0.7  // Add some randomness
       }, recaptchaToken);
       
       console.log("Received response from OpenAI:", data);
