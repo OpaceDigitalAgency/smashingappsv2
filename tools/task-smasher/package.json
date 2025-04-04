@@ -21,7 +21,6 @@
     "@netlify/blobs": "^8.1.2",
     "@netlify/functions": "^3.0.4",
     "axios": "^1.8.4",
-    "busboy": "^1.6.0",
     "crypto-js": "^4.2.0",
     "lucide-react": "^0.344.0",
     "openai": "^4.28.0",

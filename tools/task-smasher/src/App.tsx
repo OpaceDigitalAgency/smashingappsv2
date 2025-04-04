@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -21,89 +20,6 @@ import Task from './components/Task';
 import Sidebar from './components/Sidebar';
 import TaskMismatchPopup from './components/TaskMismatchPopup';
 import OpenAIExample from './components/OpenAIExample';
-
-// Custom Navbar for TaskSmasher
-const TaskSmasherNavbar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-24">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <img
-                src="/smashingapps-ai.png"
-                alt="SmashingApps.ai Logo"
-                className="h-20 w-auto"
-              />
-            </Link>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-4">
-            <Link to="/tools/task-smasher/" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-              Task Smasher
-            </Link>
-            <Link to="/#tools" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-              More Tools
-            </Link>
-            <Link to="/#why" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-              Why SmashingApps
-            </Link>
-            <Link to="/#contact" className="btn-primary !py-2 !px-4 text-sm">
-              Get Started
-            </Link>
-          </div>
-          
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-primary focus:outline-none"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white py-2 px-4 shadow-inner">
-          <Link
-            to="/tools/task-smasher/"
-            className="block text-gray-700 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
-            onClick={() => setIsOpen(false)}
-          >
-            Task Smasher
-          </Link>
-          <Link
-            to="/#tools"
-            className="block text-gray-700 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
-            onClick={() => setIsOpen(false)}
-          >
-            More Tools
-          </Link>
-          <Link
-            to="/#why"
-            className="block text-gray-700 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
-            onClick={() => setIsOpen(false)}
-          >
-            Why SmashingApps
-          </Link>
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <Link
-              to="/#contact"
-              className="block btn-primary !py-2 !px-4 text-center"
-              onClick={() => setIsOpen(false)}
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-};
 
 interface AppProps {
   initialUseCase?: string;
@@ -297,34 +213,9 @@ function App({ initialUseCase }: AppProps) {
   }, []);
 
   return (
-    <div className="min-h-screen w-full flex flex-col fade-in-app">
-      {/* Add the Navbar at the top */}
-      <TaskSmasherNavbar />
+    <div className="min-h-screen w-full flex fade-in-app">
+      <Sidebar selectedUseCase={selectedUseCase} onSelectUseCase={handleSelectUseCase} />
       
-      {/* Global Loading Indicator for OpenAI API calls */}
-      {generating && !isListening && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto flex flex-col items-center">
-            <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Processing...</h3>
-            <p className="text-gray-600 text-center">
-              Generating content with {selectedModel}. This may take a few seconds.
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Voice Recording Indicator */}
-      {isListening && (
-        <div className="fixed top-28 right-4 bg-white rounded-lg shadow-lg p-4 z-50 flex items-center">
-          <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse mr-2"></div>
-          <span className="text-gray-800">Recording... Click mic to stop</span>
-        </div>
-      )}
-      
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar selectedUseCase={selectedUseCase} onSelectUseCase={handleSelectUseCase} />
-        
       <div className="flex-1 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 overflow-auto transition-colors duration-500" 
            style={{
              background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`
@@ -756,7 +647,6 @@ function App({ initialUseCase }: AppProps) {
             setTaskMismatch({...taskMismatch, showing: false});
           }}
         />
-      </div>
       </div>
     </div>
   );
