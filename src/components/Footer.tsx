@@ -1,9 +1,9 @@
 import React from 'react';
-import { Github, Mail, Twitter } from 'lucide-react';
+import { Github, Mail, Twitter, MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer id="contact" className="bg-gray-900 text-white py-12">
+    <footer id="contact" className="bg-gray-900 text-white py-16">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
@@ -14,22 +14,29 @@ const Footer: React.FC = () => {
                 className="h-20 w-auto"
               />
             </a>
-            <p className="mt-4 text-gray-400 max-w-md">
+            <p className="mt-4 text-gray-300 max-w-md">
               AI-powered micro-apps to help you smash through tasks with smart, fun, and focused tools.
             </p>
-            <p className="mt-4 text-gray-400">
-              "One idea in. Smart tasks out."
+            <p className="mt-4 text-gray-300">
+              ⚡️ Built with brainpower and bad jokes by Opace Ltd
             </p>
             <div className="mt-6 flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://twitter.com/opaceltd" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Twitter className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://github.com/OpaceDigitalAgency" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Github className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="mailto:hello@opace.digital" className="text-gray-400 hover:text-white transition-colors">
                 <Mail className="h-6 w-6" />
               </a>
+            </div>
+            <div className="mt-4 flex items-center text-gray-400">
+              <MapPin className="h-4 w-4 mr-2" />
+              <span>Birmingham HQ</span>
+              <span className="mx-2">•</span>
+              <Mail className="h-4 w-4 mr-2" />
+              <a href="mailto:hello@opace.digital" className="hover:text-white transition-colors">hello@opace.digital</a>
             </div>
           </div>
           
@@ -56,7 +63,7 @@ const Footer: React.FC = () => {
         
         <div className="mt-12 pt-8 border-t border-gray-800">
           <p className="text-center text-gray-400">
-            "Made by humans. Powered by AI." &copy; {new Date().getFullYear()} SmashingApps.ai
+            © {new Date().getFullYear()} SmashingApps.ai • Operated by Opace Ltd
           </p>
         </div>
       </div>

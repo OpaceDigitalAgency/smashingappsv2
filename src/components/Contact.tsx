@@ -3,54 +3,69 @@ import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Contact: React.FC = () => {
   return (
-    <section id="contact-page" className="py-16 bg-white">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+    <section id="contact-page" className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            Get in <span className="text-secondary">Touch</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            Get in Touch with the <span className="text-indigo-600">SmashingApps</span> Team
           </h2>
           <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-            Have questions about our AI tools? Want to provide feedback? We'd love to hear from you!
+            We're here to help with questions, feedback, or partnership ideas. SmashingApps.ai is proudly built and operated by Opace Ltd — a creative team based in Birmingham, UK.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 md:grid-cols-2">
-          <div className="bg-gray-50 p-8 rounded-xl shadow-sm">
+        <div className="mt-16 grid gap-10 md:grid-cols-2">
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h3>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-start">
-                <Mail className="w-6 h-6 text-primary mt-1 mr-4" />
-                <div>
-                  <h4 className="text-lg font-medium text-gray-900">Email</h4>
-                  <p className="text-gray-600">contact@smashingapps.ai</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <Phone className="w-6 h-6 text-primary mt-1 mr-4" />
-                <div>
-                  <h4 className="text-lg font-medium text-gray-900">Phone</h4>
-                  <p className="text-gray-600">+1 (555) 123-4567</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <MapPin className="w-6 h-6 text-primary mt-1 mr-4" />
+                <MapPin className="w-6 h-6 text-indigo-500 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-gray-900">Address</h4>
                   <p className="text-gray-600">
-                    123 AI Innovation Street<br />
-                    Tech Valley, CA 94043<br />
-                    United States
+                    Opace Ltd<br />
+                    Level 1, The Mailbox, Spaces<br />
+                    3 Wharfside Street, Birmingham<br />
+                    B1 1RD, United Kingdom
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <Mail className="w-6 h-6 text-indigo-500 mt-1 mr-4" />
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900">Email</h4>
+                  <p className="text-gray-600">
+                    <a href="mailto:hello@opace.digital" className="hover:text-indigo-600 transition-colors">
+                      hello@opace.digital
+                    </a>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="w-6 h-6 text-indigo-500 mt-1 mr-4 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"></path>
+                    <path d="M12 8v4l3 3"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900">Website</h4>
+                  <p className="text-gray-600">
+                    <a href="https://opace.digital" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors">
+                      opace.digital
+                    </a>
                   </p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Send a Message</h3>
+            <p className="text-gray-600 mb-6">Got a burning idea or need help smashing a task? Drop us a line — we'll get back faster than a tabby on a Zoom call.</p>
             
             <form className="space-y-4">
               <div>
@@ -103,7 +118,7 @@ const Contact: React.FC = () => {
               
               <button
                 type="submit"
-                className="btn-primary py-2 px-6 rounded-md"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
               >
                 Send Message
               </button>
