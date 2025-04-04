@@ -669,6 +669,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
               };
             };
             isFinal?: boolean;
+            length: number;
           };
         }
         
@@ -804,38 +805,31 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         setGenerating(false);
         return;
       }
-          }
-          
-          // Fallback message if SpeechRecognition is not available
-          setNewTask('Voice transcription is not available in this browser');
-          setIsListening(false);
-          
-          /* Original OpenAI Whisper implementation (requires direct API access)
-          // This feature is disabled when using the proxy
-          
-          if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-          }
-
-          const data = await response.json();
-          
-          if (data.text) {
-            setNewTask(data.text);
-            // Auto submit after a short delay
-            setTimeout(() => {
-              if (data.text.trim()) {
-                const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
-                handleAddTask(formEvent);
-              }
-            }, 1000);
-          }
-          */
-        } catch (error) {
-          console.error('Error processing audio:', error);
-          setNewTask(error instanceof Error ? error.message : 'Error processing audio. Please try again.');
+      
+      // Fall back to MediaRecorder approach
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm'
+      });
+      
+      audioChunksRef.current = [];
+      mediaRecorderRef.current = mediaRecorder;
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
         }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        audioChunksRef.current = [];
         
+        setNewTask('Processing audio...');
+        setNewTask('Voice transcription is currently disabled. Please try typing instead.');
         setIsListening(false);
+        setGenerating(false);
+        
         stream.getTracks().forEach(track => track.stop());
       };
       
