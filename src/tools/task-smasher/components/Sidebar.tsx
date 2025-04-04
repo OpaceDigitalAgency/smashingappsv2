@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Calendar, Target, MessageSquare, ChefHat, Home, Briefcase, Plane, ShoppingCart, GraduationCap, PartyPopper, Wrench, Palette } from 'lucide-react';
+import { Calendar, Target, MessageSquare, ChefHat, Home, Briefcase, Plane, ShoppingCart, GraduationCap, PartyPopper, Wrench, Palette, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { useCaseDefinitions } from '../utils/useCaseDefinitions';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -26,8 +26,28 @@ const useCases = [
 function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
   const [smashPosition, setSmashPosition] = useState({ top: 0, left: 0 });
   const [showSmashEffect, setShowSmashEffect] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  
+  // Check if mobile and auto-collapse on mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsCollapsed(mobile); // Auto-collapse on mobile
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
   
   // Determine the current use case from the URL path
   useEffect(() => {
@@ -88,17 +108,60 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
     ? useCaseDefinitions[selectedUseCase]?.label || 'Use Cases'
     : 'Use Cases';
 
+  // Toggle sidebar collapse state
+  const toggleCollapse = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col gap-2 shadow-sm z-10 transition-colors duration-300 ease-in-out relative overflow-hidden"
+      className={`${isCollapsed ? 'w-16 md:w-20' : 'w-64 md:w-72'}
+        bg-white border-r border-gray-200 flex flex-col gap-2
+        shadow-lg z-10 transition-all duration-300 ease-in-out
+        relative overflow-hidden ${isMobile && isCollapsed ? '-ml-16 md:-ml-20' : 'ml-0'}`}
+      style={{
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+      }}
     >
-      <h2 className="text-lg font-semibold text-gray-900 mb-2">
-        Use Case Categories
-      </h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Select a category below to create AI-generated tasks specific to that domain
-      </p>
+      {/* Toggle button - desktop version */}
+      <button
+        onClick={toggleCollapse}
+        className="absolute top-4 right-3 p-2 rounded-full bg-indigo-50 hover:bg-indigo-100
+          text-indigo-600 transition-all duration-200 z-20 shadow-md hidden md:flex items-center justify-center"
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+      </button>
+      
+      {/* Mobile menu button - floating button for mobile */}
+      <button
+        onClick={toggleCollapse}
+        className={`fixed bottom-6 right-6 p-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600
+          text-white shadow-xl md:hidden ${isCollapsed ? 'scale-100' : 'scale-90 opacity-90'}
+          transition-all duration-300 z-50 hover:shadow-2xl hover:scale-105`}
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        style={{
+          boxShadow: '0 4px 20px rgba(79, 70, 229, 0.4)'
+        }}
+      >
+        {isCollapsed ? <Menu className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+      </button>
+      <div className={`p-4 ${isCollapsed ? 'text-center' : ''}`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''} mb-4`}>
+          <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+            <Target className="w-5 h-5 text-white" />
+          </div>
+          <h2 className={`text-lg font-bold text-gray-900 ml-3 ${isCollapsed ? 'hidden' : ''}`}>
+            Use Case Categories
+          </h2>
+        </div>
+        <p className={`text-sm text-gray-600 mb-4 ${isCollapsed ? 'hidden' : ''}`}>
+          Select a category below to create AI-generated tasks specific to that domain
+        </p>
+      </div>
       
       {/* Active smash effect (appears on click) */}
       {showSmashEffect && (
@@ -118,7 +181,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
         </div>
       )}
       
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 px-2 overflow-y-auto custom-scrollbar">
         {useCases.map(useCase => {
           const Icon = useCase.icon;
           const isSelected = selectedUseCase === useCase.id;
@@ -128,24 +191,28 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
               key={useCase.id}
               to={`/tools/task-smasher/${useCase.label.toLowerCase().replace(/\s+/g, '-')}/`}
               onClick={(e) => handleUseCaseClick(useCase.id, e)}
-              className={`flex flex-col items-start gap-1 px-3 py-2 rounded-lg text-left transition-all duration-300 relative no-underline
+              className={`flex flex-col items-${isCollapsed ? 'center' : 'start'} gap-1 px-3 py-3 rounded-xl text-left transition-all duration-300 relative no-underline
                 ${isSelected
-                  ? 'bg-indigo-50 text-indigo-700 shadow-sm scale-[1.02] font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'}`}
+                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 shadow-md scale-[1.02] font-medium'
+                  : 'text-gray-700 hover:bg-gray-50 hover:shadow-sm'}`}
               style={{
                 backgroundColor: isSelected ? `var(--${useCase.id}-light)` : '',
-                color: isSelected ? `var(--${useCase.id}-primary)` : ''
+                color: isSelected ? `var(--${useCase.id}-primary)` : '',
+                boxShadow: isSelected ? '0 4px 12px rgba(79, 70, 229, 0.15)' : ''
               }}
+              title={useCase.label}
             >
-              <div className="flex items-center gap-3 w-full">
-                <Icon
-                  className={`w-5 h-5 transition-colors duration-300 ${isSelected ? 'text-indigo-600' : ''}`}
-                  style={{ color: isSelected ? `var(--${useCase.id}-primary)` : '' }}
-                />
-                <span className="font-medium">{useCase.label}</span>
+              <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''} gap-3 w-full`}>
+                <div className={`flex items-center justify-center ${isSelected ? 'bg-white' : 'bg-gray-100'} p-2 rounded-lg transition-colors duration-300`}>
+                  <Icon
+                    className={`w-5 h-5 transition-colors duration-300 ${isSelected ? 'text-indigo-600' : 'text-gray-600'}`}
+                    style={{ color: isSelected ? `var(--${useCase.id}-primary)` : '' }}
+                  />
+                </div>
+                {!isCollapsed && <span className={`font-medium ${isSelected ? 'text-indigo-700' : 'text-gray-700'}`}>{useCase.label}</span>}
               </div>
-              {isSelected && (
-                <p className="text-xs text-gray-600 mt-1 pl-8">
+              {isSelected && !isCollapsed && (
+                <p className="text-xs text-gray-500 mt-2 pl-10 pr-2 bg-white bg-opacity-50 py-1 rounded-md">
                   {useCaseDefinitions[useCase.id]?.description || ''}
                 </p>
               )}
@@ -154,9 +221,10 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
         })}
       </div>
       
-      <div className="mt-auto pt-4 border-t border-gray-100 text-xs text-center text-gray-400">
-        <span className="block mb-1 font-medium">TaskSmasher</span>
-        <span>Click to smash your tasks!</span>
+      <div className={`mt-auto pt-4 border-t border-gray-100 text-xs text-center ${isCollapsed ? 'px-2' : 'px-4'} pb-4`}>
+        {!isCollapsed && <span className="block mb-1 font-medium text-indigo-600">TaskSmasher</span>}
+        {!isCollapsed && <span className="text-gray-500">Click to smash your tasks!</span>}
+        {isCollapsed && <span className="block text-indigo-600">TS</span>}
       </div>
     </div>
   );
