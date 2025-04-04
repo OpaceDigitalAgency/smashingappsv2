@@ -33,7 +33,7 @@ const TaskSmasherNavbar: React.FC = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img
-                src="/smashingapps-ai.png"
+                src="/tools/task-smasher/assets/AITaskSmasher-small.png"
                 alt="SmashingApps.ai Logo"
                 className="h-20 w-auto"
               />
