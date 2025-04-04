@@ -7,7 +7,7 @@ import DroppableBoard from './DroppableBoard';
 
 function Board({
   board,
-  tasks,
+  filteredTasks,
   editingBoardId,
   setEditingBoardId,
   updateBoardTitle,
@@ -64,13 +64,13 @@ function Board({
           </button>
         </div>
         <div className="text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-          {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
         </div>
       </div>
       
       <DroppableBoard board={board}>
-        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-          {tasks.map(task => (
+        <SortableContext items={filteredTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+          {filteredTasks.map(task => (
             <Task
               key={task.id}
               task={task}

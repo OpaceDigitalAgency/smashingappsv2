@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import OpenAIService from '../utils/openaiService';
 
-const OpenAIExample: React.FC = () => {
+interface OpenAIExampleProps {
+  onClose: () => void;
+}
+
+const OpenAIExample: React.FC<OpenAIExampleProps> = ({ onClose }) => {
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
@@ -70,71 +74,81 @@ const OpenAIExample: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">OpenAI API Example</h2>
-      
-      {/* Rate limit information */}
-      {rateLimit && (
-        <div className="mb-4 p-3 bg-gray-100 rounded">
-          <h3 className="font-semibold">Rate Limit Status:</h3>
-          <p>Limit: {rateLimit.limit} requests per day</p>
-          <p>Remaining: {rateLimit.remaining} requests</p>
-          <p>Resets: {rateLimit.reset.toLocaleString()}</p>
-        </div>
-      )}
-      
-      {/* Error message */}
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-      
-      {/* Input form */}
-      <form onSubmit={handleSubmit} className="mb-4">
-        <div className="mb-4">
-          <label htmlFor="prompt" className="block mb-2 font-medium">
-            Enter your prompt:
-          </label>
-          <textarea
-            id="prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={4}
-            placeholder="Type your prompt here..."
-          />
-        </div>
-        
-        <div className="flex space-x-2">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="max-w-2xl w-full mx-auto p-6 bg-white rounded-lg shadow-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">OpenAI API Example</h2>
           <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
           >
-            {loading ? 'Sending...' : 'Send to OpenAI'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={checkRateLimit}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
-          >
-            Check Rate Limit
+            ✕
           </button>
         </div>
-      </form>
       
-      {/* Response */}
-      {response && (
-        <div className="mt-6">
-          <h3 className="font-semibold mb-2">Response:</h3>
-          <div className="p-3 bg-gray-100 rounded whitespace-pre-wrap">
-            {response}
+        {/* Rate limit information */}
+        {rateLimit && (
+          <div className="mb-4 p-3 bg-gray-100 rounded">
+            <h3 className="font-semibold">Rate Limit Status:</h3>
+            <p>Limit: {rateLimit.limit} requests per day</p>
+            <p>Remaining: {rateLimit.remaining} requests</p>
+            <p>Resets: {rateLimit.reset.toLocaleString()}</p>
           </div>
-        </div>
-      )}
+        )}
+        
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        
+        {/* Input form */}
+        <form onSubmit={handleSubmit} className="mb-4">
+          <div className="mb-4">
+            <label htmlFor="prompt" className="block mb-2 font-medium">
+              Enter your prompt:
+            </label>
+            <textarea
+              id="prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={4}
+              placeholder="Type your prompt here..."
+            />
+          </div>
+          
+          <div className="flex space-x-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {loading ? 'Sending...' : 'Send to OpenAI'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={checkRateLimit}
+              disabled={loading}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+            >
+              Check Rate Limit
+            </button>
+          </div>
+        </form>
+        
+        {/* Response */}
+        {response && (
+          <div className="mt-6">
+            <h3 className="font-semibold mb-2">Response:</h3>
+            <div className="p-3 bg-gray-100 rounded whitespace-pre-wrap">
+              {response}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

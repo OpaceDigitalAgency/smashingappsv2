@@ -127,7 +127,7 @@ export interface SubtaskProps {
 
 export interface BoardComponentProps {
   board: Board;
-  tasks: Task[];
+  filteredTasks: Task[];
   editingBoardId: string | null;
   setEditingBoardId: React.Dispatch<React.SetStateAction<string | null>>;
   updateBoardTitle: (boardId: string, newTitle: string) => void;
