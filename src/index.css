@@ -249,6 +249,23 @@ div[class*="flex-1"][class*="flex"],
   align-items: flex-start !important; /* optional - aligns items to the top */
 }
 
+/* Pulsing animation for sidebar toggle */
+@keyframes toggle-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+
+.sidebar-toggle-pulse {
+  animation: toggle-pulse 2s infinite;
+}
+
 /* Custom scrollbar for sidebar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

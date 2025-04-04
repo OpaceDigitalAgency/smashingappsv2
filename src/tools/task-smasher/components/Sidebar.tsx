@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Calendar, Target, MessageSquare, ChefHat, Home, Briefcase, Plane, ShoppingCart, GraduationCap, PartyPopper, Wrench, Palette, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { Calendar, Target, MessageSquare, ChefHat, Home, Briefcase, Plane, ShoppingCart, GraduationCap, PartyPopper, Wrench, Palette, ChevronLeft, ChevronRight, Menu, PanelLeft, PanelRight, SidebarClose, SidebarOpen, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useCaseDefinitions } from '../utils/useCaseDefinitions';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -36,7 +36,12 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      setIsCollapsed(mobile); // Auto-collapse on mobile
+      // Set initial collapsed state based on mobile
+      if (mobile) {
+        setIsCollapsed(true);
+      } else {
+        setIsCollapsed(false);
+      }
     };
     
     // Initial check
@@ -112,6 +117,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
   const toggleCollapse = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log("Toggle sidebar collapse state", isCollapsed, "->", !isCollapsed);
     setIsCollapsed(!isCollapsed);
   };
 
@@ -121,7 +127,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
       className={`${isCollapsed ? 'w-16 md:w-20' : 'w-64 md:w-72'}
         bg-white border-r border-gray-200 flex flex-col gap-2
         shadow-lg z-10 transition-all duration-300 ease-in-out
-        relative overflow-hidden ${isMobile && isCollapsed ? '-ml-16 md:-ml-20' : 'ml-0'}`}
+        relative overflow-hidden`}
       style={{
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
       }}
@@ -129,11 +135,29 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
       {/* Toggle button - desktop version */}
       <button
         onClick={toggleCollapse}
-        className="absolute top-4 right-3 p-2 rounded-full bg-indigo-50 hover:bg-indigo-100
-          text-indigo-600 transition-all duration-200 z-20 shadow-md hidden md:flex items-center justify-center"
+        className="absolute top-4 right-3 p-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600
+          text-white transition-all duration-200 z-20 shadow-lg hidden md:flex items-center justify-center
+          hover:shadow-xl hover:scale-105 sidebar-toggle-pulse"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        style={{
+          boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+        }}
       >
-        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        {isCollapsed ? <SidebarOpen className="w-5 h-5" /> : <SidebarClose className="w-5 h-5" />}
+      </button>
+
+      {/* Toggle button - visible on all screens */}
+      <button
+        onClick={toggleCollapse}
+        className="absolute top-4 right-3 p-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600
+          text-white transition-all duration-200 z-20 shadow-lg flex md:hidden items-center justify-center
+          hover:shadow-xl hover:scale-105 sidebar-toggle-pulse"
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        style={{
+          boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+        }}
+      >
+        {isCollapsed ? <SidebarOpen className="w-5 h-5" /> : <SidebarClose className="w-5 h-5" />}
       </button>
       
       {/* Mobile menu button - floating button for mobile */}
@@ -141,13 +165,20 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
         onClick={toggleCollapse}
         className={`fixed bottom-6 right-6 p-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600
           text-white shadow-xl md:hidden ${isCollapsed ? 'scale-100' : 'scale-90 opacity-90'}
-          transition-all duration-300 z-50 hover:shadow-2xl hover:scale-105`}
+          transition-all duration-300 z-50 hover:shadow-2xl hover:scale-105 sidebar-toggle-pulse`}
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         style={{
-          boxShadow: '0 4px 20px rgba(79, 70, 229, 0.4)'
+          boxShadow: '0 4px 20px rgba(79, 70, 229, 0.6)'
         }}
       >
-        {isCollapsed ? <Menu className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+        {isCollapsed ?
+          <div className="relative">
+            <PanelLeft className="w-6 h-6" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+          </div>
+          :
+          <PanelRight className="w-6 h-6" />
+        }
       </button>
       <div className={`p-4 ${isCollapsed ? 'text-center' : ''}`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''} mb-4`}>
