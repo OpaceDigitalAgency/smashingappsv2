@@ -465,7 +465,6 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 </div>
               </div>
             </div>
-          </SemanticSection>
             
             <div className="flex flex-wrap items-center gap-4 mt-4">
               {/* Filters Button */}
