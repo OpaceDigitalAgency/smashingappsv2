@@ -1,0 +1,8 @@
+{
+  "name": "netlify-plugin-seo-enhancer",
+  "version": "1.0.0",
+  "description": "A Netlify build plugin that enhances SEO by adding meta tags to all routes",
+  "main": "index.js",
+  "author": "SmashingApps.ai",
+  "license": "MIT"
+}

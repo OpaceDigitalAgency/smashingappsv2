@@ -16,7 +16,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Base URL for development server
-const DEV_SERVER_URL = 'http://localhost:5173';
+// During Netlify build, we'll use a local server
+const DEV_SERVER_URL = process.env.NETLIFY ? 'http://localhost:8888' : 'http://localhost:5173';
 
 // Routes to prerender
 const ROUTES_TO_PRERENDER = [
@@ -65,11 +66,61 @@ async function prerenderRoute(route, browser) {
     waitUntil: 'networkidle0', // Wait until network is idle (no more than 2 connections for at least 500ms)
   });
   
-  // Wait for any additional content to load (adjust as needed)
+  // Wait for React to fully render and SEO components to update meta tags
+  // First wait for the root element to be populated
+  await page.waitForFunction(() => {
+    return document.getElementById('root') &&
+           document.getElementById('root').children.length > 0;
+  }, { timeout: 10000 });
+  
+  // Then wait a bit more to ensure all async operations complete
   await page.waitForTimeout(2000);
   
+  // Get the meta information from our metaConfig
+  const routePath = route.endsWith('/') || route === '/' ? route : `${route}/`;
+  const metaConfigJs = await page.evaluate(() => {
+    // This will run in the browser context
+    return window.__META_CONFIG__ || {};
+  });
+  
   // Get the HTML content
-  const html = await page.content();
+  let html = await page.content();
+  
+  // If we couldn't get the meta config from the window object,
+  // we'll need to manually inject the meta tags based on the route
+  if (!metaConfigJs[routePath]) {
+    // Import the meta config directly
+    const metaConfigPath = path.resolve(__dirname, '../src/utils/metaConfig.ts');
+    const metaConfigContent = fs.readFileSync(metaConfigPath, 'utf8');
+    
+    // Extract the route-specific meta config using regex
+    const routePattern = new RegExp(`'${routePath}':\\s*{([^}]+)}`, 's');
+    const match = metaConfigContent.match(routePattern);
+    
+    if (match) {
+      // Basic meta tags to inject if we can't get them from the browser
+      const title = match[1].match(/title:\s*['"]([^'"]+)['"]/)?.[1] || 'SmashingApps.ai';
+      const description = match[1].match(/description:\s*['"]([^'"]+)['"]/)?.[1] || '';
+      const canonical = match[1].match(/canonical:\s*['"]([^'"]+)['"]/)?.[1] || `https://smashingapps.ai${route}`;
+      
+      // Replace the title tag
+      html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
+      
+      // Replace or add meta description
+      if (html.includes('<meta name="description"')) {
+        html = html.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${description}">`);
+      } else {
+        html = html.replace('</head>', `  <meta name="description" content="${description}">\n  </head>`);
+      }
+      
+      // Replace or add canonical link
+      if (html.includes('<link rel="canonical"')) {
+        html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${canonical}">`);
+      } else {
+        html = html.replace('</head>', `  <link rel="canonical" href="${canonical}">\n  </head>`);
+      }
+    }
+  }
   
   // Create the directory structure for the route
   const outputDir = path.resolve(__dirname, '../dist', route.substring(1));
@@ -90,9 +141,11 @@ async function prerenderRoute(route, browser) {
 async function prerenderRoutes() {
   console.log('Starting prerendering process...');
   
-  // Launch Puppeteer
+  // Launch Puppeteer with appropriate options for Netlify environment
   const browser = await puppeteer.launch({
     headless: 'new', // Use the new headless mode
+    args: process.env.NETLIFY ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
+    executablePath: process.env.NETLIFY ? '/usr/bin/chromium-browser' : undefined,
   });
   
   try {
@@ -109,6 +162,31 @@ async function prerenderRoutes() {
     await browser.close();
   }
 }
-
 // Run the prerendering process
+// First, expose the meta config to the window object
+// Create a small script to inject into the page
+const injectScript = `
+// Create a script element to expose metaConfig
+const script = document.createElement('script');
+script.textContent = \`
+  window.__META_CONFIG__ = ${JSON.stringify(require('../src/utils/metaConfig.js').default)};
+\`;
+document.head.appendChild(script);
+`;
+
+// Start a local server if we're in the Netlify environment
+if (process.env.NETLIFY) {
+  const { exec } = require('child_process');
+  const server = exec('npx serve -s dist -l 8888');
+  
+  // Give the server time to start
+  setTimeout(() => {
+    prerenderRoutes().then(() => {
+      // Kill the server when done
+      server.kill();
+    });
+  }, 3000);
+} else {
+  prerenderRoutes();
+}
 prerenderRoutes();

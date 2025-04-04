@@ -9,8 +9,9 @@
     "generate-seo": "node scripts/generate-seo-files.js",
     "generate-og": "node scripts/generate-og-images.js",
     "generate-favicons": "node scripts/generate-favicons.js",
+    "inject-meta": "node scripts/inject-meta-tags.js",
     "prerender": "vite preview --port 5173 & node scripts/prerender-routes.js && pkill -f 'vite preview'",
-    "build:seo": "npm run build && npm run generate-og && npm run generate-favicons && npm run prerender",
+    "build:seo": "npm run build && npm run generate-og && npm run generate-favicons && npm run inject-meta && npm run prerender",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -35,7 +36,8 @@
     "vite": "^5.4.2",
     "xlsx": "^0.18.5",
     "puppeteer": "^22.0.0",
-    "sharp": "^0.33.2"
+    "sharp": "^0.33.2",
+    "serve": "^14.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

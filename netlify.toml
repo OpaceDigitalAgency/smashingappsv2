@@ -1,12 +1,21 @@
 # Unified site configuration
 [build]
   base = "/"
-  command = "npm run build"
+  command = "npm run build:seo"
   publish = "dist"
 
 # Environment configuration
 [context.production.environment]
   NODE_ENV = "production"
+
+# Build plugins
+[[plugins]]
+  package = "./netlify/plugins/seo-plugin"
+
+# Function configuration
+[functions]
+  # Set a reasonable timeout for functions
+  timeout = 15
 
 # SPA redirects for React Router - unified app structure
 [[redirects]]

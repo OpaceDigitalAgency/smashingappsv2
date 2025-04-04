@@ -1,0 +1,51 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Roo kick-start instructions: \
+\
+SmashingApps.ai Deployment Guide\
+\
+Repository Structure\
+		GitHub Repository:\'a0https://github.com/OpaceDigitalAgency/smashingapps-unified\
+		Main app is at root level\
+		TaskSmasher tool is in\'a0/tools/task-smasher/\
+\
+Key Dependencies\
+\
+All build dependencies must be in the dependencies section of package.json (not devDependencies):\
+		typescript\
+		vite\
+		@vitejs/plugin-react\
+		postcss\
+		autoprefixer\
+		tailwindcss\
+\
+Build Process\
+		The build script runs:\'a0npx tsc && npx vite build && node tools/task-smasher/scripts/generate-\
+static-pages.js\
+		Static pages are generated for SEO and initial loading\
+\
+Deployment Process\
+		Make code changes locally\
+		Test locally with\'a0npm run dev\
+		Commit changes:\'a0git add . && git commit -m "Your message"\
+		Push to GitHub:\'a0git push origin main\
+		Netlify automatically builds and deploys from the main branch to https://smashingapps.ai/\
+\
+Common Issues\
+		If build fails, check if any required packages are in devDependencies instead of dependencies\
+		The static page generation script must run after the Vite build\
+		Check Netlify logs for specific error messages\
+\
+Project Structure\
+		Main app: React app with React Router for navigation\
+		TaskSmasher: Tool located at\'a0/tools/task-smasher/\
+		Routing: All routes are handled by the main app's router in\'a0src/App.tsx\
+		Static pages: Generated for SEO in\'a0tools/task-smasher/scripts/generate-static-pages.js\
+\
+This unified repository structure eliminates the Git submodule issues that previously caused deployment problems.\
+}
