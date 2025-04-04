@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare } from 'lucide-react';
+import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -554,36 +554,37 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             onDragOver={handleDragOver}
           >
             <SortableContext items={boards.map(board => board.id)}>
-              <div className="flex flex-col space-y-6">
-                {/* Board titles row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {boards.map(board => (
-                    <div key={`title-${board.id}`} className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-gray-900">{board.title}</h2>
-                        <div className="text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                          {getFilteredTasks(board.id).length} {getFilteredTasks(board.id).length === 1 ? 'task' : 'tasks'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Board content row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {boards.map(board => (
-                    <div id={board.id} key={board.id}>
-                      <Board
-                        board={board}
-                        onUpdateTitle={updateBoardTitle}
-                        onEditingBoard={editingBoardId === board.id}
-                        setEditingBoardId={setEditingBoardId}
-                        isDraggingOver={isDraggingOver === board.id}
-                        filteredTasks={getFilteredTasks(board.id)}
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {boards.map(board => (
+                  <div id={board.id} key={board.id} className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4">
+                    <Board
+                      board={board}
+                      filteredTasks={getFilteredTasks(board.id)}
+                      editingBoardId={editingBoardId}
+                      setEditingBoardId={setEditingBoardId}
+                      updateBoardTitle={updateBoardTitle}
+                      onToggleExpanded={toggleExpanded}
+                      onToggleComplete={toggleComplete}
+                      onShowFeedback={showFeedback}
+                      onDeleteTask={deleteTask}
+                      onGenerateSubtasks={handleGenerateSubtasks}
+                      onAddSubtask={addSubtask}
+                      onRegenerateTask={regenerateTask}
+                      showContextInput={showContextInput}
+                      setShowContextInput={setShowContextInput}
+                      contextInput={contextInput}
+                      setContextInput={setContextInput}
+                      updateContext={updateContext}
+                      generating={generating}
+                      activeTask={activeTask}
+                      editing={editing}
+                      startEditing={startEditing}
+                      handleEditSave={handleEditSave}
+                      updateTaskPriority={updateTaskPriority}
+                      isDraggingOver={isDraggingOver === board.id}
+                    />
+                  </div>
+                ))}
               </div>
             </SortableContext>
             

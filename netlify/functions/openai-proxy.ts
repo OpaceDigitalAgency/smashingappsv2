@@ -9,7 +9,7 @@ const RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 const RECAPTCHA_SCORE_THRESHOLD = 0.5; // Minimum score to consider human (0.0 to 1.0)
 
 // Rate limit configuration
-const RATE_LIMIT = 20; // 20 requests per IP per day
+const RATE_LIMIT = 40; // 40 requests per IP per day
 const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Function to verify reCAPTCHA token
