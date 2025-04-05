@@ -91,7 +91,9 @@ async function prerenderRoute(route, browser) {
   if (!metaConfigJs[routePath]) {
     // Import the meta config directly
     const metaConfigPath = path.resolve(__dirname, '../src/utils/metaConfig.ts');
-    const metaConfigContent = fs.readFileSync(metaConfigPath, 'utf8');
+    // Fallback to .js if .ts doesn't exist
+    const metaConfigFile = fs.existsSync(metaConfigPath) ? metaConfigPath : path.resolve(__dirname, '../src/utils/metaConfig.js');
+    const metaConfigContent = fs.readFileSync(metaConfigFile, 'utf8');
     
     // Extract the route-specific meta config using regex
     const routePattern = new RegExp(`'${routePath}':\\s*{([^}]+)}`, 's');
@@ -169,7 +171,7 @@ const injectScript = `
 // Create a script element to expose metaConfig
 const script = document.createElement('script');
 script.textContent = \`
-  window.__META_CONFIG__ = ${JSON.stringify(require('../src/utils/metaConfig.js').default)};
+  window.__META_CONFIG__ = ${JSON.stringify({})};
 \`;
 document.head.appendChild(script);
 `;
@@ -189,4 +191,3 @@ if (process.env.NETLIFY) {
 } else {
   prerenderRoutes();
 }
-prerenderRoutes();
