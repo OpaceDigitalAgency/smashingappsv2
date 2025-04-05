@@ -222,9 +222,12 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   
   // Create route-specific HTML files for each route defined in metaConfig
   console.log('\nProcessing route-specific files...');
+  console.log('Available routes in metaConfig:', Object.keys(metaConfig));
+  
   for (const route of Object.keys(metaConfig)) {
     const meta = metaConfig[route];
     console.log(`\nProcessing route: ${route}`);
+    console.log(`Route meta data: ${JSON.stringify(meta, null, 2)}`);
     if (!meta) {
       console.warn(`   No meta config found for route: ${route}. Skipping.`);
       continue;
@@ -236,27 +239,41 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     
     // Replace title - Ensure meta exists
     if (meta.title) {
+      console.log(`   Setting title to: ${meta.title}`);
       routeHtml = routeHtml.replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`);
+      console.log('   Replaced title tag');
+    } else {
+      console.log('   Skipped title - no title provided');
     }
     
     // Replace or add meta description
     // Replace or add meta description - Ensure meta exists
     if (meta.description) {
+      console.log(`   Setting meta description to: ${meta.description.substring(0, 50)}...`);
       if (routeHtml.includes('<meta name="description"')) {
         routeHtml = routeHtml.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${meta.description}">`);
+        console.log('   Replaced existing meta description tag');
       } else {
         routeHtml = routeHtml.replace('</head>', `  <meta name="description" content="${meta.description}">\n  </head>`);
+        console.log('   Added new meta description tag');
       }
+    } else {
+      console.log('   Skipped meta description - no description provided');
     }
     
     // Replace or add canonical link
     // Replace or add canonical link - Ensure meta exists
     if (meta.canonical) {
+      console.log(`   Setting canonical URL to: ${meta.canonical}`);
       if (routeHtml.includes('<link rel="canonical"')) {
         routeHtml = routeHtml.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${meta.canonical}">`);
+        console.log('   Replaced existing canonical link');
       } else {
         routeHtml = routeHtml.replace('</head>', `  <link rel="canonical" href="${meta.canonical}">\n  </head>`);
+        console.log('   Added new canonical link');
       }
+    } else {
+      console.log('   Skipped canonical link - no canonical URL provided');
     }
     
     // Add robots meta tag
@@ -269,6 +286,7 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     // Add Open Graph tags - Ensure meta exists and use the same description as meta tag
     if (meta.title && meta.description && meta.image && !routeHtml.includes('<meta property="og:title"')) {
       const metaDescription = meta.description;
+      console.log(`   Setting OG/Twitter description to: ${metaDescription.substring(0, 50)}...`);
       const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
@@ -285,6 +303,13 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   <meta name="twitter:image" content="${meta.image}" />
 `;
       routeHtml = routeHtml.replace('</head>', `${ogTags}\n  </head>`);
+      console.log('   Added OG and Twitter tags with matching description');
+    } else {
+      console.log('   Skipped OG/Twitter tags - missing required data or tags already exist');
+      console.log(`   - Title: ${meta.title ? 'Yes' : 'No'}`);
+      console.log(`   - Description: ${meta.description ? 'Yes' : 'No'}`);
+      console.log(`   - Image: ${meta.image ? 'Yes' : 'No'}`);
+      console.log(`   - OG title already exists: ${routeHtml.includes('<meta property="og:title"') ? 'Yes' : 'No'}`);
     }
     
     // Add structured data if available
@@ -341,20 +366,40 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     }
     
     // Inject basic body content for the route (for SEO and JS-disabled browsers)
+    console.log('   Injecting fallback content with route-specific H1 and description');
+    const h1Content = meta.title || 'SmashingApps.ai';
+    const pContent = meta.description || 'Loading...';
+    console.log(`   H1 content: ${h1Content}`);
+    console.log(`   P content: ${pContent.substring(0, 50)}...`);
+    
     const routeBodyContent = `
       <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
       <div id="root-fallback" style="display: none !important; visibility: hidden !important;">
-        <h1>${meta.title || 'SmashingApps.ai'}</h1>
-        <p>${meta.description || 'Loading...'}</p>
+        <h1>${h1Content}</h1>
+        <p>${pContent}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
       </div>
     `;
-    routeHtml = routeHtml.replace('<div id="root"></div>', `<div id="root">${routeBodyContent}</div>`);
+    
+    if (routeHtml.includes('<div id="root"></div>')) {
+      routeHtml = routeHtml.replace('<div id="root"></div>', `<div id="root">${routeBodyContent}</div>`);
+      console.log('   Successfully injected fallback content');
+    } else {
+      console.log('   Could not find <div id="root"></div> to inject fallback content');
+      console.log('   HTML snippet:', routeHtml.substring(0, 500) + '...');
+    }
 
     // Write the HTML file
     const outputPath = path.join(outputDir, 'index.html');
-    fs.writeFileSync(outputPath, routeHtml);
-    console.log(`✅ Created ${outputPath} with route-specific meta tags and basic content`);
+    try {
+      fs.writeFileSync(outputPath, routeHtml);
+      console.log(`✅ Created ${outputPath} with route-specific meta tags and basic content`);
+      console.log(`   Title: ${meta.title}`);
+      console.log(`   Description: ${meta.description ? meta.description.substring(0, 50) + '...' : 'N/A'}`);
+      console.log(`   Canonical: ${meta.canonical}`);
+    } catch (writeError) {
+      console.error(`   Error writing file ${outputPath}:`, writeError);
+    }
   }
   
   console.log('Meta tags injection complete!');
