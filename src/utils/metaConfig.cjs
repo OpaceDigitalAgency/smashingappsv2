@@ -1,14 +1,27 @@
 /**
- * Metadata Configuration (JavaScript version)
- * 
- * This file contains the metadata configuration for all routes in the application.
- * It is used by the prerendering script to generate meta tags for static HTML files.
+ * SEO SETTINGS MASTER FILE
+ *
+ * This file controls ALL the SEO settings for the entire website.
+ * It defines what users and search engines see in search results, social media shares, and browser tabs.
+ *
+ * WHAT THIS FILE DOES:
+ * - Controls page titles (what appears in browser tabs and search results)
+ * - Controls meta descriptions (the text under the title in search results)
+ * - Controls social media sharing images and text (what appears when pages are shared on Facebook, Twitter, etc.)
+ * - Controls search engine indexing settings
+ * - Defines all the pages/URLs on the website
+ *
+ * HOW TO USE THIS FILE:
+ * - Find the section for the page you want to edit
+ * - Change the text between quotes to update titles, descriptions, etc.
+ * - Be careful not to remove any quotes, commas, or brackets
  */
 
-// Base URL for canonical links and OG URLs
+// The main website address - don't change this unless the domain changes
 const BASE_URL = 'https://smashingapps.ai';
 
-// Default meta configuration (fallback)
+// DEFAULT SEO SETTINGS (used as fallback if specific page settings are missing)
+// Edit these to change the default SEO settings for the entire website
 const defaultMetaConfig = {
   title: 'SmashingApps.ai | AI-Powered Productivity Tools',
   description: 'Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants.',
@@ -18,8 +31,12 @@ const defaultMetaConfig = {
   keywords: 'AI tools, productivity, task management, AI apps, SmashingApps, AI assistants'
 };
 
-// Route-specific meta configurations
+// SPECIFIC PAGE SEO SETTINGS
+// Each section below controls the SEO for a specific page on the website
+// The part in quotes (like '/') is the page URL path
 const metaConfig = {
+  // HOMEPAGE SEO SETTINGS
+  // This controls what appears in search results for the main homepage
   '/': {
     title: 'SmashingApps.ai | AI-Powered Productivity Tools',
     description: 'Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants.',
@@ -38,6 +55,8 @@ const metaConfig = {
       }
     }
   },
+  // TASKSMASHER MAIN PAGE SEO SETTINGS
+  // This controls what appears in search results for the TaskSmasher tool page
   '/tools/task-smasher/': {
     title: 'TaskSmasher – AI Task Planner | Break Down Complex Tasks Easily',
     description: 'Use AI to break down overwhelming tasks into manageable subtasks. TaskSmasher helps you organize, prioritize, and complete tasks efficiently with AI assistance.',
@@ -58,6 +77,8 @@ const metaConfig = {
       description: 'AI-powered task management tool that breaks down complex tasks into manageable subtasks'
     }
   },
+  // CONTACT PAGE SEO SETTINGS
+  // This controls what appears in search results for the Contact page
   '/contact': {
     title: 'Contact Us | SmashingApps.ai Support & Inquiries',
     description: 'Get in touch with the SmashingApps.ai team for support, feature requests, or partnership inquiries. We\'d love to hear from you and help with your productivity needs!',
@@ -73,7 +94,10 @@ const metaConfig = {
   }
 };
 
-// Generate meta configs for all TaskSmasher use cases
+// TASKSMASHER USE CASE DEFINITIONS
+// This section defines all the different use cases/tools within TaskSmasher
+// Each use case automatically gets its own page with SEO settings based on these definitions
+// TO ADD A NEW USE CASE: Simply add a new entry following the same pattern as the others
 const useCaseDefinitions = {
   daily: {
     label: "Daily Organizer",
@@ -125,8 +149,12 @@ const useCaseDefinitions = {
   }
 };
 
-// Add use case routes to metaConfig
+// AUTOMATIC PAGE GENERATION - TECHNICAL SECTION
+// This code automatically creates pages for each use case defined above
+// You don't need to edit this section unless you're a developer
+// It converts each use case into a full page with proper SEO settings
 Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
+  // Creates URL paths like /tools/task-smasher/goal-planner/
   const path = `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`;
   metaConfig[path] = {
     title: `${definition.label} - AI Task Planner | TaskSmasher by SmashingApps.ai`,

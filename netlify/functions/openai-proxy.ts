@@ -1,15 +1,35 @@
+/**
+ * OPENAI API PROXY SETTINGS
+ *
+ * This file controls how the application communicates with OpenAI's AI services.
+ * It handles security, rate limiting, and error handling for all AI requests.
+ *
+ * WHAT THIS FILE DOES:
+ * - Connects to OpenAI's API securely
+ * - Limits how many AI requests each user can make
+ * - Prevents abuse with security measures
+ * - Handles errors and timeouts
+ *
+ * KEY SETTINGS TO MODIFY:
+ * - Line 12: RATE_LIMIT - Maximum API calls per user (default: 60)
+ * - Line 13: RATE_LIMIT_WINDOW - Time window for rate limits (default: 24 hours)
+ * - Line 152: timeout - Request timeout in milliseconds (default: 60000 = 60 seconds)
+ */
+
 import { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 import OpenAI from "openai";
 import axios from "axios";
 import * as crypto from "crypto";
 
-// reCAPTCHA configuration
+// SECURITY SETTINGS - Controls the reCAPTCHA verification system
+// This helps prevent bots from abusing the AI system
 const RECAPTCHA_SECRET_KEY = "6Lc_BQkrAAAAAC2zzS3znw-ahAhHQ57Sqhwxcui2";
 const RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 const RECAPTCHA_SCORE_THRESHOLD = 0.5; // Minimum score to consider human (0.0 to 1.0)
 
-// Rate limit configuration
-const RATE_LIMIT = 60; // 60 requests per IP per day
+// USAGE LIMITS - Controls how many AI requests each user can make
+// Change these values to adjust the usage limits
+const RATE_LIMIT = 60; // MAXIMUM API CALLS ALLOWED PER USER
 const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Function to verify reCAPTCHA token
@@ -146,11 +166,12 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     
     console.log("Initializing OpenAI client with API key:", apiKey ? "Key exists" : "No key");
     
-    // Initialize OpenAI client with timeout
+    // OPENAI CONNECTION SETTINGS
+    // These settings control how we connect to OpenAI's API
     const openai = new OpenAI({
       apiKey: apiKey,
-      timeout: 60000, // 60 second timeout (increased from 30s)
-      maxRetries: 3,  // Retry failed requests three times
+      timeout: 60000, // REQUEST TIMEOUT: 60 seconds (change this if requests are timing out)
+      maxRetries: 3,  // Number of times to retry failed requests
       defaultHeaders: {
         "User-Agent": "SmashingApps/1.0"
       }
@@ -271,10 +292,13 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       } else {
         // For all other requests, use the OpenAI SDK
         try {
+          // MAIN AI REQUEST SETTINGS
+          // This is where we send the user's prompt to OpenAI and get a response
+          // You can modify these settings to change how the AI responds
           response = await openai.chat.completions.create({
-            model: requestBody.model,
-            messages: requestBody.messages,
-            ...requestBody // Include any other parameters passed in the request
+            model: requestBody.model,           // AI model to use (e.g., "gpt-3.5-turbo")
+            messages: requestBody.messages,     // The conversation history and user's prompt
+            ...requestBody                      // Any other parameters (temperature, max_tokens, etc.)
           });
         } catch (error) {
           console.error("Error with OpenAI SDK:", error);
@@ -286,14 +310,15 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     // Get the API call count from the request headers or use a default value
     const apiCallCount = parseInt(event.headers["x-api-call-count"] || "0", 10) + 1;
     
-    // Return the response with rate limit headers
+    // USAGE TRACKING - Keeps track of how many AI requests each user has made
+    // These headers tell the browser how many requests are remaining
     const responseHeaders = {
       "Content-Type": "application/json",
-      "X-RateLimit-Limit": String(RATE_LIMIT),
-      "X-RateLimit-Remaining": String(RATE_LIMIT - apiCallCount),
-      "X-RateLimit-Reset": new Date(Date.now() + RATE_LIMIT_WINDOW).toISOString(),
-      "X-RateLimit-Used": String(apiCallCount),
-      "X-Fingerprint": fingerprint.substring(0, 8) // Just for debugging
+      "X-RateLimit-Limit": String(RATE_LIMIT),                                // Maximum allowed requests
+      "X-RateLimit-Remaining": String(RATE_LIMIT - apiCallCount),             // Remaining requests
+      "X-RateLimit-Reset": new Date(Date.now() + RATE_LIMIT_WINDOW).toISOString(), // When the limit resets
+      "X-RateLimit-Used": String(apiCallCount),                               // Requests used so far
+      "X-Fingerprint": fingerprint.substring(0, 8)                            // User identifier (for debugging)
     };
     
     // Add reCAPTCHA verification status to headers

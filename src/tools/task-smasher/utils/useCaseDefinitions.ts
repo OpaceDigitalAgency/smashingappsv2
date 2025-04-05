@@ -1,16 +1,42 @@
+/**
+ * TASKSMASHER USE CASE DEFINITIONS
+ *
+ * This file defines all the different use cases (tools) available in TaskSmasher.
+ * Each use case has its own settings that control how it appears and functions.
+ *
+ * WHAT THIS FILE DOES:
+ * - Defines the name and description for each use case
+ * - Provides keywords that help the AI understand what each use case is about
+ * - Controls how each use case is displayed in the sidebar menu
+ *
+ * HOW TO ADD A NEW USE CASE:
+ * 1. Copy an existing use case block (like the "daily" one)
+ * 2. Change the ID (the part before the colon)
+ * 3. Update the label, keywords, and description
+ * 4. Save the file
+ *
+ * The new use case will automatically appear in the sidebar menu and get its own page!
+ */
+
+// Technical definition - for developers only
 export type UseCaseDefinition = {
-  label: string;
-  keywords: string[];
-  negativeKeywords: string[];
-  description: string;
+  label: string;              // The name shown to users
+  keywords: string[];         // Words that help identify this type of task
+  negativeKeywords: string[]; // Words that indicate this is NOT the right use case
+  description: string;        // Short description shown to users
 };
 
+// USE CASE DEFINITIONS
+// This is where all the different TaskSmasher tools are defined
+// TO ADD A NEW USE CASE: Copy an existing block and modify it
 export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
+  // DAILY ORGANIZER
+  // This use case helps users organize their daily tasks and schedule
   daily: {
-    label: "Daily Organizer",
+    label: "Daily Organizer",  // Name shown in the sidebar and page title
     keywords: [
-      "today", "tomorrow", "morning", "evening", "daily", "schedule", 
-      "routine", "appointment", "meeting", "call", "reminder", "day", 
+      "today", "tomorrow", "morning", "evening", "daily", "schedule",
+      "routine", "appointment", "meeting", "call", "reminder", "day",
       "organize", "plan", "check", "review", "update", "email", "task",
       "calendar", "agenda", "work", "personal"
     ],
@@ -18,21 +44,23 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "cook", "ingredient", "marketing", "campaign", "seo",
       "diy", "build", "paint", "travel", "flight", "hotel", "vacation"
     ],
-    description: "Everyday tasks, scheduled activities, and daily routines"
+    description: "Everyday tasks, scheduled activities, and daily routines"  // Shown to users
   },
+  // GOAL PLANNER
+  // This use case helps users plan and track their long-term goals
   goals: {
-    label: "Goal Planner",
+    label: "Goal Planner",  // Name shown in the sidebar and page title
     keywords: [
       "goal", "objective", "milestone", "achieve", "accomplish", "target",
       "plan", "strategy", "vision", "mission", "success", "measure",
-      "progress", "track", "growth", "improve", "develop", "habit", 
+      "progress", "track", "growth", "improve", "develop", "habit",
       "resolution", "challenge", "deadline", "outcome", "result"
     ],
     negativeKeywords: [
       "recipe", "cook", "ingredient", "marketing", "campaign", "daily",
       "today", "tomorrow", "shopping", "buy", "purchase", "grocery"
     ],
-    description: "Long-term objectives, milestones, and personal development targets"
+    description: "Long-term objectives, milestones, and personal development targets"  // Shown to users
   },
   marketing: {
     label: "Marketing Tasks",

@@ -1,7 +1,26 @@
+/**
+ * OPENAI API SETTINGS AND LIMITS
+ *
+ * This file controls how the application interacts with OpenAI's AI services.
+ * It manages API calls, rate limits, and error handling.
+ *
+ * WHAT THIS FILE DOES:
+ * - Sends requests to OpenAI's AI models
+ * - Tracks how many API calls each user has made
+ * - Enforces usage limits to prevent excessive costs
+ * - Handles errors and timeouts
+ *
+ * KEY SETTINGS TO MODIFY:
+ * - Line 115: API call limit (default: 60)
+ * - Line 300: Fallback API call limit (default: 60)
+ * - Line 301: Default remaining calls (default: 19)
+ * - Line 101: Request timeout in milliseconds (default: 60000 = 60 seconds)
+ */
+
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 /**
- * Interface for OpenAI chat completion request
+ * Technical definition of an OpenAI request - for developers only
  */
 interface ChatCompletionRequest {
   model: string;
@@ -14,7 +33,7 @@ interface ChatCompletionRequest {
 }
 
 /**
- * Interface for OpenAI chat completion response
+ * Technical definition of an OpenAI response - for developers only
  */
 interface ChatCompletionResponse {
   id: string;
@@ -37,7 +56,7 @@ interface ChatCompletionResponse {
 }
 
 /**
- * Error response from the API
+ * Error response format - for developers only
  */
 interface ErrorResponse {
   error: string;
@@ -45,17 +64,23 @@ interface ErrorResponse {
 }
 
 /**
- * Rate limit information from response headers
+ * API USAGE LIMITS TRACKING
+ *
+ * This tracks how many API calls a user has made and when their limit resets.
+ * These settings control the maximum number of AI requests a user can make.
  */
 interface RateLimitInfo {
-  limit: number;
-  remaining: number;
-  reset: Date;
-  used: number;
+  limit: number;      // Maximum number of API calls allowed (e.g., 60)
+  remaining: number;  // Number of API calls remaining
+  reset: Date;        // When the limit will reset
+  used: number;       // Number of API calls already used
 }
 
 /**
- * Service for interacting with OpenAI API through our Netlify function proxy
+ * OPENAI SERVICE - MAIN FUNCTIONALITY
+ *
+ * This handles all communication with OpenAI's AI models.
+ * It sends user prompts to the AI and returns the AI's responses.
  */
 export const OpenAIService = {
   /**
@@ -110,8 +135,10 @@ export const OpenAIService = {
       });
 
       // Extract rate limit information from headers
+      // IMPORTANT: This sets the maximum number of API calls allowed per user
+      // You can change the '60' value to adjust the limit
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),  // MAXIMUM API CALLS ALLOWED
         remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
@@ -295,12 +322,13 @@ export const OpenAIService = {
     } catch (error) {
       console.error('Error getting rate limit status:', error);
       
-      // Fallback to default values
+      // FALLBACK SETTINGS: Used if we can't get the actual limits from the server
+      // You can change these values to adjust the default limits
       return {
-        limit: 60,
-        remaining: 19,
-        reset: new Date(Date.now() + 3600000),
-        used: 1
+        limit: 60,        // MAXIMUM API CALLS ALLOWED (default)
+        remaining: 19,    // DEFAULT REMAINING CALLS
+        reset: new Date(Date.now() + 3600000),  // Reset after 1 hour
+        used: 1           // Assume 1 call used already
       };
     }
   }
