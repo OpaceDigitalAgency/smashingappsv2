@@ -11,7 +11,7 @@
     "generate-favicons": "node scripts/generate-favicons.js",
     "inject-meta": "node scripts/inject-meta-tags.js",
     "prerender": "vite preview --port 5173 & node scripts/prerender-routes.js && pkill -f 'vite preview'",
-    "build:seo": "npm run build && npm run generate-og && npm run generate-favicons && npm run inject-meta",
+    "build:seo": "npm run build && npm run inject-meta",
     "lint": "eslint .",
     "preview": "vite preview"
   },
