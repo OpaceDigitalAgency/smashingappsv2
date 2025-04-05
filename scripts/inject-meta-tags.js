@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 const metaConfigModule = require('../src/utils/metaConfig.js');
 const metaConfig = metaConfigModule.default;
 const defaultMetaConfig = metaConfigModule.defaultMetaConfig;
-import { default as metaConfig, defaultMetaConfig } from '../src/utils/metaConfig.js';
+// Removed duplicate import statement
 
 /**
  * Create route-specific HTML files with proper meta tags
