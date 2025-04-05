@@ -326,8 +326,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     // Add CSS to hide the fallback content for users with JavaScript enabled
     routeHtml = routeHtml.replace('</head>', `${hideFallbackCSS}\n  </head>`);
     
-    // Add script to add no-js class and then remove it when JS loads
-    routeHtml = routeHtml.replace('<head>', `<head>\n  ${noJsScript}`);
+    // Add script to immediately hide the fallback content
+    routeHtml = routeHtml.replace('<head>', `<head>\n  ${hideScript}`);
     
     // Create the directory structure relative to the dist directory
     const routePath = route.startsWith('/') ? route.substring(1) : route; // Ensure no leading slash for path joining
