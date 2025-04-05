@@ -57,14 +57,20 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
   
   return (
     <div
-      className={`fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center z-[9999] ${animation}`}
+      className={`fixed inset-0 flex items-center justify-center z-[9999] ${animation}`}
       style={{
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         backdropFilter: 'blur(4px)'
       }}
+      onClick={(e) => {
+        // Close when clicking outside the popup
+        if (e.target === e.currentTarget) {
+          handleIgnore();
+        }
+      }}
     >
       <div
-        className="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-w-sm w-full mx-4"
+        className="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-w-sm w-full mx-4 relative"
         style={{
           transform: animation === 'animate-in'
             ? 'scale(1)'

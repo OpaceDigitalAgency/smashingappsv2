@@ -235,6 +235,44 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
       }, 100);
     }
   }, []);
+  
+  // Check for preserved tasks when component loads
+  useEffect(() => {
+    const preservedTask = localStorage.getItem('preservedTask');
+    const preservedTaskTimestamp = localStorage.getItem('preservedTaskTimestamp');
+    const targetUseCase = localStorage.getItem('targetUseCase');
+    
+    // Only process if we have a preserved task and it's less than 10 seconds old
+    if (preservedTask && preservedTaskTimestamp && targetUseCase) {
+      const timestamp = parseInt(preservedTaskTimestamp, 10);
+      const now = Date.now();
+      const age = now - timestamp;
+      
+      // If the task is less than 10 seconds old and the current use case matches the target
+      if (age < 10000 && selectedUseCase === targetUseCase) {
+        // Add the preserved task to the todo board
+        setBoards(prevBoards => {
+          const newBoards = [...prevBoards];
+          newBoards[0].tasks.push({
+            id: `task-${Date.now()}`,
+            title: preservedTask,
+            subtasks: [],
+            completed: false,
+            priority: 'medium',
+            estimatedTime: 1,
+            expanded: false,
+            boardId: 'todo'
+          });
+          return newBoards;
+        });
+        
+        // Clear the preserved task from localStorage
+        localStorage.removeItem('preservedTask');
+        localStorage.removeItem('preservedTaskTimestamp');
+        localStorage.removeItem('targetUseCase');
+      }
+    }
+  }, [selectedUseCase]);
 
   // Determine the current use case from the URL path or the selected use case
   const getCurrentUseCase = () => {
@@ -769,6 +807,9 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             suggestedUseCase={taskMismatch.suggestedUseCase}
             onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' })}
             onSwitchUseCase={(useCase) => {
+              // Store the current task text to preserve it
+              const taskTextToPreserve = taskMismatch.taskText || '';
+              
               // First, handle the use case switch in the context
               // This will preserve the task and add it to the new use case
               handleSelectUseCase(useCase);
@@ -779,11 +820,18 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 // Format the URL path
                 const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
                 
-                // Use a small delay to ensure the state is updated before navigation
+                // Store the task in localStorage to ensure it persists across page navigation
+                if (taskTextToPreserve) {
+                  localStorage.setItem('preservedTask', taskTextToPreserve);
+                  localStorage.setItem('preservedTaskTimestamp', Date.now().toString());
+                  localStorage.setItem('targetUseCase', useCase);
+                }
+                
+                // Use a longer delay to ensure the state is updated before navigation
                 setTimeout(() => {
                   // Navigate to the new URL
                   window.location.href = path;
-                }, 100);
+                }, 300);
               }
               
               // Clear the task mismatch state
