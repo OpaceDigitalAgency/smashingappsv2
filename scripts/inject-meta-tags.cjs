@@ -86,21 +86,22 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   }
   
   // Add Open Graph tags
-  // Add Open Graph tags - Ensure defaultMetaConfig exists
+  // Add Open Graph tags - Ensure defaultMetaConfig exists and use the same description as meta tag
   if (defaultMetaConfig.title && defaultMetaConfig.description && defaultMetaConfig.image && !defaultHtml.includes('<meta property="og:title"')) {
+    const metaDescription = defaultMetaConfig.description;
     const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${defaultMetaConfig.canonical || 'https://smashingapps.ai'}" />
   <meta property="og:title" content="${defaultMetaConfig.title}" />
-  <meta property="og:description" content="${defaultMetaConfig.description}" />
+  <meta property="og:description" content="${metaDescription}" />
   <meta property="og:image" content="${defaultMetaConfig.image}" />
   <meta property="og:site_name" content="SmashingApps.ai" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${defaultMetaConfig.title}" />
-  <meta name="twitter:description" content="${defaultMetaConfig.description}" />
+  <meta name="twitter:description" content="${metaDescription}" />
   <meta name="twitter:image" content="${defaultMetaConfig.image}" />
 `;
     defaultHtml = defaultHtml.replace('</head>', `${ogTags}\n  </head>`);
@@ -117,9 +118,64 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     defaultHtml = defaultHtml.replace('</head>', `${structuredDataTag}\n  </head>`);
   }
   
-  // Inject basic body content for default index.html
+  // Add CSS to hide the fallback content for users with JavaScript enabled
+  const hideFallbackCSS = `
+  <style>
+    /* Hide fallback content when JavaScript is enabled */
+    #root-fallback {
+      display: none;
+    }
+    
+    /* Only show fallback content when JavaScript is disabled */
+    .no-js #root-fallback {
+      display: block;
+    }
+  </style>
+  `;
+  defaultHtml = defaultHtml.replace('</head>', `${hideFallbackCSS}\n  </head>`);
+  
+  // Add Google Analytics and Hotjar tracking code
+  const trackingCode = `
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-38TGWBFRMN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-38TGWBFRMN');
+  </script>
+  <!-- Hotjar Tracking Code for smashingapps.ai -->
+  <script>
+    (function(h,o,t,j,a,r){
+        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+        h._hjSettings={hjid:5361995,hjsv:6};
+        a=o.getElementsByTagName('head')[0];
+        r=o.createElement('script');r.async=1;
+        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+        a.appendChild(r);
+    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+  </script>
+  `;
+  defaultHtml = defaultHtml.replace('</head>', `${trackingCode}\n  </head>`);
+  
+  // Add script to add no-js class and then remove it when JS loads
+  const noJsScript = `
+  <script>
+    // Add no-js class to html element
+    document.documentElement.className += ' no-js';
+    
+    // Remove no-js class when JavaScript loads
+    window.addEventListener('DOMContentLoaded', function() {
+      document.documentElement.className = document.documentElement.className.replace(' no-js', '');
+    });
+  </script>
+  `;
+  defaultHtml = defaultHtml.replace('<head>', `<head>\n  ${noJsScript}`);
+  
+  // Inject basic body content for default index.html (for SEO and JS-disabled browsers)
   const defaultBodyContent = `
-      <div id="root-fallback" style="padding: 20px; font-family: sans-serif;">
+      <div id="root-fallback">
         <h1>${defaultMetaConfig.title || 'SmashingApps.ai'}</h1>
         <p>${defaultMetaConfig.description || 'Loading...'}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
@@ -179,21 +235,22 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     }
     
     // Add Open Graph tags
-    // Add Open Graph tags - Ensure meta exists
+    // Add Open Graph tags - Ensure meta exists and use the same description as meta tag
     if (meta.title && meta.description && meta.image && !routeHtml.includes('<meta property="og:title"')) {
+      const metaDescription = meta.description;
       const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${meta.canonical || 'https://smashingapps.ai' + route}" />
   <meta property="og:title" content="${meta.title}" />
-  <meta property="og:description" content="${meta.description}" />
+  <meta property="og:description" content="${metaDescription}" />
   <meta property="og:image" content="${meta.image}" />
   <meta property="og:site_name" content="SmashingApps.ai" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${meta.title}" />
-  <meta name="twitter:description" content="${meta.description}" />
+  <meta name="twitter:description" content="${metaDescription}" />
   <meta name="twitter:image" content="${meta.image}" />
 `;
       routeHtml = routeHtml.replace('</head>', `${ogTags}\n  </head>`);
@@ -210,6 +267,37 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
       routeHtml = routeHtml.replace('</head>', `${structuredDataTag}\n  </head>`);
     }
     
+    // Add Google Analytics and Hotjar tracking code to route-specific pages
+    const trackingCode = `
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-38TGWBFRMN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-38TGWBFRMN');
+    </script>
+    <!-- Hotjar Tracking Code for smashingapps.ai -->
+    <script>
+      (function(h,o,t,j,a,r){
+          h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+          h._hjSettings={hjid:5361995,hjsv:6};
+          a=o.getElementsByTagName('head')[0];
+          r=o.createElement('script');r.async=1;
+          r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+          a.appendChild(r);
+      })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+    </script>
+    `;
+    routeHtml = routeHtml.replace('</head>', `${trackingCode}\n  </head>`);
+    
+    // Add CSS to hide the fallback content for users with JavaScript enabled
+    routeHtml = routeHtml.replace('</head>', `${hideFallbackCSS}\n  </head>`);
+    
+    // Add script to add no-js class and then remove it when JS loads
+    routeHtml = routeHtml.replace('<head>', `<head>\n  ${noJsScript}`);
+    
     // Create the directory structure relative to the dist directory
     const routePath = route.startsWith('/') ? route.substring(1) : route; // Ensure no leading slash for path joining
     const outputDir = path.join(distDir, routePath);
@@ -221,9 +309,9 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
       continue; // Skip this route if directory creation fails
     }
     
-    // Inject basic body content for the route
+    // Inject basic body content for the route (for SEO and JS-disabled browsers)
     const routeBodyContent = `
-      <div id="root-fallback" style="padding: 20px; font-family: sans-serif;">
+      <div id="root-fallback">
         <h1>${meta.title || 'SmashingApps.ai'}</h1>
         <p>${meta.description || 'Loading...'}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
