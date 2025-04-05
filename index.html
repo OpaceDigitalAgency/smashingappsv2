@@ -2,13 +2,30 @@
 <html lang="en">
   <head>
     <script>
-      // Add no-js class to html element
-      document.documentElement.className += ' no-js';
-      
-      // Remove no-js class when JavaScript loads
-      window.addEventListener('DOMContentLoaded', function() {
-        document.documentElement.className = document.documentElement.className.replace(' no-js', '');
-      });
+      // Immediately hide the fallback content - aggressive approach
+      (function() {
+        // Create a style element with aggressive hiding
+        var style = document.createElement('style');
+        style.textContent = '#root-fallback { display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; }';
+        
+        // Append it to the head
+        document.head.appendChild(style);
+        
+        // Also directly hide any existing elements
+        document.addEventListener('DOMContentLoaded', function() {
+          var fallback = document.getElementById('root-fallback');
+          if (fallback) {
+            fallback.style.display = 'none';
+            fallback.style.visibility = 'hidden';
+            fallback.style.opacity = '0';
+            fallback.style.position = 'absolute';
+            fallback.style.width = '1px';
+            fallback.style.height = '1px';
+            fallback.style.overflow = 'hidden';
+            fallback.style.clip = 'rect(0, 0, 0, 0)';
+          }
+        });
+      })();
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,16 +34,29 @@
     <meta name="theme-color" content="#6366f1" />
     
     <style>
-      /* Hide fallback content when JavaScript is enabled */
+      /* Hide fallback content by default - aggressive approach */
       #root-fallback {
-        display: none;
-      }
-      
-      /* Only show fallback content when JavaScript is disabled */
-      .no-js #root-fallback {
-        display: block;
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
       }
     </style>
+    
+    <!-- Fallback style for when JavaScript is disabled -->
+    <noscript>
+      <style>
+        #root-fallback {
+          display: block !important;
+          padding: 20px;
+          font-family: sans-serif;
+        }
+      </style>
+    </noscript>
     
     <!-- Favicon links -->
     <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
@@ -78,7 +108,8 @@
   </head>
   <body>
     <div id="root">
-      <div id="root-fallback">
+      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
         <h1>SmashingApps.ai | AI-Powered Productivity Tools</h1>
         <p>Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants.</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>

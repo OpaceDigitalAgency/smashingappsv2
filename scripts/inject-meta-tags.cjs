@@ -118,19 +118,32 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     defaultHtml = defaultHtml.replace('</head>', `${structuredDataTag}\n  </head>`);
   }
   
-  // Add CSS to hide the fallback content for users with JavaScript enabled
+  // Add CSS to hide the fallback content by default - aggressive approach
   const hideFallbackCSS = `
   <style>
-    /* Hide fallback content when JavaScript is enabled */
+    /* Hide fallback content by default - aggressive approach */
     #root-fallback {
-      display: none;
-    }
-    
-    /* Only show fallback content when JavaScript is disabled */
-    .no-js #root-fallback {
-      display: block;
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
     }
   </style>
+  
+  <!-- Fallback style for when JavaScript is disabled -->
+  <noscript>
+    <style>
+      #root-fallback {
+        display: block !important;
+        padding: 20px;
+        font-family: sans-serif;
+      }
+    </style>
+  </noscript>
   `;
   defaultHtml = defaultHtml.replace('</head>', `${hideFallbackCSS}\n  </head>`);
   
@@ -159,23 +172,41 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   `;
   defaultHtml = defaultHtml.replace('</head>', `${trackingCode}\n  </head>`);
   
-  // Add script to add no-js class and then remove it when JS loads
-  const noJsScript = `
+  // Add script to immediately hide the fallback content - aggressive approach
+  const hideScript = `
   <script>
-    // Add no-js class to html element
-    document.documentElement.className += ' no-js';
-    
-    // Remove no-js class when JavaScript loads
-    window.addEventListener('DOMContentLoaded', function() {
-      document.documentElement.className = document.documentElement.className.replace(' no-js', '');
-    });
+    // Immediately hide the fallback content - aggressive approach
+    (function() {
+      // Create a style element with aggressive hiding
+      var style = document.createElement('style');
+      style.textContent = '#root-fallback { display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; }';
+      
+      // Append it to the head
+      document.head.appendChild(style);
+      
+      // Also directly hide any existing elements
+      document.addEventListener('DOMContentLoaded', function() {
+        var fallback = document.getElementById('root-fallback');
+        if (fallback) {
+          fallback.style.display = 'none';
+          fallback.style.visibility = 'hidden';
+          fallback.style.opacity = '0';
+          fallback.style.position = 'absolute';
+          fallback.style.width = '1px';
+          fallback.style.height = '1px';
+          fallback.style.overflow = 'hidden';
+          fallback.style.clip = 'rect(0, 0, 0, 0)';
+        }
+      });
+    })();
   </script>
   `;
-  defaultHtml = defaultHtml.replace('<head>', `<head>\n  ${noJsScript}`);
+  defaultHtml = defaultHtml.replace('<head>', `<head>\n  ${hideScript}`);
   
   // Inject basic body content for default index.html (for SEO and JS-disabled browsers)
   const defaultBodyContent = `
-      <div id="root-fallback">
+      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important;">
         <h1>${defaultMetaConfig.title || 'SmashingApps.ai'}</h1>
         <p>${defaultMetaConfig.description || 'Loading...'}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
@@ -311,7 +342,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     
     // Inject basic body content for the route (for SEO and JS-disabled browsers)
     const routeBodyContent = `
-      <div id="root-fallback">
+      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important;">
         <h1>${meta.title || 'SmashingApps.ai'}</h1>
         <p>${meta.description || 'Loading...'}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
