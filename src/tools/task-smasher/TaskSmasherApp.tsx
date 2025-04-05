@@ -238,39 +238,59 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
   
   // Check for preserved tasks when component loads
   useEffect(() => {
-    const preservedTask = localStorage.getItem('preservedTask');
-    const preservedTaskTimestamp = localStorage.getItem('preservedTaskTimestamp');
-    const targetUseCase = localStorage.getItem('targetUseCase');
-    
-    // Only process if we have a preserved task and it's less than 10 seconds old
-    if (preservedTask && preservedTaskTimestamp && targetUseCase) {
-      const timestamp = parseInt(preservedTaskTimestamp, 10);
-      const now = Date.now();
-      const age = now - timestamp;
+    try {
+      console.log('Checking for preserved tasks...');
       
-      // If the task is less than 10 seconds old and the current use case matches the target
-      if (age < 10000 && selectedUseCase === targetUseCase) {
-        // Add the preserved task to the todo board
-        setBoards(prevBoards => {
-          const newBoards = [...prevBoards];
-          newBoards[0].tasks.push({
-            id: `task-${Date.now()}`,
-            title: preservedTask,
-            subtasks: [],
-            completed: false,
-            priority: 'medium',
-            estimatedTime: 1,
-            expanded: false,
-            boardId: 'todo'
-          });
-          return newBoards;
-        });
+      // Check both sessionStorage and localStorage for preserved tasks
+      const preservedTask = sessionStorage.getItem('preservedTask') || localStorage.getItem('preservedTask');
+      const preservedTaskTimestamp = sessionStorage.getItem('preservedTaskTimestamp') || localStorage.getItem('preservedTaskTimestamp');
+      const targetUseCase = sessionStorage.getItem('targetUseCase') || localStorage.getItem('targetUseCase');
+      
+      console.log('Found preserved task:', preservedTask);
+      console.log('Target use case:', targetUseCase);
+      console.log('Current use case:', selectedUseCase);
+      
+      // Only process if we have a preserved task and it's less than 30 seconds old
+      if (preservedTask && preservedTaskTimestamp && targetUseCase) {
+        const timestamp = parseInt(preservedTaskTimestamp, 10);
+        const now = Date.now();
+        const age = now - timestamp;
         
-        // Clear the preserved task from localStorage
-        localStorage.removeItem('preservedTask');
-        localStorage.removeItem('preservedTaskTimestamp');
-        localStorage.removeItem('targetUseCase');
+        console.log('Task age (ms):', age);
+        
+        // If the task is less than 30 seconds old and the current use case matches the target
+        if (age < 30000 && selectedUseCase === targetUseCase) {
+          console.log('Adding preserved task to board:', preservedTask);
+          
+          // Add the preserved task to the todo board
+          setBoards(prevBoards => {
+            const newBoards = [...prevBoards];
+            newBoards[0].tasks.push({
+              id: `task-${Date.now()}`,
+              title: preservedTask,
+              subtasks: [],
+              completed: false,
+              priority: 'medium',
+              estimatedTime: 1,
+              expanded: false,
+              boardId: 'todo'
+            });
+            return newBoards;
+          });
+          
+          // Clear the preserved task from storage
+          sessionStorage.removeItem('preservedTask');
+          sessionStorage.removeItem('preservedTaskTimestamp');
+          sessionStorage.removeItem('targetUseCase');
+          localStorage.removeItem('preservedTask');
+          localStorage.removeItem('preservedTaskTimestamp');
+          localStorage.removeItem('targetUseCase');
+          
+          console.log('Task added and storage cleared');
+        }
       }
+    } catch (error) {
+      console.error('Error checking for preserved tasks:', error);
     }
   }, [selectedUseCase]);
 
@@ -807,35 +827,39 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             suggestedUseCase={taskMismatch.suggestedUseCase}
             onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' })}
             onSwitchUseCase={(useCase) => {
-              // Store the current task text to preserve it
-              const taskTextToPreserve = taskMismatch.taskText || '';
-              
-              // First, handle the use case switch in the context
-              // This will preserve the task and add it to the new use case
-              handleSelectUseCase(useCase);
-              
-              // Then, get the use case label for navigation
-              const useCaseLabel = useCaseDefinitions[useCase]?.label;
-              if (useCaseLabel) {
-                // Format the URL path
-                const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
+              try {
+                // Get the task text to preserve
+                const taskTextToPreserve = taskMismatch.taskText || '';
+                console.log('Task to preserve:', taskTextToPreserve);
                 
-                // Store the task in localStorage to ensure it persists across page navigation
-                if (taskTextToPreserve) {
-                  localStorage.setItem('preservedTask', taskTextToPreserve);
-                  localStorage.setItem('preservedTaskTimestamp', Date.now().toString());
-                  localStorage.setItem('targetUseCase', useCase);
+                // Get the use case label for navigation
+                const useCaseLabel = useCaseDefinitions[useCase]?.label;
+                if (useCaseLabel && taskTextToPreserve) {
+                  // Use sessionStorage which is more reliable for page navigation
+                  sessionStorage.setItem('preservedTask', taskTextToPreserve);
+                  sessionStorage.setItem('preservedTaskTimestamp', Date.now().toString());
+                  sessionStorage.setItem('targetUseCase', useCase);
+                  
+                  console.log('Stored in sessionStorage:', {
+                    task: taskTextToPreserve,
+                    useCase: useCase
+                  });
+                  
+                  // Format the URL path
+                  const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
+                  
+                  // Clear the task mismatch state
+                  setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
+                  
+                  // Navigate to the new URL after a delay
+                  setTimeout(() => {
+                    console.log('Navigating to:', path);
+                    window.location.href = path;
+                  }, 500);
                 }
-                
-                // Use a longer delay to ensure the state is updated before navigation
-                setTimeout(() => {
-                  // Navigate to the new URL
-                  window.location.href = path;
-                }, 300);
+              } catch (error) {
+                console.error('Error in onSwitchUseCase:', error);
               }
-              
-              // Clear the task mismatch state
-              setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
             }}
           />
         </div>
