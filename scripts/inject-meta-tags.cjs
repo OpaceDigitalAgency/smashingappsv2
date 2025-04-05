@@ -232,7 +232,16 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
       console.warn(`   No meta config found for route: ${route}. Skipping.`);
       continue;
     }
-    if (route === '/') continue; // Skip the homepage as we've already updated index.html
+    if (route === '/') {
+      console.log('   Skipping homepage as we\'ve already updated index.html');
+      continue; // Skip the homepage as we've already updated index.html
+    }
+    
+    // Skip routes that are handled by the generate-static-pages.js script
+    if (route.startsWith('/tools/task-smasher/') && route !== '/tools/task-smasher/') {
+      console.log(`   Skipping ${route} as it's handled by the generate-static-pages.js script`);
+      continue;
+    }
     
     // Create a copy of the HTML with route-specific meta tags
     let routeHtml = originalHtml;
