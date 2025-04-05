@@ -1,11 +1,32 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Add no-js class to html element
+      document.documentElement.className += ' no-js';
+      
+      // Remove no-js class when JavaScript loads
+      window.addEventListener('DOMContentLoaded', function() {
+        document.documentElement.className = document.documentElement.className.replace(' no-js', '');
+      });
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SmashingApps.ai - AI-powered micro-apps that help you smash through tasks with smart, fun, and focused tools" />
+    <meta name="description" content="Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants." />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#6366f1" />
+    
+    <style>
+      /* Hide fallback content when JavaScript is enabled */
+      #root-fallback {
+        display: none;
+      }
+      
+      /* Only show fallback content when JavaScript is disabled */
+      .no-js #root-fallback {
+        display: block;
+      }
+    </style>
     
     <!-- Favicon links -->
     <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
@@ -18,20 +39,20 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://smashingapps.ai/" />
-    <meta property="og:title" content="SmashingApps.ai | AI-powered simplicity" />
-    <meta property="og:description" content="SmashingApps.ai - AI-powered micro-apps that help you smash through tasks with smart, fun, and focused tools" />
+    <meta property="og:title" content="SmashingApps.ai | AI-Powered Productivity Tools" />
+    <meta property="og:description" content="Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants." />
     <meta property="og:image" content="https://smashingapps.ai/og/default.png" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://smashingapps.ai/" />
-    <meta name="twitter:title" content="SmashingApps.ai | AI-powered simplicity" />
-    <meta name="twitter:description" content="SmashingApps.ai - AI-powered micro-apps that help you smash through tasks with smart, fun, and focused tools" />
+    <meta name="twitter:title" content="SmashingApps.ai | AI-Powered Productivity Tools" />
+    <meta name="twitter:description" content="Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants." />
     <meta name="twitter:image" content="https://smashingapps.ai/og/default.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>SmashingApps.ai | AI-powered simplicity</title>
+    <title>SmashingApps.ai | AI-Powered Productivity Tools</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-38TGWBFRMN"></script>
@@ -56,7 +77,13 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="root-fallback">
+        <h1>SmashingApps.ai | AI-Powered Productivity Tools</h1>
+        <p>Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants.</p>
+        <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
