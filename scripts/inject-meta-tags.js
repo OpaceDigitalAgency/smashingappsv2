@@ -14,10 +14,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Import the meta config
-// Use require for CommonJS compatibility
-const metaConfigModule = require('../src/utils/metaConfig.js');
-const metaConfig = metaConfigModule.default;
-const defaultMetaConfig = metaConfigModule.defaultMetaConfig;
+// Use dynamic import for ES module compatibility
+let metaConfig, defaultMetaConfig;
+try {
+  const metaConfigModule = await import('../src/utils/metaConfig.js');
+  metaConfig = metaConfigModule.default;
+  defaultMetaConfig = metaConfigModule.defaultMetaConfig;
+} catch (error) {
+  console.error('Error importing metaConfig:', error);
+  // Fallback to empty objects
+  metaConfig = {};
+  defaultMetaConfig = {};
+}
 // Removed duplicate import statement
 
 /**
