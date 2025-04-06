@@ -55,12 +55,13 @@ const defaultMetaConfig = {
   image: `${BASE_URL}/og/default.png`,
   canonical: BASE_URL,
   robots: 'index, follow'
+};
   
 // SPECIFIC PAGE SEO SETTINGS
 const metaConfig = {
   '/': {
-    title: 'SmashingApps.ai | Free AI Productivity Apps & Tools'',
-  description: 'Get things done faster with free AI planners and smart to-do lists. Smash tasks easily using auto task management from SmashingApps.ai.',
+    title: 'SmashingApps.ai | Free AI Productivity Apps & Tools',
+    description: 'Get things done faster with free AI planners and smart to-do lists. Smash tasks easily using auto task management from SmashingApps.ai.',
     image: `${BASE_URL}/og/homepage.png`,
     canonical: BASE_URL,
     structuredData: {
