@@ -410,17 +410,23 @@ div[class*="flex-1"][class*="flex"] > div,
   padding: 0.25rem 0.5rem !important;
 }
 /* Only apply small font size to text-gray-600 within the TaskSmasher app */
-.fade-in-app .text-gray-600 {
+body.task-smasher .text-gray-600 {
   font-size: 11px !important;
 }
 
 /* Keep normal font size for text-gray-600 on other pages */
-.text-gray-600 {
+body.home .text-gray-600 {
   font-size: inherit;
 }
 
-button {
-  font-size: revert !important; 
+/* Button styles for task-smasher pages */
+body.task-smasher button {
+  font-size: 11px !important;
+}
+
+/* Button styles for home page */
+body.home button {
+  font-size: inherit;
 }
 
 button.px-4 {

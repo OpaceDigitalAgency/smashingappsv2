@@ -20,8 +20,8 @@
  * See CONTRIBUTING.md for more detailed guidelines.
  */
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import SEO from './components/SEO';
 import StructuredData from './components/StructuredData';
@@ -92,13 +92,34 @@ const HomePage = () => (
  * 1. Add routes for the base path (both with and without trailing slash)
  * 2. Add routes for any specialized sub-paths if needed
  */
+// BodyClassManager component to manage body classes based on route
+const BodyClassManager = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Remove existing classes
+    document.body.classList.remove('home', 'task-smasher');
+    
+    // Add appropriate class based on the current route
+    if (location.pathname === '/') {
+      document.body.classList.add('home');
+    } else if (location.pathname.includes('/tools/task-smasher')) {
+      document.body.classList.add('task-smasher');
+    }
+  }, [location.pathname]);
+  
+  return null;
+};
 
 function App() {
   return (
     <HelmetProvider>
+    <HelmetProvider>
       <BrowserRouter>
         {/* Global SEO component - manages all meta tags */}
         <SEO />
+        {/* Body class manager component */}
+        <BodyClassManager />
         {/* Global Navbar - appears on all pages */}
         <Navbar />
         <div className="pt-0 min-h-screen flex flex-col"> {/* Add padding to account for the navbar */}
