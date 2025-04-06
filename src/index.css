@@ -414,5 +414,5 @@ div[class*="flex-1"][class*="flex"] > div,
 }
 
 button {
-  font-size: unset !important;
+  /* Removed font-size unset */
 }
