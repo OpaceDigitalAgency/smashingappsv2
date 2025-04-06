@@ -414,6 +414,24 @@ body.task-smasher .text-gray-600 {
   font-size: 11px !important;
 }
 
+/* Make H1 wrap at "AI-powered simplicity" on large desktop views */
+@media (min-width: 1400px) {
+  h1.text-4xl.sm\:text-5xl.md\:text-6xl {
+    display: inline-block;
+    max-width: 90%;
+  }
+  
+  h1.text-4xl.sm\:text-5xl.md\:text-6xl::after {
+    content: "with";
+    position: absolute;
+    visibility: hidden;
+  }
+  
+  h1.text-4xl.sm\:text-5xl.md\:text-6xl span.wrap-text {
+    display: block;
+  }
+}
+
 /* Keep normal font size for text-gray-600 on other pages */
 body.home .text-gray-600 {
   font-size: inherit;

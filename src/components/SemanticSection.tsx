@@ -2,7 +2,7 @@ import React from 'react';
 
 interface SemanticSectionProps {
   as?: 'section' | 'article' | 'main' | 'div' | 'header';
-  title?: string;
+  title?: string | React.ReactNode;
   titleAs?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
   subtitle?: string;
   subtitleAs?: 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p';

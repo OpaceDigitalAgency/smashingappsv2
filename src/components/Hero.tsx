@@ -7,7 +7,7 @@ const Hero: React.FC = () => {
     <SemanticSection
       as="section"
       className="hero-gradient py-16 sm:py-24"
-      title="Smash through tasks with AI-powered simplicity."
+      title={<>Smash through tasks with <span className="wrap-text">AI-powered simplicity.</span></>}
       titleAs="h1"
       titleClassName="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight"
       contentClassName="w-full px-4 sm:px-6 lg:px-8"
