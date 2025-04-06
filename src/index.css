@@ -378,3 +378,10 @@ div[class*="flex-1"][class*="flex"] > div,
     display: none !important;
   }
 }
+
+/* Hide filter button labels on small screens */
+@media (max-width: 550px) {
+  .filter-button-text {
+    display: none !important;
+  }
+}

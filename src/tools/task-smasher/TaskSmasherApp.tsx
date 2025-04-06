@@ -548,7 +548,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     onClick={() => setFiltersExpanded(!filtersExpanded)}
                   >
                     <Filter className="w-4 h-4" />
-                    <span className="truncate">Filters</span>
+                    <span className="truncate filter-button-text">Filters</span>
                     {filtersExpanded ?
                       <ChevronUp className="w-4 h-4 ml-auto flex-shrink-0" /> :
                       <ChevronDown className="w-4 h-4 ml-auto flex-shrink-0" />
@@ -561,7 +561,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     onClick={() => setSliderExpanded(!sliderExpanded)}
                   >
                     <Sliders className="w-4 h-4" />
-                    <span className="truncate">Subtasks: {breakdownLevel}</span>
+                    <span className="truncate filter-button-text">Subtasks: {breakdownLevel}</span>
                     {sliderExpanded ?
                       <ChevronUp className="w-4 h-4 ml-auto flex-shrink-0" /> :
                       <ChevronDown className="w-4 h-4 ml-auto flex-shrink-0" />
@@ -575,7 +575,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     title="Undo last action"
                   >
                     <Undo className="w-4 h-4" />
-                    <span className="truncate">Undo</span>
+                    <span className="truncate filter-button-text">Undo</span>
                   </button>
                 </div>
               </div>
