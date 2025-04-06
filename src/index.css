@@ -414,5 +414,10 @@ div[class*="flex-1"][class*="flex"] > div,
 }
 
 button {
-  /* Removed font-size unset */
+  font-size: revert !important; 
+}
+
+.px-4 {
+  padding-left: 0.5rem;
+  padding-right: 5rem;
 }
