@@ -211,6 +211,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   defaultHtml = defaultHtml.replace('<head>', `<head>\n  ${hideScript}`);
   
   // Inject basic body content for default index.html (for SEO and JS-disabled browsers)
+  // Update the fallback content in the body to match the meta description
+  // Update the fallback content in the body to match the meta description
   const defaultBodyContent = `
       <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
       <div id="root-fallback" style="display: none !important; visibility: hidden !important;">
