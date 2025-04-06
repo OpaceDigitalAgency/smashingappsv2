@@ -159,54 +159,28 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       try {
         console.log('Synchronizing with server rate limit on page load');
         
-        // First check if we have rate limit info in localStorage
-        const storedRateLimitInfo = localStorage.getItem('rateLimitInfo');
-        let localRateLimit: RateLimitInfo | null = null;
-        
-        if (storedRateLimitInfo) {
-          try {
-            console.log('Found stored rate limit info in localStorage');
-            const parsedInfo = JSON.parse(storedRateLimitInfo);
-            console.log('Parsed stored rate limit info:', parsedInfo);
-            
-            // Check if the stored info is still valid (not expired)
-            const resetTime = new Date(parsedInfo.reset);
-            if (resetTime > new Date()) {
-              // The stored info is still valid
-              localRateLimit = {
-                limit: parsedInfo.limit,
-                remaining: parsedInfo.remaining,
-                reset: resetTime,
-                used: parsedInfo.used
-              };
-              
-              // Update the client-side state with the localStorage information
-              setRateLimitInfo(localRateLimit);
-              setExecutionCount(localRateLimit.used);
-              setRateLimited(localRateLimit.remaining === 0);
-              
-              console.log('Using stored rate limit info:', localRateLimit);
-            } else {
-              console.log('Stored rate limit info is expired');
-            }
-          } catch (e) {
-            console.error('Error parsing stored rate limit info:', e);
-          }
-        }
-        
-        // If we don't have valid stored info, get it from the server
-        if (!localRateLimit) {
-          // Get the current rate limit status from the server
-          const serverRateLimit = await OpenAIService.getRateLimitStatus();
-          console.log('Received server rate limit:', serverRateLimit);
-          
-          // Update the client-side state with the server-side information
-          setRateLimitInfo(serverRateLimit);
-          setExecutionCount(serverRateLimit.used);
-          setRateLimited(serverRateLimit.remaining === 0);
-          
-          console.log('Updated state with server rate limit info');
-        }
+        // Always fetch the latest rate limit status from the server on page load
+        console.log('Fetching server rate limit on page load');
+        const serverRateLimit = await OpenAIService.getRateLimitStatus();
+        console.log('Received server rate limit:', serverRateLimit);
+
+        // Update the client-side state with the server-side information
+        setRateLimitInfo(serverRateLimit);
+        setExecutionCount(serverRateLimit.used);
+        setRateLimited(serverRateLimit.remaining === 0);
+
+        console.log('Updated state with server rate limit info');
+
+        // Update localStorage with the fresh server data
+        localStorage.setItem('rateLimitInfo', JSON.stringify({
+          limit: serverRateLimit.limit,
+          remaining: serverRateLimit.remaining,
+          reset: serverRateLimit.reset.toISOString(),
+          used: serverRateLimit.used
+        }));
+        localStorage.setItem('executionCount', serverRateLimit.used.toString());
+        localStorage.setItem('rateLimited', (serverRateLimit.remaining === 0).toString());
+        console.log('Updated localStorage with server rate limit info');
       } catch (error) {
         console.error('Error synchronizing with server rate limit:', error);
       }

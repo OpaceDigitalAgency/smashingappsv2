@@ -46,7 +46,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         </div>
       ) : (
         <div
-          className={`flex-grow text-xs ${
+          className={`flex-grow text-sm ${ /* Increased font size */
             subtask.completed
               ? 'line-through text-gray-400'
               : 'text-gray-700 hover:text-gray-900'
@@ -67,7 +67,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         >
           <span className="mr-1 max-w-[90%] break-words whitespace-normal">{subtask.title}</span>
           {subtask.title.length > 40 && (
-            <span className="text-xs text-indigo-500 flex-shrink-0 ml-1" title="Click to see full text">
+            <span className="text-sm text-indigo-500 flex-shrink-0 ml-1" title="Click to see full text"> {/* Match text-sm */}
               •••
             </span>
           )}
@@ -75,7 +75,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           
           {/* Prominent tooltip that appears immediately on hover */}
           {showTooltip && (
-            <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="subtask-tooltip bg-gray-800 text-white text-xs rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
+            <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="subtask-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700"> {/* Increased font size */}
               <div className="font-medium mb-1">Full Text:</div>
               {subtask.title}
             </div>
@@ -98,15 +98,15 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
               onChange={(e) => startEditing(taskId, subtask.id, 'time', e.target.value)}
               onBlur={() => handleEditSave(boardId)}
               onKeyDown={(e) => e.key === 'Enter' && handleEditSave(boardId)}
-              className="w-12 py-0.5 px-1.5 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-12 py-0.5 px-1.5 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500" /* Increased font size */
               min="0"
               autoFocus
             />
-            <span className="text-xs text-gray-500">h</span>
+            <span className="text-sm text-gray-500">h</span> {/* Increased font size */}
           </div>
         ) : (
           <div 
-            className="flex items-center text-xs text-gray-500 gap-1 px-1.5 py-0.5 rounded border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+            className="flex items-center text-sm text-gray-500 gap-1 px-1.5 py-0.5 rounded border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors duration-200" /* Increased font size */
             onClick={() => startEditing(taskId, subtask.id, 'time', subtask.estimatedTime.toString())}
           >
             <Timer className="w-3 h-3" />
@@ -117,7 +117,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         <div className="flex items-center">
           {/* Edit button */}
           <button 
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-0.5 rounded hover:bg-gray-100"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100" /* Increased padding */
             onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -126,7 +126,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           {/* Delete button */}
           <button
             onClick={() => onDeleteTask(subtask.id, boardId)}
-            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-0.5 rounded hover:bg-red-50"
+            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50" /* Increased padding */
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

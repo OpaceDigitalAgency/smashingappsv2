@@ -171,9 +171,9 @@ function Task({
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-xs overflow-hidden">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden"> {/* Increased font size */}
             <div
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 bg-gray-50 ${
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 bg-gray-50 ${ /* Increased padding */
                 isEditing && editing.field === 'time' ? '' : 'cursor-pointer hover:bg-gray-100'
               } transition-colors duration-200 flex-shrink-0`}
               onClick={() => !isEditing && startEditing(task.id, null, 'time', task.estimatedTime.toString())}
@@ -188,7 +188,7 @@ function Task({
                     onChange={(e) => startEditing(task.id, null, 'time', e.target.value)}
                     onBlur={() => handleEditSave(boardId)}
                     onKeyDown={(e) => e.key === 'Enter' && handleEditSave(boardId)}
-                    className="w-12 py-0.5 px-1 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-12 py-0.5 px-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500" /* Match text-sm */
                     min="0"
                     autoFocus
                   />
@@ -197,14 +197,14 @@ function Task({
               ) : (
                 <>
                   <Timer className="w-3.5 h-3.5 text-gray-500" />
-                  <span className="text-gray-600 font-medium">{task.estimatedTime}h</span>
+                  <span className="text-gray-600 font-medium">{task.estimatedTime}h</span> {/* Inherits text-sm */}
                 </>
               )}
             </div>
             
             <button
               onClick={handlePriorityChange}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`} {/* Increased padding and font size */}
               title="Click to change priority"
             >
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
@@ -212,7 +212,7 @@ function Task({
             
             <div className="flex ml-auto items-center gap-2 flex-shrink-0">
               <button
-                className="text-indigo-500 hover:text-indigo-700 transition-colors px-2.5 py-1 rounded-full hover:bg-indigo-50 font-medium"
+                className="text-indigo-500 hover:text-indigo-700 transition-colors px-3 py-1.5 rounded-full hover:bg-indigo-50 font-medium" /* Increased padding */
                 onClick={() => onShowFeedback(task.id)}
               >
                 Rate
@@ -225,11 +225,11 @@ function Task({
                     value={contextInput}
                     onChange={(e) => setContextInput(e.target.value)}
                     placeholder="Add notes..."
-                    className="flex-grow text-xs py-1 px-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="flex-grow text-sm py-1 px-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" /* Match text-sm */
                   />
                   <button
                     onClick={() => updateContext(task.id)}
-                    className="px-2 py-1 text-xs text-white bg-indigo-500 rounded hover:bg-indigo-600 transition-colors"
+                    className="px-2 py-1 text-sm text-white bg-indigo-500 rounded hover:bg-indigo-600 transition-colors" /* Match text-sm */
                   >
                     Add Notes
                   </button>
@@ -237,7 +237,7 @@ function Task({
               ) : (
                 <button
                   onClick={() => setShowContextInput(task.id)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100"
+                  className="text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100" /* Increased padding */
                   title={task.context ? "Edit notes" : "Add notes"}
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
@@ -246,7 +246,7 @@ function Task({
               
               <button
                 onClick={() => handleDelete && handleDelete(task.id, boardId)}
-                className="text-red-400 hover:text-red-600 transition-colors rounded-full p-1.5 hover:bg-red-50"
+                className="text-red-400 hover:text-red-600 transition-colors rounded-full p-2 hover:bg-red-50" /* Increased padding */
                 title="Delete task"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -255,7 +255,7 @@ function Task({
           </div>
           
           {task.context && (
-            <div className="mt-3 text-xs text-gray-600 bg-gray-50 rounded-lg p-3 shadow-sm">
+            <div className="mt-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-3 shadow-sm"> {/* Increased font size */}
               <span className="font-medium text-gray-700">Notes:</span> {task.context}
             </div>
           )}

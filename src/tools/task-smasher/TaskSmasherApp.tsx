@@ -470,7 +470,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                   <input
                     type="text"
                     placeholder="Add a new task..."
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                     value={newTask}
                     onChange={(e) => setNewTask(e.target.value)}
                   />
@@ -491,7 +491,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     addSmashEffectAt(buttonRect.left + buttonRect.width/2, buttonRect.top + buttonRect.height/2);
                   }}
                   disabled={!newTask.trim()}
-                  className="premium-button py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="premium-button py-3 px-4 rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   style={{
                     background: `linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 70%, white))`
                   }}
@@ -502,7 +502,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 
                 <div className="relative">
                   <button
-                    className={`py-2 px-4 border border-gray-200 rounded-lg flex items-center gap-2 h-full transition-all duration-200 ${
+                    className={`py-3 px-4 border border-gray-200 rounded-lg flex items-center gap-2 h-full transition-all duration-200 min-h-[44px] ${
                       generating
                         ? 'bg-indigo-50/80 border-indigo-200 shadow-sm animate-pulse'
                         : 'bg-white/80 backdrop-blur-sm hover:bg-gray-50'
@@ -524,152 +524,177 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
               </div>
             </div>
             
-            <div className="flex flex-wrap items-center gap-4 mt-4">
-              {/* Filters Button */}
-              <button 
-                className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200"
-                onClick={() => setFiltersExpanded(!filtersExpanded)}
-              >
-                <Filter className="w-4 h-4" />
-                <span>Filters</span>
-                {filtersExpanded ? 
-                  <ChevronUp className="w-4 h-4 ml-1" /> : 
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                }
-              </button>
-              
-              {/* Subtask Breakdown Slider Button */}
-              <button
-                className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200"
-                onClick={() => setSliderExpanded(!sliderExpanded)}
-              >
-                <Sliders className="w-4 h-4" />
-                <span>Number of subtasks: {breakdownLevel}</span>
-                {sliderExpanded ?
-                  <ChevronUp className="w-4 h-4 ml-1" /> :
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                }
-              </button>
-              
-              {/* Undo button next to filters */}
-              <button
-                onClick={handleUndo}
-                className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200"
-                title="Undo last action"
-              >
-                <Undo className="w-4 h-4" />
-                <span>Undo</span>
-              </button>
+            {/* reCAPTCHA Branding for inline badge */}
+            <div className="text-xs text-gray-500 mt-2 text-center sm:text-left">
+              This site is protected by reCAPTCHA and the Google{' '}
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+                Privacy Policy
+              </a>{' '}
+              and{' '}
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+                Terms of Service
+              </a>{' '}
+              apply.
             </div>
             
-            {/* Filters Panel */}
-            {filtersExpanded && (
-              <div className="bg-white/90 rounded-lg border border-gray-200 p-4 shadow-sm transition-all duration-300 mt-2 space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
-                    Priority Filter
-                  </h3>
-                  <div className="flex mb-2">
-                    <button
-                      onClick={() => setFilterPriority('all')}
-                      className={`px-3 py-1 text-sm rounded-l-md border border-r-0 ${
-                        filterPriority === 'all'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      All
-                    </button>
-                    <button
-                      onClick={() => setFilterPriority('high')}
-                      className={`px-3 py-1 text-sm border border-r-0 ${
-                        filterPriority === 'high'
-                          ? 'bg-red-50 text-red-700 border-red-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      High
-                    </button>
-                    <button
-                      onClick={() => setFilterPriority('medium')}
-                      className={`px-3 py-1 text-sm border border-r-0 ${
-                        filterPriority === 'medium'
-                          ? 'bg-orange-50 text-orange-700 border-orange-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      Medium
-                    </button>
-                    <button
-                      onClick={() => setFilterPriority('low')}
-                      className={`px-3 py-1 text-sm rounded-r-md border ${
-                        filterPriority === 'low'
-                          ? 'bg-gray-100 text-gray-700 border-gray-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      Low
-                    </button>
-                  </div>
-                </div>
+            {/* End of Task Input / AI Buttons Section */}
+          </SemanticSection>
+
+          {/* Controls Section (Filters, Subtasks, Undo) - Moved Below Input */}
+          <SemanticSection
+            as="div"
+            className="my-6" // Added vertical margin for spacing
+            title="Controls"
+            titleAs="h2"
+            titleClassName="sr-only" // Hide title visually, but keep for accessibility
+          >
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 transition-all duration-300 w-full">
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Filters Button */}
+                <button
+                  className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px]" // Increased padding/height
+                  onClick={() => setFiltersExpanded(!filtersExpanded)}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>Filters</span>
+                  {filtersExpanded ?
+                    <ChevronUp className="w-4 h-4 ml-1" /> :
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  }
+                </button>
                 
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
-                    Rating Filter
-                    <Star className="w-4 h-4 text-yellow-400" />
-                  </h3>
-                  <div className="flex flex-wrap">
-                    <button
-                      onClick={() => setFilterRating(0)}
-                      className={`px-3 py-1 text-sm rounded-l-md border border-r-0 ${
-                        filterRating === 0
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      All
-                    </button>
-                    {[5, 4, 3, 2, 1].map(rating => (
+                {/* Subtask Breakdown Slider Button */}
+                <button
+                  className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px]" // Increased padding/height
+                  onClick={() => setSliderExpanded(!sliderExpanded)}
+                >
+                  <Sliders className="w-4 h-4" />
+                  <span>Number of subtasks: {breakdownLevel}</span>
+                  {sliderExpanded ?
+                    <ChevronUp className="w-4 h-4 ml-1" /> :
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  }
+                </button>
+                
+                {/* Undo button */}
+                <button
+                  onClick={handleUndo}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px]" // Increased padding/height
+                  title="Undo last action"
+                >
+                  <Undo className="w-4 h-4" />
+                  <span>Undo</span>
+                </button>
+              </div>
+              
+              {/* Filters Panel */}
+              {filtersExpanded && (
+                <div className="bg-white/90 rounded-lg border border-gray-200 p-4 shadow-sm transition-all duration-300 mt-4 space-y-4"> {/* Added mt-4 */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
+                      Priority Filter
+                    </h3>
+                    <div className="flex flex-wrap mb-2 gap-1"> {/* Added flex-wrap and gap */}
                       <button
-                        key={rating}
-                        onClick={() => setFilterRating(rating as 0 | 1 | 2 | 3 | 4 | 5)}
-                        className={`px-3 py-1 text-sm border ${
-                          rating === 1 ? 'rounded-r-md' : 'border-r-0'
-                        } ${
-                          filterRating === rating
-                            ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                        onClick={() => setFilterPriority('all')}
+                        className={`px-3 py-1.5 text-sm rounded-md border ${ /* Increased py, adjusted rounding/borders */
+                          filterPriority === 'all'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                             : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                         }`}
                       >
-                        {rating}★
+                        All
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setFilterPriority('high')}
+                        className={`px-3 py-1.5 text-sm rounded-md border ${ /* Increased py, adjusted rounding/borders */
+                          filterPriority === 'high'
+                            ? 'bg-red-50 text-red-700 border-red-200'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        High
+                      </button>
+                      <button
+                        onClick={() => setFilterPriority('medium')}
+                        className={`px-3 py-1.5 text-sm rounded-md border ${ /* Increased py, adjusted rounding/borders */
+                          filterPriority === 'medium'
+                            ? 'bg-orange-50 text-orange-700 border-orange-200'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        Medium
+                      </button>
+                      <button
+                        onClick={() => setFilterPriority('low')}
+                        className={`px-3 py-1.5 text-sm rounded-md border ${ /* Increased py, adjusted rounding/borders */
+                          filterPriority === 'low'
+                            ? 'bg-gray-100 text-gray-700 border-gray-200'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        Low
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
+                      Rating Filter
+                      <Star className="w-4 h-4 text-yellow-400" />
+                    </h3>
+                    <div className="flex flex-wrap gap-1"> {/* Added flex-wrap and gap */}
+                      <button
+                        onClick={() => setFilterRating(0)}
+                        className={`px-3 py-1.5 text-sm rounded-md border ${ /* Increased py, adjusted rounding/borders */
+                          filterRating === 0
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {[5, 4, 3, 2, 1].map(rating => (
+                        <button
+                          key={rating}
+                          onClick={() => setFilterRating(rating as 0 | 1 | 2 | 3 | 4 | 5)}
+                          className={`px-3 py-1.5 text-sm rounded-md border ${ /* Increased py, adjusted rounding/borders */
+                            filterRating === rating
+                              ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {rating}★
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Subtask Breakdown Slider Panel */}
-            {sliderExpanded && (
-              <div className="bg-white/90 rounded-lg border border-gray-200 p-4 shadow-sm transition-all duration-300 mt-2">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Subtask Breakdown Level</h3>
-                <input
-                  type="range"
-                  min="2"
-                  max="8"
-                  value={breakdownLevel}
-                  onChange={(e) => setBreakdownLevel(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>2 (Simple)</span>
-                  <span>5 (Balanced)</span>
-                  <span>8 (Detailed)</span>
+              )}
+              
+              {/* Subtask Breakdown Slider Panel */}
+              {sliderExpanded && (
+                <div className="bg-white/90 rounded-lg border border-gray-200 p-4 shadow-sm transition-all duration-300 mt-4"> {/* Added mt-4 */}
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Subtask Breakdown Level</h3>
+                  <input
+                    type="range"
+                    min="2"
+                    max="8"
+                    value={breakdownLevel}
+                    onChange={(e) => setBreakdownLevel(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>2 (Simple)</span>
+                    <span>5 (Balanced)</span>
+                    <span>8 (Detailed)</span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </SemanticSection>
 
+          {/* Main Task Boards Section */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
