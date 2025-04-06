@@ -427,3 +427,7 @@ button.px-4 {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
+.home .px-4 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
