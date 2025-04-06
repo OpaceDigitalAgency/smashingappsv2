@@ -373,7 +373,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
            }}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Token dropdown/data bar - hidden on mobile */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300 w-full hidden md:block">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300 w-full model-dropdown-container">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                 {/* API key input removed - now using secure backend proxy */}
