@@ -385,3 +385,22 @@ div[class*="flex-1"][class*="flex"] > div,
     display: none !important;
   }
 }
+
+/* Make filter buttons square and left-aligned on small screens */
+@media (max-width: 550px) {
+  .filter-button {
+    width: auto !important;
+    flex: none !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .filter-buttons-container {
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+  }
+}
+
+/* Make task count text smaller */
+.task-count {
+  font-size: 11px !important;
+}

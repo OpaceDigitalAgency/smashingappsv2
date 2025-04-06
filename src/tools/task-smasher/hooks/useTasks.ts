@@ -45,7 +45,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   
   const [boards, setBoards] = useState<Board[]>([
     { id: 'todo', title: 'To Do', tasks: [] },
-    { id: 'inprogress', title: 'In Progress', tasks: [] },
+    { id: 'inprogress', title: 'Progress', tasks: [] },
     { id: 'done', title: 'Done', tasks: [] }
   ]);
   
@@ -980,7 +980,7 @@ Make sure to include all necessary ingredients with precise measurements before 
     // Create empty boards
     const emptyBoards: Board[] = [
       { id: 'todo', title: 'To Do', tasks: [] },
-      { id: 'inprogress', title: 'In Progress', tasks: [] },
+      { id: 'inprogress', title: 'Progress', tasks: [] },
       { id: 'done', title: 'Done', tasks: [] }
     ];
     
