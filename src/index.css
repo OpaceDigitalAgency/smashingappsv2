@@ -386,13 +386,16 @@ div[class*="flex-1"][class*="flex"] > div,
   }
 }
 
-/* Make filter buttons square and left-aligned on small screens */
+/* Make filter buttons perfect squares and left-aligned on small screens */
 @media (max-width: 550px) {
   .filter-button {
-    width: auto !important;
+    width: 44px !important;
+    height: 44px !important;
     flex: none !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
   .filter-buttons-container {
     justify-content: flex-start !important;
@@ -403,4 +406,6 @@ div[class*="flex-1"][class*="flex"] > div,
 /* Make task count text smaller */
 .task-count {
   font-size: 11px !important;
+  line-height: 1 !important;
+  padding: 0.25rem 0.5rem !important;
 }
