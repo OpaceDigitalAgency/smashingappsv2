@@ -114,7 +114,6 @@ const BodyClassManager = () => {
 function App() {
   return (
     <HelmetProvider>
-    <HelmetProvider>
       <BrowserRouter>
         {/* Global SEO component - manages all meta tags */}
         <SEO />

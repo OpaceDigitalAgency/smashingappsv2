@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Mail, Twitter, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -20,23 +20,9 @@ const Footer: React.FC = () => {
             <p className="mt-4 text-gray-300">
               ⚡️ Built with brainpower and bad jokes by Opace Ltd
             </p>
-            <div className="mt-6 flex space-x-4">
-              <a href="https://twitter.com/opaceltd" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                <Twitter className="h-6 w-6" />
-              </a>
-              <a href="https://github.com/OpaceDigitalAgency" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                <Github className="h-6 w-6" />
-              </a>
-              <a href="mailto:hello@opace.digital" className="text-gray-400 hover:text-white transition-colors">
-                <Mail className="h-6 w-6" />
-              </a>
-            </div>
             <div className="mt-4 flex items-center text-gray-400">
               <MapPin className="h-4 w-4 mr-2" />
               <span>Birmingham HQ</span>
-              <span className="mx-2">•</span>
-              <Mail className="h-4 w-4 mr-2" />
-              <a href="mailto:hello@opace.digital" className="hover:text-white transition-colors">hello@opace.digital</a>
             </div>
           </div>
           
