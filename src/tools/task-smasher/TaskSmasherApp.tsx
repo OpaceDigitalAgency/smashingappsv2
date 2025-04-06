@@ -372,7 +372,8 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
              background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`
            }}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300 w-full">
+          {/* Token dropdown/data bar - hidden on mobile */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 mb-6 transition-all duration-300 w-full hidden md:block">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                 {/* API key input removed - now using secure backend proxy */}
@@ -434,7 +435,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             titleClassName="text-2xl font-bold text-gray-900"
             subtitle="AI-powered task management"
             subtitleAs="p"
-            subtitleClassName="text-sm text-gray-500 ml-4"
+            subtitleClassName="text-sm text-gray-500 ml-auto italic" /* Right-aligned subtitle */
             contentClassName="w-full"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -464,24 +465,27 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
               </div>
             </div>
             
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-stretch flex-grow gap-2">
-                <form onSubmit={handleAddTask} className="flex-grow flex items-center relative">
-                  <input
-                    type="text"
-                    placeholder="Add a new task..."
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={isListening ? stopVoiceInput : startVoiceInput}
-                    className={`absolute right-4 text-gray-400 hover:text-gray-600 ${isListening ? 'text-red-500 hover:text-red-700' : ''}`}
-                  >
-                    <Mic className="w-5 h-5" />
-                  </button>
-                </form>
+            {/* Task input field - full width */}
+            <div className="flex flex-col gap-4">
+              <form onSubmit={handleAddTask} className="w-full flex items-center relative">
+                <input
+                  type="text"
+                  placeholder="Add a new task..."
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={isListening ? stopVoiceInput : startVoiceInput}
+                  className={`absolute right-4 text-gray-400 hover:text-gray-600 ${isListening ? 'text-red-500 hover:text-red-700' : ''}`}
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+              </form>
+              
+              {/* Action buttons on a new row */}
+              <div className="flex items-center gap-2">
                 <button
                   type="submit"
                   onClick={(e) => {
@@ -491,7 +495,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     addSmashEffectAt(buttonRect.left + buttonRect.width/2, buttonRect.top + buttonRect.height/2);
                   }}
                   disabled={!newTask.trim()}
-                  className="premium-button py-3 px-4 rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                  className="premium-button py-3 px-4 rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex-1"
                   style={{
                     background: `linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 70%, white))`
                   }}
@@ -500,42 +504,29 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                   <span>Add Task</span>
                 </button>
                 
-                <div className="relative">
-                  <button
-                    className={`py-3 px-4 border border-gray-200 rounded-lg flex items-center gap-2 h-full transition-all duration-200 min-h-[44px] ${
-                      generating
-                        ? 'bg-indigo-50/80 border-indigo-200 shadow-sm animate-pulse'
-                        : 'bg-white/80 backdrop-blur-sm hover:bg-gray-50'
-                    }`}
-                    onClick={(e) => {
-                      handleGenerateIdeas();
-                      // Add smash effect when generating ideas
-                      const buttonRect = (e.target as HTMLElement).getBoundingClientRect();
-                      addSmashEffectAt(buttonRect.left + buttonRect.width/2, buttonRect.top + buttonRect.height/2);
-                    }}
-                    disabled={generating}
-                  >
-                    <Sparkles className={`w-5 h-5 ${generating ? 'text-indigo-600' : 'text-indigo-500'}`} />
-                    <span className="hidden sm:inline text-gray-700">
-                      {generating ? 'Generating...' : 'Need Ideas?'}
-                    </span>
-                  </button>
-                </div>
+                <button
+                  className={`py-3 px-4 border border-gray-200 rounded-lg flex items-center gap-2 transition-all duration-200 min-h-[44px] flex-1 ${
+                    generating
+                      ? 'bg-indigo-50/80 border-indigo-200 shadow-sm animate-pulse'
+                      : 'bg-white/80 backdrop-blur-sm hover:bg-gray-50'
+                  }`}
+                  onClick={(e) => {
+                    handleGenerateIdeas();
+                    // Add smash effect when generating ideas
+                    const buttonRect = (e.target as HTMLElement).getBoundingClientRect();
+                    addSmashEffectAt(buttonRect.left + buttonRect.width/2, buttonRect.top + buttonRect.height/2);
+                  }}
+                  disabled={generating}
+                >
+                  <Sparkles className={`w-5 h-5 ${generating ? 'text-indigo-600' : 'text-indigo-500'}`} />
+                  <span className="text-gray-700">
+                    {generating ? 'Generating...' : 'Need Ideas?'}
+                  </span>
+                </button>
               </div>
             </div>
             
-            {/* reCAPTCHA Branding for inline badge */}
-            <div className="text-xs text-gray-500 mt-2 text-center sm:text-left">
-              This site is protected by reCAPTCHA and the Google{' '}
-              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
-                Privacy Policy
-              </a>{' '}
-              and{' '}
-              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
-                Terms of Service
-              </a>{' '}
-              apply.
-            </div>
+            {/* reCAPTCHA text removed from here - moved to bottom of page */}
             
             {/* End of Task Input / AI Buttons Section */}
           </SemanticSection>
@@ -703,7 +694,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             onDragOver={handleDragOver}
           >
             <SortableContext items={boards.map(board => board.id)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
                 {boards.map(board => (
                   <div key={board.id} className="flex flex-col w-full">
                     {/* Board header */}
@@ -887,6 +878,19 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
               }
             }}
           />
+          
+          {/* reCAPTCHA Branding moved to bottom of page */}
+          <div className="text-xs text-gray-500 mt-8 mb-4 text-center">
+            This site is protected by reCAPTCHA and the Google{' '}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+              Privacy Policy
+            </a>{' '}
+            and{' '}
+            <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+              Terms of Service
+            </a>{' '}
+            apply.
+          </div>
         </div>
       </div>
     </div>
