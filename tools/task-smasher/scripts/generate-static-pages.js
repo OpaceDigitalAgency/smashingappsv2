@@ -23,111 +23,70 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import the metaConfig from the src/utils directory
-import fs from 'fs';
-import path from 'path';
-
-// Read the metaConfig.cjs file to get the use case definitions
-const metaConfigPath = path.join(__dirname, '../../../src/utils/metaConfig.cjs');
-const metaConfigContent = fs.readFileSync(metaConfigPath, 'utf8');
-
-// Extract the useCaseDefinitions from the metaConfig.cjs file
-const useCaseDefinitionsMatch = metaConfigContent.match(/const useCaseDefinitions = ({[\s\S]*?});/);
-let useCaseDefinitions = {};
-
-if (useCaseDefinitionsMatch && useCaseDefinitionsMatch[1]) {
-  try {
-    // Convert the extracted string to a JavaScript object
-    // This is a simple approach and might not work for complex objects
-    const useCaseDefinitionsStr = useCaseDefinitionsMatch[1]
-      .replace(/(\w+):/g, '"$1":')  // Convert property names to strings
-      .replace(/'/g, '"')           // Convert single quotes to double quotes
-      .replace(/\s+/g, ' ')         // Normalize whitespace
-      .replace(/,\s*}/g, '}')       // Remove trailing commas
-      .replace(/,\s*]/g, ']');      // Remove trailing commas in arrays
-
-    useCaseDefinitions = JSON.parse(useCaseDefinitionsStr);
-    console.log('Successfully extracted useCaseDefinitions from metaConfig.cjs');
-  } catch (error) {
-    console.error('Error parsing useCaseDefinitions:', error);
-    // Fallback to default definitions if parsing fails
-    useCaseDefinitions = {
-      daily: {
-        label: "Daily Organizer",
-        description: "Plan your day efficiently with our free AI planner. Daily tasks simplified into magic to-do lists.",
-        keywords: ["today", "tomorrow", "morning", "evening", "daily", "schedule", "routine"]
-      },
-      goals: {
-        label: "Goal Planner",
-        description: "Achieve goals faster using our free AI task planner. Break down objectives into smart to-do lists.",
-        keywords: ["goal", "objective", "milestone", "achieve", "accomplish", "target"]
-      },
-      marketing: {
-        label: "Marketing Tasks",
-        description: "Organise marketing campaigns easily. Smart AI task manager creates structured to-do lists.",
-        keywords: ["marketing", "campaign", "social media", "post", "content", "email"]
-      },
-      recipe: {
-        label: "Recipe Steps",
-        description: "Turn any recipe into step-by-step smart to-do lists. Simplify cooking tasks with free AI planning.",
-        keywords: ["recipe", "cook", "bake", "ingredient", "food", "meal", "prep"]
-      },
-      home: {
-        label: "Home Chores",
-        description: "Effortlessly manage chores with AI to-do lists. Keep your home organised using our free AI task manager.",
-        keywords: ["clean", "tidy", "organize", "declutter", "laundry", "dishes"]
-      },
-      freelance: {
-        label: "Freelancer Projects",
-        description: "Manage freelance tasks effectively. Free AI planner to help create clear project workflows.",
-        keywords: ["client", "project", "deadline", "proposal", "contract", "invoice"]
-      },
-      travel: {
-        label: "Trip Planner",
-        description: "Free AI task planner for seamless travel. Smart to-do lists cover packing, bookings, and activities.",
-        keywords: ["travel", "trip", "vacation", "journey", "flight", "hotel", "booking"]
-      },
-      shopping: {
-        label: "Shopping Tasks",
-        description: "Plan your shopping effortlessly. Free AI-generated smart to-do lists keep purchases organised and on budget.",
-        keywords: ["shopping", "buy", "purchase", "store", "shop", "mall", "online"]
-      },
-      study: {
-        label: "Study Plan",
-        description: "Optimise studying with free AI-powered task breakdowns. Magic to-do lists help you stay focused and productive.",
-        keywords: ["study", "learn", "course", "class", "assignment", "homework"]
-      },
-      events: {
-        label: "Event Planning",
-        description: "Plan events with ease. Free AI auto task manager to organise guest lists, schedules, and more.",
-        keywords: ["event", "party", "celebration", "wedding", "birthday", "anniversary"]
-      },
-      diy: {
-        label: "DIY Projects",
-        description: "Simplify your DIY projects using our free AI task manager. Create clear and manageable steps.",
-        keywords: ["diy", "build", "make", "craft", "create", "project", "tool"]
-      },
-      creative: {
-        label: "Creative Projects",
-        description: "Turn creative ideas into reality with free AI task planners. Smart to-do lists structure your creative process.",
-        keywords: ["creative", "art", "design", "draw", "paint", "sketch", "illustration"]
-      }
-    };
+// Define the use case definitions directly
+// These should match the definitions in src/utils/metaConfig.cjs
+const useCaseDefinitions = {
+  daily: {
+    label: "Daily Organizer",
+    description: "Plan your day efficiently with our free AI planner. Daily tasks simplified into magic to-do lists.",
+    keywords: ["today", "tomorrow", "morning", "evening", "daily", "schedule", "routine"]
+  },
+  goals: {
+    label: "Goal Planner",
+    description: "Achieve goals faster using our free AI task planner. Break down objectives into smart to-do lists.",
+    keywords: ["goal", "objective", "milestone", "achieve", "accomplish", "target"]
+  },
+  marketing: {
+    label: "Marketing Tasks",
+    description: "Organise marketing campaigns easily. Smart AI task manager creates structured to-do lists.",
+    keywords: ["marketing", "campaign", "social media", "post", "content", "email"]
+  },
+  recipe: {
+    label: "Recipe Steps",
+    description: "Turn any recipe into step-by-step smart to-do lists. Simplify cooking tasks with free AI planning.",
+    keywords: ["recipe", "cook", "bake", "ingredient", "food", "meal", "prep"]
+  },
+  home: {
+    label: "Home Chores",
+    description: "Effortlessly manage chores with AI to-do lists. Keep your home organised using our free AI task manager.",
+    keywords: ["clean", "tidy", "organize", "declutter", "laundry", "dishes"]
+  },
+  freelance: {
+    label: "Freelancer Projects",
+    description: "Manage freelance tasks effectively. Free AI planner to help create clear project workflows.",
+    keywords: ["client", "project", "deadline", "proposal", "contract", "invoice"]
+  },
+  travel: {
+    label: "Trip Planner",
+    description: "Free AI task planner for seamless travel. Smart to-do lists cover packing, bookings, and activities.",
+    keywords: ["travel", "trip", "vacation", "journey", "flight", "hotel", "booking"]
+  },
+  shopping: {
+    label: "Shopping Tasks",
+    description: "Plan your shopping effortlessly. Free AI-generated smart to-do lists keep purchases organised and on budget.",
+    keywords: ["shopping", "buy", "purchase", "store", "shop", "mall", "online"]
+  },
+  study: {
+    label: "Study Plan",
+    description: "Optimise studying with free AI-powered task breakdowns. Magic to-do lists help you stay focused and productive.",
+    keywords: ["study", "learn", "course", "class", "assignment", "homework"]
+  },
+  events: {
+    label: "Event Planning",
+    description: "Plan events with ease. Free AI auto task manager to organise guest lists, schedules, and more.",
+    keywords: ["event", "party", "celebration", "wedding", "birthday", "anniversary"]
+  },
+  diy: {
+    label: "DIY Projects",
+    description: "Simplify your DIY projects using our free AI task manager. Create clear and manageable steps.",
+    keywords: ["diy", "build", "make", "craft", "create", "project", "tool"]
+  },
+  creative: {
+    label: "Creative Projects",
+    description: "Turn creative ideas into reality with free AI task planners. Smart to-do lists structure your creative process.",
+    keywords: ["creative", "art", "design", "draw", "paint", "sketch", "illustration"]
   }
-} else {
-  console.error('Could not find useCaseDefinitions in metaConfig.cjs');
-  // Use the fallback definitions
-  useCaseDefinitions = {
-    // ... same fallback definitions as above ...
-  };
-}
-
-// Add keywords to each use case if they don't exist
-Object.keys(useCaseDefinitions).forEach(key => {
-  if (!useCaseDefinitions[key].keywords) {
-    useCaseDefinitions[key].keywords = ["task", "management", "ai", "planner", "to-do"];
-  }
-});
+};
 
 // TEMPLATE LOADING
 // This reads the base HTML template that will be customized for each page
