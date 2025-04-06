@@ -215,7 +215,7 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   // Update the fallback content in the body to match the meta description
   const defaultBodyContent = `
       <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
-      <div id="root-fallback" style="display: none !important; visibility: hidden !important;">
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
         <h1>${defaultMetaConfig.title || 'SmashingApps.ai'}</h1>
         <p>${defaultMetaConfig.description || 'Loading...'}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
@@ -246,11 +246,11 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
       continue; // Skip the homepage as we've already updated index.html
     }
     
-    // Skip routes that are handled by the generate-static-pages.js script
-    if (route.startsWith('/tools/task-smasher/') && route !== '/tools/task-smasher/') {
-      console.log(`   Skipping ${route} as it's handled by the generate-static-pages.js script`);
-      continue;
-    }
+    // Don't skip any routes - we want to ensure all pages have correct meta tags
+    // if (route.startsWith('/tools/task-smasher/') && route !== '/tools/task-smasher/') {
+    //   console.log(`   Skipping ${route} as it's handled by the generate-static-pages.js script`);
+    //   continue;
+    // }
     
     // Create a copy of the HTML with route-specific meta tags
     let routeHtml = originalHtml;
@@ -391,7 +391,7 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     
     const routeBodyContent = `
       <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
-      <div id="root-fallback" style="display: none !important; visibility: hidden !important;">
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
         <h1>${h1Content}</h1>
         <p>${pContent}</p>
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>

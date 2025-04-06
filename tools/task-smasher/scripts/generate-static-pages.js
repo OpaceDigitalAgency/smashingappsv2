@@ -183,6 +183,12 @@ Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
   // This content is only for SEO - users will see the React app instead
   const contentHtml = `
     <div id="root">
+      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
+        <h1>${definition.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher</h1>
+        <p>${definition.description}</p>
+        <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
+      </div>
       <div class="min-h-screen w-full flex">
         <div class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col gap-2 shadow-sm z-10">
           <h2 class="text-lg font-semibold text-gray-900 mb-2">Use Case Categories</h2>
