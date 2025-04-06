@@ -464,9 +464,8 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 </button>
               </div>
             </div>
-            
-            {/* Task input field - full width */}
-            <div className="flex flex-col gap-4">
+            {/* Task input field and action buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
               <form onSubmit={handleAddTask} className="w-full flex items-center relative">
                 <input
                   type="text"
@@ -484,8 +483,8 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 </button>
               </form>
               
-              {/* Action buttons on a new row */}
-              <div className="flex items-center gap-2">
+              {/* Action buttons - side by side on desktop, stacked on mobile */}
+              <div className="flex items-center gap-2 sm:flex-shrink-0">
                 <button
                   type="submit"
                   onClick={(e) => {
@@ -495,7 +494,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                     addSmashEffectAt(buttonRect.left + buttonRect.width/2, buttonRect.top + buttonRect.height/2);
                   }}
                   disabled={!newTask.trim()}
-                  className="premium-button py-3 px-4 rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex-1"
+                  className="premium-button py-3 px-4 rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex-1 sm:flex-initial"
                   style={{
                     background: `linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 70%, white))`
                   }}
@@ -505,7 +504,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 </button>
                 
                 <button
-                  className={`py-3 px-4 border border-gray-200 rounded-lg flex items-center gap-2 transition-all duration-200 min-h-[44px] flex-1 ${
+                  className={`py-3 px-4 border border-gray-200 rounded-lg flex items-center gap-2 transition-all duration-200 min-h-[44px] flex-1 sm:flex-initial ${
                     generating
                       ? 'bg-indigo-50/80 border-indigo-200 shadow-sm animate-pulse'
                       : 'bg-white/80 backdrop-blur-sm hover:bg-gray-50'
@@ -540,42 +539,45 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             titleClassName="sr-only" // Hide title visually, but keep for accessibility
           >
             <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/80 p-4 transition-all duration-300 w-full">
-              <div className="flex flex-wrap items-center gap-4">
-                {/* Filters Button */}
-                <button
-                  className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px]" // Increased padding/height
-                  onClick={() => setFiltersExpanded(!filtersExpanded)}
-                >
-                  <Filter className="w-4 h-4" />
-                  <span>Filters</span>
-                  {filtersExpanded ?
-                    <ChevronUp className="w-4 h-4 ml-1" /> :
-                    <ChevronDown className="w-4 h-4 ml-1" />
-                  }
-                </button>
-                
-                {/* Subtask Breakdown Slider Button */}
-                <button
-                  className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px]" // Increased padding/height
-                  onClick={() => setSliderExpanded(!sliderExpanded)}
-                >
-                  <Sliders className="w-4 h-4" />
-                  <span>Number of subtasks: {breakdownLevel}</span>
-                  {sliderExpanded ?
-                    <ChevronUp className="w-4 h-4 ml-1" /> :
-                    <ChevronDown className="w-4 h-4 ml-1" />
-                  }
-                </button>
-                
-                {/* Undo button */}
-                <button
-                  onClick={handleUndo}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px]" // Increased padding/height
-                  title="Undo last action"
-                >
-                  <Undo className="w-4 h-4" />
-                  <span>Undo</span>
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {/* Control buttons in a row on mobile */}
+                <div className="flex items-center gap-2 w-full">
+                  {/* Filters Button */}
+                  <button
+                    className="flex items-center gap-1 px-2 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
+                    onClick={() => setFiltersExpanded(!filtersExpanded)}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="truncate">Filters</span>
+                    {filtersExpanded ?
+                      <ChevronUp className="w-4 h-4 ml-auto flex-shrink-0" /> :
+                      <ChevronDown className="w-4 h-4 ml-auto flex-shrink-0" />
+                    }
+                  </button>
+                  
+                  {/* Subtask Breakdown Slider Button */}
+                  <button
+                    className="flex items-center gap-1 px-2 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
+                    onClick={() => setSliderExpanded(!sliderExpanded)}
+                  >
+                    <Sliders className="w-4 h-4" />
+                    <span className="truncate">Subtasks: {breakdownLevel}</span>
+                    {sliderExpanded ?
+                      <ChevronUp className="w-4 h-4 ml-auto flex-shrink-0" /> :
+                      <ChevronDown className="w-4 h-4 ml-auto flex-shrink-0" />
+                    }
+                  </button>
+                  
+                  {/* Undo button */}
+                  <button
+                    onClick={handleUndo}
+                    className="flex items-center gap-1 px-2 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
+                    title="Undo last action"
+                  >
+                    <Undo className="w-4 h-4" />
+                    <span className="truncate">Undo</span>
+                  </button>
+                </div>
               </div>
               
               {/* Filters Panel */}

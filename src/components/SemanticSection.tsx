@@ -52,17 +52,24 @@ const SemanticSection: React.FC<SemanticSectionProps> = ({
   
   return (
     <SectionTag id={id} className={className}>
-      {title && (
+      {title && subtitle ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <TitleTag className={`${titleClassName}`}>
+            {title}
+          </TitleTag>
+          <SubtitleTag className={`${subtitleClassName}`}>
+            {subtitle}
+          </SubtitleTag>
+        </div>
+      ) : title ? (
         <TitleTag className={`${titleClassName}`}>
           {title}
         </TitleTag>
-      )}
-      
-      {subtitle && (
+      ) : subtitle ? (
         <SubtitleTag className={`${subtitleClassName}`}>
           {subtitle}
         </SubtitleTag>
-      )}
+      ) : null}
       
       <div className={contentClassName}>
         {children}
