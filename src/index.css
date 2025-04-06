@@ -423,7 +423,7 @@ button {
   font-size: revert !important; 
 }
 
-.px-4 {
+button.px-4 {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
