@@ -20,12 +20,14 @@
   from = "/"
   to = "/index.html"
   status = 200
+  force = false # Don't force redirect for bots
 
-# Route all tool paths through the SPA
+# Route all tool paths through the SPA, but allow bots to see the static files
 [[redirects]]
   from = "/tools/*"
-  to = "/index.html"
+  to = "/tools/:splat/index.html"
   status = 200
+  force = false # Don't force redirect for bots
 
 # API redirects for serverless functions
 [[redirects]]
@@ -44,3 +46,4 @@
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false # Don't force redirect for bots

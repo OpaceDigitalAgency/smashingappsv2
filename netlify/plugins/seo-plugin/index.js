@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Import the meta config
-const metaConfigPath = path.resolve(__dirname, '../../../src/utils/metaConfig.js');
+const metaConfigPath = path.resolve(__dirname, '../../../src/utils/metaConfig.cjs');
 let metaConfig, defaultMetaConfig;
 
 try {
@@ -70,6 +70,55 @@ module.exports = {
       defaultHtml = defaultHtml.replace('</head>', `  <meta name="robots" content="${defaultMetaConfig.robots}">\n  </head>`);
     }
     
+    // Always update Open Graph tags, replacing them if they exist
+    if (defaultMetaConfig.title && defaultMetaConfig.description && defaultMetaConfig.image) {
+      // First remove any existing OG and Twitter tags
+      defaultHtml = defaultHtml.replace(/<meta property="og:[^>]*>/g, '');
+      defaultHtml = defaultHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+      
+      // Then add the new OG and Twitter tags
+      const ogTags = `
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${defaultMetaConfig.canonical || 'https://smashingapps.ai'}" />
+  <meta property="og:title" content="${defaultMetaConfig.title}" />
+  <meta property="og:description" content="${defaultMetaConfig.description}" />
+  <meta property="og:image" content="${defaultMetaConfig.image}" />
+  <meta property="og:site_name" content="SmashingApps.ai" />
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${defaultMetaConfig.title}" />
+  <meta name="twitter:description" content="${defaultMetaConfig.description}" />
+  <meta name="twitter:image" content="${defaultMetaConfig.image}" />
+`;
+      defaultHtml = defaultHtml.replace('</head>', `${ogTags}\n  </head>`);
+      console.log(`Added OG and Twitter tags for homepage with description: ${defaultMetaConfig.description.substring(0, 50)}...`);
+    }
+    
+    // Add fallback content for SEO
+    if (defaultMetaConfig.title && defaultMetaConfig.description) {
+      const fallbackContent = `
+      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
+        <h1>${defaultMetaConfig.title}</h1>
+        <p>${defaultMetaConfig.description}</p>
+        <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
+      </div>
+    `;
+      
+      // Replace the empty root div with our content
+      if (defaultHtml.includes('<div id="root"></div>')) {
+        defaultHtml = defaultHtml.replace('<div id="root"></div>', `<div id="root">${fallbackContent}</div>`);
+        console.log(`Added fallback content for homepage`);
+      } else if (defaultHtml.includes('<div id="root">')) {
+        // If the root div already has content, try to replace it
+        const rootRegex = /<div id="root">[\s\S]*?<\/div>/;
+        defaultHtml = defaultHtml.replace(rootRegex, `<div id="root">${fallbackContent}</div>`);
+        console.log(`Replaced existing fallback content for homepage`);
+      }
+    }
+    
     // Write the updated default HTML back to index.html
     fs.writeFileSync(indexPath, defaultHtml);
     console.log(`✅ Updated default meta tags in ${indexPath}`);
@@ -109,8 +158,13 @@ module.exports = {
         routeHtml = routeHtml.replace('</head>', `  <meta name="robots" content="${meta.robots}">\n  </head>`);
       }
       
-      // Add Open Graph tags
-      if (meta.title && meta.description && meta.image && !routeHtml.includes('<meta property="og:title"')) {
+      // Always update Open Graph tags, replacing them if they exist
+      if (meta.title && meta.description && meta.image) {
+        // First remove any existing OG and Twitter tags
+        routeHtml = routeHtml.replace(/<meta property="og:[^>]*>/g, '');
+        routeHtml = routeHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+        
+        // Then add the new OG and Twitter tags
         const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
@@ -127,6 +181,7 @@ module.exports = {
   <meta name="twitter:image" content="${meta.image}" />
 `;
         routeHtml = routeHtml.replace('</head>', `${ogTags}\n  </head>`);
+        console.log(`Added OG and Twitter tags for ${route} with description: ${meta.description.substring(0, 50)}...`);
       }
       
       // Add structured data if available
@@ -140,6 +195,29 @@ module.exports = {
         routeHtml = routeHtml.replace('</head>', `${structuredDataTag}\n  </head>`);
       }
       
+      // Add fallback content for SEO
+      if (meta.title && meta.description) {
+        const fallbackContent = `
+      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
+      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
+        <h1>${meta.title}</h1>
+        <p>${meta.description}</p>
+        <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
+      </div>
+    `;
+        
+        // Replace the empty root div with our content
+        if (routeHtml.includes('<div id="root"></div>')) {
+          routeHtml = routeHtml.replace('<div id="root"></div>', `<div id="root">${fallbackContent}</div>`);
+          console.log(`Added fallback content for ${route}`);
+        } else if (routeHtml.includes('<div id="root">')) {
+          // If the root div already has content, try to replace it
+          const rootRegex = /<div id="root">[\s\S]*?<\/div>/;
+          routeHtml = routeHtml.replace(rootRegex, `<div id="root">${fallbackContent}</div>`);
+          console.log(`Replaced existing fallback content for ${route}`);
+        }
+      }
+      
       // Create the directory structure for the route
       const routePath = route.substring(1); // Remove leading slash
       const outputDir = path.join(PUBLISH_DIR, routePath);
@@ -150,7 +228,7 @@ module.exports = {
         // Write the HTML file
         const outputPath = path.join(outputDir, 'index.html');
         fs.writeFileSync(outputPath, routeHtml);
-        console.log(`✅ Created ${outputPath} with route-specific meta tags`);
+        console.log(`✅ Created ${outputPath} with route-specific meta tags and fallback content`);
       } catch (error) {
         console.error(`Error creating file for route ${route}:`, error);
       }
