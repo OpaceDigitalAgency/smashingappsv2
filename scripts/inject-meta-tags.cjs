@@ -87,9 +87,16 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   
   // Add Open Graph tags
   // Add Open Graph tags - Ensure defaultMetaConfig exists and use the same description as meta tag
-  if (defaultMetaConfig.title && defaultMetaConfig.description && defaultMetaConfig.image && !defaultHtml.includes('<meta property="og:title"')) {
-    const metaDescription = defaultMetaConfig.description;
-    const ogTags = `
+  // Always update OG and Twitter tags, replacing them if they exist
+  const metaDescription = defaultMetaConfig.description;
+  console.log(`Setting OG/Twitter description to: ${metaDescription.substring(0, 50)}...`);
+  
+  // First remove any existing OG and Twitter tags
+  defaultHtml = defaultHtml.replace(/<meta property="og:[^>]*>/g, '');
+  defaultHtml = defaultHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+  
+  // Then add the new OG and Twitter tags
+  const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${defaultMetaConfig.canonical || 'https://smashingapps.ai'}" />
@@ -104,8 +111,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   <meta name="twitter:description" content="${metaDescription}" />
   <meta name="twitter:image" content="${defaultMetaConfig.image}" />
 `;
-    defaultHtml = defaultHtml.replace('</head>', `${ogTags}\n  </head>`);
-  }
+  defaultHtml = defaultHtml.replace('</head>', `${ogTags}\n  </head>`);
+  console.log('Added OG and Twitter tags with matching description');
   
   // Add structured data if available
   if (defaultMetaConfig.structuredData && !defaultHtml.includes('application/ld+json')) {
@@ -293,10 +300,16 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     
     // Add Open Graph tags
     // Add Open Graph tags - Ensure meta exists and use the same description as meta tag
-    if (meta.title && meta.description && meta.image && !routeHtml.includes('<meta property="og:title"')) {
-      const metaDescription = meta.description;
-      console.log(`   Setting OG/Twitter description to: ${metaDescription.substring(0, 50)}...`);
-      const ogTags = `
+    // Always update OG and Twitter tags, replacing them if they exist
+    const metaDescription = meta.description;
+    console.log(`   Setting OG/Twitter description to: ${metaDescription.substring(0, 50)}...`);
+    
+    // First remove any existing OG and Twitter tags
+    routeHtml = routeHtml.replace(/<meta property="og:[^>]*>/g, '');
+    routeHtml = routeHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+    
+    // Then add the new OG and Twitter tags
+    const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${meta.canonical || 'https://smashingapps.ai' + route}" />
@@ -311,15 +324,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   <meta name="twitter:description" content="${metaDescription}" />
   <meta name="twitter:image" content="${meta.image}" />
 `;
-      routeHtml = routeHtml.replace('</head>', `${ogTags}\n  </head>`);
-      console.log('   Added OG and Twitter tags with matching description');
-    } else {
-      console.log('   Skipped OG/Twitter tags - missing required data or tags already exist');
-      console.log(`   - Title: ${meta.title ? 'Yes' : 'No'}`);
-      console.log(`   - Description: ${meta.description ? 'Yes' : 'No'}`);
-      console.log(`   - Image: ${meta.image ? 'Yes' : 'No'}`);
-      console.log(`   - OG title already exists: ${routeHtml.includes('<meta property="og:title"') ? 'Yes' : 'No'}`);
-    }
+    routeHtml = routeHtml.replace('</head>', `${ogTags}\n  </head>`);
+    console.log('   Added OG and Twitter tags with matching description');
     
     // Add structured data if available
     if (meta.structuredData && !routeHtml.includes('application/ld+json')) {
@@ -333,7 +339,7 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     }
     
     // Add Google Analytics and Hotjar tracking code to route-specific pages
-    const trackingCode = `
+    const routeTrackingCode = `
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-38TGWBFRMN"></script>
     <script>
@@ -355,7 +361,7 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
       })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
     </script>
     `;
-    routeHtml = routeHtml.replace('</head>', `${trackingCode}\n  </head>`);
+    routeHtml = routeHtml.replace('</head>', `${routeTrackingCode}\n  </head>`);
     
     // Add CSS to hide the fallback content for users with JavaScript enabled
     routeHtml = routeHtml.replace('</head>', `${hideFallbackCSS}\n  </head>`);
