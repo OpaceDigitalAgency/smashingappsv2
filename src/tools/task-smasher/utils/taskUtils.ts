@@ -169,7 +169,7 @@ export const exportToPDF = (boards: Board[]): void => {
                     </span>
                   </div>
                   <div class="task-meta">
-                    Estimated: ${task.estimatedTime}h • Status: ${task.completed ? 'Completed' : 'In Progress'}
+                    Estimated: ${task.estimatedTime}h • Status: ${task.completed ? 'Completed' : 'Progress'}
                   </div>
                   ${task.subtasks && task.subtasks.length > 0 ? `
                     <div class="subtasks">

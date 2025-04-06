@@ -64,6 +64,14 @@
   --secondary-light: var(--daily-secondary);
 }
 
+.text-gray-600 {
+    font-size: 11px !important;
+}
+
+button{
+  font-size: unset !important;
+}
+
 #root {
   min-height: 100vh;
   width: 100%;
