@@ -323,9 +323,9 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
 
   const currentUseCase = getCurrentUseCase();
   
-  // Create SEO overrides based on the current use case
+  // Create SEO overrides based on the current use case - match the format in metaConfig.ts
   const seoOverrides = currentUseCase ? {
-    title: `${currentUseCase.definition.label} - TaskSmasher | SmashingApps.ai`,
+    title: `${currentUseCase.definition.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher`,
     description: currentUseCase.definition.description
   } : undefined;
 
@@ -339,7 +339,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
         <>
           <StructuredData
             data={createSoftwareAppData(
-              `TaskSmasher - ${currentUseCase.definition.label}`,
+              `${currentUseCase.definition.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher`,
               currentUseCase.definition.description,
               `https://smashingapps.ai/tools/task-smasher/${currentUseCase.definition.label.toLowerCase().replace(/\s+/g, '-')}/`,
               `https://smashingapps.ai/og/task-smasher-${currentUseCase.id}.png`
@@ -386,7 +386,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
           <SemanticSection
             as="header"
             className="mb-8"
-            title={`TaskSmasher ${selectedUseCase && useCaseDefinitions[selectedUseCase]?.label}`}
+            title={`${selectedUseCase && useCaseDefinitions[selectedUseCase]?.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher`}
             titleAs="h1"
             titleClassName="text-2xl font-bold text-gray-900"
             subtitle="AI-powered task management"

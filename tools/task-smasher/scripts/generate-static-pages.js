@@ -105,6 +105,18 @@ if (!fs.existsSync(toolsDir)) {
   fs.mkdirSync(toolsDir, { recursive: true });
 }
 
+// Also create the directory in the main dist directory
+const mainDistDir = path.join(__dirname, '..', '..', '..', 'dist');
+if (!fs.existsSync(mainDistDir)) {
+  fs.mkdirSync(mainDistDir, { recursive: true });
+}
+
+// Create the tools/task-smasher directory within the main dist directory
+const mainToolsDir = path.join(mainDistDir, 'tools', 'task-smasher');
+if (!fs.existsSync(mainToolsDir)) {
+  fs.mkdirSync(mainToolsDir, { recursive: true });
+}
+
 // PAGE GENERATION
 // This loop creates a separate HTML file for each use case
 // Each page gets its own directory and customized content
@@ -217,7 +229,7 @@ Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
               <div class="flex items-center gap-4 w-full sm:w-auto">
                 <img src="/tools/task-smasher/assets/AITaskSmasher-small.png" alt="TaskSmasher Logo" class="w-8 h-8" />
-                <h1 class="text-2xl font-bold text-gray-900">TaskSmasher ${definition.label} YY</h1>
+                <h1 class="text-2xl font-bold text-gray-900">${definition.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher</h1>
                 <div class="ml-4 text-sm text-gray-500">AI-powered task management</div>
               </div>
             </div>
@@ -268,11 +280,19 @@ Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
     /<div id="root"><\/div>/,
     contentHtml
   );
-  
-  // Write the HTML file
+  // Write the HTML file to the local dist directory
   const indexPath = path.join(pageDir, 'index.html');
   fs.writeFileSync(indexPath, htmlWithContent);
   
+  // Also write the HTML file to the main dist directory
+  const mainPageDir = path.join(mainToolsDir, urlPath);
+  if (!fs.existsSync(mainPageDir)) {
+    fs.mkdirSync(mainPageDir, { recursive: true });
+  }
+  const mainIndexPath = path.join(mainPageDir, 'index.html');
+  fs.writeFileSync(mainIndexPath, htmlWithContent);
+  
+  console.log(`Generated static page for ${definition.label} at ${indexPath} and ${mainIndexPath}`);
   console.log(`Generated static page for ${definition.label} at ${indexPath}`);
 });
 

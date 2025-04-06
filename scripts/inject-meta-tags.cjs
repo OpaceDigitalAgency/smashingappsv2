@@ -221,7 +221,21 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
       </div>
     `;
-  defaultHtml = defaultHtml.replace('<div id="root"></div>', `<div id="root">${defaultBodyContent}</div>`);
+  
+  // Always replace the root div content, regardless of its current content
+  const rootDivRegex = /<div id="root"[^>]*>[\s\S]*?<\/div>/;
+  if (rootDivRegex.test(defaultHtml)) {
+    defaultHtml = defaultHtml.replace(rootDivRegex, `<div id="root">${defaultBodyContent}</div>`);
+    console.log('   Successfully injected fallback content for homepage');
+  } else if (defaultHtml.includes('<div id="root"></div>')) {
+    defaultHtml = defaultHtml.replace('<div id="root"></div>', `<div id="root">${defaultBodyContent}</div>`);
+    console.log('   Successfully injected fallback content for homepage');
+  } else {
+    console.log('   Could not find root div to inject fallback content for homepage');
+    // Try to insert before the closing body tag as a last resort
+    defaultHtml = defaultHtml.replace('</body>', `<div id="root">${defaultBodyContent}</div></body>`);
+    console.log('   Inserted fallback content before closing body tag for homepage');
+  }
 
   // Write the updated default HTML back to index.html
   fs.writeFileSync(indexPath, defaultHtml);
@@ -397,13 +411,19 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
         <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
       </div>
     `;
-    
-    if (routeHtml.includes('<div id="root"></div>')) {
+    // Always replace the root div content, regardless of its current content
+    const rootDivRegex = /<div id="root"[^>]*>[\s\S]*?<\/div>/;
+    if (rootDivRegex.test(routeHtml)) {
+      routeHtml = routeHtml.replace(rootDivRegex, `<div id="root">${routeBodyContent}</div>`);
+      console.log('   Successfully injected fallback content');
+    } else if (routeHtml.includes('<div id="root"></div>')) {
       routeHtml = routeHtml.replace('<div id="root"></div>', `<div id="root">${routeBodyContent}</div>`);
       console.log('   Successfully injected fallback content');
     } else {
-      console.log('   Could not find <div id="root"></div> to inject fallback content');
-      console.log('   HTML snippet:', routeHtml.substring(0, 500) + '...');
+      console.log('   Could not find root div to inject fallback content');
+      // Try to insert before the closing body tag as a last resort
+      routeHtml = routeHtml.replace('</body>', `<div id="root">${routeBodyContent}</div></body>`);
+      console.log('   Inserted fallback content before closing body tag');
     }
 
     // Write the HTML file
