@@ -210,7 +210,7 @@ module.exports = {
         if (routeHtml.includes('<div id="root"></div>')) {
           routeHtml = routeHtml.replace('<div id="root"></div>', `<div id="root">${fallbackContent}</div>`);
           console.log(`Added fallback content for ${route}`);
-        } else if (routeHtml.includes('<div id="root">')) {
+        } else {
           // If the root div already has content, try to replace it
           const rootRegex = /<div id="root">[\s\S]*?<\/div>/;
           routeHtml = routeHtml.replace(rootRegex, `<div id="root">${fallbackContent}</div>`);
