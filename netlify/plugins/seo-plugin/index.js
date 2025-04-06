@@ -28,6 +28,9 @@ module.exports = {
     const { PUBLISH_DIR } = constants;
     
     console.log('Running SEO Enhancer plugin...');
+    console.log('PUBLISH_DIR:', PUBLISH_DIR);
+    console.log('metaConfig:', metaConfig);
+    console.log('defaultMetaConfig:', defaultMetaConfig);
     
     // Check if the index.html file exists
     const indexPath = path.join(PUBLISH_DIR, 'index.html');
@@ -122,6 +125,7 @@ module.exports = {
     // Write the updated default HTML back to index.html
     fs.writeFileSync(indexPath, defaultHtml);
     console.log(`✅ Updated default meta tags in ${indexPath}`);
+    console.log(`Updated default meta tags in ${indexPath} with title: ${defaultMetaConfig.title} and description: ${defaultMetaConfig.description}`);
     
     // Create route-specific HTML files for each route in metaConfig
     for (const [route, meta] of Object.entries(metaConfig)) {
