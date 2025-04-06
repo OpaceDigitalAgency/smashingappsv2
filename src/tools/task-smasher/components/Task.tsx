@@ -204,7 +204,8 @@ function Task({
             
             <button
               onClick={handlePriorityChange}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`} {/* Increased padding and font size */}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`}
+              /* Increased padding and font size */
               title="Click to change priority"
             >
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
