@@ -409,8 +409,14 @@ div[class*="flex-1"][class*="flex"] > div,
   line-height: 1 !important;
   padding: 0.25rem 0.5rem !important;
 }
-.text-gray-600 {
+/* Only apply small font size to text-gray-600 within the TaskSmasher app */
+.fade-in-app .text-gray-600 {
   font-size: 11px !important;
+}
+
+/* Keep normal font size for text-gray-600 on other pages */
+.text-gray-600 {
+  font-size: inherit;
 }
 
 button {
