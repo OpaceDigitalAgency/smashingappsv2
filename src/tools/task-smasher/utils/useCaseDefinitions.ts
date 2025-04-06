@@ -44,7 +44,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "cook", "ingredient", "marketing", "campaign", "seo",
       "diy", "build", "paint", "travel", "flight", "hotel", "vacation"
     ],
-    description: "Everyday tasks, scheduled activities, and daily routines"  // Shown to users
+    description: "Plan your day efficiently with our free AI planner. Daily tasks simplified into magic to-do lists."  // Shown to users
   },
   // GOAL PLANNER
   // This use case helps users plan and track their long-term goals
@@ -60,7 +60,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "cook", "ingredient", "marketing", "campaign", "daily",
       "today", "tomorrow", "shopping", "buy", "purchase", "grocery"
     ],
-    description: "Long-term objectives, milestones, and personal development targets"  // Shown to users
+    description: "Achieve goals faster using our free AI task planner. Break down objectives into smart to-do lists."  // Shown to users
   },
   marketing: {
     label: "Marketing Tasks",
@@ -75,7 +75,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "cook", "ingredient", "diy", "build", "paint",
       "shopping", "grocery", "personal", "home", "cleaning", "fix"
     ],
-    description: "Marketing campaigns, content creation, SEO, and advertising tasks with project planning"
+    description: "Organise marketing campaigns easily. Smart AI task manager creates structured to-do lists."
   },
   recipe: {
     label: "Recipe Steps",
@@ -89,7 +89,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "marketing", "campaign", "seo", "email", "meeting", "work",
       "presentation", "analysis", "report", "review", "assignment"
     ],
-    description: "Cooking recipes with ingredients, step-by-step instructions, and kitchen tasks"
+    description: "Turn any recipe into step-by-step smart to-do lists. Simplify cooking tasks with free AI planning."
   },
   home: {
     label: "Home Chores",
@@ -103,7 +103,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "marketing", "campaign", "seo", "work", "meeting", "presentation",
       "travel", "flight", "hotel", "vacation", "report", "analysis"
     ],
-    description: "Household tasks, cleaning, organizing, and home maintenance"
+    description: "Effortlessly manage chores with AI to-do lists. Keep your home organised using our free AI task manager."
   },
   freelance: {
     label: "Freelancer Projects",
@@ -117,7 +117,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "cook", "ingredient", "home", "cleaning", "personal",
       "shopping", "grocery", "travel", "vacation", "family"
     ],
-    description: "Client work, freelance projects, and business management tasks"
+    description: "Manage freelance tasks effectively. Free AI planner to help create clear project workflows."
   },
   travel: {
     label: "Trip Planner",
@@ -131,7 +131,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "marketing", "work", "meeting", "home", "cleaning",
       "laundry", "assignment", "report", "analysis", "presentation"
     ],
-    description: "Travel planning, vacation itineraries, and trip logistics"
+    description: "Free AI task planner for seamless travel. Smart to-do lists cover packing, bookings, and activities."
   },
   shopping: {
     label: "Shopping Tasks",
@@ -145,7 +145,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "marketing", "campaign", "work", "meeting", "presentation",
       "travel", "flight", "hotel", "vacation", "report", "analysis"
     ],
-    description: "Shopping lists, purchase planning, and store errands"
+    description: "Plan your shopping effortlessly. Free AI-generated smart to-do lists keep purchases organised and on budget."
   },
   study: {
     label: "Study Plan",
@@ -159,7 +159,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "recipe", "marketing", "campaign", "home", "cleaning", "shopping",
       "travel", "vacation", "client", "freelance", "work"
     ],
-    description: "Academic tasks, learning goals, and education-related activities"
+    description: "Optimise studying with free AI-powered task breakdowns. Magic to-do lists help you stay focused and productive."
   },
   events: {
     label: "Event Planning",
@@ -173,7 +173,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "marketing", "campaign", "work", "meeting", "presentation",
       "assignment", "report", "analysis", "study", "exam", "test"
     ],
-    description: "Party planning, event organization, and gathering logistics"
+    description: "Plan events with ease. Free AI auto task manager to organise guest lists, schedules, and more."
   },
   diy: {
     label: "DIY Projects",
@@ -187,7 +187,7 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "marketing", "campaign", "work", "meeting", "presentation",
       "study", "exam", "assignment", "report", "analysis"
     ],
-    description: "Do-it-yourself projects, crafts, and home improvement tasks"
+    description: "Simplify your DIY projects using our free AI task manager. Create clear and manageable steps."
   },
   creative: {
     label: "Creative Projects",
@@ -201,6 +201,6 @@ export const useCaseDefinitions: Record<string, UseCaseDefinition> = {
       "marketing", "campaign", "work", "meeting", "presentation",
       "shopping", "grocery", "cleaning", "home", "laundry"
     ],
-    description: "Artistic endeavors, content creation, and creative pursuits"
+    description: "Turn creative ideas into reality with free AI task planners. Smart to-do lists structure your creative process."
   }
 };
