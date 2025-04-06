@@ -409,3 +409,10 @@ div[class*="flex-1"][class*="flex"] > div,
   line-height: 1 !important;
   padding: 0.25rem 0.5rem !important;
 }
+.text-gray-600 {
+  font-size: 11px !important;
+}
+
+button {
+  font-size: unset !important;
+}
