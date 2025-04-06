@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
           <div className="md:col-span-2">
             <a href="/" className="flex items-center">
               <img
-                src="/smashingapps-ai-small.png"
+                src="/smashingapps-ai-small-trans.png"
                 alt="SmashingApps.ai Logo"
                 className="h-20 w-auto"
               />
