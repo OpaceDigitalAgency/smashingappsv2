@@ -76,23 +76,23 @@
   }
 } */
 
-/* 3. Task layout for ALL screen sizes - UPDATED IMPLEMENTATION */
-/* Make task items display in column layout on ALL screen sizes */
-.task-item-container,
-.task-content > div:first-child,
-.task-content > div.flex {
+/* 3. Task layout for ALL screen sizes - DIRECT FIX */
+/* Force column layout for task items */
+.task-content {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
 }
 
-/* Make text field full width for ALL screen sizes */
-.task-title-container {
+/* Force the first div in task-content to be full width */
+.task-content > div:first-of-type {
   width: 100% !important;
-  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-/* Force the task text field to take full width for ALL screen sizes */
+/* Make the task title container full width */
+.task-title-container,
 .task-content h3,
 .task-content input[type="text"] {
   width: 100% !important;
@@ -100,53 +100,52 @@
   flex-grow: 1 !important;
 }
 
-/* Restructure the task metadata container for ALL screen sizes */
+/* Force task metadata to be in a column */
 .task-metadata {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
   width: 100% !important;
+  margin-top: 8px !important;
 }
 
-/* Move action buttons below and make them full width for ALL screen sizes */
+/* Force action buttons to be on a new line */
 .task-action-buttons,
-.task-metadata > div.flex.ml-auto {
+.task-metadata > div.flex.ml-auto,
+.task-actions {
   width: 100% !important;
-  margin-top: 0.75rem !important;
+  margin-top: 12px !important;
   margin-left: 0 !important;
   justify-content: flex-start !important;
-  order: 3 !important; /* Ensure it appears after time estimate and priority */
+  order: 3 !important;
   display: flex !important;
-  flex-wrap: wrap !important;
 }
 
-/* Style the time estimate and priority buttons for ALL screen sizes */
+/* Ensure time estimate and priority buttons have proper spacing */
 .task-metadata > div,
 .task-metadata > button {
-  margin-top: 0.5rem !important;
-  margin-right: 0.5rem !important;
+  margin-top: 8px !important;
+  margin-right: 8px !important;
 }
 
-/* Additional fix for task item layout for ALL screen sizes */
-.task-content > div.flex {
+/* Override any flex row settings */
+.task-content > div.flex,
+.task-metadata.flex {
   flex-direction: column !important;
   align-items: flex-start !important;
 }
 
-/* Ensure the task text field takes full width for ALL screen sizes */
-.task-content h3.task-title-container {
-  width: 100% !important;
-  max-width: 100% !important;
-  flex-basis: 100% !important;
+/* Fix overlapping icons - MORE SPECIFIC SELECTORS */
+.task-content button:has(.w-4.h-4),
+button[class*="text-gray-400"]:has(.w-4.h-4),
+.task-content > div:first-child > button {
+  margin-right: 15px !important;
 }
 
-/* Fix overlapping icons */
-button[class*="text-gray-400"]:has(.w-4.h-4) {
-  margin-right: 10px !important;
-}
-
-.task-content button:first-child {
-  margin-right: 10px !important;
+/* Ensure expand/collapse button has proper spacing */
+button:has(.w-4.h-4) + h3,
+button:has(.w-4.h-4) + input {
+  margin-left: 5px !important;
 }
 
 /* Mobile-specific font size adjustments */
