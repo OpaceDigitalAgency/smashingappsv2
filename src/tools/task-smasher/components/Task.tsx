@@ -118,29 +118,32 @@ function Task({
           : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
       } p-4 mb-3 transition-all duration-200 cursor-grab active:cursor-grabbing`}
     >
-      <div className="flex items-start gap-3">
-        <button
-          onClick={() => onToggleComplete(task.id, boardId)}
-          className={`flex-shrink-0 mt-0.5 w-6 h-6 rounded-full ${
-            task.completed
-              ? 'text-green-500 bg-green-50 hover:bg-green-100'
-              : 'text-gray-300 bg-gray-50 hover:bg-gray-100'
-          } transition-all duration-200 flex items-center justify-center`}
-        >
-          <CheckCircle2 className="w-5 h-5" />
-        </button>
+      <div className="flex flex-col items-start gap-3">
+        <div className="w-full flex items-center gap-4">
+          <button
+            onClick={() => onToggleComplete(task.id, boardId)}
+            className={`flex-shrink-0 w-6 h-6 rounded-full ${
+              task.completed
+                ? 'text-green-500 bg-green-50 hover:bg-green-100'
+                : 'text-gray-300 bg-gray-50 hover:bg-gray-100'
+            } transition-all duration-200 flex items-center justify-center`}
+          >
+            <CheckCircle2 className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={() => onToggleExpanded(task.id)}
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 flex-shrink-0 p-1 rounded-full hover:bg-gray-100"
+          >
+            {task.expanded
+              ? <ChevronDown className="w-4 h-4" />
+              : <ChevronRight className="w-4 h-4" />
+            }
+          </button>
+        </div>
         
-        <div className="flex-grow min-w-0 task-content" style={{ position: 'relative' }}>
+        <div className="flex-grow min-w-0 task-content w-full" style={{ position: 'relative' }}>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onToggleExpanded(task.id)}
-              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 flex-shrink-0 p-1 rounded-full hover:bg-gray-100"
-            >
-              {task.expanded
-                ? <ChevronDown className="w-4 h-4" />
-                : <ChevronRight className="w-4 h-4" />
-              }
-            </button>
             
             {isEditing && editing.field === 'title' ? (
               <input
@@ -221,7 +224,6 @@ function Task({
               <GripVertical className="w-4 h-4" />
             </div>
           </div>
-          
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden task-metadata"> {/* Added task-metadata class for targeting in CSS */}
             <div
               className={`flex items-center gap-1 rounded-full px-3 py-1.5 bg-gray-50 ${ /* Increased padding */
@@ -253,14 +255,17 @@ function Task({
               )}
             </div>
             
-            <button
-              onClick={handlePriorityChange}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`}
-              /* Increased padding and font size */
-              title="Click to change priority"
-            >
-              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-            </button>
+            <div className="task-priority-container">
+              <button
+                onClick={handlePriorityChange}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium ${priorityClasses[task.priority]} flex-shrink-0 transition-colors duration-200 cursor-pointer shadow-sm`}
+                /* Increased padding and font size */
+                title="Click to change priority"
+              >
+                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              </button>
+            </div>
+            
             <div className="flex ml-auto items-center gap-2 flex-shrink-0 task-actions task-action-buttons"> {/* Added task-action-buttons class for targeting in CSS */}
               <button
                 className="text-indigo-500 hover:text-indigo-700 transition-colors px-3 py-1.5 rounded-full hover:bg-indigo-50 font-medium" /* Increased padding */
