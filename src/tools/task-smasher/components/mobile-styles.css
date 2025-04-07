@@ -25,15 +25,23 @@
     font-size: 1.125rem !important; /* Keep as text-lg */
   }
   
-  /* Increase font size for specific text elements in header/filter area */
+  /* Increase font size for ALL text elements in header/filter area EXCEPT for "To Do" list title */
+  .task-text,
+  .subtask-text,
+  .filter-text,
+  .add-task-placeholder,
+  .need-ideas-text,
+  .board-header button,
+  .board-header span,
+  .board-header div,
   input[type="text"]::placeholder {
-    font-size: 1rem !important; /* Increase placeholder text size */
+    font-size: 1.2rem !important; /* Explicitly increase font size */
   }
   
   /* Increase size for "Need Ideas?", "Filters", "Subtasks:", "Undo" text */
   .premium-button span,
   button:not([class*="rounded-full"]) span {
-    font-size: 1rem !important;
+    font-size: 1.2rem !important;
   }
 }
 
@@ -78,7 +86,7 @@
   
   /* Increase font size for task title only */
   .task-content h3 {
-    font-size: 1.125rem !important; /* Increase from text-base to text-lg */
+    font-size: 1.25rem !important; /* Increase from text-base to text-xl */
   }
   
   /* Restructure the task metadata container for mobile */
@@ -89,8 +97,26 @@
     width: 100% !important;
   }
   
+  /* Make task items display in column layout on mobile */
+  .task-item-container,
+  .task-content > div:first-child,
+  .task-content > div.flex {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  /* Force the task text field to take full width */
+  .task-content h3,
+  .task-content input[type="text"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-grow: 1 !important;
+  }
+  
   /* Move action buttons below and make them full width */
-  .task-action-buttons {
+  .task-action-buttons,
+  .task-metadata > div.flex.ml-auto {
     width: 100% !important;
     margin-top: 0.75rem !important;
     margin-left: 0 !important;
@@ -107,17 +133,34 @@
     margin-right: 0.5rem !important;
   }
   
-  /* Increase text size for all buttons in the header/filter area */
-  .board-header button,
-  .board-header span,
-  .board-header div {
+  /* Increase text size for all text elements */
+  .task-text,
+  .subtask-text,
+  .filter-text,
+  .add-task-placeholder,
+  .need-ideas-text,
+  .task-content span,
+  .task-content div:not(.task-action-buttons) span {
+    font-size: 1.2rem !important;
+  }
+  
+  /* Keep buttons at text-sm but slightly larger for mobile */
+  .task-content button.rounded-full,
+  .task-content button.px-3.py-1\.5 {
     font-size: 1rem !important;
   }
   
-  /* Keep buttons at text-sm */
-  .task-content button.rounded-full,
-  .task-content button.px-3.py-1\.5 {
-    font-size: 0.875rem !important;
+  /* Additional fix for task item layout */
+  .task-content > div.flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  
+  /* Ensure the task text field takes full width */
+  .task-content h3.task-title-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
   }
 }
 /* 4. Click-outside behavior for tooltips and menus - COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT) */
