@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CheckCircle2, ChevronDown, ChevronRight, Plus, RefreshCw, Sparkles, Timer, Trash2, MessageCircle, Star, GripVertical } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronRight, Plus, RefreshCw, Sparkles, Timer, Trash2, MessageCircle, Star, GripVertical, HelpCircle } from 'lucide-react';
 import { TaskProps } from '../types';
 import Subtask from './Subtask';
 
@@ -104,7 +104,7 @@ function Task({
           <CheckCircle2 className="w-5 h-5" />
         </button>
         
-        <div className="flex-grow min-w-0" style={{ position: 'relative' }}>
+        <div className="flex-grow min-w-0 task-content" style={{ position: 'relative' }}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onToggleExpanded(task.id)}
@@ -132,11 +132,11 @@ function Task({
                   task.completed
                     ? 'line-through text-gray-400'
                     : 'text-gray-700 hover:text-gray-900'
-                } cursor-pointer transition-colors duration-200 relative flex items-center`}
+                } cursor-pointer transition-colors duration-200 relative flex items-center task-title-container mobile-tooltip-trigger`}
                 onClick={() => startEditing(task.id, null, 'title', task.title)}
                 onMouseEnter={(e) => {
                   setShowTooltip(true);
-                  // Position the tooltip near the cursor
+                  // Position the tooltip near the cursor on desktop
                   setTimeout(() => {
                     const tooltip = document.querySelector('.task-tooltip') as HTMLElement;
                     if (tooltip) {
@@ -149,17 +149,36 @@ function Task({
               >
                 <span className="mr-1 max-w-[90%] break-words whitespace-normal">{task.title}</span>
                 {task.title.length > 50 && (
-                  <span className="text-xs text-indigo-500 flex-shrink-0 ml-1" title="Click to see full text">
+                  <span className="text-xs text-indigo-500 flex-shrink-0 ml-1 hidden md:inline" title="Click to see full text">
                     •••
                   </span>
                 )}
                 
-                {/* Prominent tooltip that appears immediately on hover */}
+                {/* Tooltip icon for mobile - only visible on mobile */}
+                {task.title.length > 30 && (
+                  <span className="mobile-tooltip-icon hidden" onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTooltip(!showTooltip);
+                  }}>
+                    <HelpCircle className="w-4 h-4 text-indigo-500 ml-1" />
+                  </span>
+                )}
+                
+                {/* Desktop tooltip that appears on hover */}
                 {showTooltip && (
-                  <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="task-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
-                    <div className="font-medium mb-1">Full Text:</div>
-                    {task.title}
-                  </div>
+                  <>
+                    {/* Desktop tooltip - fixed position near cursor */}
+                    <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="task-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
+                      <div className="font-medium mb-1">Full Text:</div>
+                      {task.title}
+                    </div>
+                    
+                    {/* Mobile tooltip - positioned above the text */}
+                    <div className="mobile-tooltip">
+                      <div className="font-medium mb-1">Full Text:</div>
+                      {task.title}
+                    </div>
+                  </>
                 )}
               </h3>
             )}
@@ -211,7 +230,7 @@ function Task({
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
             </button>
             
-            <div className="flex ml-auto items-center gap-2 flex-shrink-0">
+            <div className="flex ml-auto items-center gap-2 flex-shrink-0 task-actions">
               <button
                 className="text-indigo-500 hover:text-indigo-700 transition-colors px-3 py-1.5 rounded-full hover:bg-indigo-50 font-medium" /* Increased padding */
                 onClick={() => onShowFeedback(task.id)}

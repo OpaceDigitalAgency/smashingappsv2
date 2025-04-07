@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import './components/mobile-styles.css'; // Import mobile-specific styles
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
-import ModelDropdown from './components/ModelDropdown';
 import ModelDropdown from './components/ModelDropdown';
 import SemanticSection from '../../components/SemanticSection';
 import {
@@ -656,7 +656,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 {boards.map(board => (
                   <div key={board.id} className="flex flex-col w-full">
                     {/* Board header */}
-                    <div id={board.id} className="bg-white rounded-t-lg p-4 border border-gray-200 shadow-sm mb-1 flex items-center justify-between">
+                    <div id={board.id} className="board-header bg-white rounded-t-lg p-4 border border-gray-200 shadow-sm mb-1 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="text-gray-400 cursor-grab mr-1">
                           <GripVertical className="w-4 h-4" />
@@ -674,7 +674,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                             />
                           </div>
                         ) : (
-                          <h2 className="text-lg font-medium text-gray-800">{board.title}</h2>
+                          <h2 className={`text-lg font-medium text-gray-800 ${board.title === 'To Do' ? 'todo-header' : ''}`}>{board.title}</h2>
                         )}
                         <button
                           onClick={() => setEditingBoardId(board.id)}
@@ -683,7 +683,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                           <Pencil className="w-4 h-4" />
                         </button>
                       </div>
-                      <div className="text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                      <div className="task-count text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
                         {getFilteredTasks(board.id).length} {getFilteredTasks(board.id).length === 1 ? 'task' : 'tasks'}
                       </div>
                     </div>
