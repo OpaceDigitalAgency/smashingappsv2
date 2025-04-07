@@ -37,19 +37,16 @@
   }
 }
 
-/* 2. Tooltip icon and positioning */
-@media screen and (max-width: 480px) and (orientation: portrait) {
-  /* Hide the default tooltip */
+/* 2. Tooltip icon and positioning - COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT) */
+/* @media screen and (max-width: 480px) and (orientation: portrait) {
   .task-tooltip {
     display: none !important;
   }
   
-  /* Show the tooltip icon */
   .mobile-tooltip-icon {
     display: inline-flex !important;
   }
   
-  /* Style for the tooltip that appears above */
   .mobile-tooltip {
     position: absolute;
     bottom: 100%;
@@ -67,25 +64,16 @@
     width: 100%;
     animation: fadeIn 0.15s ease-out forwards;
     display: block !important;
-    pointer-events: none; /* Ensure tooltip doesn't block interaction */
+    pointer-events: none;
   }
-}
+} */
 
-/* 3. Task action buttons layout for mobile portrait */
+/* 3. Task action buttons layout for mobile portrait - IMPROVED IMPLEMENTATION */
 @media screen and (max-width: 480px) and (orientation: portrait) {
   /* Make text field full width */
   .task-title-container {
     width: 100% !important;
     max-width: 100% !important;
-  }
-  
-  /* Move action buttons below */
-  .task-action-buttons {
-    width: 100% !important;
-    margin-top: 0.75rem !important;
-    margin-left: 0 !important;
-    justify-content: flex-start !important;
-    order: 3 !important; /* Ensure it appears after time estimate and priority */
   }
   
   /* Increase font size for task title only */
@@ -95,9 +83,21 @@
   
   /* Restructure the task metadata container for mobile */
   .task-metadata {
+    display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
     width: 100% !important;
+  }
+  
+  /* Move action buttons below and make them full width */
+  .task-action-buttons {
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+    order: 3 !important; /* Ensure it appears after time estimate and priority */
+    display: flex !important;
+    flex-wrap: wrap !important;
   }
   
   /* Style the time estimate and priority buttons */
@@ -107,16 +107,21 @@
     margin-right: 0.5rem !important;
   }
   
-  /* REVERT incorrect font size increases for buttons */
+  /* Increase text size for all buttons in the header/filter area */
+  .board-header button,
+  .board-header span,
+  .board-header div {
+    font-size: 1rem !important;
+  }
+  
+  /* Keep buttons at text-sm */
   .task-content button.rounded-full,
   .task-content button.px-3.py-1\.5 {
-    font-size: 0.875rem !important; /* Keep buttons at text-sm */
+    font-size: 0.875rem !important;
   }
 }
-
-/* 4. Click-outside behavior for tooltips and menus */
-.mobile-tooltip {
-  pointer-events: none !important; /* Ensure tooltip doesn't block interaction */
-}
-
+/* 4. Click-outside behavior for tooltips and menus - COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT) */
+/* .mobile-tooltip {
+  pointer-events: none !important;
+} */
 /* Redundant block removed */

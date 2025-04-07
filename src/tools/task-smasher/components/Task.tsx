@@ -57,32 +57,33 @@ function Task({
 
   const isEditing = editing.taskId === task.id && !editing.subtaskId;
   const isGenerating = generating && activeTask === task.id;
-  const [showDesktopTooltip, setShowDesktopTooltip] = useState(false);
-  const [showMobileTooltip, setShowMobileTooltip] = useState(false); // State for mobile tooltip
-  const mobileTooltipRef = useRef<HTMLDivElement>(null);
-  const helpIconRef = useRef<HTMLSpanElement>(null);
+  // TOOLTIP FUNCTIONALITY COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT)
+  // const [showDesktopTooltip, setShowDesktopTooltip] = useState(false);
+  // const [showMobileTooltip, setShowMobileTooltip] = useState(false); // State for mobile tooltip
+  // const mobileTooltipRef = useRef<HTMLDivElement>(null);
+  // const helpIconRef = useRef<HTMLSpanElement>(null);
 
-  // Add click-outside behavior for mobile tooltip
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      // Close mobile tooltip when clicking outside
-      if (showMobileTooltip &&
-          mobileTooltipRef.current &&
-          !mobileTooltipRef.current.contains(event.target as Node) &&
-          helpIconRef.current &&
-          !helpIconRef.current.contains(event.target as Node)) {
-        setShowMobileTooltip(false);
-      }
-    }
+  // // Add click-outside behavior for mobile tooltip
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     // Close mobile tooltip when clicking outside
+  //     if (showMobileTooltip &&
+  //         mobileTooltipRef.current &&
+  //         !mobileTooltipRef.current.contains(event.target as Node) &&
+  //         helpIconRef.current &&
+  //         !helpIconRef.current.contains(event.target as Node)) {
+  //       setShowMobileTooltip(false);
+  //     }
+  //   }
 
-    // Add event listener
-    document.addEventListener('mousedown', handleClickOutside);
+  //   // Add event listener
+  //   document.addEventListener('mousedown', handleClickOutside);
     
-    // Clean up
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMobileTooltip]);
+  //   // Clean up
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside);
+  //   };
+  // }, [showMobileTooltip]);
 
   const handlePriorityChange = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -159,18 +160,19 @@ function Task({
                     : 'text-gray-700 hover:text-gray-900'
                 } cursor-pointer transition-colors duration-200 relative flex items-center task-title-container mobile-tooltip-trigger`}
                 onClick={() => startEditing(task.id, null, 'title', task.title)}
-                onMouseEnter={(e) => {
-                  setShowDesktopTooltip(true);
-                  // Position the tooltip near the cursor on desktop
-                  setTimeout(() => {
-                    const tooltip = document.querySelector('.task-tooltip') as HTMLElement;
-                    if (tooltip) {
-                      tooltip.style.left = `${e.clientX + 10}px`;
-                      tooltip.style.top = `${e.clientY + 10}px`;
-                    }
-                  }, 0);
-                }}
-                onMouseLeave={() => setShowDesktopTooltip(false)}
+                // TOOLTIP FUNCTIONALITY COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT)
+                // onMouseEnter={(e) => {
+                //   setShowDesktopTooltip(true);
+                //   // Position the tooltip near the cursor on desktop
+                //   setTimeout(() => {
+                //     const tooltip = document.querySelector('.task-tooltip') as HTMLElement;
+                //     if (tooltip) {
+                //       tooltip.style.left = `${e.clientX + 10}px`;
+                //       tooltip.style.top = `${e.clientY + 10}px`;
+                //     }
+                //   }, 0);
+                // }}
+                // onMouseLeave={() => setShowDesktopTooltip(false)}
               >
                 <span className="mr-1 max-w-[90%] break-words whitespace-normal">{task.title}</span>
                 {task.title.length > 50 && (
@@ -179,37 +181,37 @@ function Task({
                   </span>
                 )}
                 
-                {/* Tooltip icon for mobile - only visible on mobile */}
-                {task.title.length > 30 && (
+                {/* TOOLTIP FUNCTIONALITY COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT) */}
+                {/* {task.title.length > 30 && (
                   <span
                     ref={helpIconRef}
-                    className="mobile-tooltip-icon" // Removed hidden classes
+                    className="mobile-tooltip-icon"
                     onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation(); // Prevent triggering edit
-                      setShowMobileTooltip(!showMobileTooltip); // Toggle mobile tooltip state
+                      e.stopPropagation();
+                      setShowMobileTooltip(!showMobileTooltip);
                     }}
                   >
                     <HelpCircle className="w-4 h-4 text-indigo-500 ml-1" />
                   </span>
-                )}
+                )} */}
                 
-                {/* Desktop tooltip that appears on hover */}
-                {showDesktopTooltip && (
+                {/* Desktop tooltip that appears on hover - COMMENTED OUT */}
+                {/* {showDesktopTooltip && (
                   <>
-                    {/* Desktop tooltip - fixed position near cursor */}
                     <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="task-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
                       <div className="font-medium mb-1">Full Text:</div>
                       {task.title}
                     </div>
                   </>
-                )}
-                {/* Mobile tooltip - positioned above the text, controlled by state and CSS */}
-                {showMobileTooltip && (
-                    <div ref={mobileTooltipRef} className="mobile-tooltip"> {/* Removed hidden class, visibility controlled by CSS media query + this conditional render */}
+                )} */}
+                
+                {/* Mobile tooltip - COMMENTED OUT */}
+                {/* {showMobileTooltip && (
+                    <div ref={mobileTooltipRef} className="mobile-tooltip">
                       <div className="font-medium mb-1">Full Text:</div>
                       {task.title}
                     </div>
-                )}
+                )} */}
               </h3>
             )}
             

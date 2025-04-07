@@ -4,7 +4,8 @@ import { SubtaskProps } from '../types';
 
 function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEditing, handleEditSave, onDeleteTask, updateTaskPriority }: SubtaskProps) {
   const isEditing = editing.taskId === taskId && editing.subtaskId === subtask.id;
-  const [showTooltip, setShowTooltip] = useState(false);
+  // TOOLTIP FUNCTIONALITY COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT)
+  // const [showTooltip, setShowTooltip] = useState(false);
 
   // Show rating as stars
   const renderRating = () => {
@@ -52,18 +53,19 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
               : 'text-gray-700 hover:text-gray-900'
           } cursor-pointer transition-colors duration-200 mr-1 relative flex items-center`}
           onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
-          onMouseEnter={(e) => {
-            setShowTooltip(true);
-            // Position the tooltip near the cursor
-            setTimeout(() => {
-              const tooltip = document.querySelector('.subtask-tooltip') as HTMLElement;
-              if (tooltip) {
-                tooltip.style.left = `${e.clientX + 10}px`;
-                tooltip.style.top = `${e.clientY + 10}px`;
-              }
-            }, 0);
-          }}
-          onMouseLeave={() => setShowTooltip(false)}
+          // TOOLTIP FUNCTIONALITY COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT)
+          // onMouseEnter={(e) => {
+          //   setShowTooltip(true);
+          //   // Position the tooltip near the cursor
+          //   setTimeout(() => {
+          //     const tooltip = document.querySelector('.subtask-tooltip') as HTMLElement;
+          //     if (tooltip) {
+          //       tooltip.style.left = `${e.clientX + 10}px`;
+          //       tooltip.style.top = `${e.clientY + 10}px`;
+          //     }
+          //   }, 0);
+          // }}
+          // onMouseLeave={() => setShowTooltip(false)}
         >
           <span className="mr-1 max-w-[90%] break-words whitespace-normal">{subtask.title}</span>
           {subtask.title.length > 40 && (
@@ -73,13 +75,13 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           )}
           {subtask.feedback && renderRating()}
           
-          {/* Prominent tooltip that appears immediately on hover */}
-          {showTooltip && (
-            <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="subtask-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700"> {/* Increased font size */}
+          {/* TOOLTIP FUNCTIONALITY COMMENTED OUT (SIMPLIFIED MOBILE LAYOUT) */}
+          {/* {showTooltip && (
+            <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="subtask-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
               <div className="font-medium mb-1">Full Text:</div>
               {subtask.title}
             </div>
-          )}
+          )} */}
         </div>
       )}
       
