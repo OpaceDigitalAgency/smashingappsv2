@@ -138,8 +138,8 @@ export const OpenAIService = {
       // IMPORTANT: This sets the maximum number of API calls allowed per user
       // You can change the '60' value to adjust the limit
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),  // MAXIMUM API CALLS ALLOWED
-        remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '200', 10),  // MAXIMUM API CALLS ALLOWED
+        remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '100', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
       };
@@ -291,8 +291,8 @@ export const OpenAIService = {
       
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),
-        remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '200', 10),
+        remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '100', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
       };
@@ -325,8 +325,8 @@ export const OpenAIService = {
       // FALLBACK SETTINGS: Used if we can't get the actual limits from the server
       // You can change these values to adjust the default limits
       return {
-        limit: 60,        // MAXIMUM API CALLS ALLOWED (default)
-        remaining: 19,    // DEFAULT REMAINING CALLS
+        limit: 100,        // MAXIMUM API CALLS ALLOWED (fallback default)
+        remaining: 100,    // DEFAULT REMAINING CALLS (fallback default)
         reset: new Date(Date.now() + 3600000),  // Reset after 1 hour
         used: 1           // Assume 1 call used already
       };

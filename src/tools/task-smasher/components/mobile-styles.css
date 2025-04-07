@@ -1,7 +1,13 @@
 /* Mobile-specific styles for Task Smasher */
 
+/* Define animation for tooltip */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 1. Make header text bigger for mobile portrait views only (except "To Do") */
-@media (max-width: 767px) and (orientation: portrait) {
+@media screen and (max-width: 480px) and (orientation: portrait) {
   /* Board header text */
   .board-header h2.text-lg {
     font-size: 1.25rem !important; /* Increase from text-lg to text-xl */
@@ -21,7 +27,7 @@
 }
 
 /* 2. Tooltip icon and positioning */
-@media (max-width: 767px) and (orientation: portrait) {
+@media screen and (max-width: 480px) and (orientation: portrait) {
   /* Hide the default tooltip */
   .task-tooltip {
     display: none !important;
@@ -49,11 +55,12 @@
     max-width: 100%;
     width: 100%;
     animation: fadeIn 0.15s ease-out forwards;
+    display: block !important;
   }
 }
 
 /* 3. Task action buttons layout for mobile portrait */
-@media (max-width: 767px) and (orientation: portrait) {
+@media screen and (max-width: 480px) and (orientation: portrait) {
   /* Make text field full width */
   .task-title-container {
     width: 100% !important;
@@ -67,4 +74,15 @@
     margin-left: 0 !important;
     justify-content: flex-start !important;
   }
+  
+  /* Increase font size for text elements within task card */
+  .task-content h3 {
+    font-size: 1.125rem !important; /* Increase from text-base to text-lg */
+  }
+  
+  .task-content .text-sm {
+    font-size: 1rem !important; /* Increase from text-sm to text-base */
+  }
 }
+
+/* Redundant block removed */

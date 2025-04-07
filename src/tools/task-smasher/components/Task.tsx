@@ -57,7 +57,8 @@ function Task({
 
   const isEditing = editing.taskId === task.id && !editing.subtaskId;
   const isGenerating = generating && activeTask === task.id;
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [showDesktopTooltip, setShowDesktopTooltip] = useState(false);
+  const [showMobileTooltip, setShowMobileTooltip] = useState(false); // State for mobile tooltip
 
   const handlePriorityChange = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -135,7 +136,7 @@ function Task({
                 } cursor-pointer transition-colors duration-200 relative flex items-center task-title-container mobile-tooltip-trigger`}
                 onClick={() => startEditing(task.id, null, 'title', task.title)}
                 onMouseEnter={(e) => {
-                  setShowTooltip(true);
+                  setShowDesktopTooltip(true);
                   // Position the tooltip near the cursor on desktop
                   setTimeout(() => {
                     const tooltip = document.querySelector('.task-tooltip') as HTMLElement;
@@ -145,8 +146,7 @@ function Task({
                     }
                   }, 0);
                 }}
-                onMouseLeave={() => setShowTooltip(false)}
-              >
+              > // Removed onMouseLeave to keep mobile tooltip open after click
                 <span className="mr-1 max-w-[90%] break-words whitespace-normal">{task.title}</span>
                 {task.title.length > 50 && (
                   <span className="text-xs text-indigo-500 flex-shrink-0 ml-1 hidden md:inline" title="Click to see full text">
@@ -156,29 +156,33 @@ function Task({
                 
                 {/* Tooltip icon for mobile - only visible on mobile */}
                 {task.title.length > 30 && (
-                  <span className="mobile-tooltip-icon hidden" onClick={(e) => {
-                    e.stopPropagation();
-                    setShowTooltip(!showTooltip);
-                  }}>
+                  <span
+                    className="mobile-tooltip-icon" // Removed hidden classes
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation(); // Prevent triggering edit
+                      setShowMobileTooltip(!showMobileTooltip); // Toggle mobile tooltip state
+                    }}
+                  >
                     <HelpCircle className="w-4 h-4 text-indigo-500 ml-1" />
                   </span>
                 )}
                 
                 {/* Desktop tooltip that appears on hover */}
-                {showTooltip && (
+                {showDesktopTooltip && (
                   <>
                     {/* Desktop tooltip - fixed position near cursor */}
                     <div style={{animation: 'fadeIn 0.15s ease-out forwards', position: 'fixed', zIndex: 1000}} className="task-tooltip bg-gray-800 text-white text-sm rounded-md p-3 shadow-xl max-w-xs whitespace-normal break-words pointer-events-none border border-gray-700">
                       <div className="font-medium mb-1">Full Text:</div>
                       {task.title}
                     </div>
-                    
-                    {/* Mobile tooltip - positioned above the text */}
-                    <div className="mobile-tooltip">
+                  </>
+                )}
+                {/* Mobile tooltip - positioned above the text, controlled by state and CSS */}
+                {showMobileTooltip && (
+                    <div className="mobile-tooltip"> {/* Removed hidden class, visibility controlled by CSS media query + this conditional render */}
                       <div className="font-medium mb-1">Full Text:</div>
                       {task.title}
                     </div>
-                  </>
                 )}
               </h3>
             )}
@@ -190,7 +194,7 @@ function Task({
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden"> {/* Increased font size */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden"> {/* This will inherit increased font size from CSS */}
             <div
               className={`flex items-center gap-1 rounded-full px-3 py-1.5 bg-gray-50 ${ /* Increased padding */
                 isEditing && editing.field === 'time' ? '' : 'cursor-pointer hover:bg-gray-100'
@@ -230,7 +234,7 @@ function Task({
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
             </button>
             
-            <div className="flex ml-auto items-center gap-2 flex-shrink-0 task-actions">
+            <div className="flex ml-auto items-center gap-2 flex-shrink-0 task-actions"> {/* Will be positioned below in mobile view via CSS */}
               <button
                 className="text-indigo-500 hover:text-indigo-700 transition-colors px-3 py-1.5 rounded-full hover:bg-indigo-50 font-medium" /* Increased padding */
                 onClick={() => onShowFeedback(task.id)}
