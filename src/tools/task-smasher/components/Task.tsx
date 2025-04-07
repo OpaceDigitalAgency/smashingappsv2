@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CheckCircle2, ChevronDown, ChevronRight, Plus, RefreshCw, Sparkles, Timer, Trash2, MessageCircle, Star, GripVertical, HelpCircle } from 'lucide-react';
@@ -59,6 +59,30 @@ function Task({
   const isGenerating = generating && activeTask === task.id;
   const [showDesktopTooltip, setShowDesktopTooltip] = useState(false);
   const [showMobileTooltip, setShowMobileTooltip] = useState(false); // State for mobile tooltip
+  const mobileTooltipRef = useRef<HTMLDivElement>(null);
+  const helpIconRef = useRef<HTMLSpanElement>(null);
+
+  // Add click-outside behavior for mobile tooltip
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // Close mobile tooltip when clicking outside
+      if (showMobileTooltip &&
+          mobileTooltipRef.current &&
+          !mobileTooltipRef.current.contains(event.target as Node) &&
+          helpIconRef.current &&
+          !helpIconRef.current.contains(event.target as Node)) {
+        setShowMobileTooltip(false);
+      }
+    }
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMobileTooltip]);
 
   const handlePriorityChange = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -158,6 +182,7 @@ function Task({
                 {/* Tooltip icon for mobile - only visible on mobile */}
                 {task.title.length > 30 && (
                   <span
+                    ref={helpIconRef}
                     className="mobile-tooltip-icon" // Removed hidden classes
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation(); // Prevent triggering edit
@@ -180,7 +205,7 @@ function Task({
                 )}
                 {/* Mobile tooltip - positioned above the text, controlled by state and CSS */}
                 {showMobileTooltip && (
-                    <div className="mobile-tooltip"> {/* Removed hidden class, visibility controlled by CSS media query + this conditional render */}
+                    <div ref={mobileTooltipRef} className="mobile-tooltip"> {/* Removed hidden class, visibility controlled by CSS media query + this conditional render */}
                       <div className="font-medium mb-1">Full Text:</div>
                       {task.title}
                     </div>
@@ -195,7 +220,7 @@ function Task({
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden"> {/* This will inherit increased font size from CSS */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden task-metadata"> {/* Added task-metadata class for targeting in CSS */}
             <div
               className={`flex items-center gap-1 rounded-full px-3 py-1.5 bg-gray-50 ${ /* Increased padding */
                 isEditing && editing.field === 'time' ? '' : 'cursor-pointer hover:bg-gray-100'
@@ -234,8 +259,7 @@ function Task({
             >
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
             </button>
-            
-            <div className="flex ml-auto items-center gap-2 flex-shrink-0 task-actions"> {/* Will be positioned below in mobile view via CSS */}
+            <div className="flex ml-auto items-center gap-2 flex-shrink-0 task-actions task-action-buttons"> {/* Added task-action-buttons class for targeting in CSS */}
               <button
                 className="text-indigo-500 hover:text-indigo-700 transition-colors px-3 py-1.5 rounded-full hover:bg-indigo-50 font-medium" /* Increased padding */
                 onClick={() => onShowFeedback(task.id)}

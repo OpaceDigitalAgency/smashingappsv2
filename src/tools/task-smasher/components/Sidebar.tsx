@@ -29,6 +29,8 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   
   // Check if mobile and auto-collapse on mobile
@@ -53,6 +55,34 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
     // Cleanup
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+  
+  // Add click-outside behavior to collapse sidebar when clicking elsewhere
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // Only handle if sidebar is expanded and we're on mobile
+      if (!isCollapsed && isMobile) {
+        // Check if click is outside the sidebar, toggle button, and mobile button
+        if (
+          containerRef.current &&
+          !containerRef.current.contains(event.target as Node) &&
+          toggleButtonRef.current &&
+          !toggleButtonRef.current.contains(event.target as Node) &&
+          mobileButtonRef.current &&
+          !mobileButtonRef.current.contains(event.target as Node)
+        ) {
+          setIsCollapsed(true);
+        }
+      }
+    }
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCollapsed, isMobile]);
   
   // Determine the current use case from the URL path
   useEffect(() => {
@@ -134,6 +164,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
     >
       {/* Toggle button - desktop version */}
       <button
+        ref={toggleButtonRef}
         onClick={toggleCollapse}
         className="absolute top-4 right-3 p-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600
           text-white transition-all duration-200 z-20 shadow-lg hidden md:flex items-center justify-center
@@ -146,8 +177,9 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
         {isCollapsed ? <SidebarOpen className="w-5 h-5" /> : <SidebarClose className="w-5 h-5" />}
       </button>
 
-      {/* Toggle button - visible on all screens */}
+      {/* Toggle button - visible on mobile screens */}
       <button
+        ref={toggleButtonRef}
         onClick={toggleCollapse}
         className="absolute top-4 right-3 p-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600
           text-white transition-all duration-200 z-20 shadow-lg flex md:hidden items-center justify-center
@@ -162,6 +194,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
       
       {/* Mobile menu button - floating button for mobile */}
       <button
+        ref={mobileButtonRef}
         onClick={toggleCollapse}
         className={`fixed bottom-6 right-6 p-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600
           text-white shadow-xl md:hidden ${isCollapsed ? 'scale-100' : 'scale-90 opacity-90'}

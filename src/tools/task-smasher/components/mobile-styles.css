@@ -80,11 +80,12 @@
   }
   
   /* Move action buttons below */
-  .task-actions {
+  .task-action-buttons {
     width: 100% !important;
-    margin-top: 0.5rem !important;
+    margin-top: 0.75rem !important;
     margin-left: 0 !important;
     justify-content: flex-start !important;
+    order: 3 !important; /* Ensure it appears after time estimate and priority */
   }
   
   /* Increase font size for task title only */
@@ -92,16 +93,18 @@
     font-size: 1.125rem !important; /* Increase from text-base to text-lg */
   }
   
-  /* Move time estimate and other icons below task title */
-  .task-content > div > div.flex.flex-wrap.items-center {
+  /* Restructure the task metadata container for mobile */
+  .task-metadata {
     flex-direction: column !important;
     align-items: flex-start !important;
+    width: 100% !important;
   }
   
-  /* Ensure time estimate and priority buttons are on their own line */
-  .task-content > div > div.flex.flex-wrap.items-center > div,
-  .task-content > div > div.flex.flex-wrap.items-center > button {
+  /* Style the time estimate and priority buttons */
+  .task-metadata > div,
+  .task-metadata > button {
     margin-top: 0.5rem !important;
+    margin-right: 0.5rem !important;
   }
   
   /* REVERT incorrect font size increases for buttons */
@@ -109,6 +112,11 @@
   .task-content button.px-3.py-1\.5 {
     font-size: 0.875rem !important; /* Keep buttons at text-sm */
   }
+}
+
+/* 4. Click-outside behavior for tooltips and menus */
+.mobile-tooltip {
+  pointer-events: none !important; /* Ensure tooltip doesn't block interaction */
 }
 
 /* Redundant block removed */
