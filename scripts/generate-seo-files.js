@@ -8,29 +8,50 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 // Get the directory name in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Base URL for the site
+// Use require in ESM
+const require = createRequire(import.meta.url);
+// Import the seoMaster configuration - our single source of truth
+const path = require('path');
+const fs = require('fs');
+
+let seoMaster;
+const seoMasterPath = path.resolve(__dirname, '../dist/utils/seoMaster.cjs.js');
+
+if (fs.existsSync(seoMasterPath)) {
+  seoMaster = require(seoMasterPath);
+} else {
+  // Fallback to the source file if the compiled version doesn't exist
+  console.log('Compiled seoMaster not found, using esbuild to compile on-the-fly');
+  
+  // Use esbuild to compile the TypeScript file on-the-fly
+  const { buildSync } = require('esbuild');
+  const fallbackPath = path.resolve(__dirname, '../src/utils/seoMaster.cjs.ts');
+  const outfile = path.resolve(__dirname, '../temp-seoMaster.cjs');
+  
+  buildSync({
+    entryPoints: [fallbackPath],
+    outfile,
+    bundle: true,
+    platform: 'node',
+    format: 'cjs',
+    target: 'node14',
+  });
+  
+  seoMaster = require(outfile);
+}
+const seoMaster = require('../src/utils/seoMaster.cjs');
+
+// Get the base URL from the seoMaster
 const BASE_URL = 'https://smashingapps.ai';
 
-// Import use case definitions from a temporary copy to avoid TypeScript issues
-const useCaseDefinitions = {
-  daily: { label: "Daily Organizer", description: "Organize your everyday tasks efficiently with AI assistance" },
-  goals: { label: "Goal Planner", description: "Break down long-term objectives into actionable steps" },
-  marketing: { label: "Marketing Tasks", description: "Organize marketing campaigns and tasks with AI guidance" },
-  recipe: { label: "Recipe Steps", description: "Break down cooking recipes into clear, manageable steps" },
-  home: { label: "Home Chores", description: "Organize household tasks and chores efficiently" },
-  travel: { label: "Trip Planner", description: "Plan your travel itinerary with AI-powered organization" },
-  study: { label: "Study Plan", description: "Break down academic tasks and study sessions effectively" },
-  events: { label: "Event Planning", description: "Organize events and parties with AI task management" },
-  freelance: { label: "Freelancer Projects", description: "Manage client work and freelance projects efficiently" },
-  shopping: { label: "Shopping Tasks", description: "Organize shopping lists and tasks with AI assistance" },
-  diy: { label: "DIY Projects", description: "Break down do-it-yourself projects into manageable steps" },
-  creative: { label: "Creative Projects", description: "Organize creative endeavors and artistic projects" }
-};
+// Use the use case definitions from the seoMaster
+const useCaseDefinitions = seoMaster.useCaseDefinitions;
 
 // Define all routes in the application
 const routes = [

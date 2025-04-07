@@ -10,37 +10,54 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 // Get the directory name in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Use require in ESM
+const require = createRequire(import.meta.url);
+// Import the seoMaster configuration - our single source of truth
+const path = require('path');
+const fs = require('fs');
+
+let seoMaster;
+const seoMasterPath = path.resolve(__dirname, '../dist/utils/seoMaster.cjs.js');
+
+if (fs.existsSync(seoMasterPath)) {
+  seoMaster = require(seoMasterPath);
+} else {
+  // Fallback to the source file if the compiled version doesn't exist
+  console.log('Compiled seoMaster not found, using esbuild to compile on-the-fly');
+  
+  // Use esbuild to compile the TypeScript file on-the-fly
+  const { buildSync } = require('esbuild');
+  const fallbackPath = path.resolve(__dirname, '../src/utils/seoMaster.cjs.ts');
+  const outfile = path.resolve(__dirname, '../temp-seoMaster.cjs');
+  
+  buildSync({
+    entryPoints: [fallbackPath],
+    outfile,
+    bundle: true,
+    platform: 'node',
+    format: 'cjs',
+    target: 'node14',
+  });
+  
+  seoMaster = require(outfile);
+}
+const seoMaster = require('../src/utils/seoMaster.cjs');
+
 // Base URL for development server
 // During Netlify build, we'll use a local server
 const DEV_SERVER_URL = process.env.NETLIFY ? 'http://localhost:8888' : 'http://localhost:5173';
 
-// Routes to prerender
-const ROUTES_TO_PRERENDER = [
-  '/',
-  '/tools/task-smasher/',
-  '/contact'
-];
+// Routes to prerender - get from seoMaster
+const ROUTES_TO_PRERENDER = Object.keys(seoMaster.routeMeta);
 
-// Import use case definitions from a temporary copy to avoid TypeScript issues
-const useCaseDefinitions = {
-  daily: { label: "Daily Organizer", description: "Organize your everyday tasks efficiently with AI assistance" },
-  goals: { label: "Goal Planner", description: "Break down long-term objectives into actionable steps" },
-  marketing: { label: "Marketing Tasks", description: "Organize marketing campaigns and tasks with AI guidance" },
-  recipe: { label: "Recipe Steps", description: "Break down cooking recipes into clear, manageable steps" },
-  home: { label: "Home Chores", description: "Organize household tasks and chores efficiently" },
-  travel: { label: "Trip Planner", description: "Plan your travel itinerary with AI-powered organization" },
-  study: { label: "Study Plan", description: "Break down academic tasks and study sessions effectively" },
-  events: { label: "Event Planning", description: "Organize events and parties with AI task management" },
-  freelance: { label: "Freelancer Projects", description: "Manage client work and freelance projects efficiently" },
-  shopping: { label: "Shopping Tasks", description: "Organize shopping lists and tasks with AI assistance" },
-  diy: { label: "DIY Projects", description: "Break down do-it-yourself projects into manageable steps" },
-  creative: { label: "Creative Projects", description: "Organize creative endeavors and artistic projects" }
-};
+// Use the use case definitions from the seoMaster
+const useCaseDefinitions = seoMaster.useCaseDefinitions;
 
 // Add all TaskSmasher use case routes
 Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
@@ -76,52 +93,41 @@ async function prerenderRoute(route, browser) {
   // Then wait a bit more to ensure all async operations complete
   await page.waitForTimeout(2000);
   
-  // Get the meta information from our metaConfig
+  // Get the meta information from our seoMaster
   const routePath = route.endsWith('/') || route === '/' ? route : `${route}/`;
-  const metaConfigJs = await page.evaluate(() => {
-    // This will run in the browser context
-    return window.__META_CONFIG__ || {};
-  });
   
   // Get the HTML content
   let html = await page.content();
   
-  // If we couldn't get the meta config from the window object,
-  // we'll need to manually inject the meta tags based on the route
-  if (!metaConfigJs[routePath]) {
-    // Import the meta config directly
-    const metaConfigPath = path.resolve(__dirname, '../src/utils/metaConfig.ts');
-    // Fallback to .js if .ts doesn't exist
-    const metaConfigFile = fs.existsSync(metaConfigPath) ? metaConfigPath : path.resolve(__dirname, '../src/utils/metaConfig.js');
-    const metaConfigContent = fs.readFileSync(metaConfigFile, 'utf8');
-    
-    // Extract the route-specific meta config using regex
-    const routePattern = new RegExp(`'${routePath}':\\s*{([^}]+)}`, 's');
-    const match = metaConfigContent.match(routePattern);
-    
-    if (match) {
-      // Basic meta tags to inject if we can't get them from the browser
-      const title = match[1].match(/title:\s*['"]([^'"]+)['"]/)?.[1] || 'SmashingApps.ai';
-      const description = match[1].match(/description:\s*['"]([^'"]+)['"]/)?.[1] || '';
-      const canonical = match[1].match(/canonical:\s*['"]([^'"]+)['"]/)?.[1] || `https://smashingapps.ai${route}`;
-      
-      // Replace the title tag
-      html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
-      
-      // Replace or add meta description
-      if (html.includes('<meta name="description"')) {
-        html = html.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${description}">`);
-      } else {
-        html = html.replace('</head>', `  <meta name="description" content="${description}">\n  </head>`);
-      }
-      
-      // Replace or add canonical link
-      if (html.includes('<link rel="canonical"')) {
-        html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${canonical}">`);
-      } else {
-        html = html.replace('</head>', `  <link rel="canonical" href="${canonical}">\n  </head>`);
-      }
-    }
+  // Get the meta data for this route from our single source of truth
+  const meta = seoMaster.getMetaForRoute(routePath);
+  
+  // Replace the title tag
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`);
+  
+  // Replace or add meta description
+  if (html.includes('<meta name="description"')) {
+    html = html.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${meta.description}">`);
+  } else {
+    html = html.replace('</head>', `  <meta name="description" content="${meta.description}">\n  </head>`);
+  }
+  
+  // Replace or add canonical link
+  if (html.includes('<link rel="canonical"')) {
+    html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${meta.canonical}">`);
+  } else {
+    html = html.replace('</head>', `  <link rel="canonical" href="${meta.canonical}">\n  </head>`);
+  }
+  
+  // Add structured data if available
+  if (meta.structuredData && !html.includes('application/ld+json')) {
+    const structuredDataTag = `
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    ${JSON.stringify(meta.structuredData, null, 2)}
+  </script>
+`;
+    html = html.replace('</head>', `${structuredDataTag}\n  </head>`);
   }
   
   // Create the directory structure for the route
@@ -168,10 +174,10 @@ async function prerenderRoutes() {
 // First, expose the meta config to the window object
 // Create a small script to inject into the page
 const injectScript = `
-// Create a script element to expose metaConfig
+// Create a script element to expose seoMaster
 const script = document.createElement('script');
 script.textContent = \`
-  window.__META_CONFIG__ = ${JSON.stringify({})};
+  window.__SEO_MASTER__ = ${JSON.stringify(seoMaster.routeMeta)};
 \`;
 document.head.appendChild(script);
 `;

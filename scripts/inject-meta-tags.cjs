@@ -1,49 +1,71 @@
 /**
  * Meta Tags Injector
- * 
+ *
  * This script directly injects meta tags into the index.html file
- * based on the metaConfig. This serves as a fallback in case the
+ * based on the seoMaster configuration. This serves as a fallback in case the
  * prerendering process doesn't work as expected.
+ *
+ * It uses the SINGLE SOURCE OF TRUTH for all SEO-related content.
  */
 
-// Removed duplicate ES module imports
 // Use require for CommonJS
 const path = require('path');
 const fs = require('fs');
 
-// Get the directory name in CommonJS
-// Note: __dirname is available directly in CommonJS modules run by Node
-// const __filename = fileURLToPath(import.meta.url); // Not needed for CommonJS
-// const __dirname = path.dirname(__filename); // Use Node's __dirname
-
-// Import the meta config using require
-let metaConfig, defaultMetaConfig;
+// Import the seoMaster configuration
+let seoMaster;
 try {
-  console.log('Attempting to require metaConfig...');
-  const metaConfigPath = path.resolve(__dirname, '../src/utils/metaConfig.cjs');
-  console.log(`Resolved metaConfig path: ${metaConfigPath}`);
-  if (!fs.existsSync(metaConfigPath)) {
-    throw new Error(`metaConfig file not found at ${metaConfigPath}`);
-  }
-  const metaConfigModule = require(metaConfigPath);
-  metaConfig = metaConfigModule.default;
-  defaultMetaConfig = metaConfigModule.defaultMetaConfig;
-  console.log('Successfully required metaConfig:', !!metaConfig, 'defaultMetaConfig:', !!defaultMetaConfig);
-  if (!metaConfig || !defaultMetaConfig) {
-    throw new Error('metaConfig or defaultMetaConfig is undefined after require.');
+  console.log('Attempting to require seoMaster...');
+  const seoMasterPath = path.resolve(__dirname, '../dist/utils/seoMaster.cjs.js');
+  console.log(`Resolved seoMaster path: ${seoMasterPath}`);
+
+  if (!fs.existsSync(seoMasterPath)) {
+    // Fallback to the source file if the compiled version doesn't exist
+    const fallbackPath = path.resolve(__dirname, '../src/utils/seoMaster.cjs.ts');
+    console.log(`Compiled seoMaster not found, trying fallback path: ${fallbackPath}`);
+    
+    if (!fs.existsSync(fallbackPath)) {
+      throw new Error(`seoMaster file not found at ${seoMasterPath} or ${fallbackPath}`);
+    }
+    
+    // Use esbuild to compile the TypeScript file on-the-fly
+    const { build } = require('esbuild');
+    const outfile = path.resolve(__dirname, '../temp-seoMaster.cjs');
+    
+    build({
+      entryPoints: [fallbackPath],
+      outfile,
+      bundle: true,
+      platform: 'node',
+      format: 'cjs',
+      target: 'node14',
+    }).then(() => {
+      seoMaster = require(outfile);
+      console.log('Successfully required seoMaster (compiled on-the-fly):', !!seoMaster);
+      
+      if (!seoMaster || !seoMaster.defaultMeta || !seoMaster.routeMeta) {
+        throw new Error('seoMaster, defaultMeta, or routeMeta is undefined after require.');
+      }
+    });
+  } else {
+    seoMaster = require(seoMasterPath);
+    console.log('Successfully required seoMaster:', !!seoMaster);
+    
+    if (!seoMaster || !seoMaster.defaultMeta || !seoMaster.routeMeta) {
+      throw new Error('seoMaster, defaultMeta, or routeMeta is undefined after require.');
+    }
   }
 } catch (error) {
-  console.error('Error requiring metaConfig:', error);
-  // Fallback to empty objects to prevent script failure
-  metaConfig = {};
-  defaultMetaConfig = { title: 'SmashingApps.ai | Fallback', description: 'Fallback description', canonical: 'https://smashingapps.ai', image: '' }; // Basic fallback
-  process.exit(1); // Exit if config is crucial
+  console.error('Error requiring seoMaster:', error);
+  // Exit if the master SEO configuration is not available
+  process.exit(1);
 }
 
 /**
  * Create route-specific HTML files with proper meta tags and basic body content
+ * using the single source of truth for SEO
  */
-function injectMetaTagsAndContent() { // Removed async as require is synchronous
+function injectMetaTagsAndContent() {
   console.log('Starting meta tags injection...');
   
   // Read the original index.html file from the build output directory
@@ -54,41 +76,39 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   // Create a version with default meta tags
   let defaultHtml = originalHtml;
   
-  // Replace title - Ensure defaultMetaConfig exists
-  if (defaultMetaConfig.title) {
-    defaultHtml = defaultHtml.replace(/<title>[^<]*<\/title>/, `<title>${defaultMetaConfig.title}</title>`);
-  }
+  // Get the default meta information from our single source of truth
+  const defaultMeta = seoMaster.defaultMeta;
   
+  // Replace title
+  if (defaultMeta.title) {
+    defaultHtml = defaultHtml.replace(/<title>[^<]*<\/title>/, `<title>${defaultMeta.title}</title>`);
+  }
   // Replace or add meta description
-  // Replace or add meta description - Ensure defaultMetaConfig exists
-  if (defaultMetaConfig.description) {
+  if (defaultMeta.description) {
     if (defaultHtml.includes('<meta name="description"')) {
-      defaultHtml = defaultHtml.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${defaultMetaConfig.description}">`);
+      defaultHtml = defaultHtml.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${defaultMeta.description}">`);
     } else {
-      defaultHtml = defaultHtml.replace('</head>', `  <meta name="description" content="${defaultMetaConfig.description}">\n  </head>`);
+      defaultHtml = defaultHtml.replace('</head>', `  <meta name="description" content="${defaultMeta.description}">\n  </head>`);
     }
   }
   
   // Replace or add canonical link
-  // Replace or add canonical link - Ensure defaultMetaConfig exists
-  if (defaultMetaConfig.canonical) {
+  if (defaultMeta.canonical) {
     if (defaultHtml.includes('<link rel="canonical"')) {
-      defaultHtml = defaultHtml.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${defaultMetaConfig.canonical}">`);
+      defaultHtml = defaultHtml.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${defaultMeta.canonical}">`);
     } else {
-      defaultHtml = defaultHtml.replace('</head>', `  <link rel="canonical" href="${defaultMetaConfig.canonical}">\n  </head>`);
+      defaultHtml = defaultHtml.replace('</head>', `  <link rel="canonical" href="${defaultMeta.canonical}">\n  </head>`);
     }
   }
   
   // Add robots meta tag
-  // Add robots meta tag - Ensure defaultMetaConfig exists
-  if (defaultMetaConfig.robots && !defaultHtml.includes('<meta name="robots"')) {
-    defaultHtml = defaultHtml.replace('</head>', `  <meta name="robots" content="${defaultMetaConfig.robots}">\n  </head>`);
+  if (defaultMeta.robots && !defaultHtml.includes('<meta name="robots"')) {
+    defaultHtml = defaultHtml.replace('</head>', `  <meta name="robots" content="${defaultMeta.robots}">\n  </head>`);
   }
   
-  // Add Open Graph tags
-  // Add Open Graph tags - Ensure defaultMetaConfig exists and use the same description as meta tag
+  // Add Open Graph tags using our single source of truth
   // Always update OG and Twitter tags, replacing them if they exist
-  const metaDescription = defaultMetaConfig.description;
+  const metaDescription = defaultMeta.description;
   console.log(`Setting OG/Twitter description to: ${metaDescription.substring(0, 50)}...`);
   
   // First remove any existing OG and Twitter tags
@@ -99,27 +119,27 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   const ogTags = `
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="${defaultMetaConfig.canonical || 'https://smashingapps.ai'}" />
-  <meta property="og:title" content="${defaultMetaConfig.title}" />
+  <meta property="og:url" content="${defaultMeta.canonical || 'https://smashingapps.ai'}" />
+  <meta property="og:title" content="${defaultMeta.title}" />
   <meta property="og:description" content="${metaDescription}" />
-  <meta property="og:image" content="${defaultMetaConfig.image}" />
+  <meta property="og:image" content="${defaultMeta.image}" />
   <meta property="og:site_name" content="SmashingApps.ai" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${defaultMetaConfig.title}" />
+  <meta name="twitter:title" content="${defaultMeta.title}" />
   <meta name="twitter:description" content="${metaDescription}" />
-  <meta name="twitter:image" content="${defaultMetaConfig.image}" />
+  <meta name="twitter:image" content="${defaultMeta.image}" />
 `;
   defaultHtml = defaultHtml.replace('</head>', `${ogTags}\n  </head>`);
   console.log('Added OG and Twitter tags with matching description');
   
   // Add structured data if available
-  if (defaultMetaConfig.structuredData && !defaultHtml.includes('application/ld+json')) {
+  if (defaultMeta.structuredData && !defaultHtml.includes('application/ld+json')) {
     const structuredDataTag = `
   <!-- Structured Data -->
   <script type="application/ld+json">
-    ${JSON.stringify(defaultMetaConfig.structuredData, null, 2)}
+    ${JSON.stringify(defaultMeta.structuredData, null, 2)}
   </script>
 `;
     defaultHtml = defaultHtml.replace('</head>', `${structuredDataTag}\n  </head>`);
@@ -213,14 +233,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   // Inject basic body content for default index.html (for SEO and JS-disabled browsers)
   // Update the fallback content in the body to match the meta description
   // Update the fallback content in the body to match the meta description
-  const defaultBodyContent = `
-      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
-      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
-        <h1>${defaultMetaConfig.title || 'SmashingApps.ai'}</h1>
-        <p>${defaultMetaConfig.description || 'Loading...'}</p>
-        <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
-      </div>
-    `;
+  // Use the seoMaster to generate the fallback content
+  const defaultBodyContent = seoMaster.generateFallbackContent('/');
   
   // Always replace the root div content, regardless of its current content
   const rootDivRegex = /<div id="root"[^>]*>[\s\S]*?<\/div>/;
@@ -240,24 +254,23 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
   // Write the updated default HTML back to index.html
   fs.writeFileSync(indexPath, defaultHtml);
   console.log(`✅ Updated default meta tags and basic content in ${indexPath}`);
-  console.log(`   Title: ${defaultMetaConfig.title}`);
-  console.log(`   Description: ${defaultMetaConfig.description ? defaultMetaConfig.description.substring(0, 50) + '...' : 'N/A'}`);
+  console.log(`   Title: ${defaultMeta.title}`);
+  console.log(`   Description: ${defaultMeta.description ? defaultMeta.description.substring(0, 50) + '...' : 'N/A'}`);
   
-  // Create route-specific HTML files for each route defined in metaConfig
+  // Create route-specific HTML files for each route defined in seoMaster
   console.log('\nProcessing route-specific files...');
-  console.log('Available routes in metaConfig:', Object.keys(metaConfig));
+  console.log('Available routes in seoMaster:', Object.keys(seoMaster.routeMeta));
   
-  for (const route of Object.keys(metaConfig)) {
-    const meta = metaConfig[route];
+  for (const route of Object.keys(seoMaster.routeMeta)) {
+    // Get the meta data for this route from our single source of truth
+    const meta = seoMaster.getMetaForRoute(route);
     console.log(`\nProcessing route: ${route}`);
     console.log(`Route meta data: ${JSON.stringify(meta, null, 2)}`);
-    if (!meta) {
-      console.warn(`   No meta config found for route: ${route}. Skipping.`);
-      continue;
-    }
+    
+    // Skip the homepage as we've already updated index.html
     if (route === '/') {
       console.log('   Skipping homepage as we\'ve already updated index.html');
-      continue; // Skip the homepage as we've already updated index.html
+      continue;
     }
     
     // Don't skip any routes - we want to ensure all pages have correct meta tags
@@ -403,14 +416,8 @@ function injectMetaTagsAndContent() { // Removed async as require is synchronous
     console.log(`   H1 content: ${h1Content}`);
     console.log(`   P content: ${pContent.substring(0, 50)}...`);
     
-    const routeBodyContent = `
-      <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
-      <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
-        <h1>${h1Content}</h1>
-        <p>${pContent}</p>
-        <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
-      </div>
-    `;
+    // Use the seoMaster to generate the fallback content
+    const routeBodyContent = seoMaster.generateFallbackContent(route);
     // Always replace the root div content, regardless of its current content
     const rootDivRegex = /<div id="root"[^>]*>[\s\S]*?<\/div>/;
     if (rootDivRegex.test(routeHtml)) {

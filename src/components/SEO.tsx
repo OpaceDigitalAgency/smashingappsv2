@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import metaConfig, { defaultMetaConfig, MetaConfig } from '../utils/metaConfig.ts';
+// Import the master SEO configuration
+import * as seoMaster from '../utils/seoMaster';
+import type { MetaConfig } from '../utils/seoMaster';
 
 interface SEOProps {
   overrides?: Partial<MetaConfig>;
@@ -9,46 +11,23 @@ interface SEOProps {
 
 /**
  * SEO Component
- * 
+ *
  * This component dynamically generates meta tags based on the current route.
- * It uses the metaConfig to get route-specific meta information and falls back
- * to default values if no specific configuration is found.
- * 
+ * It uses the seoMaster to get route-specific meta information from a single source of truth.
+ *
  * Props:
  * - overrides: Optional object to override specific meta values for the current page
  */
 const SEO: React.FC<SEOProps> = ({ overrides = {} }) => {
   const location = useLocation();
-  const [currentMeta, setCurrentMeta] = useState<MetaConfig>(defaultMetaConfig);
+  const [currentMeta, setCurrentMeta] = useState<MetaConfig>(seoMaster.defaultMeta);
   
   useEffect(() => {
-    // Get the current path with trailing slash for consistency
-    let path = location.pathname;
-    if (!path.endsWith('/') && path !== '/') {
-      path = `${path}/`;
-    }
+    // Get the current path
+    const path = location.pathname;
     
-    // Find the most specific matching route
-    // First try exact match
-    let meta = metaConfig[path];
-    
-    // If no exact match, try to find a parent route
-    if (!meta) {
-      const pathParts = path.split('/').filter(Boolean);
-      while (pathParts.length > 0) {
-        const parentPath = `/${pathParts.join('/')}/`;
-        if (metaConfig[parentPath]) {
-          meta = metaConfig[parentPath];
-          break;
-        }
-        pathParts.pop();
-      }
-    }
-    
-    // Fall back to default if still no match
-    if (!meta) {
-      meta = defaultMetaConfig;
-    }
+    // Get the meta data for this route from our single source of truth
+    const meta = seoMaster.getMetaForRoute(path);
     
     // Apply any overrides
     setCurrentMeta({ ...meta, ...overrides });
