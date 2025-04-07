@@ -16,10 +16,8 @@ const __dirname = path.dirname(__filename);
 
 // Use require in ESM
 const require = createRequire(import.meta.url);
-// Import the seoMaster configuration - our single source of truth
-const path = require('path');
-const fs = require('fs');
 
+// Import the seoMaster configuration - our single source of truth
 let seoMaster;
 const seoMasterPath = path.resolve(__dirname, '../dist/utils/seoMaster.cjs.js');
 
@@ -27,28 +25,18 @@ if (fs.existsSync(seoMasterPath)) {
   seoMaster = require(seoMasterPath);
 } else {
   // Fallback to the source file if the compiled version doesn't exist
-  console.log('Compiled seoMaster not found, using esbuild to compile on-the-fly');
-  
-  // Use esbuild to compile the TypeScript file on-the-fly
-  const { buildSync } = require('esbuild');
-  const fallbackPath = path.resolve(__dirname, '../src/utils/seoMaster.cjs.ts');
-  const outfile = path.resolve(__dirname, '../temp-seoMaster.cjs');
-  
-  buildSync({
-    entryPoints: [fallbackPath],
-    outfile,
-    bundle: true,
-    platform: 'node',
-    format: 'cjs',
-    target: 'node14',
-  });
-  
-  seoMaster = require(outfile);
+  console.log('Compiled seoMaster not found, using source file directly');
+  seoMaster = require('../src/utils/seoMaster.pure.cjs');
 }
-const seoMaster = require('../src/utils/seoMaster.cjs');
 
 // Get the base URL from the seoMaster
 const BASE_URL = 'https://smashingapps.ai';
+
+// Check if seoMaster was loaded correctly
+if (!seoMaster || !seoMaster.useCaseDefinitions) {
+  console.error('Error: seoMaster or useCaseDefinitions not available');
+  process.exit(1);
+}
 
 // Use the use case definitions from the seoMaster
 const useCaseDefinitions = seoMaster.useCaseDefinitions;

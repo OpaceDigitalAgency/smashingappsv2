@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Meta Tags Injector
  *
@@ -21,39 +22,22 @@ try {
 
   if (!fs.existsSync(seoMasterPath)) {
     // Fallback to the source file if the compiled version doesn't exist
-    const fallbackPath = path.resolve(__dirname, '../src/utils/seoMaster.cjs.ts');
+    const fallbackPath = path.resolve(__dirname, '../src/utils/seoMaster.pure.cjs');
     console.log(`Compiled seoMaster not found, trying fallback path: ${fallbackPath}`);
     
     if (!fs.existsSync(fallbackPath)) {
       throw new Error(`seoMaster file not found at ${seoMasterPath} or ${fallbackPath}`);
     }
     
-    // Use esbuild to compile the TypeScript file on-the-fly
-    const { build } = require('esbuild');
-    const outfile = path.resolve(__dirname, '../temp-seoMaster.cjs');
-    
-    build({
-      entryPoints: [fallbackPath],
-      outfile,
-      bundle: true,
-      platform: 'node',
-      format: 'cjs',
-      target: 'node14',
-    }).then(() => {
-      seoMaster = require(outfile);
-      console.log('Successfully required seoMaster (compiled on-the-fly):', !!seoMaster);
-      
-      if (!seoMaster || !seoMaster.defaultMeta || !seoMaster.routeMeta) {
-        throw new Error('seoMaster, defaultMeta, or routeMeta is undefined after require.');
-      }
-    });
+    seoMaster = require(fallbackPath);
+    console.log('Successfully required seoMaster from source file:', !!seoMaster);
   } else {
     seoMaster = require(seoMasterPath);
     console.log('Successfully required seoMaster:', !!seoMaster);
-    
-    if (!seoMaster || !seoMaster.defaultMeta || !seoMaster.routeMeta) {
-      throw new Error('seoMaster, defaultMeta, or routeMeta is undefined after require.');
-    }
+  }
+  
+  if (!seoMaster || !seoMaster.defaultMeta || !seoMaster.routeMeta) {
+    throw new Error('seoMaster, defaultMeta, or routeMeta is undefined after require.');
   }
 } catch (error) {
   console.error('Error requiring seoMaster:', error);
