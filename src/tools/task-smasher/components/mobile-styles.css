@@ -24,6 +24,17 @@
   .board-header h2.todo-header {
     font-size: 1.125rem !important; /* Keep as text-lg */
   }
+  
+  /* Increase font size for specific text elements in header/filter area */
+  input[type="text"]::placeholder {
+    font-size: 1rem !important; /* Increase placeholder text size */
+  }
+  
+  /* Increase size for "Need Ideas?", "Filters", "Subtasks:", "Undo" text */
+  .premium-button span,
+  button:not([class*="rounded-full"]) span {
+    font-size: 1rem !important;
+  }
 }
 
 /* 2. Tooltip icon and positioning */
@@ -56,6 +67,7 @@
     width: 100%;
     animation: fadeIn 0.15s ease-out forwards;
     display: block !important;
+    pointer-events: none; /* Ensure tooltip doesn't block interaction */
   }
 }
 
@@ -75,13 +87,27 @@
     justify-content: flex-start !important;
   }
   
-  /* Increase font size for text elements within task card */
+  /* Increase font size for task title only */
   .task-content h3 {
     font-size: 1.125rem !important; /* Increase from text-base to text-lg */
   }
   
-  .task-content .text-sm {
-    font-size: 1rem !important; /* Increase from text-sm to text-base */
+  /* Move time estimate and other icons below task title */
+  .task-content > div > div.flex.flex-wrap.items-center {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  
+  /* Ensure time estimate and priority buttons are on their own line */
+  .task-content > div > div.flex.flex-wrap.items-center > div,
+  .task-content > div > div.flex.flex-wrap.items-center > button {
+    margin-top: 0.5rem !important;
+  }
+  
+  /* REVERT incorrect font size increases for buttons */
+  .task-content button.rounded-full,
+  .task-content button.px-3.py-1\.5 {
+    font-size: 0.875rem !important; /* Keep buttons at text-sm */
   }
 }
 

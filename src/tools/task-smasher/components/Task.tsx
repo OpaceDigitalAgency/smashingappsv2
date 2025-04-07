@@ -146,7 +146,8 @@ function Task({
                     }
                   }, 0);
                 }}
-              > // Removed onMouseLeave to keep mobile tooltip open after click
+                onMouseLeave={() => setShowDesktopTooltip(false)}
+              >
                 <span className="mr-1 max-w-[90%] break-words whitespace-normal">{task.title}</span>
                 {task.title.length > 50 && (
                   <span className="text-xs text-indigo-500 flex-shrink-0 ml-1 hidden md:inline" title="Click to see full text">
