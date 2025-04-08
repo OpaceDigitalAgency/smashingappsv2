@@ -435,13 +435,23 @@ button.shadow-sm {
   margin-right: auto !important;
 }
 
-/* Remove any horizontal dividers */
+/* Remove any horizontal dividers - but NOT buttons or interactive elements */
 .task-content hr,
 .task-content .border-t,
 .task-content .border-b,
 .task-content .border-gray-100,
-.task-content .border-gray-200 {
+.task-content .border-gray-200:not(button):not(.subtask-time-button):not(.subtask-actions-row *) {
   display: none !important;
+}
+
+/* Explicitly ensure subtask action elements are visible */
+.subtask-actions-row button,
+.subtask-actions-row .subtask-time-button,
+.subtask-actions-row div,
+.subtask-actions-row input {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Selectively restore background colors for buttons */
