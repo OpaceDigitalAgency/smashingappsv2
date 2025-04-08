@@ -176,6 +176,7 @@ button:has(.w-4.h-4) + input {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  padding-bottom: 8px !important;
 }
 
 /* Make subtask title full width */
@@ -193,12 +194,14 @@ button:has(.w-4.h-4) + input {
   width: auto !important;
 }
 
-/* Combine subtask time and actions into one row */
-.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center.justify-between {
+/* Ensure subtask time and actions are on one row */
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center:not(:first-child) {
   display: flex !important;
   flex-direction: row !important;
   width: 100% !important;
-  justify-content: space-between !important;
+  justify-content: flex-start !important;
+  margin-top: 4px !important;
+  margin-left: 24px !important; /* Align with the text above */
 }
 
 /* Create a container for both time and actions */

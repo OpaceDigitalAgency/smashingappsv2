@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Pencil, Timer, Trash2, Star, GripVertical } from 'lucide-react';
+import { CheckCircle2, Pencil, Timer, Trash2, Star } from 'lucide-react';
 import { SubtaskProps } from '../types';
 
 function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEditing, handleEditSave, onDeleteTask, updateTaskPriority }: SubtaskProps) {
@@ -22,6 +22,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
 
   return (
     <div className="py-2 px-2 flex flex-col items-start gap-1.5 hover:bg-gray-50/80 backdrop-blur-sm rounded-md transition-colors duration-150 group relative">
+      {/* First row: checkbox and task title */}
       <div className="w-full flex items-center gap-3">
         <button
           onClick={() => onToggleComplete(subtask.id, boardId)}
@@ -86,44 +87,41 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           </div>
         )}
       </div>
-      
-      <div className="w-full flex items-center justify-between">
+      {/* Second row: time estimate, edit button, delete button */}
+      <div className="w-full flex items-center mt-1">
         {/* Time estimate div */}
-        <div className="flex items-center">
-          {isEditing && editing.field === 'time' ? (
-            <div className="flex items-center gap-1 z-30 bg-white shadow-sm p-1 rounded border border-gray-200">
-              <input
-                type="number"
-                value={editing.value}
-                onChange={(e) => startEditing(taskId, subtask.id, 'time', e.target.value)}
-                onBlur={() => handleEditSave(boardId)}
-                onKeyDown={(e) => e.key === 'Enter' && handleEditSave(boardId)}
-                className="w-12 py-0.5 px-1.5 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500" /* Increased font size */
-                min="0"
-                autoFocus
-              />
-              <span className="text-sm text-gray-500">h</span> {/* Increased font size */}
-            </div>
-          ) : (
-            <div
-              className="flex items-center text-sm text-gray-500 gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors duration-200 shadow-sm" /* Improved styling */
-              onClick={() => startEditing(taskId, subtask.id, 'time', subtask.estimatedTime.toString())}
-            >
-              <Timer className="w-3 h-3" />
-              <span className="font-medium">{subtask.estimatedTime}h</span>
-            </div>
-          )}
-          
-          {/* Drag handle */}
-          <div className="text-gray-400 cursor-grab ml-2">
-            <GripVertical className="w-4 h-4" />
+        {isEditing && editing.field === 'time' ? (
+          <div className="flex items-center gap-1 z-30 bg-white shadow-sm p-1 rounded border border-gray-200">
+            <input
+              type="number"
+              value={editing.value}
+              onChange={(e) => startEditing(taskId, subtask.id, 'time', e.target.value)}
+              onBlur={() => handleEditSave(boardId)}
+              onKeyDown={(e) => e.key === 'Enter' && handleEditSave(boardId)}
+              className="w-12 py-0.5 px-1.5 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              min="0"
+              autoFocus
+            />
+            <span className="text-sm text-gray-500">h</span>
           </div>
-        </div>
+        ) : (
+          <div
+            className="flex items-center text-sm text-gray-500 gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors duration-200 shadow-sm"
+            onClick={() => startEditing(taskId, subtask.id, 'time', subtask.estimatedTime.toString())}
+          >
+            <Timer className="w-3 h-3" />
+            <span className="font-medium">{subtask.estimatedTime}h</span>
+          </div>
+        )}
         
-        <div className="flex items-center">
+        {/* Spacer to push buttons to the right */}
+        <div className="flex-grow"></div>
+        
+        {/* Edit and Delete buttons */}
+        <div className="flex items-center gap-2">
           {/* Edit button */}
           <button
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100 bg-gray-50 border border-gray-200 shadow-sm" /* Improved styling */
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100 bg-gray-50 border border-gray-200 shadow-sm"
             onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -132,7 +130,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           {/* Delete button */}
           <button
             onClick={() => onDeleteTask(subtask.id, boardId)}
-            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50 bg-gray-50 border border-gray-200 shadow-sm" /* Improved styling */
+            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50 bg-gray-50 border border-gray-200 shadow-sm"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
