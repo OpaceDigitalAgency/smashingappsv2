@@ -61,6 +61,10 @@ input[type="number"] {
   width: 100% !important;
 }
 
+.task-smasher .flex-grow.min-w-0 {
+  left: 0px !important;
+}
+
 /* Force the first div in task-content to be full width */
 .task-content > div:first-of-type {
   width: 100% !important;
@@ -189,7 +193,7 @@ button:has(.w-4.h-4) + input {
 
 /* ===== MOBILE STYLES ===== */
 /* These styles only apply to mobile screens */
-@media screen and (max-width: 600px0px) and (orientation: portrait) {
+@media screen and (max-width: 600px) and (orientation: portrait) {
   /* Board header text */
   .board-header h2.text-lg {
     font-size: 1.25rem !important; /* Increase from text-lg to text-xl */
@@ -241,9 +245,7 @@ button:has(.w-4.h-4) + input {
     display: none !important;
   }
 
-  .task-smasher .flex-grow.min-w-0 {
-    left: 0px !important;
-  }
+  
   /* Override any flex column settings for filter buttons */
   button:has(.filter-button-text) {
     flex-direction: row !important;
