@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import './components/mobile-styles.css'; // Import mobile-specific styles
+import './components/styles.css'; // Import consolidated styles for TaskSmasher
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
 import ModelDropdown from './components/ModelDropdown';
 import SemanticSection from '../../components/SemanticSection';
