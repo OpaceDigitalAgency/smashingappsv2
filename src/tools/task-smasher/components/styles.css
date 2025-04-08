@@ -377,7 +377,8 @@ button.shadow-sm {
 }
 
 /* Ensure subtask action buttons are visible and properly styled */
-.subtask-actions-row button {
+.subtask-actions-row button,
+.subtask-action-buttons button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -389,6 +390,15 @@ button.shadow-sm {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e5e7eb !important;
   border-radius: 4px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure the action buttons container is always visible */
+.subtask-action-buttons {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Style the time estimate button */
@@ -400,6 +410,10 @@ button.shadow-sm {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e5e7eb !important;
   border-radius: 9999px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
 /* Remove any horizontal dividers */

@@ -117,12 +117,13 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         {/* Spacer to push buttons to the right */}
         <div className="flex-grow"></div>
         
-        {/* Edit and Delete buttons */}
-        <div className="flex items-center gap-2">
+        {/* Edit and Delete buttons - always visible */}
+        <div className="flex items-center gap-2 subtask-action-buttons">
           {/* Edit button */}
           <button
             className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100 bg-gray-50 border border-gray-200 shadow-sm"
             onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
+            title="Edit subtask"
           >
             <Pencil className="w-3.5 h-3.5" />
           </button>
@@ -131,6 +132,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           <button
             onClick={() => onDeleteTask(subtask.id, boardId)}
             className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50 bg-gray-50 border border-gray-200 shadow-sm"
+            title="Delete subtask"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
