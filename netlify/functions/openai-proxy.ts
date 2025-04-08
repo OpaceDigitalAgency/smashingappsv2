@@ -321,6 +321,20 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       "X-Fingerprint": fingerprint.substring(0, 8)                            // User identifier (for debugging)
     };
     
+    // Check if the rate limit has been exceeded
+    if (apiCallCount > RATE_LIMIT && !isLocalDev) {
+      console.log(`Rate limit exceeded: ${apiCallCount} > ${RATE_LIMIT}`);
+      return {
+        statusCode: 429,
+        headers: responseHeaders,
+        body: JSON.stringify({
+          error: "Rate limit exceeded",
+          message: `You have exceeded the rate limit of ${RATE_LIMIT} requests. Please try again after the limit resets.`,
+          reset: new Date(Date.now() + RATE_LIMIT_WINDOW).toISOString()
+        })
+      };
+    }
+    
     // Add reCAPTCHA verification status to headers
     if (!isLocalDev) {
       responseHeaders["X-ReCaptcha-Verified"] = recaptchaVerified ? "true" : "false";

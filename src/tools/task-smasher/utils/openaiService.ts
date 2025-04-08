@@ -204,6 +204,20 @@ export const OpenAIService = {
       // Override the used count with our local counter for consistency
       rateLimit.used = newApiCallCount;
       
+      // Check if we've exceeded the rate limit based on our local counter
+      if (newApiCallCount > rateLimit.limit) {
+        console.warn(`Local rate limit exceeded: ${newApiCallCount} > ${rateLimit.limit}`);
+        // Force the remaining count to be negative
+        rateLimit.remaining = rateLimit.limit - newApiCallCount;
+        // Set rateLimited flag in localStorage
+        localStorage.setItem('rateLimited', 'true');
+        
+        // If we've exceeded the limit by a significant amount (20% over), throw a rate limit error
+        if (newApiCallCount > rateLimit.limit * 1.2) {
+          throw new Error(`Rate limit exceeded. Try again after ${rateLimit.reset.toLocaleString()}`);
+        }
+      }
+      
       return { data, rateLimit };
     } catch (error) {
       console.error("Error in createChatCompletion:", error);

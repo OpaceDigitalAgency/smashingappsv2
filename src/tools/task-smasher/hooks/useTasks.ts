@@ -168,7 +168,16 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         // Update the client-side state with the server-side information
         setRateLimitInfo(serverRateLimit);
         setExecutionCount(serverRateLimit.used);
-        setRateLimited(serverRateLimit.remaining === 0);
+        
+        // Check if rate limit is exceeded
+        const isLimitExceeded = serverRateLimit.remaining <= 0 || serverRateLimit.used >= serverRateLimit.limit;
+        setRateLimited(isLimitExceeded);
+        
+        // Show the rate limit popup if the limit is exceeded
+        if (isLimitExceeded) {
+          console.log('Rate limit exceeded, showing popup');
+          setShowRateLimitPopup(true);
+        }
 
         console.log('Updated state with server rate limit info');
 
@@ -180,7 +189,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
           used: serverRateLimit.used
         }));
         localStorage.setItem('executionCount', serverRateLimit.used.toString());
-        localStorage.setItem('rateLimited', (serverRateLimit.remaining === 0).toString());
+        localStorage.setItem('rateLimited', isLimitExceeded.toString());
         console.log('Updated localStorage with server rate limit info');
       } catch (error) {
         console.error('Error synchronizing with server rate limit:', error);
