@@ -212,7 +212,19 @@ flex-direction: row !important;
 .task-smasher .w-full {
   width: unset !important; 
 }
+ /* Increase text size for all text elements */
+ .task-text,
+ .subtask-text,
+ .filter-text,
+ .add-task-placeholder,
+ .need-ideas-text,
+ .task-content span,
+ .task-content div:not(.task-action-buttons) span {
+   font-size: 12px !important;
+ }
 
+
+ 
 
 
 
@@ -282,16 +294,7 @@ flex-direction: row !important;
     font-size: 1.25rem !important; /* Increase from text-base to text-xl */
   }
   
-  /* Increase text size for all text elements */
-  .task-text,
-  .subtask-text,
-  .filter-text,
-  .add-task-placeholder,
-  .need-ideas-text,
-  .task-content span,
-  .task-content div:not(.task-action-buttons) span {
-    font-size: 12px !important;
-  }
+ 
   
   /* Keep buttons at text-sm but slightly larger for mobile */
   .task-content button.rounded-full,
