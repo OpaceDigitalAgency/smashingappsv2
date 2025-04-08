@@ -191,6 +191,27 @@ button:has(.w-4.h-4) + input {
   margin-top: 8px !important;
 }
 
+
+
+
+
+
+
+.task-smasher .text-gray-500 {
+  float: left !important;
+  margin-right: 5px !important;
+}
+.task-smasher .task-content>div.flex {
+flex-direction: row !important;
+}
+
+
+
+
+
+
+
+
 /* ===== MOBILE STYLES ===== */
 /* These styles only apply to mobile screens */
 @media screen and (max-width: 600px) and (orientation: portrait) {
@@ -227,7 +248,7 @@ button:has(.w-4.h-4) + input {
   /* Increase size for "Need Ideas?", "Filters", "Subtasks:", "Undo" text */
   .premium-button span,
   button:not([class*="rounded-full"]) span {
-    font-size: 1.2rem !important;
+    font-size: 1rem !important;
     display: inline-flex !important;
     align-items: center !important;
   }
@@ -244,14 +265,6 @@ button:has(.w-4.h-4) + input {
   .task-smasher button:has(.filter-button-text) > span{
     display: none !important;
   }
-
-  .task-smasher .text-gray-500 {
-    float: left !important;
-    margin-right: 5px !important;
-}
-.task-smasher .task-content>div.flex {
-  flex-direction: row !important;
-}
 
   /* Override any flex column settings for filter buttons */
   button:has(.filter-button-text) {
@@ -272,7 +285,7 @@ button:has(.w-4.h-4) + input {
   .need-ideas-text,
   .task-content span,
   .task-content div:not(.task-action-buttons) span {
-    font-size: 1.2rem !important;
+    font-size: 1rem !important;
   }
   
   /* Keep buttons at text-sm but slightly larger for mobile */
@@ -318,3 +331,22 @@ button:has(.w-4.h-4) + input {
   pointer-events: none !important;
 } */
 /* Redundant block removed */
+
+/* Styles for the OpenAI Proxy button in ModelDropdown */
+.model-dropdown-container button:has(.w-4.h-4.text-indigo-500) {
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.model-dropdown-container button:has(.w-4.h-4.text-indigo-500):hover {
+  background-color: rgba(79, 70, 229, 0.1);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+
+/* Mobile styles for the proxy button */
+@media screen and (max-width: 600px) and (orientation: portrait) {
+  .model-dropdown-container button:has(.w-4.h-4.text-indigo-500) {
+    font-size: 1rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
