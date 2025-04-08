@@ -195,13 +195,18 @@ button:has(.w-4.h-4) + input {
 }
 
 /* Ensure subtask time and actions are on one row */
-.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center:not(:first-child) {
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center:not(:first-child),
+.subtask-actions-row {
   display: flex !important;
   flex-direction: row !important;
   width: 100% !important;
   justify-content: flex-start !important;
   margin-top: 4px !important;
   margin-left: 24px !important; /* Align with the text above */
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 /* Create a container for both time and actions */
@@ -369,6 +374,32 @@ button.shadow-sm {
   background-color: #f9fafb !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e5e7eb !important;
+}
+
+/* Ensure subtask action buttons are visible and properly styled */
+.subtask-actions-row button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 4px !important;
+  margin-right: 4px !important;
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 4px !important;
+}
+
+/* Style the time estimate button */
+.subtask-actions-row div[class*="flex items-center text-sm text-gray-500"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 8px !important;
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 9999px !important;
 }
 
 /* Remove any horizontal dividers */

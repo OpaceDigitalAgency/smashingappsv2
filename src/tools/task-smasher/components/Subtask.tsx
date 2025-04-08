@@ -88,7 +88,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         )}
       </div>
       {/* Second row: time estimate, edit button, delete button */}
-      <div className="w-full flex items-center mt-1">
+      <div className="w-full flex items-center mt-1 subtask-actions-row">
         {/* Time estimate div */}
         {isEditing && editing.field === 'time' ? (
           <div className="flex items-center gap-1 z-30 bg-white shadow-sm p-1 rounded border border-gray-200">
