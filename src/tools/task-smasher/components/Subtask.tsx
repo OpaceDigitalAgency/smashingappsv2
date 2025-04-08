@@ -68,7 +68,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           // }}
           // onMouseLeave={() => setShowTooltip(false)}
         >
-          <span className="mr-1 max-w-[90%] break-words whitespace-normal">{subtask.title}</span>
+          <span className="mr-1 max-w-full break-words whitespace-normal flex-grow">{subtask.title}</span>
           {subtask.title.length > 40 && (
             <span className="text-sm text-indigo-500 flex-shrink-0 ml-1" title="Click to see full text"> {/* Match text-sm */}
               •••
@@ -87,9 +87,9 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         )}
       </div>
       
-      <div className="w-full flex items-center">
+      <div className="w-full flex items-center justify-between">
         {/* Time estimate div */}
-        <div className="w-full">
+        <div className="flex items-center">
           {isEditing && editing.field === 'time' ? (
             <div className="flex items-center gap-1 z-30 bg-white shadow-sm p-1 rounded border border-gray-200">
               <input
@@ -113,13 +113,11 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
               <span className="font-medium">{subtask.estimatedTime}h</span>
             </div>
           )}
-        </div>
-      </div>
-      
-      <div className="w-full flex items-center justify-between">
-        {/* Drag handle */}
-        <div className="text-gray-400 cursor-grab">
-          <GripVertical className="w-4 h-4" />
+          
+          {/* Drag handle */}
+          <div className="text-gray-400 cursor-grab ml-2">
+            <GripVertical className="w-4 h-4" />
+          </div>
         </div>
         
         <div className="flex items-center">

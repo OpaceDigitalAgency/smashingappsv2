@@ -169,26 +169,44 @@ button:has(.w-4.h-4) + input {
   width: 100% !important;
 }
 
-/* Subtask container */
+/* Remove gray divider lines and fix layout */
 .py-2.px-2.flex.flex-col.items-start.gap-1\.5 {
   display: flex !important;
   flex-direction: column !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* Subtask time estimate row */
-.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center {
-  display: flex !important;
-  flex-direction: row !important;
+/* Make subtask title full width */
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center.gap-3 {
+  width: 100% !important;
+}
+
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center.gap-3 > div.flex-grow {
+  width: 100% !important;
+  flex: 1 1 auto !important;
+}
+
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center.gap-3 > div.flex-grow > span {
+  max-width: 100% !important;
   width: auto !important;
-  margin-right: 8px !important;
 }
 
-/* Subtask edit/delete buttons row */
+/* Combine subtask time and actions into one row */
 .py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center.justify-between {
   display: flex !important;
   flex-direction: row !important;
-  width: auto !important;
-  margin-left: auto !important;
+  width: 100% !important;
+  justify-content: space-between !important;
+}
+
+/* Create a container for both time and actions */
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 > div.w-full.flex.items-center:not(.justify-between) + div.w-full.flex.items-center.justify-between {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
 }
 
 
@@ -206,15 +224,28 @@ button:has(.w-4.h-4) + input {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   width: 100% !important;
-  overflow-x: auto !important;
-  padding-bottom: 4px !important;
+  overflow-x: visible !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+  background: transparent !important;
 }
 
 /* Make sure the task title row stays in row direction */
 .task-smasher .task-content>div.flex.items-center {
   flex-direction: row !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove background and shadow from buttons */
+.rounded-full.bg-gray-50,
+.rounded-full.shadow-sm,
+button.shadow-sm {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 /* Task metadata items */
 .task-metadata > div,
@@ -278,15 +309,55 @@ button:has(.w-4.h-4) + input {
 .mt-5.flex.flex-wrap.gap-2 {
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  overflow-x: auto !important;
-  padding-bottom: 4px !important;
+  flex-wrap: wrap !important;
+  overflow-x: visible !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  margin-top: 10px !important;
 }
 
 .mt-5.flex.flex-wrap.gap-2 > button {
   flex: 0 0 auto !important;
   width: auto !important;
   white-space: nowrap !important;
+  margin-bottom: 0 !important;
+}
+
+/* Fix the main task container */
+.bg-white\/90.backdrop-blur-sm.rounded-lg.shadow-sm.border {
+  border-bottom: none !important;
+}
+
+/* Fix the time estimate button */
+.flex.items-center.gap-1.rounded-full.px-3.py-1\.5.bg-gray-50 {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Fix the priority button */
+.px-3.py-1\.5.rounded-full.text-sm.font-medium.shadow-sm {
+  box-shadow: none !important;
+}
+
+/* Remove any horizontal dividers */
+.task-content hr,
+.task-content .border-t,
+.task-content .border-b,
+.task-content .border-gray-100,
+.task-content .border-gray-200 {
+  display: none !important;
+}
+
+/* Remove any background colors that might create divider lines */
+.bg-gray-50, .hover\:bg-gray-100, .bg-white\/90 {
+  background-color: transparent !important;
+}
+
+/* Remove any shadows that might create divider lines */
+.shadow-sm, .hover\:shadow-md {
+  box-shadow: none !important;
 }
 
 /* ===== MOBILE STYLES ===== */
