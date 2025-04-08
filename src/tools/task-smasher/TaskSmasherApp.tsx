@@ -501,7 +501,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 <div className="flex items-center gap-2 w-full">
                   {/* Filters Button */}
                   <button
-                    className="flex items-center gap-1 px-2 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
+                    className="flex items-center gap-1 px-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
                     onClick={() => setFiltersExpanded(!filtersExpanded)}
                   >
                     <Filter className="w-4 h-4" />
@@ -514,7 +514,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                   
                   {/* Subtask Breakdown Slider Button */}
                   <button
-                    className="flex items-center gap-1 px-2 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
+                    className="flex items-center gap-1 px-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
                     onClick={() => setSliderExpanded(!sliderExpanded)}
                   >
                     <Sliders className="w-4 h-4" />
@@ -528,7 +528,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                   {/* Undo button */}
                   <button
                     onClick={handleUndo}
-                    className="flex items-center gap-1 px-2 py-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
+                    className="flex items-center gap-1 px-2 bg-white/80 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium shadow-sm transition-all duration-200 min-h-[44px] flex-1" // Adjusted for mobile
                     title="Undo last action"
                   >
                     <Undo className="w-4 h-4" />
