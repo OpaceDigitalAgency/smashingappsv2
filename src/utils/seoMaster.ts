@@ -21,6 +21,7 @@ export interface MetaConfig {
   robots?: string;
   structuredData?: object;
   keywords?: string;
+  useCaseLabel?: string; // Added optional property for the base use case label
 }
 
 export interface MetaConfigMap {
@@ -198,6 +199,7 @@ Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
     canonical: `${BASE_URL}${urlPath}`,
     urlPath: urlPath,
     keywords: `task management, ${definition.label.toLowerCase()}, AI task breakdown, productivity tool, SmashingApps`,
+    useCaseLabel: definition.label, // Store the original label
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -310,11 +312,13 @@ export function generateMetaTags(route: string): string {
  */
 export function generateFallbackContent(route: string): string {
   const meta = getMetaForRoute(route);
+  // Use the specific useCaseLabel for H1 if available, otherwise use the full title
+  const useCaseName = meta.useCaseLabel || meta.title;
   
   return `
     <!-- SEO Fallback Content - Only visible to search engines and users with JavaScript disabled -->
     <div id="root-fallback" style="display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important;">
-      <h1>${meta.title}</h1>
+      <h1>${useCaseName}</h1>
       <p>${meta.description}</p>
       <p><em>Content is loading... If it doesn't load, please ensure JavaScript is enabled.</em></p>
     </div>
