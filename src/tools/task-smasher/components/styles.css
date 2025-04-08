@@ -110,10 +110,19 @@ input[type="number"] {
 }
 
 /* Ensure filter button icon and text are on the same line */
-button:has(.filter-button-text) {
+button:has(.filter-button-text),
+button.flex.items-center {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Target the specific filter button */
+button:has(.filter-button-text) > svg,
+button:has(.filter-button-text) > span {
+  display: inline-block !important;
+  vertical-align: middle !important;
 }
 
 /* Override any flex row settings */
@@ -223,6 +232,15 @@ button:has(.w-4.h-4) + input {
   .filter-button-text {
     display: inline-flex !important;
     align-items: center !important;
+    flex-direction: row !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+  
+  /* Override any flex column settings for filter buttons */
+  button:has(.filter-button-text) {
+    flex-direction: row !important;
+    display: flex !important;
   }
   
   /* Increase font size for task title only */
