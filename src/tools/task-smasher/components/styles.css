@@ -169,34 +169,39 @@ button:has(.w-4.h-4) + input {
   width: 100% !important;
 }
 
-/* Subtask specific styles */
+/* Subtask specific styles - row layout */
 .py-2.px-2.flex.items-center {
   display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
 }
 
 .py-2.px-2.flex.items-center > div,
 .py-2.px-2.flex.items-center > button {
-  width: 100% !important;
-  display: block !important;
-  margin-top: 8px !important;
+  width: auto !important;
+  display: inline-flex !important;
+  margin-top: 0 !important;
+  margin-right: 8px !important;
 }
 
 .py-2.px-2.flex.items-center > div.flex-grow {
-  margin-top: 0 !important;
+  flex-grow: 1 !important;
 }
 
 .py-2.px-2.flex.items-center > div.flex.items-center.gap-1\.5.shrink-0 {
-  display: block !important;
-  width: 100% !important;
+  display: inline-flex !important;
+  width: auto !important;
+  align-items: center !important;
 }
 
 .py-2.px-2.flex.items-center > div.flex.items-center.gap-1\.5.shrink-0 > div,
 .py-2.px-2.flex.items-center > div.flex.items-center.gap-1\.5.shrink-0 > div.flex.items-center {
-  width: 100% !important;
-  display: block !important;
-  margin-top: 8px !important;
+  width: auto !important;
+  display: inline-flex !important;
+  margin-top: 0 !important;
+  margin-right: 8px !important;
 }
 
 
@@ -209,7 +214,8 @@ button:has(.w-4.h-4) + input {
   float: left !important;
   margin-right: 5px !important;
 }
-.task-smasher .task-content>div.flex {
+/* Ensure task content divs don't force column layout */
+.task-smasher .task-content>div.flex:not(.items-center) {
   flex-direction: column !important;
 }
 
@@ -217,11 +223,18 @@ button:has(.w-4.h-4) + input {
 .task-smasher .task-content>div.flex.items-center {
   flex-direction: row !important;
 }
-.task-smasher .task-metadata>div, .task-action-buttons, .task-metadata>div.flex.ml-auto, .task-actions {
+/* Ensure all metadata items and action buttons are in a row */
+.task-smasher .task-metadata>div,
+.task-action-buttons,
+.task-metadata>div.flex.ml-auto,
+.task-actions,
+.task-smasher button.rounded-full,
+.task-smasher button.px-3.py-1\.5 {
   width: auto !important;
   margin-top: 0 !important;
   margin-right: 8px !important;
   display: inline-flex !important;
+  flex: 0 0 auto !important;
 }
 
 /* Align action buttons to the right */
@@ -255,7 +268,20 @@ button:has(.w-4.h-4) + input {
 
 
 
+/* Fix for action buttons (subtask, regenerate, AI subtasks) */
+.mt-5.flex.flex-wrap.gap-2 {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
 
+.mt-5.flex.flex-wrap.gap-2 > button {
+  flex: 0 1 auto !important;
+  width: auto !important;
+}
+
+/* ===== MOBILE STYLES ===== */
 /* ===== MOBILE STYLES ===== */
 /* These styles only apply to mobile screens */
 @media screen and (max-width: 600px) and (orientation: portrait) {
