@@ -230,6 +230,8 @@ button:has(.w-4.h-4) + input {
   padding-bottom: 0 !important;
   border-bottom: none !important;
   background: transparent !important;
+  justify-content: space-between !important;
+  min-height: 40px !important;
 }
 
 /* Make sure the task title row stays in row direction */
@@ -239,13 +241,26 @@ button:has(.w-4.h-4) + input {
   box-shadow: none !important;
 }
 
-/* Remove background and shadow from buttons */
+/* Restore button styling */
 .rounded-full.bg-gray-50,
 .rounded-full.shadow-sm,
 button.shadow-sm {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Restore specific button styling */
+.flex.items-center.gap-1.rounded-full.px-3.py-1\.5.bg-gray-50 {
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.px-3.py-1\.5.rounded-full.text-sm.font-medium {
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
 }
 /* Task metadata items */
 .task-metadata > div,
@@ -257,6 +272,7 @@ button.shadow-sm {
   margin-right: 8px !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  max-width: 45% !important;
 }
 
 /* Action buttons container */
@@ -265,6 +281,8 @@ button.shadow-sm {
   flex-direction: row !important;
   margin-left: auto !important;
   width: auto !important;
+  flex-wrap: nowrap !important;
+  max-width: 45% !important;
 }
 
 /* Action buttons */
@@ -331,14 +349,23 @@ button.shadow-sm {
 
 /* Fix the time estimate button */
 .flex.items-center.gap-1.rounded-full.px-3.py-1\.5.bg-gray-50 {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 /* Fix the priority button */
 .px-3.py-1\.5.rounded-full.text-sm.font-medium.shadow-sm {
-  box-shadow: none !important;
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Fix for subtask buttons */
+.py-2.px-2.flex.flex-col.items-start.gap-1\.5 button {
+  background-color: #f9fafb !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 /* Remove any horizontal dividers */
@@ -350,14 +377,39 @@ button.shadow-sm {
   display: none !important;
 }
 
-/* Remove any background colors that might create divider lines */
-.bg-gray-50, .hover\:bg-gray-100, .bg-white\/90 {
-  background-color: transparent !important;
+/* Selectively restore background colors for buttons */
+button.bg-gray-50,
+button.hover\:bg-gray-100,
+.rounded-full.bg-gray-50 {
+  background-color: #f9fafb !important;
 }
 
-/* Remove any shadows that might create divider lines */
-.shadow-sm, .hover\:shadow-md {
-  box-shadow: none !important;
+/* Selectively restore shadows for buttons */
+button.shadow-sm,
+button.hover\:shadow-md,
+.rounded-full.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Fix for small screens - ensure proper wrapping */
+@media screen and (max-width: 480px) {
+  .task-metadata {
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+  }
+  
+  .task-metadata > div,
+  .task-metadata > button,
+  .task-metadata > .task-priority-container,
+  .task-action-buttons {
+    max-width: 100% !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .task-action-buttons {
+    margin-left: 0 !important;
+    margin-top: 4px !important;
+  }
 }
 
 /* ===== MOBILE STYLES ===== */

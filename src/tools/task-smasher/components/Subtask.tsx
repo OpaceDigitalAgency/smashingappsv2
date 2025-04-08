@@ -106,7 +106,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
             </div>
           ) : (
             <div
-              className="flex items-center text-sm text-gray-500 gap-1 px-1.5 py-0.5 rounded border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors duration-200" /* Increased font size */
+              className="flex items-center text-sm text-gray-500 gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors duration-200 shadow-sm" /* Improved styling */
               onClick={() => startEditing(taskId, subtask.id, 'time', subtask.estimatedTime.toString())}
             >
               <Timer className="w-3 h-3" />
@@ -123,7 +123,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
         <div className="flex items-center">
           {/* Edit button */}
           <button
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100" /* Increased padding */
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100 bg-gray-50 border border-gray-200 shadow-sm" /* Improved styling */
             onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           {/* Delete button */}
           <button
             onClick={() => onDeleteTask(subtask.id, boardId)}
-            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50" /* Increased padding */
+            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50 bg-gray-50 border border-gray-200 shadow-sm" /* Improved styling */
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
