@@ -416,7 +416,18 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             </div>
             {/* Task input field and action buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <form onSubmit={handleAddTask} className="w-full flex items-center relative">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddTask(e);
+                  // Add smash effect when adding task via form submission (Enter key)
+                  if (e.target) {
+                    const formRect = (e.target as HTMLElement).getBoundingClientRect();
+                    addSmashEffectAt(formRect.left + formRect.width/2, formRect.top + formRect.height/2);
+                  }
+                }}
+                className="w-full flex items-center relative"
+              >
                 <input
                   type="text"
                   placeholder="Add a new task..."
@@ -436,7 +447,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
               {/* Action buttons - side by side on desktop, stacked on mobile */}
               <div className="flex items-center gap-2 sm:flex-shrink-0">
                 <button
-                  type="submit"
+                  type="button"
                   onClick={(e) => {
                     handleAddTask(e as React.FormEvent);
                     // Add smash effect when adding task

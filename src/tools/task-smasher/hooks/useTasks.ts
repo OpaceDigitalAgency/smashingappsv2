@@ -272,41 +272,49 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     if (e) e.preventDefault();
     
     if (newTask.trim()) {
-      // Check if task matches selected use case
-      const isContextValid = await checkTaskContext(newTask);
+      // Set generating state to true to show loading indicator during validation
+      setGenerating(true);
       
-      // Only continue with task creation if context is valid
-      if (isContextValid) {
-        setHistory(prev => [...prev, boards]);
+      try {
+        // Check if task matches selected use case
+        const isContextValid = await checkTaskContext(newTask);
         
-        setBoards(prev => {
-          const todoBoard = prev.find(board => board.id === 'todo');
-          if (!todoBoard) return prev;
+        // Only continue with task creation if context is valid
+        if (isContextValid) {
+          setHistory(prev => [...prev, boards]);
           
-          return prev.map(board => {
-            if (board.id === 'todo') {
-              return {
-                ...board,
-                tasks: [
-                  ...board.tasks,
-                  {
-                    id: `task-${Date.now()}`,
-                    title: newTask.trim(),
-                    subtasks: [],
-                    completed: false,
-                    priority: 'medium',
-                    estimatedTime: 1,
-                    expanded: false,
-                    boardId: 'todo'
-                  }
-                ]
-              };
-            }
-            return board;
+          setBoards(prev => {
+            const todoBoard = prev.find(board => board.id === 'todo');
+            if (!todoBoard) return prev;
+            
+            return prev.map(board => {
+              if (board.id === 'todo') {
+                return {
+                  ...board,
+                  tasks: [
+                    ...board.tasks,
+                    {
+                      id: `task-${Date.now()}`,
+                      title: newTask.trim(),
+                      subtasks: [],
+                      completed: false,
+                      priority: 'medium',
+                      estimatedTime: 1,
+                      expanded: false,
+                      boardId: 'todo'
+                    }
+                  ]
+                };
+              }
+              return board;
+            });
           });
-        });
-        
-        setNewTask('');
+          
+          setNewTask('');
+        }
+      } finally {
+        // Always set generating to false when done, regardless of success or failure
+        setGenerating(false);
       }
     }
   }, [newTask, boards, checkTaskContext]);
