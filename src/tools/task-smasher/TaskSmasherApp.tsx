@@ -386,7 +386,8 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
           <SemanticSection
             as="header"
             className="mb-8"
-            title={`${selectedUseCase && useCaseDefinitions[selectedUseCase]?.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher`}
+            // Use the currentUseCase label directly for the visible H1
+            title={currentUseCase.definition.label}
             titleAs="h1"
             titleClassName="text-2xl font-bold text-gray-900"
             subtitle="AI-powered task management"
