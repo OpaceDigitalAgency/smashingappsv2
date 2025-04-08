@@ -229,15 +229,21 @@ button:has(.w-4.h-4) + input {
   }
   
   /* Ensure filter-button-text is displayed inline */
-  .filter-button-text {
+  /*.filter-button-text {
    /* display: inline-flex !important;
     align-items: center !important;
     flex-direction: row !important;
     white-space: nowrap !important;
-    overflow: visible !important; */
-    display: none !important
-  }
+    overflow: visible !important; 
+  }*/
   
+  .task-smasher button:has(.filter-button-text) > span{
+    display: none !important;
+  }
+
+  .task-smasher.flex-grow.min-w-0 {
+    left: 0px !important;
+  }
   /* Override any flex column settings for filter buttons */
   button:has(.filter-button-text) {
     flex-direction: row !important;
