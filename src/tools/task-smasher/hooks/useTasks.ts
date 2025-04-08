@@ -1023,15 +1023,13 @@ Make sure to include all necessary ingredients with precise measurements before 
     document.documentElement.style.setProperty('--primary-light', `var(--${useCase}-light)`);
     document.documentElement.style.setProperty('--secondary-light', `var(--${useCase}-secondary)`);
     
-    // Clear the task mismatch state
-    if (switchingDueToMismatch) {
-      setTaskMismatch({
-        showing: false,
-        reason: '',
-        suggestedUseCase: undefined,
-        taskText: ''
-      });
-    }
+    // Always clear the task mismatch state when switching use cases
+    setTaskMismatch({
+      showing: false,
+      reason: '',
+      suggestedUseCase: undefined,
+      taskText: ''
+    });
   }, [boards, taskMismatch]);
   
   const handleGenerateIdeas = async () => {

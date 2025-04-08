@@ -814,27 +814,19 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 // Get the use case label for navigation
                 const useCaseLabel = useCaseDefinitions[useCase]?.label;
                 if (useCaseLabel && taskTextToPreserve) {
-                  // Use sessionStorage which is more reliable for page navigation
-                  sessionStorage.setItem('preservedTask', taskTextToPreserve);
-                  sessionStorage.setItem('preservedTaskTimestamp', Date.now().toString());
-                  sessionStorage.setItem('targetUseCase', useCase);
-                  
-                  console.log('Stored in sessionStorage:', {
-                    task: taskTextToPreserve,
-                    useCase: useCase
-                  });
-                  
                   // Format the URL path
                   const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
+                  
+                  // Update the URL without reloading the page
+                  window.history.pushState({}, '', path);
+                  
+                  // Directly call handleSelectUseCase instead of reloading the page
+                  handleSelectUseCase(useCase);
                   
                   // Clear the task mismatch state
                   setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
                   
-                  // Navigate to the new URL after a delay
-                  setTimeout(() => {
-                    console.log('Navigating to:', path);
-                    window.location.href = path;
-                  }, 500);
+                  console.log('Switched to use case:', useCase);
                 }
               } catch (error) {
                 console.error('Error in onSwitchUseCase:', error);

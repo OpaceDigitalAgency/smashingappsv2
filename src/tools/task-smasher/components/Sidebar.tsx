@@ -102,7 +102,9 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
         const matchedUseCase = useCases.find(useCase =>
           useCase.label.toLowerCase().replace(/\s+/g, '-') === path.toLowerCase()
         );
-        if (matchedUseCase && matchedUseCase.id !== selectedUseCase) {
+        if (matchedUseCase) {
+          // Always update the selected use case when the URL changes
+          // This ensures the sidebar selection stays in sync with the URL
           onSelectUseCase(matchedUseCase.id);
         }
       }
