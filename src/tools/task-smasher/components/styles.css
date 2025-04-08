@@ -22,7 +22,7 @@
 
 /* Task title styles */
 .task-title-container {
-  font-size: 1.25rem !important;
+  font-size: 1rem !important;
   font-weight: 500 !important;
 }
 
@@ -196,8 +196,8 @@ button:has(.w-4.h-4) + input {
 @media screen and (max-width: 600px) and (orientation: portrait) {
   /* Board header text */
   .board-header h2.text-lg {
-    font-size: 1.25rem !important; /* Increase from text-lg to text-xl */
-    line-height: 1.75rem !important;
+    font-size: 1rem !important; /* Increase from text-lg to text-xl */
+    line-height: 1.25rem !important;
   }
   
   /* Task count badge */
@@ -245,7 +245,14 @@ button:has(.w-4.h-4) + input {
     display: none !important;
   }
 
-  
+  .task-smasher .text-gray-500 {
+    float: left !important;
+    margin-right: 5px !important;
+}
+.task-smasher .task-content>div.flex {
+  flex-direction: row !important;
+}
+
   /* Override any flex column settings for filter buttons */
   button:has(.filter-button-text) {
     flex-direction: row !important;
