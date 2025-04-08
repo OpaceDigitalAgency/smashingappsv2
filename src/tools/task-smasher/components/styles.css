@@ -12,6 +12,11 @@ h1 {
   to { opacity: 1; }
 }
 
+/* Custom margin for mb-4 class */
+.mb-4 {
+  margin: 1rem 0 1rem 0;
+}
+
 /* ===== DESKTOP STYLES ===== */
 /* These styles apply to all screen sizes by default */
 
@@ -102,6 +107,13 @@ input[type="number"] {
   justify-content: flex-start !important;
   order: 3 !important;
   display: block !important;
+}
+
+/* Ensure filter button icon and text are on the same line */
+button:has(.filter-button-text) {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
 }
 
 /* Override any flex row settings */
@@ -203,6 +215,14 @@ button:has(.w-4.h-4) + input {
   .premium-button span,
   button:not([class*="rounded-full"]) span {
     font-size: 1.2rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+  
+  /* Ensure filter-button-text is displayed inline */
+  .filter-button-text {
+    display: inline-flex !important;
+    align-items: center !important;
   }
   
   /* Increase font size for task title only */
