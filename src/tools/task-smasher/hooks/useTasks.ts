@@ -21,6 +21,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     const savedRateLimited = localStorage.getItem('rateLimited');
     return savedRateLimited ? savedRateLimited === 'true' : false;
   });
+  const [showRateLimitPopup, setShowRateLimitPopup] = useState(false);
   
   const [rateLimitInfo, setRateLimitInfo] = useState<{ limit: number; remaining: number; used: number; reset: Date }>(() => {
     const savedRateLimitInfo = localStorage.getItem('rateLimitInfo');
@@ -258,9 +259,8 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       // Check if the error is due to rate limiting
       if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
         setRateLimited(true);
-        // Use local validation as fallback
-        const result = validateTaskLocally(taskText, selectedUseCase);
-        return result.isValid || result.confidence <= 0.6;
+        setShowRateLimitPopup(true);
+        return false; // Prevent task creation when rate limited
       }
       
       console.error('Error validating task context:', error);
@@ -797,7 +797,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       // Check if the error is due to rate limiting
       if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
         setRateLimited(true);
-        alert('Rate limit exceeded. Please try again later.');
+        setShowRateLimitPopup(true);
       }
     } finally {
       setGenerating(false);
@@ -971,7 +971,7 @@ Make sure to include all necessary ingredients with precise measurements before 
       // Check if the error is due to rate limiting
       if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
         setRateLimited(true);
-        alert('Rate limit exceeded. Please try again later.');
+        setShowRateLimitPopup(true);
       }
     } finally {
       setGenerating(false);
@@ -1170,6 +1170,7 @@ Make sure to include all necessary ingredients with precise measurements before 
         // Check if the error is due to rate limiting
         if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
           setRateLimited(true);
+          setShowRateLimitPopup(true);
           // Don't retry rate limit errors
           break;
         }
@@ -1197,7 +1198,7 @@ Make sure to include all necessary ingredients with precise measurements before 
     // Handle any errors after all retries are exhausted
     if (lastError) {
       if (lastError instanceof Error && lastError.message.includes('Rate limit exceeded')) {
-        alert('Rate limit exceeded. Please try again later.');
+        setShowRateLimitPopup(true);
       } else {
         alert("Failed to generate ideas. Please try again.");
       }
@@ -1220,6 +1221,27 @@ Make sure to include all necessary ingredients with precise measurements before 
     return filteredTasks;
   }, [boards, filterPriority, filterRating]);
 
+  // Function to clear rate limits
+  const clearRateLimits = useCallback(() => {
+    // Clear rate limit information from localStorage
+    localStorage.removeItem('rateLimitInfo');
+    localStorage.removeItem('rateLimited');
+    localStorage.removeItem('apiCallCount');
+    localStorage.removeItem('executionCount');
+    
+    // Reset state
+    setRateLimited(false);
+    setRateLimitInfo({
+      limit: 60,
+      remaining: 60,
+      used: 0,
+      reset: new Date(Date.now() + 3600000)
+    });
+    setExecutionCount(0);
+    
+    console.log('Rate limits cleared successfully');
+  }, []);
+
   const result: TasksContextType = {
     selectedModel,
     setSelectedModel,
@@ -1228,6 +1250,9 @@ Make sure to include all necessary ingredients with precise measurements before 
     boards,
     setBoards,
     newTask,
+    showRateLimitPopup,
+    setShowRateLimitPopup,
+    clearRateLimits,
     setNewTask,
     editingBoardId,
     setEditingBoardId,

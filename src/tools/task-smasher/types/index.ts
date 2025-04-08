@@ -91,6 +91,9 @@ export interface TasksContextType {
   setTaskMismatch: React.Dispatch<React.SetStateAction<TaskMismatchData>>;
   rateLimited: boolean;
   rateLimitInfo: RateLimitInfo;
+  showRateLimitPopup: boolean;
+  setShowRateLimitPopup: React.Dispatch<React.SetStateAction<boolean>>;
+  clearRateLimits: () => void;
   handleAddTask: (e?: React.FormEvent) => Promise<void>;
   startEditing: (taskId: string, subtaskId: string | null, field: 'title' | 'time' | 'priority', currentValue: string) => void;
   handleEditSave: (boardId: string) => void;

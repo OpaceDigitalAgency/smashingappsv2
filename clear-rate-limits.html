@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Rate Limits</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clear Rate Limits</h1>
+    <p>This page will clear the rate limit information from localStorage, allowing you to use the API again.</p>
+    
+    <button id="clearButton">Clear Rate Limits</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('clearButton').addEventListener('click', function() {
+            // Clear rate limit information
+            localStorage.removeItem('rateLimitInfo');
+            localStorage.removeItem('rateLimited');
+            localStorage.removeItem('apiCallCount');
+            localStorage.removeItem('executionCount');
+            
+            // Display success message
+            document.getElementById('result').innerHTML = '<p class="success">Rate limit information cleared successfully! You can now return to the application and continue using the API.</p>';
+            
+            // Show current localStorage state
+            const storageInfo = document.createElement('pre');
+            storageInfo.textContent = 'Current localStorage state:\n' + JSON.stringify(localStorage, null, 2);
+            document.getElementById('result').appendChild(storageInfo);
+        });
+    </script>
+</body>
+</html>

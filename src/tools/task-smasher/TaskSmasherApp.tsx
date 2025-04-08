@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './components/styles.css'; // Import consolidated styles for TaskSmasher
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
 import ModelDropdown from './components/ModelDropdown';
+import RateLimitPopup from './components/RateLimitPopup';
 import SemanticSection from '../../components/SemanticSection';
 import {
   DndContext,
@@ -57,6 +58,9 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
     totalCost,
     rateLimited,
     rateLimitInfo,
+    showRateLimitPopup,
+    setShowRateLimitPopup,
+    clearRateLimits,
     executionCount,
     boards,
     setBoards,
@@ -832,6 +836,14 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 console.error('Error in onSwitchUseCase:', error);
               }
             }}
+          />
+          
+          {/* Rate Limit Popup */}
+          <RateLimitPopup
+            isVisible={showRateLimitPopup}
+            rateLimitInfo={rateLimitInfo}
+            onClose={() => setShowRateLimitPopup(false)}
+            onClearRateLimits={clearRateLimits}
           />
           
           {/* reCAPTCHA Branding moved to bottom of page */}
