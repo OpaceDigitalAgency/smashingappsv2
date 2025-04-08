@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Zap, DollarSign, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Zap, DollarSign, Info, MessageSquare } from 'lucide-react';
 
 interface ModelDropdownProps {
   selectedModel: string;
@@ -13,6 +13,7 @@ interface ModelDropdownProps {
     reset: Date;
     used: number;
   };
+  onToggleOpenAIExample?: () => void;
 }
 
 const ModelDropdown: React.FC<ModelDropdownProps> = ({
@@ -21,7 +22,8 @@ const ModelDropdown: React.FC<ModelDropdownProps> = ({
   totalCost,
   executionCount,
   rateLimited,
-  rateLimitInfo
+  rateLimitInfo,
+  onToggleOpenAIExample
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -67,6 +69,17 @@ const ModelDropdown: React.FC<ModelDropdownProps> = ({
                   <option value="gpt-3.5-turbo">GPT-3.5 Turbo - Most affordable</option>
                 </optgroup>
               </select>
+              
+              {/* OpenAI Proxy Button */}
+              {onToggleOpenAIExample && (
+                <button
+                  onClick={onToggleOpenAIExample}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4 text-indigo-500" />
+                  <span>OpenAI Proxy</span>
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 text-sm">

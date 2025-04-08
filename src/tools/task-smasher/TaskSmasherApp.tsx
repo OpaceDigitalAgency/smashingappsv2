@@ -381,6 +381,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             executionCount={executionCount}
             rateLimited={rateLimited}
             rateLimitInfo={rateLimitInfo}
+            onToggleOpenAIExample={() => setShowOpenAIExample(!showOpenAIExample)}
           />
 
           <SemanticSection
@@ -410,14 +411,6 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
                 >
                   <FilePdf className="w-4 h-4" />
                   <span className="hidden sm:inline">PDF</span>
-                </button>
-                {/* Undo button moved to a more intuitive location */}
-                <button
-                  onClick={() => setShowOpenAIExample(!showOpenAIExample)}
-                  className="text-gray-700 px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="hidden sm:inline">OpenAI Proxy</span>
                 </button>
               </div>
             </div>
