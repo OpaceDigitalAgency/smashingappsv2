@@ -1,4 +1,10 @@
-/* TaskSmasher Styles - Consolidated CSS for both desktop and mobile */
+/* OPACE NEW */
+
+h1 {
+  padding: 0px !important;
+}
+
+/*Styles - Consolidated CSS for both desktop and mobile */
 
 /* Define animation for tooltip */
 @keyframes fadeIn {
