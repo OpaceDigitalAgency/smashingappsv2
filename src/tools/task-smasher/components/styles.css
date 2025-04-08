@@ -204,8 +204,10 @@ button:has(.w-4.h-4) + input {
 .task-smasher .task-content>div.flex {
 flex-direction: row !important;
 }
-.task-smasher .task-metadata>div, .task-smasher .task-action-buttons {
-  width: unset !important; 
+.task-smasher .task-metadata>div, .task-action-buttons, .task-metadata>div.flex.ml-auto, .task-actions {
+  width: unset !important;
+  margin-top: 10px !important;
+  margin-left: 0px !important;
 }
 
 
@@ -243,13 +245,13 @@ flex-direction: row !important;
   .board-header span,
   .board-header div,
   input[type="text"]::placeholder {
-    font-size: 1.2rem !important; /* Explicitly increase font size */
+    font-size: 12px !important; /* Explicitly increase font size */
   }
   
   /* Increase size for "Need Ideas?", "Filters", "Subtasks:", "Undo" text */
   .premium-button span,
   button:not([class*="rounded-full"]) span {
-    font-size: 1rem !important;
+    font-size: 12px !important;
     display: inline-flex !important;
     align-items: center !important;
   }
@@ -286,13 +288,13 @@ flex-direction: row !important;
   .need-ideas-text,
   .task-content span,
   .task-content div:not(.task-action-buttons) span {
-    font-size: 1rem !important;
+    font-size: 12px !important;
   }
   
   /* Keep buttons at text-sm but slightly larger for mobile */
   .task-content button.rounded-full,
   .task-content button.px-3.py-1\.5 {
-    font-size: 1rem !important;
+    font-size: 12px !important;
   }
 }
 
