@@ -119,11 +119,11 @@ button.flex.items-center {
 }
 
 /* Target the specific filter button */
-button:has(.filter-button-text) > svg,
+/*button:has(.filter-button-text) > svg,
 button:has(.filter-button-text) > span {
   display: inline-block !important;
   vertical-align: middle !important;
-}
+}*/
 
 /* Override any flex row settings */
 .task-content > div.flex,
@@ -241,7 +241,7 @@ button:has(.w-4.h-4) + input {
     display: none !important;
   }
 
-  .task-smasher.flex-grow.min-w-0 {
+  .task-smasher .flex-grow.min-w-0 {
     left: 0px !important;
   }
   /* Override any flex column settings for filter buttons */
