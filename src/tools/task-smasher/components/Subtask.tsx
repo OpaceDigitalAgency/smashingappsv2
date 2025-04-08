@@ -87,56 +87,53 @@ function Subtask({ subtask, taskId, boardId, onToggleComplete, editing, startEdi
           </div>
         )}
       </div>
-      {/* Second row: time estimate, edit button, delete button */}
-      <div className="w-full flex items-center mt-1 subtask-actions-row">
+      {/* Second row: time estimate, edit button, delete button - all on one row */}
+      <div className="w-full flex items-center mt-2 subtask-actions-row bg-gray-50/50 py-1 px-2 rounded-md">
         {/* Time estimate div */}
         {isEditing && editing.field === 'time' ? (
-          <div className="flex items-center gap-1 z-30 bg-white shadow-sm p-1 rounded border border-gray-200">
+          <div className="flex items-center gap-1 z-30 bg-white shadow-sm p-1 rounded border border-gray-200 time-edit-container mr-2">
+            <Timer className="w-3 h-3 text-gray-500" />
             <input
               type="number"
               value={editing.value}
               onChange={(e) => startEditing(taskId, subtask.id, 'time', e.target.value)}
               onBlur={() => handleEditSave(boardId)}
               onKeyDown={(e) => e.key === 'Enter' && handleEditSave(boardId)}
-              className="w-12 py-0.5 px-1.5 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-12 py-0.5 px-1.5 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 time-input"
               min="0"
+              step="0.5"
               autoFocus
             />
             <span className="text-sm text-gray-500">h</span>
           </div>
         ) : (
           <div
-            className="flex items-center text-sm text-gray-500 gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors duration-200 shadow-sm"
+            className="flex items-center text-sm text-gray-500 gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors duration-200 shadow-sm subtask-time-button mr-2"
             onClick={() => startEditing(taskId, subtask.id, 'time', subtask.estimatedTime.toString())}
+            title="Click to edit time estimate"
           >
             <Timer className="w-3 h-3" />
             <span className="font-medium">{subtask.estimatedTime}h</span>
           </div>
         )}
         
-        {/* Spacer to push buttons to the right */}
-        <div className="flex-grow"></div>
+        {/* Edit button */}
+        <button
+          className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100 bg-gray-50 border border-gray-200 shadow-sm mr-2"
+          onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
+          title="Edit subtask"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
         
-        {/* Edit and Delete buttons - always visible */}
-        <div className="flex items-center gap-2 subtask-action-buttons">
-          {/* Edit button */}
-          <button
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 rounded hover:bg-gray-100 bg-gray-50 border border-gray-200 shadow-sm"
-            onClick={() => startEditing(taskId, subtask.id, 'title', subtask.title)}
-            title="Edit subtask"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          
-          {/* Delete button */}
-          <button
-            onClick={() => onDeleteTask(subtask.id, boardId)}
-            className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50 bg-gray-50 border border-gray-200 shadow-sm"
-            title="Delete subtask"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {/* Delete button */}
+        <button
+          onClick={() => onDeleteTask(subtask.id, boardId)}
+          className="text-red-400 hover:text-red-600 transition-colors duration-200 p-1.5 rounded hover:bg-red-50 bg-gray-50 border border-gray-200 shadow-sm"
+          title="Delete subtask"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );

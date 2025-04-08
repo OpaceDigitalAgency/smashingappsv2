@@ -202,11 +202,15 @@ button:has(.w-4.h-4) + input {
   width: 100% !important;
   justify-content: flex-start !important;
   margin-top: 4px !important;
-  margin-left: 24px !important; /* Align with the text above */
+  margin-left: 0 !important; /* Remove left margin */
   visibility: visible !important;
   opacity: 1 !important;
   height: auto !important;
   overflow: visible !important;
+  position: relative !important;
+  z-index: 5 !important;
+  border-top: 1px solid rgba(229, 231, 235, 0.5) !important;
+  padding-top: 6px !important;
 }
 
 /* Create a container for both time and actions */
@@ -229,6 +233,7 @@ button:has(.w-4.h-4) + input {
 }
 /* Task metadata row (time, priority, etc.) */
 .task-metadata {
+  visibility: visible !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
@@ -281,6 +286,8 @@ button.shadow-sm {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
   max-width: 45% !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Action buttons container */
@@ -305,6 +312,9 @@ button.shadow-sm {
 .task-smasher .task-metadata>div.flex.ml-auto,
 .task-smasher .task-actions {
   margin-left: auto !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 /* Only apply width:unset to specific elements, not all w-full elements */
 .task-smasher .task-metadata .w-full {
@@ -360,6 +370,9 @@ button.shadow-sm {
   background-color: #f9fafb !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e5e7eb !important;
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Fix the priority button */
@@ -377,21 +390,22 @@ button.shadow-sm {
 }
 
 /* Ensure subtask action buttons are visible and properly styled */
-.subtask-actions-row button,
-.subtask-action-buttons button {
+.subtask-actions-row button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   min-width: 28px !important;
   min-height: 28px !important;
   padding: 4px !important;
-  margin-right: 4px !important;
+  margin-right: 8px !important;
   background-color: #f9fafb !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e5e7eb !important;
   border-radius: 4px !important;
   opacity: 1 !important;
   visibility: visible !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
 /* Ensure the action buttons container is always visible */
@@ -399,6 +413,9 @@ button.shadow-sm {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative !important;
+  z-index: 10 !important;
+  margin-left: auto !important;
 }
 
 /* Style the time estimate button */
@@ -414,6 +431,8 @@ button.shadow-sm {
   visibility: visible !important;
   position: relative !important;
   z-index: 10 !important;
+  flex-shrink: 0 !important;
+  margin-right: auto !important;
 }
 
 /* Remove any horizontal dividers */
@@ -457,7 +476,43 @@ button.hover\:shadow-md,
   .task-action-buttons {
     margin-left: 0 !important;
     margin-top: 4px !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
   }
+}
+
+/* Fix for time estimate editing */
+.task-metadata div[class*="flex items-center gap-1 rounded-full"],
+.time-editing-active,
+.time-edit-container {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Ensure time input is visible when editing */
+.task-metadata input[type="number"],
+.time-input,
+.subtask-actions-row input[type="number"] {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 50px !important;
+  position: relative !important;
+  z-index: 20 !important;
+}
+
+/* Make sure action buttons are always visible */
+.task-action-buttons button,
+.subtask-action-buttons button,
+.subtask-time-button {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* ===== MOBILE STYLES ===== */
@@ -468,6 +523,37 @@ button.hover\:shadow-md,
   .board-header h2.text-lg {
     font-size: 1rem !important; /* Increase from text-lg to text-xl */
     line-height: 1.25rem !important;
+  }
+  
+  /* Specific styles for subtask time button */
+  .subtask-time-button {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 5 !important;
+    flex-shrink: 0 !important;
+    margin-right: 8px !important;
+  }
+  
+  /* Ensure the subtask actions row is always visible */
+  .subtask-actions-row {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: rgba(249, 250, 251, 0.5) !important;
+  }
+  
+  /* Fix for mobile view */
+  @media screen and (max-width: 480px) {
+    .subtask-actions-row {
+      flex-wrap: wrap !important;
+    }
+    
+    .subtask-actions-row > div,
+    .subtask-actions-row > button {
+      margin-bottom: 4px !important;
+    }
   }
   
   /* Task count badge */

@@ -227,13 +227,13 @@ function Task({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-sm overflow-hidden task-metadata"> {/* Added task-metadata class for targeting in CSS */}
             <div
               className={`flex items-center gap-1 rounded-full px-3 py-1.5 bg-gray-50 ${ /* Increased padding */
-                isEditing && editing.field === 'time' ? '' : 'cursor-pointer hover:bg-gray-100'
+                isEditing && editing.field === 'time' ? 'time-editing-active' : 'cursor-pointer hover:bg-gray-100'
               } transition-colors duration-200 flex-shrink-0`}
               onClick={() => !isEditing && startEditing(task.id, null, 'time', task.estimatedTime.toString())}
               title="Time estimate"
             >
               {isEditing && editing.field === 'time' ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 time-edit-container">
                   <Timer className="w-3.5 h-3.5 text-gray-500" />
                   <input
                     type="number"
@@ -241,8 +241,9 @@ function Task({
                     onChange={(e) => startEditing(task.id, null, 'time', e.target.value)}
                     onBlur={() => handleEditSave(boardId)}
                     onKeyDown={(e) => e.key === 'Enter' && handleEditSave(boardId)}
-                    className="w-12 py-0.5 px-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500" /* Match text-sm */
+                    className="w-12 py-0.5 px-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 time-input" /* Match text-sm */
                     min="0"
+                    step="0.5"
                     autoFocus
                   />
                   <span className="text-gray-500">h</span>
