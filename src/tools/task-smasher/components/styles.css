@@ -33,7 +33,7 @@
 
 /* Subtask styles */
 .subtask-text {
-  font-size: 1rem !important;
+  font-size: 12px !important;
 }
 
 /* Board header styles */
@@ -44,13 +44,13 @@
 
 /* Button text styles */
 button span {
-  font-size: 1rem !important;
+  font-size: 12px !important;
 }
 
 /* Input field styles */
 input[type="text"], 
 input[type="number"] {
-  font-size: 1rem !important;
+  font-size: 12px !important;
 }
 
 /* 3. Task layout for ALL screen sizes - DIRECT FIX */
@@ -209,7 +209,9 @@ flex-direction: row !important;
   margin-top: 10px !important;
   margin-left: 0px !important;
 }
-
+.task-smasher .w-full {
+  width: unset !important; 
+}
 
 
 
