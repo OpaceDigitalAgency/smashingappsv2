@@ -204,8 +204,9 @@ button:has(.w-4.h-4) + input {
 .task-smasher .task-content>div.flex {
 flex-direction: row !important;
 }
-
-
+.task-smasher .task-metadata>div, .task-smasher .task-action-buttons {
+  width: unset !important; 
+}
 
 
 
