@@ -152,8 +152,7 @@ function App() {
             {/* ArticleSmasher base routes */}
             <Route path="/tools/article-smasher" element={<ArticleSmasherApp />} />
             {/* ArticleSmasherV2 base routes */}
-            <Route path="/tools/article-smasherv2" element={<ArticleSmasherV2App />} />
-            <Route path="/tools/article-smasherv2/" element={<ArticleSmasherV2App />} />
+            <Route path="/tools/article-smasherv2/*" element={<ArticleSmasherV2App />} />
             
             <Route path="/tools/article-smasher/" element={<ArticleSmasherApp />} />
             
