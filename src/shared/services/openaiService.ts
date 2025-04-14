@@ -8,7 +8,7 @@
 import { 
   AIService, 
   aiServiceRegistry 
-} from './aiService';
+} from './AIService';
 
 import {
   AIProvider,

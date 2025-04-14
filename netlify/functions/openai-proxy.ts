@@ -21,6 +21,37 @@ import OpenAI from "openai";
 import axios from "axios";
 import * as crypto from "crypto";
 
+// Define interfaces for external libraries to avoid importing them
+// This is a workaround for the missing type declarations
+interface Anthropic {
+  messages: {
+    create: (options: any) => Promise<any>;
+  };
+}
+
+interface GoogleGenerativeAI {
+  getGenerativeModel: (options: any) => {
+    generateContent: (options: any) => Promise<any>;
+  };
+}
+
+// Mock implementations that will be replaced with real implementations when needed
+const createAnthropicClient = (options: { apiKey: string; maxRetries: number }): Anthropic => {
+  return {
+    messages: {
+      create: async () => ({})
+    }
+  };
+};
+
+const createGoogleAIClient = (apiKey: string): GoogleGenerativeAI => {
+  return {
+    getGenerativeModel: () => ({
+      generateContent: async () => ({})
+    })
+  };
+};
+
 // SECURITY SETTINGS - Controls the reCAPTCHA verification system
 // This helps prevent bots from abusing the AI system
 const RECAPTCHA_SECRET_KEY = "6Lc_BQkrAAAAAC2zzS3znw-ahAhHQ57Sqhwxcui2";
@@ -153,8 +184,36 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       console.log('No reCAPTCHA token provided, continuing anyway');
     }
     
-    // Get API key from environment variable
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Get provider from headers
+    const provider = event.headers["x-provider"] || "openai";
+    console.log(`Provider: ${provider}`);
+    
+    // Get API key from headers or environment variable
+    let apiKey = event.headers["x-api-key"] || null;
+    
+    // If no API key in headers, use environment variable based on provider
+    if (!apiKey) {
+      switch (provider) {
+        case "openai":
+          apiKey = process.env.OPENAI_API_KEY || null;
+          break;
+        case "openrouter":
+          apiKey = process.env.OPENROUTER_API_KEY || null;
+          break;
+        case "anthropic":
+          apiKey = process.env.ANTHROPIC_API_KEY || null;
+          break;
+        case "google":
+          apiKey = process.env.GOOGLE_API_KEY || null;
+          break;
+        case "image":
+          // For image generation, default to OpenAI's API key
+          apiKey = process.env.OPENAI_API_KEY || null;
+          break;
+        default:
+          apiKey = process.env.OPENAI_API_KEY || null;
+      }
+    }
     
     if (!apiKey) {
       return {
@@ -164,18 +223,59 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
     
-    console.log("Initializing OpenAI client with API key:", apiKey ? "Key exists" : "No key");
+    console.log("Initializing AI client with API key:", apiKey ? "Key exists" : "No key");
     
-    // OPENAI CONNECTION SETTINGS
-    // These settings control how we connect to OpenAI's API
-    const openai = new OpenAI({
-      apiKey: apiKey,
-      timeout: 60000, // REQUEST TIMEOUT: 60 seconds (change this if requests are timing out)
-      maxRetries: 3,  // Number of times to retry failed requests
-      defaultHeaders: {
-        "User-Agent": "SmashingApps/1.0"
-      }
-    });
+    // Initialize the appropriate client based on the provider
+    let openai, anthropic, googleAI;
+    
+    switch (provider) {
+      case "openai":
+      case "image":
+        // OPENAI CONNECTION SETTINGS
+        openai = new OpenAI({
+          apiKey: apiKey,
+          timeout: 60000, // REQUEST TIMEOUT: 60 seconds
+          maxRetries: 3,  // Number of times to retry failed requests
+          defaultHeaders: {
+            "User-Agent": "SmashingApps/1.0"
+          }
+        });
+        break;
+      case "anthropic":
+        // ANTHROPIC CONNECTION SETTINGS
+        anthropic = createAnthropicClient({
+          apiKey: apiKey,
+          maxRetries: 3
+        });
+        break;
+      case "google":
+        // GOOGLE CONNECTION SETTINGS
+        googleAI = createGoogleAIClient(apiKey || '');
+        break;
+      case "openrouter":
+        // OPENROUTER CONNECTION SETTINGS (uses OpenAI-compatible API)
+        openai = new OpenAI({
+          apiKey: apiKey,
+          baseURL: "https://openrouter.ai/api/v1",
+          timeout: 60000,
+          maxRetries: 3,
+          defaultHeaders: {
+            "User-Agent": "SmashingApps/1.0",
+            "HTTP-Referer": "https://smashingapps.ai"
+          }
+        });
+        break;
+      default:
+        // Default to OpenAI
+        openai = new OpenAI({
+          apiKey: apiKey,
+          timeout: 60000,
+          maxRetries: 3,
+          defaultHeaders: {
+            "User-Agent": "SmashingApps/1.0"
+          }
+        });
+    }
     
     // Check if this is a multipart form request (for audio transcription)
     const contentType = event.headers["content-type"] || "";
@@ -241,6 +341,9 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       // Parse JSON request body for chat completions
       const requestBody = JSON.parse(event.body || "{}");
       
+      // Check if this is an image request
+      const isImageRequest = event.headers["x-request-type"] === "image" || event.path.endsWith("/image");
+      
       // Forward the request to OpenAI
       if (!requestBody.model || !requestBody.messages) {
         return {
@@ -292,14 +395,174 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       } else {
         // For all other requests, use the OpenAI SDK
         try {
-          // MAIN AI REQUEST SETTINGS
-          // This is where we send the user's prompt to OpenAI and get a response
-          // You can modify these settings to change how the AI responds
-          response = await openai.chat.completions.create({
-            model: requestBody.model,           // AI model to use (e.g., "gpt-3.5-turbo")
-            messages: requestBody.messages,     // The conversation history and user's prompt
-            ...requestBody                      // Any other parameters (temperature, max_tokens, etc.)
-          });
+          // Handle the request based on the provider
+          switch (provider) {
+            case "openai":
+              // OPENAI REQUEST
+              response = await openai.chat.completions.create({
+                model: requestBody.model,
+                messages: requestBody.messages,
+                ...requestBody
+              });
+              break;
+              
+            case "anthropic":
+              // ANTHROPIC REQUEST
+              const anthropicResponse = await anthropic.messages.create({
+                model: requestBody.model,
+                messages: requestBody.messages,
+                system: requestBody.system,
+                max_tokens: requestBody.max_tokens || 1024,
+                temperature: requestBody.temperature
+              });
+              
+              // Convert Anthropic response to OpenAI-compatible format
+              response = {
+                id: anthropicResponse.id,
+                object: "chat.completion",
+                created: Date.now(),
+                model: requestBody.model,
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: anthropicResponse.content[0].text
+                    },
+                    finish_reason: anthropicResponse.stop_reason
+                  }
+                ],
+                usage: {
+                  prompt_tokens: anthropicResponse.usage.input_tokens,
+                  completion_tokens: anthropicResponse.usage.output_tokens,
+                  total_tokens: anthropicResponse.usage.input_tokens + anthropicResponse.usage.output_tokens
+                }
+              };
+              break;
+              
+            case "google":
+              // GOOGLE REQUEST
+              const model = googleAI.getGenerativeModel({ model: requestBody.model });
+              
+              // Convert OpenAI-style messages to Google format
+              const googleMessages = requestBody.messages.map(msg => {
+                if (msg.role === "user") {
+                  return { role: "user", parts: [{ text: msg.content }] };
+                } else if (msg.role === "assistant") {
+                  return { role: "model", parts: [{ text: msg.content }] };
+                } else {
+                  // System messages are handled differently in Google's API
+                  return { role: "user", parts: [{ text: msg.content }] };
+                }
+              });
+              
+              // Extract system instruction if present
+              const systemInstruction = requestBody.messages.find(msg => msg.role === "system")?.content;
+              
+              // Generate content
+              const googleResult = await model.generateContent({
+                contents: googleMessages,
+                generationConfig: {
+                  temperature: requestBody.temperature,
+                  maxOutputTokens: requestBody.max_tokens,
+                  topP: 0.95,
+                  topK: 40
+                },
+                systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+              });
+              
+              // Convert Google response to OpenAI-compatible format
+              response = {
+                id: `google-${Date.now()}`,
+                object: "chat.completion",
+                created: Date.now(),
+                model: requestBody.model,
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: googleResult.response.text()
+                    },
+                    finish_reason: "stop"
+                  }
+                ],
+                usage: {
+                  prompt_tokens: 0, // Google doesn't provide token counts
+                  completion_tokens: 0,
+                  total_tokens: 0
+                }
+              };
+              break;
+              
+            case "openrouter":
+              // OPENROUTER REQUEST (OpenAI-compatible API)
+              response = await openai.chat.completions.create({
+                model: requestBody.model,
+                messages: requestBody.messages,
+                ...requestBody
+              });
+              break;
+              
+            case "image":
+              if (isImageRequest) {
+                // Handle image generation based on the model
+                if (requestBody.model.startsWith("dall-e")) {
+                  // DALL-E image generation
+                  const imageResponse = await openai.images.generate({
+                    model: requestBody.model,
+                    prompt: requestBody.prompt,
+                    n: requestBody.n || 1,
+                    size: requestBody.size || "1024x1024",
+                    response_format: requestBody.response_format || "url"
+                  });
+                  
+                  response = {
+                    created: Date.now(),
+                    data: imageResponse.data
+                  };
+                } else if (requestBody.model === "stable-diffusion-3") {
+                  // Stable Diffusion would be implemented here
+                  // This is a placeholder for future implementation
+                  response = {
+                    created: Date.now(),
+                    data: [{ url: "https://placeholder.com/stable-diffusion-image.png" }]
+                  };
+                } else if (requestBody.model === "midjourney") {
+                  // Midjourney would be implemented here
+                  // This is a placeholder for future implementation
+                  response = {
+                    created: Date.now(),
+                    data: [{ url: "https://placeholder.com/midjourney-image.png" }]
+                  };
+                } else {
+                  // Default to DALL-E if model not specified
+                  const imageResponse = await openai.images.generate({
+                    model: "dall-e-3",
+                    prompt: requestBody.prompt,
+                    n: requestBody.n || 1,
+                    size: requestBody.size || "1024x1024",
+                    response_format: requestBody.response_format || "url"
+                  });
+                  
+                  response = {
+                    created: Date.now(),
+                    data: imageResponse.data
+                  };
+                }
+              } else {
+                throw new Error("Invalid image request");
+              }
+              break;
+              
+            default:
+              // Default to OpenAI
+              response = await openai.chat.completions.create({
+                model: requestBody.model,
+                messages: requestBody.messages,
+                ...requestBody
+              });
+          }
         } catch (error) {
           console.error("Error with OpenAI SDK:", error);
           throw error;

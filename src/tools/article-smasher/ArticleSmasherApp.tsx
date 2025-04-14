@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FileText, FileDown, File, Search, Wand2 } from 'lucide-react';
-import { 
-  Button, 
-  Card, 
-  Dropdown, 
-  LoadingIndicator, 
-  PromptRunner, 
+import { FileText, FileDown, File, Search, Wand2, Settings } from 'lucide-react';
+import {
+  Button,
+  Card,
+  Dropdown,
+  LoadingIndicator,
+  PromptRunner,
   RateLimitPopup,
   useAI,
   useRateLimit,
   useLocalStorage
 } from '../../shared';
+import { getModelsByCategory } from '../../shared/services/aiServices';
+import APISettingsModal from '../../shared/components/APISettingsModal/APISettingsModal';
 import config from './config';
 import StructuredData from '../../components/StructuredData';
 import SEO from '../../components/SEO';
@@ -23,6 +25,8 @@ const ArticleSmasherApp: React.FC = () => {
   const [article, setArticle] = useState('');
   const [selectedModel, setSelectedModel] = useState(config.capabilities.ai.defaultModel);
   const [selectedUseCase, setSelectedUseCase] = useState(config.defaultUseCase);
+  const [showAPISettings, setShowAPISettings] = useState(false);
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   
   // Hooks
@@ -63,6 +67,29 @@ const ArticleSmasherApp: React.FC = () => {
     };
   };
 
+  // Load available models on mount
+  useEffect(() => {
+    // Get models grouped by category
+    const modelsByCategory = getModelsByCategory();
+    
+    // Combine featured, reasoning, and cost-optimized models
+    const allModels = [
+      ...(modelsByCategory['featured'] || []),
+      ...(modelsByCategory['reasoning'] || []),
+      ...(modelsByCategory['cost-optimized'] || [])
+    ];
+    
+    // Filter out image models
+    const textModels = allModels.filter(model => model.provider !== 'image');
+    
+    setAvailableModels(textModels);
+    
+    // If the selected model is not in the available models, select the first one
+    if (textModels.length > 0 && !textModels.some(model => model.id === selectedModel)) {
+      setSelectedModel(textModels[0].id);
+    }
+  }, []);
+  
   const currentUseCase = getCurrentUseCase();
   
   // Create SEO overrides based on the current use case
@@ -224,15 +251,25 @@ const ArticleSmasherApp: React.FC = () => {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Model dropdown and controls */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <Dropdown
-              label="AI Model"
-              value={selectedModel}
-              options={config.capabilities.ai.availableModels.map(model => ({ 
-                value: model, 
-                label: model === 'gpt-3.5-turbo' ? 'GPT-3.5 Turbo (Fast)' : 'GPT-4 (Advanced)' 
-              }))}
-              onChange={setSelectedModel}
-            />
+            <div className="flex items-center gap-2">
+              <Dropdown
+                label="AI Model"
+                value={selectedModel}
+                options={availableModels.map(model => ({
+                  value: model.id,
+                  label: model.name
+                }))}
+                onChange={setSelectedModel}
+              />
+              
+              <button
+                onClick={() => setShowAPISettings(true)}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4 text-indigo-500" />
+                <span className="hidden sm:inline">API Settings</span>
+              </button>
+            </div>
             
             <div className="flex items-center gap-2">
               <Button 
@@ -280,6 +317,12 @@ const ArticleSmasherApp: React.FC = () => {
                 onChange={(e) => setKeywords(e.target.value)}
                 placeholder="Enter target keywords..."
                 className="w-full px-4 py-3 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              
+              {/* API Settings Modal */}
+              <APISettingsModal
+                show={showAPISettings}
+                onClose={() => setShowAPISettings(false)}
               />
             </div>
           )}

@@ -34,7 +34,7 @@ const articleSmasherConfig: ToolConfig = {
     },
     rateLimit: {
       enabled: true,
-      defaultLimit: 30
+      defaultLimit: 10
     }
   },
   useCases: {

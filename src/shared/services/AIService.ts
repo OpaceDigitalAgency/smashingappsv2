@@ -1,18 +1,157 @@
 import { ChatCompletionRequest, ChatCompletionResponse, RateLimitInfo } from '../types';
+import {
+  AIProvider,
+  AIModel,
+  BaseRequestOptions,
+  TextCompletionOptions,
+  ChatCompletionOptions,
+  ImageGenerationOptions,
+  TextCompletionResponse,
+  ChatCompletionResponse as EnhancedChatCompletionResponse,
+  ImageGenerationResponse,
+  RateLimitInfo as EnhancedRateLimitInfo,
+  AIResponse
+} from '../types/aiProviders';
 
 /**
- * Service for interacting with AI APIs
+ * Base interface for all AI provider services
  */
-class AIService {
+export interface AIService {
+  /**
+   * The provider identifier
+   */
+  provider: AIProvider;
+  
+  /**
+   * Get available models for this provider
+   */
+  getModels(): AIModel[];
+  
+  /**
+   * Get the default model for this provider
+   */
+  getDefaultModel(): AIModel;
+  
+  /**
+   * Check if the provider is configured (has API key if required)
+   */
+  isConfigured(): boolean;
+  
+  /**
+   * Set the API key for this provider
+   */
+  setApiKey(apiKey: string): void;
+  
+  /**
+   * Get the API key for this provider
+   */
+  getApiKey(): string | null;
+  
+  /**
+   * Get the current rate limit status
+   */
+  getRateLimitStatus(): Promise<EnhancedRateLimitInfo>;
+  
+  /**
+   * Generate a text completion
+   */
+  createTextCompletion(options: TextCompletionOptions): Promise<AIResponse<TextCompletionResponse>>;
+  
+  /**
+   * Generate a chat completion
+   */
+  createChatCompletion(options: ChatCompletionOptions): Promise<AIResponse<EnhancedChatCompletionResponse>>;
+  
+  /**
+   * Generate an image
+   */
+  createImage?(options: ImageGenerationOptions): Promise<AIResponse<ImageGenerationResponse>>;
+}
+
+/**
+ * AI Service Registry
+ *
+ * This registry manages all available AI services and provides methods to access them.
+ */
+class AIServiceRegistry {
+  private services: Map<AIProvider, AIService> = new Map();
+  private defaultProvider: AIProvider = 'openai';
+  
+  /**
+   * Register an AI service
+   */
+  registerService(service: AIService): void {
+    this.services.set(service.provider, service);
+  }
+  
+  /**
+   * Get an AI service by provider
+   */
+  getService(provider: AIProvider): AIService | undefined {
+    return this.services.get(provider);
+  }
+  
+  /**
+   * Get all registered services
+   */
+  getAllServices(): AIService[] {
+    return Array.from(this.services.values());
+  }
+  
+  /**
+   * Get all available models across all providers
+   */
+  getAllModels(): AIModel[] {
+    return this.getAllServices().flatMap(service => service.getModels());
+  }
+  
+  /**
+   * Get the default service
+   */
+  getDefaultService(): AIService | undefined {
+    return this.services.get(this.defaultProvider);
+  }
+  
+  /**
+   * Set the default provider
+   */
+  setDefaultProvider(provider: AIProvider): void {
+    if (this.services.has(provider)) {
+      this.defaultProvider = provider;
+    }
+  }
+  
+  /**
+   * Get the default provider
+   */
+  getDefaultProvider(): AIProvider {
+    return this.defaultProvider;
+  }
+  
+  /**
+   * Get a service for a specific model ID
+   */
+  getServiceForModel(modelId: string): AIService | undefined {
+    for (const service of this.services.values()) {
+      const models = service.getModels();
+      if (models.some(model => model.id === modelId)) {
+        return service;
+      }
+    }
+    return undefined;
+  }
+}
+
+// Create and export the global AI service registry
+export const aiServiceRegistry = new AIServiceRegistry();
+
+// Legacy AIService class for backward compatibility
+class LegacyAIService {
   /**
    * Send a chat completion request to the AI service
-   * 
-   * @param request The chat completion request
-   * @param recaptchaToken Optional reCAPTCHA token for verification
-   * @returns The chat completion response and rate limit info
    */
   async createChatCompletion(
-    request: ChatCompletionRequest, 
+    request: ChatCompletionRequest,
     recaptchaToken?: string | null
   ): Promise<{
     data: ChatCompletionResponse;
@@ -72,10 +211,6 @@ class AIService {
 
   /**
    * Get a simple text completion from the AI service
-   * 
-   * @param prompt The text prompt
-   * @param model The model to use (defaults to gpt-3.5-turbo)
-   * @returns The generated text
    */
   async getCompletion(prompt: string, model = 'gpt-3.5-turbo'): Promise<string> {
     try {
@@ -93,8 +228,6 @@ class AIService {
 
   /**
    * Get the current rate limit status
-   * 
-   * @returns Promise that resolves to the current rate limit info
    */
   async getRateLimitStatus(): Promise<RateLimitInfo> {
     try {
@@ -137,5 +270,5 @@ class AIService {
   }
 }
 
-// Export a singleton instance
-export default new AIService();
+// Export a singleton instance of the legacy service for backward compatibility
+export default new LegacyAIService();

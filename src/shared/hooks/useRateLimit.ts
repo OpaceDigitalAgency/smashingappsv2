@@ -10,10 +10,10 @@ import useLocalStorage from './useLocalStorage';
 export function useRateLimit(): UseRateLimitReturn {
   // Store rate limit info in localStorage
   const { value: rateLimitInfo, setValue: setRateLimitInfoValue } = useLocalStorage<RateLimitInfo>('rateLimitInfo', {
-    limit: 60,
-    remaining: 60,
+    limit: 10,
+    remaining: 10,
     used: 0,
-    reset: new Date(Date.now() + 3600000) // Default reset time is 1 hour from now
+    reset: new Date(Date.now() + 86400000) // Default reset time is 24 hours from now
   });
 
   // Store rate limited state in localStorage
@@ -41,8 +41,8 @@ export function useRateLimit(): UseRateLimitReturn {
     const resetTime = new Date(Date.now() + 3600000); // 1 hour from now
     
     setRateLimitInfoValue({
-      limit: 60,
-      remaining: 60,
+      limit: 10,
+      remaining: 10,
       used: 0,
       reset: resetTime
     });

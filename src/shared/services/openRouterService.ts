@@ -1,115 +1,101 @@
 /**
- * OpenAI Service Implementation
+ * OpenRouter Service Implementation
  *
- * This file implements the AIService interface for OpenAI.
- * It manages API calls, rate limits, and error handling.
+ * This file implements the AIService interface for OpenRouter.
+ * OpenRouter provides access to multiple AI models from different providers.
  */
 
 import { 
   AIService, 
   aiServiceRegistry 
-} from './aiService';
+} from './AIService';
 
 import {
   AIProvider,
   AIModel,
-  OpenAIModel,
+  OpenRouterModel,
   BaseRequestOptions,
   TextCompletionOptions,
   ChatCompletionOptions,
-  ImageGenerationOptions,
   TextCompletionResponse,
   ChatCompletionResponse,
-  ImageGenerationResponse,
   RateLimitInfo,
   AIResponse
 } from '../types/aiProviders';
 
-// OpenAI Models
-const OPENAI_MODELS: OpenAIModel[] = [
+// OpenRouter Models
+const OPENROUTER_MODELS: OpenRouterModel[] = [
   {
-    id: 'gpt-4.5-preview',
-    name: 'GPT-4.5 Preview',
-    provider: 'openai',
-    description: 'Largest and most capable',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.01, output: 0.03 },
+    id: 'openrouter/anthropic/claude-3-opus',
+    name: 'Claude 3 Opus (via OpenRouter)',
+    provider: 'openrouter',
+    routerId: 'anthropic/claude-3-opus',
+    description: 'Most powerful Claude model',
+    maxTokens: 200000,
+    costPer1KTokens: { input: 0.015, output: 0.075 },
     category: 'featured'
   },
   {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    provider: 'openai',
-    description: 'Fast, intelligent, flexible',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.01, output: 0.03 },
+    id: 'openrouter/anthropic/claude-3-sonnet',
+    name: 'Claude 3 Sonnet (via OpenRouter)',
+    provider: 'openrouter',
+    routerId: 'anthropic/claude-3-sonnet',
+    description: 'Balanced Claude model',
+    maxTokens: 200000,
+    costPer1KTokens: { input: 0.003, output: 0.015 },
+    category: 'reasoning'
+  },
+  {
+    id: 'openrouter/meta-llama/llama-3-70b-instruct',
+    name: 'Llama 3 70B (via OpenRouter)',
+    provider: 'openrouter',
+    routerId: 'meta-llama/llama-3-70b-instruct',
+    description: 'Meta\'s most capable model',
+    maxTokens: 8192,
+    costPer1KTokens: { input: 0.0009, output: 0.0009 },
     category: 'featured'
   },
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o mini',
-    provider: 'openai',
-    description: 'Fast, affordable',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.0015, output: 0.006 },
+    id: 'openrouter/mistralai/mistral-large',
+    name: 'Mistral Large (via OpenRouter)',
+    provider: 'openrouter',
+    routerId: 'mistralai/mistral-large',
+    description: 'Mistral\'s most capable model',
+    maxTokens: 32768,
+    costPer1KTokens: { input: 0.002, output: 0.006 },
+    category: 'reasoning'
+  },
+  {
+    id: 'openrouter/mistralai/mistral-small',
+    name: 'Mistral Small (via OpenRouter)',
+    provider: 'openrouter',
+    routerId: 'mistralai/mistral-small',
+    description: 'Efficient Mistral model',
+    maxTokens: 32768,
+    costPer1KTokens: { input: 0.0002, output: 0.0006 },
     category: 'cost-optimized'
   },
   {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    provider: 'openai',
-    description: 'Previous generation',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.01, output: 0.03 },
-    category: 'legacy'
-  },
-  {
-    id: 'gpt-4',
-    name: 'GPT-4',
-    provider: 'openai',
-    description: 'Standard version',
-    maxTokens: 8192,
-    costPer1KTokens: { input: 0.03, output: 0.06 },
-    category: 'legacy'
-  },
-  {
-    id: 'gpt-3.5-turbo',
-    name: 'GPT-3.5 Turbo',
-    provider: 'openai',
-    description: 'Most affordable',
-    maxTokens: 16385,
-    costPer1KTokens: { input: 0.0005, output: 0.0015 },
-    category: 'legacy'
-  },
-  {
-    id: 'dall-e-3',
-    name: 'DALL-E 3',
-    provider: 'openai',
-    description: 'Advanced image generation',
-    category: 'image',
-    supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
-    supportedFormats: ['png', 'jpeg']
-  } as any, // Type casting as any to avoid TypeScript error with ImageModel
-  {
-    id: 'dall-e-2',
-    name: 'DALL-E 2',
-    provider: 'openai',
-    description: 'Standard image generation',
-    category: 'image',
-    supportedSizes: ['256x256', '512x512', '1024x1024'],
-    supportedFormats: ['png', 'jpeg']
-  } as any // Type casting as any to avoid TypeScript error with ImageModel
+    id: 'openrouter/google/gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro (via OpenRouter)',
+    provider: 'openrouter',
+    routerId: 'google/gemini-1.5-pro',
+    description: 'Google\'s most capable model',
+    maxTokens: 32768,
+    costPer1KTokens: { input: 0.0025, output: 0.0075 },
+    category: 'featured'
+  }
 ];
 
 /**
- * OpenAI Service Implementation
+ * OpenRouter Service Implementation
  */
-class OpenAIServiceImpl implements AIService {
-  provider: AIProvider = 'openai';
+class OpenRouterServiceImpl implements AIService {
+  provider: AIProvider = 'openrouter';
   private apiKey: string | null = null;
-  private apiKeyStorageKey = 'openai_api_key';
-  private rateLimitStorageKey = 'rateLimitInfo';
-  private apiCallCountKey = 'apiCallCount';
+  private apiKeyStorageKey = 'openrouter_api_key';
+  private rateLimitStorageKey = 'openrouter_rateLimitInfo';
+  private apiCallCountKey = 'openrouter_apiCallCount';
   
   constructor() {
     // Try to load API key from localStorage
@@ -117,28 +103,28 @@ class OpenAIServiceImpl implements AIService {
   }
   
   /**
-   * Get available models for OpenAI
+   * Get available models for OpenRouter
    */
   getModels(): AIModel[] {
-    return OPENAI_MODELS;
+    return OPENROUTER_MODELS;
   }
   
   /**
-   * Get the default model for OpenAI
+   * Get the default model for OpenRouter
    */
   getDefaultModel(): AIModel {
-    return OPENAI_MODELS.find(model => model.id === 'gpt-3.5-turbo') || OPENAI_MODELS[0];
+    return OPENROUTER_MODELS.find(model => model.id === 'openrouter/mistralai/mistral-small') || OPENROUTER_MODELS[0];
   }
   
   /**
-   * Check if OpenAI is configured (has API key)
+   * Check if OpenRouter is configured (has API key)
    */
   isConfigured(): boolean {
     return !!this.apiKey;
   }
   
   /**
-   * Set the API key for OpenAI
+   * Set the API key for OpenRouter
    */
   setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
@@ -146,35 +132,43 @@ class OpenAIServiceImpl implements AIService {
   }
   
   /**
-   * Get the API key for OpenAI
+   * Get the API key for OpenRouter
    */
   getApiKey(): string | null {
     return this.apiKey;
   }
   
   /**
-   * Send a chat completion request to OpenAI through our proxy
+   * Send a chat completion request to OpenRouter through our proxy
    */
   async createChatCompletion(options: ChatCompletionOptions): Promise<AIResponse<ChatCompletionResponse>> {
     try {
       // Get the current API call count from localStorage
       const apiCallCount = parseInt(localStorage.getItem(this.apiCallCountKey) || '0', 10);
       
+      // Extract the OpenRouter model ID from our internal ID
+      const modelId = options.model;
+      const model = OPENROUTER_MODELS.find(m => m.id === modelId);
+      
+      if (!model) {
+        throw new Error(`Model ${modelId} not found in OpenRouter models`);
+      }
+      
       // Prepare headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-API-Call-Count': apiCallCount.toString(), // Send the current count to the server
-        'X-Provider': this.provider // Add provider information
+        'X-API-Call-Count': apiCallCount.toString(),
+        'X-Provider': this.provider
       };
       
-      // Add API key if available (for custom API key support)
+      // Add API key if available
       if (this.apiKey) {
         headers['X-API-Key'] = this.apiKey;
       }
       
       // Prepare request body
       const requestBody = {
-        model: options.model,
+        model: model.routerId, // Use the OpenRouter model ID
         messages: options.messages,
         temperature: options.temperature,
         max_tokens: options.maxTokens
@@ -188,31 +182,18 @@ class OpenAIServiceImpl implements AIService {
         method: 'POST',
         headers,
         body: JSON.stringify(requestBody),
-        // Add timeout handling
-        signal: AbortSignal.timeout(60000) // 60 second timeout
+        signal: AbortSignal.timeout(60000)
       });
       
-      // Log the response headers for debugging
-      console.log('Response status:', response.status, response.statusText);
-      console.log('Response headers:', {
-        'X-RateLimit-Used': response.headers.get('X-RateLimit-Used'),
-        'X-RateLimit-Remaining': response.headers.get('X-RateLimit-Remaining')
-      });
-
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
         limit: parseInt(response.headers.get('X-RateLimit-Limit') || '10', 10),
         remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '10', 10),
-        reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 86400000), // 24 hours from now
+        reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 86400000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
       };
 
-      // Handle rate limit exceeded
-      if (response.status === 429) {
-        throw new Error(`Rate limit exceeded. Try again after ${rateLimit.reset.toLocaleString()}`);
-      }
-
-      // Handle other errors
+      // Handle errors
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error response text:", errorText);
@@ -237,14 +218,13 @@ class OpenAIServiceImpl implements AIService {
       // Increment the API call count in localStorage
       const newApiCallCount = apiCallCount + 1;
       localStorage.setItem(this.apiCallCountKey, newApiCallCount.toString());
-      console.log(`API call count updated: ${newApiCallCount}`);
       
       // Update the rate limit info in localStorage
       localStorage.setItem(this.rateLimitStorageKey, JSON.stringify({
         limit: rateLimit.limit,
         remaining: rateLimit.remaining,
         reset: rateLimit.reset.toISOString(),
-        used: newApiCallCount, // Use our local counter for consistency
+        used: newApiCallCount,
         timestamp: new Date().toISOString()
       }));
       
@@ -254,8 +234,8 @@ class OpenAIServiceImpl implements AIService {
       // Format the response to match our ChatCompletionResponse interface
       const formattedResponse: ChatCompletionResponse = {
         id: responseData.id,
-        content: responseData.choices[0]?.message.content || '',
-        model: responseData.model,
+        content: responseData.choices[0]?.message?.content || '',
+        model: options.model,
         usage: responseData.usage ? {
           promptTokens: responseData.usage.prompt_tokens,
           completionTokens: responseData.usage.completion_tokens,
@@ -272,12 +252,12 @@ class OpenAIServiceImpl implements AIService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to communicate with OpenAI API');
+      throw new Error('Failed to communicate with OpenRouter API');
     }
   }
   
   /**
-   * Generate a text completion from OpenAI
+   * Generate a text completion from OpenRouter
    */
   async createTextCompletion(options: TextCompletionOptions): Promise<AIResponse<TextCompletionResponse>> {
     // Convert text completion request to chat completion request
@@ -298,94 +278,6 @@ class OpenAIServiceImpl implements AIService {
       data: textResponse,
       rateLimit: chatResponse.rateLimit
     };
-  }
-  
-  /**
-   * Generate an image using DALL-E
-   */
-  async createImage(options: ImageGenerationOptions): Promise<AIResponse<ImageGenerationResponse>> {
-    try {
-      // Get the current API call count from localStorage
-      const apiCallCount = parseInt(localStorage.getItem(this.apiCallCountKey) || '0', 10);
-      
-      // Prepare headers
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'X-API-Call-Count': apiCallCount.toString(),
-        'X-Provider': this.provider,
-        'X-Request-Type': 'image' // Indicate this is an image generation request
-      };
-      
-      // Add API key if available
-      if (this.apiKey) {
-        headers['X-API-Key'] = this.apiKey;
-      }
-      
-      // Prepare request body
-      const requestBody = {
-        model: options.model,
-        prompt: options.prompt,
-        size: options.size || '1024x1024',
-        n: options.n || 1,
-        response_format: 'url' // Get URLs instead of base64
-      };
-      
-      // Use the Netlify function proxy
-      const response = await fetch('/.netlify/functions/openai-proxy/image', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(60000)
-      });
-      
-      // Extract rate limit information from headers
-      const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '10', 10),
-        remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '10', 10),
-        reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 86400000),
-        used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
-      };
-      
-      // Handle errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response text:", errorText);
-        throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
-      }
-      
-      // Parse the response
-      const responseData = await response.json();
-      
-      // Increment the API call count
-      const newApiCallCount = apiCallCount + 1;
-      localStorage.setItem(this.apiCallCountKey, newApiCallCount.toString());
-      
-      // Update rate limit info
-      localStorage.setItem(this.rateLimitStorageKey, JSON.stringify({
-        limit: rateLimit.limit,
-        remaining: rateLimit.remaining,
-        reset: rateLimit.reset.toISOString(),
-        used: newApiCallCount,
-        timestamp: new Date().toISOString()
-      }));
-      
-      // Format the response
-      const formattedResponse: ImageGenerationResponse = {
-        images: responseData.data.map((item: any) => item.url),
-        model: options.model
-      };
-      
-      return {
-        data: formattedResponse,
-        rateLimit
-      };
-    } catch (error) {
-      console.error("Error in createImage:", error);
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to generate image with DALL-E');
-    }
   }
   
   /**
@@ -486,8 +378,8 @@ class OpenAIServiceImpl implements AIService {
   }
 }
 
-// Create and register the OpenAI service
-const OpenAIService = new OpenAIServiceImpl();
-aiServiceRegistry.registerService(OpenAIService);
+// Create and register the OpenRouter service
+const OpenRouterService = new OpenRouterServiceImpl();
+aiServiceRegistry.registerService(OpenRouterService);
 
-export default OpenAIService;
+export default OpenRouterService;

@@ -5,6 +5,7 @@ import './components/styles.css'; // Import consolidated styles for TaskSmasher
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
 import ModelDropdown from './components/ModelDropdown';
 import RateLimitPopup from './components/RateLimitPopup';
+import APISettingsModal from '../../shared/components/APISettingsModal/APISettingsModal';
 import SemanticSection from '../../components/SemanticSection';
 import {
   DndContext,
@@ -117,6 +118,7 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [sliderExpanded, setSliderExpanded] = useState(false);
   const [showOpenAIExample, setShowOpenAIExample] = useState(false);
+  const [showAPISettings, setShowAPISettings] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -386,6 +388,13 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
             rateLimited={rateLimited}
             rateLimitInfo={rateLimitInfo}
             onToggleOpenAIExample={() => setShowOpenAIExample(!showOpenAIExample)}
+            onOpenAPISettings={() => setShowAPISettings(true)}
+          />
+
+          {/* API Settings Modal */}
+          <APISettingsModal
+            show={showAPISettings}
+            onClose={() => setShowAPISettings(false)}
           />
 
           <SemanticSection

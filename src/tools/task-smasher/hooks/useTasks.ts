@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Board, EditingState, FeedbackState, Task, TaskMismatchData, TasksContextType, RateLimitInfo } from '../types';
 import { filterTasksByPriority, filterTasksByRating } from '../utils/taskUtils';
 import { validateTaskLocally, validateTaskWithAI } from '../utils/taskContextValidator';
-import OpenAIService from '../utils/openaiService';
+import OpenAIService from '../utils/openaiServiceAdapter';
 import useReCaptcha from './useReCaptcha';
 
 export function useTasks(initialUseCase?: string): TasksContextType {
@@ -37,10 +37,10 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       }
     }
     return {
-      limit: 20,
-      remaining: 20,
+      limit: 10,
+      remaining: 10,
       used: 0,
-      reset: new Date(Date.now() + 3600000)
+      reset: new Date(Date.now() + 86400000) // 24 hours from now
     };
   });
   
@@ -1241,10 +1241,10 @@ Make sure to include all necessary ingredients with precise measurements before 
     // Reset state
     setRateLimited(false);
     setRateLimitInfo({
-      limit: 60,
-      remaining: 60,
+      limit: 10,
+      remaining: 10,
       used: 0,
-      reset: new Date(Date.now() + 3600000)
+      reset: new Date(Date.now() + 86400000) // 24 hours from now
     });
     setExecutionCount(0);
     

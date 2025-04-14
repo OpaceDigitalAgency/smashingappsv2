@@ -42,7 +42,7 @@ const taskSmasherConfig: ToolConfig = {
     },
     rateLimit: {
       enabled: true,
-      defaultLimit: 60
+      defaultLimit: 10
     }
   },
   useCases: {
