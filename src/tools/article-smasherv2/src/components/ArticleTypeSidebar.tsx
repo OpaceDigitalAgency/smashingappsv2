@@ -214,10 +214,15 @@ const ArticleTypeSidebar: React.FC<ArticleTypeSidebarProps> = ({
                       <div className="flex items-center w-full">
                         <span className="flex-grow text-sm">{type.label}</span>
                         <div className="flex items-center">
-                          <Info 
-                            size={14} 
-                            className={`mr-1.5 ${selectedType === type.value ? 'text-white' : 'text-gray-400'}`}
-                          />
+                          <div className="tooltip">
+                            <Info
+                              size={14}
+                              className={`mr-1.5 info-icon ${selectedType === type.value ? 'text-white' : 'text-gray-400'}`}
+                            />
+                            <div className="tooltip-text">
+                              {type.description}
+                            </div>
+                          </div>
                           {selectedType === type.value && (
                             <CheckCircle size={16} className="text-white" />
                           )}
@@ -255,7 +260,7 @@ const ArticleTypeSidebar: React.FC<ArticleTypeSidebarProps> = ({
                     >
                       <div className="w-6 h-6 flex flex-col items-center justify-center">
                         <span>{type.label.charAt(0)}</span>
-                        <Info size={10} className="mt-0.5 text-gray-400" />
+                        <Info size={10} className="mt-0.5 text-gray-400 info-icon" />
                       </div>
                     </button>
                     

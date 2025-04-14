@@ -124,3 +124,86 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Tooltip styles */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  z-index: 100;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 125%;
+  transition: opacity 0.2s, visibility 0.2s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Add arrow to tooltip */
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+/* Ensure tooltips don't get clipped */
+.tooltip-container {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Drag and drop indicator styles */
+.drag-indicator {
+  border: 2px dashed #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: #f8fafc;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.drag-indicator:hover {
+  border-color: #94a3b8;
+  background-color: #f1f5f9;
+}
+
+.drag-indicator-icon {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: #94a3b8;
+}
+
+/* Info icon hover effect */
+.info-icon {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.info-icon:hover {
+  color: #3b82f6 !important;
+}

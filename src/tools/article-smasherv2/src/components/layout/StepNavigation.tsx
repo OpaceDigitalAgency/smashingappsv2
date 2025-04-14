@@ -14,33 +14,35 @@ interface StepProps {
 
 const Step: React.FC<StepProps> = ({ isActive, isComplete, number, title, description, icon, onClick }) => {
   return (
-    <div className="tooltip">
-      <button
-        onClick={onClick}
-        className={`flex items-center justify-center px-3 py-2 rounded-md transition-all w-full ${
-          isActive
-            ? 'bg-blue-600 text-white'
-            : isComplete
-            ? 'bg-green-100 text-green-800'
-            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-        }`}
-      >
-        <div
-          className={`flex items-center justify-center w-5 h-5 rounded-full mr-1.5 ${
+    <div className="tooltip-container">
+      <div className="tooltip">
+        <button
+          onClick={onClick}
+          className={`flex items-center justify-center px-3 py-2 rounded-md transition-all w-full ${
             isActive
-              ? 'bg-white text-blue-600'
+              ? 'bg-blue-600 text-white'
               : isComplete
-              ? 'bg-green-200 text-green-800'
-              : 'bg-gray-200 text-gray-400'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
           }`}
         >
-          {isComplete ? <CheckCircle size={14} /> : icon}
+          <div
+            className={`flex items-center justify-center w-5 h-5 rounded-full mr-1.5 ${
+              isActive
+                ? 'bg-white text-blue-600'
+                : isComplete
+                ? 'bg-green-200 text-green-800'
+                : 'bg-gray-200 text-gray-400'
+            }`}
+          >
+            {isComplete ? <CheckCircle size={14} /> : icon}
+          </div>
+          <span className="text-xs font-medium">{title}</span>
+        </button>
+        <div className="tooltip-text">
+          <p className="font-medium mb-1">{title}</p>
+          <p>{description}</p>
         </div>
-        <span className="text-xs font-medium">{title}</span>
-      </button>
-      <div className="tooltip-text">
-        <p className="font-medium mb-1">{title}</p>
-        <p>{description}</p>
       </div>
     </div>
   );
@@ -110,7 +112,7 @@ const StepNavigation: React.FC = () => {
         <p className="text-gray-600 text-sm">Step {currentStep} of {totalSteps}</p>
       </div>
       
-      <div className="flex justify-between overflow-hidden pb-1">
+      <div className="grid grid-cols-6 gap-1 overflow-hidden pb-1">
         {steps.map((step, index) => (
           <div 
             key={step.number} 
