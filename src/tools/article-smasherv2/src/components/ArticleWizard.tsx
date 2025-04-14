@@ -2,7 +2,7 @@ import React from 'react';
 import { useArticleWizard } from '../contexts/ArticleWizardContext';
 import MainLayout from './layout/MainLayout';
 import TopicStep from './steps/TopicStep/TopicStepWithNav';
-import KeywordStep from './steps/KeywordStep/KeywordStep';
+import KeywordStep from './steps/KeywordStep/KeywordStepImproved';
 import OutlineStep from './steps/OutlineStep/OutlineStep';
 import ContentStep from './steps/ContentStep/ContentStep';
 import ImageStep from './steps/ImageStep/ImageStepWithNav';

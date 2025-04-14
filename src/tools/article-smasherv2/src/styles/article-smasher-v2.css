@@ -81,6 +81,55 @@
   color: #9ca3af;
 }
 
+/* Custom scrollbar for article type sidebar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 104, 179, 0.2) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 104, 179, 0.2);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 104, 179, 0.4);
+}
+
+/* Animation for active article type item */
+.article-type-item.active {
+  animation: selectFade 0.3s ease-in-out;
+}
+
+@keyframes selectFade {
+  0% { transform: scale(0.98); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Fixed navigation buttons at the bottom */
+.fixed-nav-buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #e5e7eb;
+  z-index: 50;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Add padding to the bottom of the content to account for fixed nav buttons */
+.article-smasherv2-container .main-content-flex > div:last-child {
+  padding-bottom: 5rem;
+}
+
 /* Generate ideas button */
 .generate-ideas-btn {
   display: flex;

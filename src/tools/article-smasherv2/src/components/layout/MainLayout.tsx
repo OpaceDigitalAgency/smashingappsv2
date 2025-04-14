@@ -1,8 +1,9 @@
 import React, { ReactNode } from 'react';
 import { useArticleWizard } from '../../contexts/ArticleWizardContext';
 import WizardHeader from './WizardHeader';
+import FixedNavigation from './FixedNavigation';
 import StepNavigation from './StepNavigation';
-import ArticleTypeSidebar from '../ArticleTypeSidebar';
+import ArticleTypeSidebarImproved from '../ArticleTypeSidebarImproved';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -26,14 +27,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         
         <div className="main-content-flex">
           {/* Sidebar - always visible for consistent layout */}
-          <div className="md:w-64 flex-shrink-0">
-            <ArticleTypeSidebar 
+          <div className="md:w-72 flex-shrink-0">
+            <ArticleTypeSidebarImproved
               selectedType={selectedArticleType}
               onSelectType={setSelectedArticleType}
               isLocked={isArticleTypeLocked || currentStep > 1}
               onGenerateIdeas={generateTopicIdeas}
             />
           </div>
+          
+          {/* Fixed Navigation Buttons */}
+          <FixedNavigation />
           
           {/* Main Content */}
           <div className="flex-grow bg-white rounded-xl shadow-card p-4 mb-20">
