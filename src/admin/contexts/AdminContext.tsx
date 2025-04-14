@@ -8,7 +8,7 @@ import {
   applyGlobalSettingsToAllApps,
   initGlobalSettingsService
 } from '../../shared/services/globalSettingsService';
-import { PromptTemplate, PromptSettings } from '../../tools/article-smasherv2/src/types';
+import { PromptTemplate, PromptSettings } from '../../tools/article-smasher/src/types';
 import {
   TaskSmasherPromptTemplate,
   loadTaskSmasherPrompts,
@@ -19,7 +19,7 @@ import {
   savePrompts,
   loadSettings,
   saveSettings,
-} from '../../tools/article-smasherv2/src/services/promptService';
+} from '../../tools/article-smasher/src/services/promptService';
 
 // Define the context type
 interface AdminContextType {

@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    base: '/tools/article-smasherv2/',
+    base: '/tools/article-smasher/',
     optimizeDeps: {
       exclude: ['lucide-react'],
     },

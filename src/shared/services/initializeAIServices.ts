@@ -12,12 +12,18 @@ export function initializeAIServicesWithTracking(): void {
   // Get all registered services
   const services = aiServiceRegistry.getAllServices();
   
+  // Get the current URL to help with debugging
+  const url = window.location.href;
+  console.log('Initializing AI services with usage tracking for URL:', url);
+  
   // Wrap each service with usage tracking
   services.forEach(service => {
     // Determine the app ID based on the context
     // This is a simplified approach - in a real app, you might want to
     // determine this dynamically based on which app is using the service
     const appId = getAppIdForService(service.provider);
+    
+    console.log(`Service provider: ${service.provider}, App ID: ${appId}`);
     
     // Wrap the service with usage tracking
     const wrappedService = wrapAIService(service, appId);
@@ -39,8 +45,7 @@ function getAppIdForService(provider: AIProvider): string {
   // determine this dynamically based on which app is using the service
   // Get the current URL to determine which app is using the service
   const url = window.location.href;
-  
-  // Check if the URL contains article-smasher (either v2 or original)
+  // Check if the URL contains article-smasher
   if (url.includes('article-smasher')) {
     return 'article-smasher';
   }
@@ -55,7 +60,7 @@ function getAppIdForService(provider: AIProvider): string {
   switch (provider) {
     case 'openai':
       // If we're using OpenAI, check if we're in an article context
-      if (url.includes('article') || url.includes('content') || url.includes('blog') || url.includes('post')) {
+      if (url.includes('article-smasher') || url.includes('article') || url.includes('content') || url.includes('blog') || url.includes('post')) {
         return 'article-smasher';
       }
       return 'task-smasher';
@@ -81,8 +86,6 @@ export function getCurrentAppId(): string {
   
   if (path.includes('task-smasher')) {
     return 'task-smasher';
-  } else if (path.includes('article-smasherv2')) {
-    return 'article-smasherv2';
   } else if (path.includes('article-smasher')) {
     return 'article-smasher';
   } else {

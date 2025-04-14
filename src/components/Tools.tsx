@@ -40,21 +40,6 @@ const Tools: React.FC = () => {
       comingSoon: false
     },
     {
-      id: 'article-smasherv2',
-      name: 'ArticleSmasher V2',
-      description: 'Advanced AI content creation with GPT-4o integration.',
-      useCases: [
-        { name: 'Blog Post', path: '/tools/article-smasherv2/blog-post/' },
-        { name: 'SEO Article', path: '/tools/article-smasherv2/seo-article/' },
-        { name: 'Academic Paper', path: '/tools/article-smasherv2/academic-paper/' },
-        { name: 'News Article', path: '/tools/article-smasherv2/news-article/' },
-        { name: 'Demo', path: '/tools/article-smasherv2/demo/' }
-      ],
-      icon: BrainCircuit,
-      color: 'from-indigo-500 to-indigo-600',
-      comingSoon: false
-    },
-    {
       id: 'recipe-smasher',
       name: 'RecipeSmasher',
       description: 'Get AI-generated recipe steps from any ingredients.',
@@ -118,10 +103,10 @@ const Tools: React.FC = () => {
                 ) : (
                   <>
                     <a
-                      href={['task-smasher', 'article-smasher', 'article-smasherv2'].includes(tool.id) ? `/tools/${tool.id}/` : `#${tool.id}`}
+                      href={['task-smasher', 'article-smasher'].includes(tool.id) ? `/tools/${tool.id}/` : `#${tool.id}`}
                       className="inline-flex items-center text-primary hover:text-primary-dark font-medium"
                       onClick={(e) => {
-                        if (['task-smasher', 'article-smasher', 'article-smasherv2'].includes(tool.id)) {
+                        if (['task-smasher', 'article-smasher'].includes(tool.id)) {
                           // Direct navigation without transition
                           window.location.href = `/tools/${tool.id}/`;
                         }

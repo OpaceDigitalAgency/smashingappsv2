@@ -16,7 +16,7 @@ import {
   Zap
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
-import { PromptTemplate } from '../../tools/article-smasherv2/src/types';
+import { PromptTemplate } from '../../tools/article-smasher/src/types';
 import { TaskSmasherPromptTemplate } from '../../tools/task-smasher/utils/promptTemplates';
 
 const PromptManagement: React.FC = () => {

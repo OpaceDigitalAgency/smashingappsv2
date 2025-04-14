@@ -5,20 +5,23 @@ import {
   PieChart, 
   LineChart, 
   Calendar, 
-  Download, 
-  RefreshCw, 
-  DollarSign, 
-  Zap, 
-  Hash, 
-  Clock 
+  Download,
+  RefreshCw,
+  DollarSign,
+  Zap,
+  Hash,
+  Clock,
+  Trash2
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider } from '../../shared/types/aiProviders';
-import { getTimeLabels, getTimeSeriesData } from '../../shared/services/usageTrackingService';
+import { getTimeLabels, getTimeSeriesData, clearAllLimitsAndUsage } from '../../shared/services/usageTrackingService';
 
 const UsageMonitoring: React.FC = () => {
   const { usageStats, timeRange, setTimeRange, providers } = useAdmin();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isClearing, setIsClearing] = React.useState(false);
+  const [showClearSuccess, setShowClearSuccess] = React.useState(false);
   
   // Handle refresh
   const handleRefresh = () => {
@@ -30,6 +33,27 @@ const UsageMonitoring: React.FC = () => {
     // Reset refreshing state after a short delay
     setTimeout(() => {
       setIsRefreshing(false);
+    }, 1000);
+  };
+  
+  // Handle clear rate limits
+  const handleClearRateLimits = () => {
+    setIsClearing(true);
+    
+    // Clear all usage data and rate limits
+    clearAllLimitsAndUsage();
+    
+    // Show success message
+    setShowClearSuccess(true);
+    
+    // Reset clearing state after a short delay
+    setTimeout(() => {
+      setIsClearing(false);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setShowClearSuccess(false);
+      }, 3000);
     }, 1000);
   };
   
@@ -126,14 +150,30 @@ const UsageMonitoring: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-2">
+          {showClearSuccess && (
+            <div className="mr-2 px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm">
+              Rate limits cleared successfully!
+            </div>
+          )}
           <Button
             variant="secondary"
             size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing}
+            className="mr-2"
           >
             <RefreshCw className={`w-4 h-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleClearRateLimits}
+            disabled={isClearing}
+            className="mr-2"
+          >
+            <Trash2 className={`w-4 h-4 mr-1 ${isClearing ? 'animate-spin' : ''}`} />
+            Clear Rate Limits
           </Button>
           <div className="relative group">
             <Button

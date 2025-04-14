@@ -44,7 +44,7 @@ import toolRegistry, { getToolConfig } from './tools/registry';
 // When adding a new tool, import its main component here
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
 import AdminApp from './admin/AdminApp';
-import ArticleSmasherV2App from './tools/article-smasher/ArticleSmasherApp';
+import ArticleSmasherApp from './tools/article-smasher/ArticleSmasherApp';
 
 // Loading component for Suspense
 const LoadingScreen = () => (
@@ -154,8 +154,8 @@ function App() {
             <Route path="/tools/task-smasher/" element={<TaskSmasherApp />} />
             
             {/* ArticleSmasher base routes */}
-            <Route path="/tools/article-smasher" element={<ArticleSmasherV2App />} />
-            <Route path="/tools/article-smasher/" element={<ArticleSmasherV2App />} />
+            <Route path="/tools/article-smasher" element={<ArticleSmasherApp />} />
+            <Route path="/tools/article-smasher/" element={<ArticleSmasherApp />} />
             
             {/* Legacy ArticleSmasherV2 routes - redirect to new paths */}
             <Route path="/tools/article-smasherv2/*" element={<Navigate to="/tools/article-smasher" replace />} />
@@ -187,8 +187,8 @@ function App() {
                 const pathWithSlash = `${basePath}/`;
                 
                 return [
-                  <Route key={`article-${id}-no-slash`} path={basePath} element={<ArticleSmasherV2App />} />,
-                  <Route key={`article-${id}-with-slash`} path={pathWithSlash} element={<ArticleSmasherV2App />} />
+                  <Route key={`article-${id}-no-slash`} path={basePath} element={<ArticleSmasherApp />} />,
+                  <Route key={`article-${id}-with-slash`} path={pathWithSlash} element={<ArticleSmasherApp />} />
                 ];
               })
             }

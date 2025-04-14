@@ -1,10 +1,10 @@
 /**
- * Standalone entry point for Article Smasher V2
+ * Standalone entry point for Article Smasher
  *
  * This file is only used when running the tool independently,
  * not when it's integrated into the main SmashingApps.ai application.
  *
- * When integrated, the ArticleSmasherV2App component is imported directly
+ * When integrated, the ArticleSmasherApp component is imported directly
  * into the main application's router.
  */
 
@@ -22,7 +22,7 @@ if (rootElement) {
   // Only initialize if we're in standalone mode (root element exists)
   createRoot(rootElement).render(
     <StrictMode>
-      <BrowserRouter basename="/tools/article-smasherv2">
+      <BrowserRouter basename="/tools/article-smasher">
         <App />
       </BrowserRouter>
     </StrictMode>

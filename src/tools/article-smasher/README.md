@@ -1,194 +1,170 @@
-# ArticleSmasher
+# Article Smasher v2
 
-ArticleSmasher is an AI-powered content creation tool that helps users generate high-quality articles for various purposes. It's part of the SmashingApps.ai platform.
+![Article Smasher v2](https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80)
+
+A powerful AI-driven content creation system designed to streamline the process of generating high-quality, SEO-optimized articles for WordPress. Article Smasher v2 leverages OpenAI's GPT-4o models to guide users through a structured, step-by-step workflow from topic ideation to publishing.
 
 ## Features
 
-- ✅ AI-powered article generation for various use cases
-- 📝 Multiple content types (Blog Posts, SEO Articles, Academic Papers, News Articles)
-- 🔍 SEO optimization for content
-- 📊 Export capabilities (JSON, PDF)
-- 🎨 Clean, user-friendly interface
-- 🔒 Rate limiting to prevent API abuse
+- **AI-Powered Generation**: Connect to OpenAI's latest GPT-4o and GPT-4o-mini models
+- **Step-by-Step Workflow**: Structured process from brainstorming to publishing
+- **Multi-Language Support**: Create content in over 30 languages
+- **Humanization Features**: Make AI content sound more natural
+- **SEO Optimization**: Generate SEO-friendly content with keyword integration
+- **DALL-E 3 Integration**: Generate relevant images for your content
+- **WordPress Integration**: Publish directly to your WordPress site
 
-## Use Cases
+## Documentation
 
-ArticleSmasher supports multiple specialized use cases, each with its own optimized AI prompt:
+Comprehensive documentation is available to help you get the most out of Article Smasher v2:
 
-- **Blog Post**: Create engaging blog posts with proper structure
-- **SEO Article**: Generate SEO-optimized content for better rankings
-- **Academic Paper**: Create academic-style content with proper citations
-- **News Article**: Generate news-style articles with journalistic structure
+- [User Guide](./docs/user-guide.md) - Learn how to use the article creation workflow
+- [Admin Guide](./docs/admin-guide.md) - Configure and manage the system
+- [Developer Guide](./docs/developer-guide.md) - Extend and customize the system
 
-## Architecture
-
-ArticleSmasher is built on the shared architecture of the SmashingApps.ai platform. For detailed information about the architecture, shared component library, and tool configuration system, please refer to the [main README](../../../README.md).
-
-## Configuration
-
-ArticleSmasher is configured using the tool configuration system. The configuration is defined in `src/tools/article-smasher/config.ts`.
-
-### Key Configuration Options
-
-```typescript
-const articleSmasherConfig: ToolConfig = {
-  id: 'article-smasher',
-  name: 'ArticleSmasher',
-  description: 'AI-powered article generation and optimization',
-  icon: FileText,
-  routes: {
-    base: '/tools/article-smasher',
-    subRoutes: {
-      blog: '/tools/article-smasher/blog-post',
-      seo: '/tools/article-smasher/seo-article',
-      academic: '/tools/article-smasher/academic-paper',
-      news: '/tools/article-smasher/news-article'
-    }
-  },
-  capabilities: {
-    ai: {
-      enabled: true,
-      defaultModel: 'gpt-4',
-      availableModels: ['gpt-3.5-turbo', 'gpt-4'],
-      systemPromptTemplate: 'You are an AI assistant that helps create high-quality articles. {{useCase}}'
-    },
-    // Other capabilities...
-  },
-  useCases: {
-    blog: {
-      id: 'blog',
-      label: 'Blog Post',
-      description: 'Create engaging blog posts with proper structure',
-      icon: Edit,
-      promptTemplate: 'Write a blog post about: {{topic}}'
-    },
-    // Other use cases...
-  },
-  defaultUseCase: 'blog',
-  metaTags: {
-    title: 'ArticleSmasher | AI-Powered Content Creation Tool',
-    description: 'Create high-quality articles, blog posts, and SEO content with AI assistance',
-    ogImage: 'https://smashingapps.ai/og/article-smasher.png'
-  }
-};
-```
-
-## Development
+## Installation and Setup
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 16.x or higher
+- npm 8.x or higher
+- An OpenAI API key with access to GPT-4o models
+- A WordPress site (for publishing integration)
 
-### Setup
+### Installation
 
-1. Clone the repository
-   ```
-   git clone https://github.com/OpaceDigitalAgency/smashingapps-unified.git
-   cd smashingapps-unified
-   ```
-
-2. Install dependencies
-   ```
-   npm install
-   ```
-
-3. Run the development server
-   ```
-   npm run dev
-   ```
-
-The app will be available at http://localhost:5173/tools/article-smasher
-
-## Component Structure
-
-ArticleSmasher is built using a component-based architecture:
-
-- **ArticleSmasherApp.tsx**: Main component that renders the entire application
-- **Sidebar**: Navigation component for switching between use cases
-- **Article Generation Form**: Form for entering article title, keywords, and other inputs
-- **Article Display**: Component for displaying the generated article
-- **Export Options**: Components for exporting articles in different formats
-
-## API Integration
-
-ArticleSmasher uses the OpenAI API through the shared AI service. This service handles:
-
-- Making requests to the OpenAI API through the secure proxy
-- Managing rate limiting
-- Handling errors and loading states
-- Processing and formatting responses
-
-### Usage Example
-
-```typescript
-const { execute, isLoading, error } = useAI();
-
-const generateArticle = async () => {
-  try {
-    const result = await execute({
-      model: selectedModel,
-      systemPrompt: systemPrompt,
-      userPrompt: prompt,
-      temperature: 0.7,
-    });
-    
-    // Update the article with the result
-    setArticle(result.content);
-  } catch (error) {
-    console.error('Error generating article:', error);
-  }
-};
+1. Clone the repository:
+```bash
+git clone https://github.com/your-organization/article-smasher-v2.git
+cd article-smasher-v2
 ```
 
-## Customization
+2. Install dependencies:
+```bash
+npm install
+```
 
-### Modifying Use Cases
+3. Create a `.env` file in the project root with your configuration:
+```
+VITE_OPENAI_API_KEY=your-api-key-here
+VITE_DEFAULT_MODEL=gpt-4o
+VITE_WORDPRESS_API_URL=https://your-wordpress-site.com/wp-json
+VITE_RECAPTCHA_SITE_KEY=your-recaptcha-site-key-here
+```
 
-To add or modify use cases:
+> **Note:** The application uses Google reCAPTCHA for security. You'll need to obtain a reCAPTCHA v3 site key from the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin).
 
-1. Edit the `useCases` object in `src/tools/article-smasher/config.ts`
-2. Add or modify the use case definition, including:
-   - `id`: Unique identifier for the use case
-   - `label`: Display name for the use case
-   - `description`: Brief description of the use case
-   - `icon`: Icon component from Lucide React
-   - `promptTemplate`: Template for the AI prompt
+4. Start the development server:
+```bash
+npm run dev
+```
 
-### Modifying AI Settings
+5. Build for production:
+```bash
+npm run build
+```
 
-To modify AI settings:
+### WordPress Integration
 
-1. Edit the `capabilities.ai` object in `src/tools/article-smasher/config.ts`
-2. Adjust settings like:
-   - `defaultModel`: Default AI model to use
-   - `availableModels`: List of available AI models
-   - `systemPromptTemplate`: Template for the system prompt
+To integrate with WordPress:
 
-### Adding Export Formats
+1. Ensure your WordPress site has the REST API enabled
+2. Install and activate the [Application Passwords](https://wordpress.org/plugins/application-passwords/) plugin
+3. Create an application password for Article Smasher v2
+4. Configure the WordPress integration in the admin settings
 
-To add new export formats:
+## System Architecture
 
-1. Edit the `capabilities.export.formats` array in `src/tools/article-smasher/config.ts`
-2. Implement the export functionality in the `exportArticle` function in `ArticleSmasherApp.tsx`
-## SEO Configuration
+Article Smasher v2 is built with a modern tech stack:
 
-ArticleSmasher uses the centralized SEO system defined in `src/utils/seoMaster.ts`. This system provides:
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **Styling**: Tailwind CSS for utility-first styling
+- **Routing**: React Router for navigation
+- **State Management**: React Context API
+- **AI Integration**: OpenAI API for GPT-4o and DALL-E 3
 
-- Meta tags for the main ArticleSmasher page
-- Meta tags for each use case page (Blog Post, SEO Article, Academic Paper, News Article)
-- Structured data for search engines
-- Open Graph tags for social sharing
+The system follows a modular architecture with these key components:
 
-The SEO configuration is no longer managed through the `metaTags` section in the config file, but instead through the centralized `seoMaster.ts` file. This ensures consistency across the platform and simplifies SEO management.
+- **Article Wizard**: Guides users through the content creation process
+- **Prompt Management**: Configurable templates for AI interactions
+- **WordPress Integration**: Publishes content directly to WordPress
 
-## Future Enhancements
+For more details, see the [Developer Guide](./docs/developer-guide.md).
 
-Planned enhancements for ArticleSmasher include:
+## Article Creation Workflow
 
-- PDF export functionality
-- Keyword analysis for SEO articles
-- Article optimization suggestions
-- Voice input for article topics
-- Templates for different article types
-- Saving and loading article drafts
-- Saving and loading article drafts
+Article Smasher v2 guides users through a systematic workflow:
+
+1. **Topic Selection**: Choose article type and topic
+2. **Keyword Research**: Identify and select relevant keywords
+3. **Outline Generation**: Create a structured outline
+4. **Content Creation**: Generate the full article content
+5. **Image Selection**: Generate and select images
+6. **Publishing**: Review and publish the article
+
+Each step builds upon the previous one, ensuring a cohesive final article. For detailed instructions, see the [User Guide](./docs/user-guide.md).
+
+## Admin Features
+
+Article Smasher v2 uses the unified admin interface at smashingapps.ai/admin, which provides centralized management for all SmashingApps.ai tools:
+
+- **Provider Management**: Configure multiple AI providers (OpenAI, Anthropic, Google, etc.)
+- **Prompt Templates**: Manage AI prompt templates for each step
+- **Settings Management**: Configure global and app-specific settings
+- **Usage Monitoring**: Track usage and performance across all applications
+
+The unified admin interface ensures consistent settings and configurations across all applications. For detailed admin instructions, see the [Admin Guide](./docs/admin-guide.md).
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── components/           # UI components
+│   ├── steps/            # Workflow step components
+│   ├── layout/           # Layout components
+│   └── common/           # Shared UI components
+├── contexts/             # React context providers
+├── services/             # Service modules
+├── hooks/                # Custom React hooks
+├── types/                # TypeScript type definitions
+├── utils/                # Utility functions
+├── App.tsx               # Main application component
+└── main.tsx              # Application entry point
+```
+
+### Available Scripts
+
+- `npm run dev`: Start the development server
+- `npm run build`: Build for production
+- `npm run preview`: Preview the production build
+- `npm run test`: Run tests
+- `npm run lint`: Lint the codebase
+
+For more development details, see the [Developer Guide](./docs/developer-guide.md).
+
+## Contributing
+
+We welcome contributions to Article Smasher v2! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please ensure your code follows our coding standards and includes appropriate tests.
+
+## License
+
+Copyright © 2025 Opace Digital Agency. All rights reserved.
+
+## Support
+
+For support, please contact:
+
+- Email: support@example.com
+- Website: https://example.com/support
+- Documentation: See the [User Guide](./docs/user-guide.md)

@@ -1,0 +1,253 @@
+/* Custom styles for article-smasher only */
+
+/* Override the mobile-container class for article-smasher */
+.article-smasher-container .mobile-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Add a flex layout for the main content area */
+.article-smasher-container .main-content-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .article-smasher-container .main-content-flex {
+    flex-direction: row;
+  }
+}
+
+/* Style for the article type sidebar */
+.article-type-sidebar {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+  padding: 1rem;
+  height: calc(100vh - 12rem);
+  position: sticky;
+  top: 5rem;
+}
+
+.article-type-sidebar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.article-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 16rem);
+  padding-right: 0.5rem;
+}
+
+.article-type-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.article-type-item.active {
+  background-color: #f0f9ff;
+  color: #0068b3;
+  border-left: 4px solid #0068b3;
+}
+
+.article-type-item:not(.active):not(.disabled) {
+  color: #4b5563;
+}
+
+.article-type-item:not(.active):not(.disabled):hover {
+  background-color: #f9fafb;
+}
+
+.article-type-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+  color: #9ca3af;
+}
+
+/* Custom scrollbar for article type sidebar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 104, 179, 0.2) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 104, 179, 0.2);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 104, 179, 0.4);
+}
+
+/* Animation for active article type item */
+.article-type-item.active {
+  animation: selectFade 0.3s ease-in-out;
+}
+
+@keyframes selectFade {
+  0% { transform: scale(0.98); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Fixed navigation buttons at the bottom */
+.fixed-nav-buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #e5e7eb;
+  z-index: 50;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Add padding to the bottom of the content to account for fixed nav buttons */
+.article-smasher-container .main-content-flex > div:last-child {
+  padding-bottom: 5rem;
+}
+
+/* Generate ideas button */
+.generate-ideas-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #0068b3;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* Drag and drop styles */
+.drop-success {
+  animation: dropSuccess 1s ease-in-out;
+}
+
+@keyframes dropSuccess {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(0, 104, 179, 0); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 104, 179, 0.5); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(0, 104, 179, 0); }
+}
+
+.drop-success-animation {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Tooltip styles for nav items */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  left: 100%;
+  margin-left: 10px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Fix for blank buttons */
+button:empty {
+  display: none;
+}
+
+/* Improved keyword controls */
+.keyword-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.keyword-add-btn {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+.keyword-add-btn:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.keyword-remove-btn {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.keyword-remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.generate-ideas-btn:hover:not(:disabled) {
+  background-color: #005291;
+}
+
+.generate-ideas-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Complete article container */
+.complete-article-container {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Fix for the complete article view to ensure it has the sidebar */
+.article-smasher-container .complete-article-container {
+  max-width: none;
+  width: 100%;
+}

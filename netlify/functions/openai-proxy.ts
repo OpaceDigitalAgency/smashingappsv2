@@ -359,214 +359,171 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       console.log("Request model:", requestBody.model);
       console.log("Request message count:", requestBody.messages?.length);
       
-      // Check if this is a "generate ideas" request
-      const isGenerateIdeasRequest = requestBody.messages &&
-        requestBody.messages.some(msg =>
-          msg.content && typeof msg.content === 'string' &&
-          msg.content.includes('Generate 5')
-        );
-      
-      if (isGenerateIdeasRequest) {
-        console.log("Detected 'generate ideas' request");
-        
-        // For generate ideas, use a hardcoded response to avoid API timeouts
-        // This is a temporary solution until we can fix the API timeout issue
-        response = {
-          id: "hardcoded-response",
-          object: "chat.completion",
-          created: Date.now(),
-          model: requestBody.model,
-          choices: [
-            {
-              index: 0,
-              message: {
-                role: "assistant",
-                content: "Create a social media content calendar\nDevelop an email marketing campaign\nDesign a new product landing page\nConduct competitor analysis\nPlan a customer feedback survey"
-              },
-              finish_reason: "stop"
-            }
-          ],
-          usage: {
-            prompt_tokens: 50,
-            completion_tokens: 50,
-            total_tokens: 100
-          }
-        };
-      } else {
-        // For all other requests, use the OpenAI SDK
-        try {
-          // Handle the request based on the provider
-          switch (provider) {
-            case "openai":
-              // OPENAI REQUEST
-              response = await openai.chat.completions.create({
-                model: requestBody.model,
-                messages: requestBody.messages,
-                ...requestBody
-              });
-              break;
-              
-            case "anthropic":
-              // ANTHROPIC REQUEST
-              const anthropicResponse = await anthropic.messages.create({
-                model: requestBody.model,
-                messages: requestBody.messages,
-                system: requestBody.system,
-                max_tokens: requestBody.max_tokens || 1024,
-                temperature: requestBody.temperature
-              });
-              
-              // Convert Anthropic response to OpenAI-compatible format
-              response = {
-                id: anthropicResponse.id,
-                object: "chat.completion",
-                created: Date.now(),
-                model: requestBody.model,
-                choices: [
-                  {
-                    index: 0,
-                    message: {
-                      role: "assistant",
-                      content: anthropicResponse.content[0].text
-                    },
-                    finish_reason: anthropicResponse.stop_reason
-                  }
-                ],
-                usage: {
-                  prompt_tokens: anthropicResponse.usage.input_tokens,
-                  completion_tokens: anthropicResponse.usage.output_tokens,
-                  total_tokens: anthropicResponse.usage.input_tokens + anthropicResponse.usage.output_tokens
+      // Process all requests through the appropriate AI service
+      try {
+        // Handle the request based on the provider
+        switch (provider) {
+          case "openai":
+            // OPENAI REQUEST
+            response = await openai.chat.completions.create({
+              model: requestBody.model,
+              messages: requestBody.messages,
+              ...requestBody
+            });
+            break;
+            
+          case "anthropic":
+            // ANTHROPIC REQUEST
+            const anthropicResponse = await anthropic.messages.create({
+              model: requestBody.model,
+              messages: requestBody.messages,
+              system: requestBody.system,
+              max_tokens: requestBody.max_tokens || 1024,
+              temperature: requestBody.temperature
+            });
+            
+            // Convert Anthropic response to OpenAI-compatible format
+            response = {
+              id: anthropicResponse.id,
+              object: "chat.completion",
+              created: Date.now(),
+              model: requestBody.model,
+              choices: [
+                {
+                  index: 0,
+                  message: {
+                    role: "assistant",
+                    content: anthropicResponse.content[0].text
+                  },
+                  finish_reason: anthropicResponse.stop_reason
                 }
-              };
-              break;
-              
-            case "google":
-              // GOOGLE REQUEST
-              const model = googleAI.getGenerativeModel({ model: requestBody.model });
-              
-              // Convert OpenAI-style messages to Google format
-              const googleMessages = requestBody.messages.map(msg => {
-                if (msg.role === "user") {
-                  return { role: "user", parts: [{ text: msg.content }] };
-                } else if (msg.role === "assistant") {
-                  return { role: "model", parts: [{ text: msg.content }] };
-                } else {
-                  // System messages are handled differently in Google's API
-                  return { role: "user", parts: [{ text: msg.content }] };
-                }
-              });
-              
-              // Extract system instruction if present
-              const systemInstruction = requestBody.messages.find(msg => msg.role === "system")?.content;
-              
-              // Generate content
-              const googleResult = await model.generateContent({
-                contents: googleMessages,
-                generationConfig: {
-                  temperature: requestBody.temperature,
-                  maxOutputTokens: requestBody.max_tokens,
-                  topP: 0.95,
-                  topK: 40
-                },
-                systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
-              });
-              
-              // Convert Google response to OpenAI-compatible format
-              response = {
-                id: `google-${Date.now()}`,
-                object: "chat.completion",
-                created: Date.now(),
-                model: requestBody.model,
-                choices: [
-                  {
-                    index: 0,
-                    message: {
-                      role: "assistant",
-                      content: googleResult.response.text()
-                    },
-                    finish_reason: "stop"
-                  }
-                ],
-                usage: {
-                  prompt_tokens: 0, // Google doesn't provide token counts
-                  completion_tokens: 0,
-                  total_tokens: 0
-                }
-              };
-              break;
-              
-            case "openrouter":
-              // OPENROUTER REQUEST (OpenAI-compatible API)
-              response = await openai.chat.completions.create({
-                model: requestBody.model,
-                messages: requestBody.messages,
-                ...requestBody
-              });
-              break;
-              
-            case "image":
-              if (isImageRequest) {
-                // Handle image generation based on the model
-                if (requestBody.model.startsWith("dall-e")) {
-                  // DALL-E image generation
-                  const imageResponse = await openai.images.generate({
-                    model: requestBody.model,
-                    prompt: requestBody.prompt,
-                    n: requestBody.n || 1,
-                    size: requestBody.size || "1024x1024",
-                    response_format: requestBody.response_format || "url"
-                  });
-                  
-                  response = {
-                    created: Date.now(),
-                    data: imageResponse.data
-                  };
-                } else if (requestBody.model === "stable-diffusion-3") {
-                  // Stable Diffusion would be implemented here
-                  // This is a placeholder for future implementation
-                  response = {
-                    created: Date.now(),
-                    data: [{ url: "https://placeholder.com/stable-diffusion-image.png" }]
-                  };
-                } else if (requestBody.model === "midjourney") {
-                  // Midjourney would be implemented here
-                  // This is a placeholder for future implementation
-                  response = {
-                    created: Date.now(),
-                    data: [{ url: "https://placeholder.com/midjourney-image.png" }]
-                  };
-                } else {
-                  // Default to DALL-E if model not specified
-                  const imageResponse = await openai.images.generate({
-                    model: "dall-e-3",
-                    prompt: requestBody.prompt,
-                    n: requestBody.n || 1,
-                    size: requestBody.size || "1024x1024",
-                    response_format: requestBody.response_format || "url"
-                  });
-                  
-                  response = {
-                    created: Date.now(),
-                    data: imageResponse.data
-                  };
-                }
-              } else {
-                throw new Error("Invalid image request");
+              ],
+              usage: {
+                prompt_tokens: anthropicResponse.usage.input_tokens,
+                completion_tokens: anthropicResponse.usage.output_tokens,
+                total_tokens: anthropicResponse.usage.input_tokens + anthropicResponse.usage.output_tokens
               }
-              break;
-              
-            default:
-              // Default to OpenAI
-              response = await openai.chat.completions.create({
-                model: requestBody.model,
-                messages: requestBody.messages,
-                ...requestBody
-              });
-          }
-        } catch (error) {
-          console.error("Error with OpenAI SDK:", error);
-          throw error;
+            };
+            break;
+            
+          case "google":
+            // GOOGLE REQUEST
+            const model = googleAI.getGenerativeModel({ model: requestBody.model });
+            
+            // Convert OpenAI-style messages to Google format
+            const googleMessages = requestBody.messages.map(msg => {
+              if (msg.role === "user") {
+                return { role: "user", parts: [{ text: msg.content }] };
+              } else if (msg.role === "assistant") {
+                return { role: "model", parts: [{ text: msg.content }] };
+              } else {
+                // System messages are handled differently in Google's API
+                return { role: "user", parts: [{ text: msg.content }] };
+              }
+            });
+            
+            // Extract system instruction if present
+            const systemInstruction = requestBody.messages.find(msg => msg.role === "system")?.content;
+            
+            // Generate content
+            const googleResult = await model.generateContent({
+              contents: googleMessages,
+              generationConfig: {
+                temperature: requestBody.temperature,
+                maxOutputTokens: requestBody.max_tokens,
+                topP: 0.95,
+                topK: 40
+              },
+              systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+            });
+            
+            // Convert Google response to OpenAI-compatible format
+            response = {
+              id: `google-${Date.now()}`,
+              object: "chat.completion",
+              created: Date.now(),
+              model: requestBody.model,
+              choices: [
+                {
+                  index: 0,
+                  message: {
+                    role: "assistant",
+                    content: googleResult.response.text()
+                  },
+                  finish_reason: "stop"
+                }
+              ],
+              usage: {
+                prompt_tokens: 0, // Google doesn't provide token counts
+                completion_tokens: 0,
+                total_tokens: 0
+              }
+            };
+            break;
+            
+          case "openrouter":
+            // OPENROUTER REQUEST (OpenAI-compatible API)
+            response = await openai.chat.completions.create({
+              model: requestBody.model,
+              messages: requestBody.messages,
+              ...requestBody
+            });
+            break;
+            
+          case "image":
+            if (isImageRequest) {
+              // Handle image generation based on the model
+              if (requestBody.model.startsWith("dall-e")) {
+                // DALL-E image generation
+                const imageResponse = await openai.images.generate({
+                  model: requestBody.model,
+                  prompt: requestBody.prompt,
+                  n: requestBody.n || 1,
+                  size: requestBody.size || "1024x1024",
+                  response_format: requestBody.response_format || "url"
+                });
+                
+                response = {
+                  created: Date.now(),
+                  data: imageResponse.data
+                };
+              } else if (requestBody.model === "stable-diffusion-3") {
+                // Stable Diffusion is not yet implemented
+                throw new Error("Stable Diffusion model is not yet implemented. Please use DALL-E models instead.");
+              } else if (requestBody.model === "midjourney") {
+                // Midjourney is not yet implemented
+                throw new Error("Midjourney model is not yet implemented. Please use DALL-E models instead.");
+              } else {
+                // Default to DALL-E if model not specified
+                const imageResponse = await openai.images.generate({
+                  model: "dall-e-3",
+                  prompt: requestBody.prompt,
+                  n: requestBody.n || 1,
+                  size: requestBody.size || "1024x1024",
+                  response_format: requestBody.response_format || "url"
+                });
+                
+                response = {
+                  created: Date.now(),
+                  data: imageResponse.data
+                };
+              }
+            } else {
+              throw new Error("Invalid image request");
+            }
+            break;
+            
+          default:
+            // Default to OpenAI
+            response = await openai.chat.completions.create({
+              model: requestBody.model,
+              messages: requestBody.messages,
+              ...requestBody
+            });
         }
+      } catch (error) {
+        console.error("Error with OpenAI SDK:", error);
+        throw error;
       }
     }
     

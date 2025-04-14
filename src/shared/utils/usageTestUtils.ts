@@ -14,7 +14,7 @@ export function generateSampleUsageData(
 ): void {
   const now = Date.now();
   const providers: AIProvider[] = ['openai', 'anthropic', 'google', 'openrouter', 'image'];
-  const apps = ['task-smasher', 'article-smasher', 'article-smasherv2'];
+  const apps = ['task-smasher', 'article-smasher'];
   const models = {
     'openai': ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
     'anthropic': ['claude-2', 'claude-instant'],

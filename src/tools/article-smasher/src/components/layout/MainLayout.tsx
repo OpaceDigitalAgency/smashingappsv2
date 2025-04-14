@@ -19,7 +19,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   } = useArticleWizard();
   
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 article-smasherv2-container">
+    <div className="min-h-screen bg-gray-50 pb-24 article-smasher-container">
       <WizardHeader />
       
       <div className="mobile-container py-4">

@@ -55,7 +55,15 @@ export const getUsageData = (): UsageData => {
 // Save usage data to local storage
 export const saveUsageData = (data: UsageData): void => {
   try {
+    // Log the app usage data being saved
+    console.log('Saving usage data with app stats:', {
+      requestsByApp: data.requestsByApp,
+      tokensByApp: data.tokensByApp,
+      costByApp: data.costByApp
+    });
+    
     localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(data));
+    console.log('Usage data saved successfully');
   } catch (error) {
     console.error('Failed to save usage data to local storage:', error);
   }
@@ -69,6 +77,8 @@ export const trackApiRequest = (
   model: string,
   timestamp?: Date
 ): void => {
+  console.log(`Tracking API request for provider: ${provider}, app: ${app}, tokens: ${tokens}, model: ${model}`);
+  
   const usageData = getUsageData();
   const timestampMs = timestamp ? timestamp.getTime() : Date.now();
   
@@ -178,6 +188,30 @@ export const getFilteredUsageData = (
 export const clearUsageData = (): void => {
   saveUsageData(initialUsageData);
   window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: initialUsageData }));
+};
+
+// Clear all rate limits and usage data
+export const clearAllLimitsAndUsage = (): void => {
+  // Clear usage data
+  clearUsageData();
+  
+  // Clear rate limit data for both Task Smasher and Article Smasher
+  const resetTime = new Date(Date.now() + 3600000); // 1 hour from now
+  const defaultRateLimitInfo = {
+    limit: 10,
+    remaining: 10,
+    used: 0,
+    reset: resetTime
+  };
+  
+  // Reset rate limit info in localStorage
+  localStorage.setItem('rateLimitInfo', JSON.stringify(defaultRateLimitInfo));
+  localStorage.setItem('rateLimited', JSON.stringify(false));
+  
+  // Dispatch an event to notify components that rate limits have been cleared
+  window.dispatchEvent(new CustomEvent('rate-limits-cleared'));
+  
+  console.log('All rate limits and usage data cleared successfully');
 };
 
 // Export a function to get time-based labels for charts

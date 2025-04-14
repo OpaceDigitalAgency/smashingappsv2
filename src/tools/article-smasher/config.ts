@@ -1,30 +1,31 @@
 import { ToolConfig } from '../../shared/types';
-import { FileText, Edit, BookOpen, Newspaper } from 'lucide-react';
+import { FileText, Edit, BookOpen, Newspaper, BrainCircuit } from 'lucide-react';
 
 const articleSmasherConfig: ToolConfig = {
   id: 'article-smasher',
   name: 'ArticleSmasher',
-  description: 'AI-powered article generation and optimization',
-  icon: FileText,
+  description: 'Advanced AI-powered content creation with GPT-4o integration',
+  icon: BrainCircuit,
   routes: {
     base: '/tools/article-smasher',
     subRoutes: {
       blog: '/tools/article-smasher/blog-post',
       seo: '/tools/article-smasher/seo-article',
       academic: '/tools/article-smasher/academic-paper',
-      news: '/tools/article-smasher/news-article'
+      news: '/tools/article-smasher/news-article',
+      demo: '/tools/article-smasher/demo'
     }
   },
   capabilities: {
     ai: {
       enabled: true,
-      defaultModel: 'gpt-4',
-      availableModels: ['gpt-3.5-turbo', 'gpt-4'],
-      systemPromptTemplate: 'You are an AI assistant that helps create high-quality articles. {{useCase}}'
+      defaultModel: 'gpt-4o',
+      availableModels: ['gpt-4o', 'gpt-4o-mini', 'gpt-4'],
+      systemPromptTemplate: 'You are an AI assistant that helps create high-quality articles with advanced capabilities. {{useCase}}'
     },
     export: {
       enabled: true,
-      formats: ['pdf', 'json', 'csv']
+      formats: ['pdf', 'json', 'csv', 'excel']
     },
     voice: {
       enabled: true
@@ -65,17 +66,20 @@ const articleSmasherConfig: ToolConfig = {
       description: 'Generate news-style articles with journalistic structure',
       icon: Newspaper,
       promptTemplate: 'Write a news article about: {{topic}}'
+    },
+    demo: {
+      id: 'demo',
+      label: 'Demo',
+      description: 'Try out the AI Scribe demo',
+      icon: BrainCircuit,
+      promptTemplate: 'Show a demonstration of AI Scribe capabilities'
     }
   },
   defaultUseCase: 'blog',
-  // NOTE: The metaTags section below is kept for backward compatibility and reference.
-  // For SEO purposes, the centralized seoMaster.ts file is now the single source of truth.
-  // Any changes to SEO should be made in src/utils/seoMaster.ts instead of here.
   metaTags: {
-    title: 'ArticleSmasher | AI-Powered Content Creation Tool',
-    description: 'Create high-quality articles, blog posts, and SEO content with AI assistance',
+    title: 'ArticleSmasher V2 | Advanced AI Content Creation',
+    description: 'Create high-quality content with GPT-4o integration, multi-language support, and advanced humanization features',
     ogImage: 'https://smashingapps.ai/og/article-smasher.png'
   }
 };
-
 export default articleSmasherConfig;

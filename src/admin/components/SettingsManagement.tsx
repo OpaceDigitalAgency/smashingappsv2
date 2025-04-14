@@ -247,7 +247,7 @@ const SettingsManagement: React.FC = () => {
               </div>
               
               <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Article Smasher V2</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Article Smasher</h3>
                 <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -255,8 +255,8 @@ const SettingsManagement: React.FC = () => {
                         Default Article Type
                       </label>
                       <select
-                        value={(appSettings['article-smasherv2']?.defaultArticleType as string) || 'blog'}
-                        onChange={(e) => handleAppSettingsChange('article-smasherv2', 'defaultArticleType', e.target.value)}
+                        value={(appSettings['article-smasher']?.defaultArticleType as string) || 'blog'}
+                        onChange={(e) => handleAppSettingsChange('article-smasher', 'defaultArticleType', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
                       >
                         <option value="blog">Blog Post</option>
@@ -272,8 +272,8 @@ const SettingsManagement: React.FC = () => {
                       <div className="flex items-center mt-2">
                         <input
                           type="checkbox"
-                          checked={(appSettings['article-smasherv2']?.enableImageGeneration as boolean) || false}
-                          onChange={(e) => handleAppSettingsChange('article-smasherv2', 'enableImageGeneration', e.target.checked)}
+                          checked={(appSettings['article-smasher']?.enableImageGeneration as boolean) || false}
+                          onChange={(e) => handleAppSettingsChange('article-smasher', 'enableImageGeneration', e.target.checked)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label className="ml-2 block text-sm text-gray-700">

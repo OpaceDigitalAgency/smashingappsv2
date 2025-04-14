@@ -1,12 +1,12 @@
-/* Custom styles for article-smasherv2 only */
+/* Custom styles for article-smasher only */
 
-/* Override the mobile-container class for article-smasherv2 */
-.article-smasherv2-container .mobile-container {
+/* Override the mobile-container class for article-smasher */
+.article-smasher-container .mobile-container {
   @apply px-4 md:px-6 lg:px-8 mx-auto w-full max-w-4xl;
 }
 
 /* Center the complete article page */
-.article-smasherv2-container .complete-article-container {
+.article-smasher-container .complete-article-container {
   @apply max-w-4xl mx-auto;
 }
 
