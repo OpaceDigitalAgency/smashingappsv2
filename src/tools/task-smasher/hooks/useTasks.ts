@@ -1017,7 +1017,6 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         } catch (error) {
           console.error('Error parsing subtasks:', error);
         }
-      }
     } catch (error) {
       console.error('Error generating subtasks:', error);
       
