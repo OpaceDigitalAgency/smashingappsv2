@@ -58,10 +58,17 @@ const ROUTES_TO_PRERENDER = Object.keys(seoMaster.routeMeta);
 
 // Use the use case definitions from the seoMaster
 const useCaseDefinitions = seoMaster.useCaseDefinitions;
+const articleSmasherUseCases = seoMaster.articleSmasherUseCases;
 
 // Add all TaskSmasher use case routes
 Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
   const path = `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`;
+  ROUTES_TO_PRERENDER.push(path);
+});
+
+// Add all ArticleSmasher use case routes
+Object.entries(articleSmasherUseCases).forEach(([id, definition]) => {
+  const path = `/tools/article-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`;
   ROUTES_TO_PRERENDER.push(path);
 });
 

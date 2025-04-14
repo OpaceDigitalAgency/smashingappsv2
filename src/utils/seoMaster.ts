@@ -127,6 +127,30 @@ export const useCaseDefinitions: UseCaseDefinitionsMap = {
   }
 };
 
+// Use case definitions for ArticleSmasher
+export const articleSmasherUseCases: UseCaseDefinitionsMap = {
+  blog: {
+    label: "Blog Post",
+    description: "Create engaging blog posts with proper structure using AI assistance. Our Blog Post generator helps you craft compelling content that resonates with your audience.",
+    keywords: ["blog", "post", "content", "writing", "article", "blogging"]
+  },
+  seo: {
+    label: "SEO Article",
+    description: "Generate SEO-optimized content for better rankings. Our SEO Article tool helps you create content that satisfies both search engines and human readers.",
+    keywords: ["seo", "search engine", "optimization", "keywords", "ranking", "organic traffic"]
+  },
+  academic: {
+    label: "Academic Paper",
+    description: "Create academic-style content with proper citations and structure. Our Academic Paper generator helps researchers and students draft scholarly articles.",
+    keywords: ["academic", "research", "paper", "journal", "scholarly", "citation", "study"]
+  },
+  news: {
+    label: "News Article",
+    description: "Generate news-style articles with journalistic structure. Our News Article tool helps you create timely, factual content in a professional news format.",
+    keywords: ["news", "journalism", "article", "report", "current events", "press"]
+  }
+};
+
 // Route-specific meta configurations
 export const routeMeta: MetaConfigMap = {
   '/': {
@@ -169,6 +193,27 @@ export const routeMeta: MetaConfigMap = {
       description: 'Smash complex tasks into smart, manageable lists using our free AI planner. TaskSmasher is an AI task manager tool that creates magic to-do lists for greater productivity.'
     }
   },
+  '/tools/article-smasher/': {
+    title: 'ArticleSmasher - AI Content Creator | Blog Posts, SEO Articles & Academic Papers',
+    description: 'Create high-quality articles, blog posts, and SEO content with AI assistance. ArticleSmasher helps you generate well-structured content for various purposes.',
+    image: `${BASE_URL}/og/article-smasher.png`,
+    canonical: `${BASE_URL}/tools/article-smasher/`,
+    urlPath: '/tools/article-smasher/',
+    keywords: 'AI content creator, article generator, blog writer, SEO content, academic writing, AI writing assistant',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'ArticleSmasher',
+      applicationCategory: 'ContentCreationApplication',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD'
+      },
+      operatingSystem: 'Web',
+      description: 'Create high-quality articles, blog posts, and SEO content with AI assistance. ArticleSmasher helps you generate well-structured content for various purposes.'
+    }
+  },
   '/contact': {
     title: 'Contact SmashingApps.ai | Free AI Productivity Apps & Tools',
     description: 'Contact SmashingApps.ai for support, feedback, or collaboration. Reach out to learn more about our free AI productivity tools.',
@@ -203,6 +248,35 @@ Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
       '@type': 'SoftwareApplication',
       name: `TaskSmasher - ${definition.label}`,
       applicationCategory: 'ProductivityApplication',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD'
+      },
+      operatingSystem: 'Web',
+      description: definition.description
+    }
+  };
+});
+
+// Generate meta configs for all ArticleSmasher use cases
+Object.entries(articleSmasherUseCases).forEach(([id, definition]) => {
+  // Generate URL-friendly path from the definition label
+  const urlPath = `/tools/article-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`;
+  
+  // Store the meta data for this use case
+  routeMeta[urlPath] = {
+    title: `${definition.label} | AI Content Creator - ArticleSmasher`,
+    description: definition.description,
+    image: `${BASE_URL}/og/article-smasher-${id}.png`,
+    canonical: `${BASE_URL}${urlPath}`,
+    urlPath: urlPath,
+    keywords: `AI content creator, ${definition.label.toLowerCase()}, ${definition.keywords ? definition.keywords.join(', ') : ''}, SmashingApps`,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: `ArticleSmasher - ${definition.label}`,
+      applicationCategory: 'ContentCreationApplication',
       offers: {
         '@type': 'Offer',
         price: '0',

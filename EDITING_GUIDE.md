@@ -126,23 +126,32 @@ Edit the text between quotes to change:
 
 ### Complete List of All Pages/URLs
 
-The following pages are automatically generated based on the use case definitions. Each page has its own SEO settings that are derived from the `useCaseDefinitions` and `routeMeta` objects in `src/utils/seoMaster.ts`:
+The following pages are automatically generated based on the use case definitions. Each page has its own SEO settings that are derived from the `useCaseDefinitions`, `articleSmasherUseCases`, and `routeMeta` objects in `src/utils/seoMaster.ts`:
 
 1. **Homepage**: `/` - Edit in the `routeMeta` object
 2. **TaskSmasher Main Page**: `/tools/task-smasher/` - Edit in the `routeMeta` object
-3. **Contact Page**: `/contact` - Edit in the `routeMeta` object
-4. **Daily Organizer**: `/tools/task-smasher/daily-organizer/` - Edit in the `useCaseDefinitions` object
-5. **Goal Planner**: `/tools/task-smasher/goal-planner/` - Edit in the `useCaseDefinitions` object
-6. **Marketing Tasks**: `/tools/task-smasher/marketing-tasks/` - Edit in the `useCaseDefinitions` object
-7. **Recipe Steps**: `/tools/task-smasher/recipe-steps/` - Edit in the `useCaseDefinitions` object
-8. **Home Chores**: `/tools/task-smasher/home-chores/` - Edit in the `useCaseDefinitions` object
-9. **Trip Planner**: `/tools/task-smasher/trip-planner/` - Edit in the `useCaseDefinitions` object
-10. **Study Plan**: `/tools/task-smasher/study-plan/` - Edit in the `useCaseDefinitions` object
-11. **Event Planning**: `/tools/task-smasher/event-planning/` - Edit in the `useCaseDefinitions` object
-12. **Freelancer Projects**: `/tools/task-smasher/freelancer-projects/` - Edit in the `useCaseDefinitions` object
-13. **Shopping Tasks**: `/tools/task-smasher/shopping-tasks/` - Edit in the `useCaseDefinitions` object
-14. **DIY Projects**: `/tools/task-smasher/diy-projects/` - Edit in the `useCaseDefinitions` object
-15. **Creative Projects**: `/tools/task-smasher/creative-projects/` - Edit in the `useCaseDefinitions` object
+3. **ArticleSmasher Main Page**: `/tools/article-smasher/` - Edit in the `routeMeta` object
+4. **Contact Page**: `/contact` - Edit in the `routeMeta` object
+
+**TaskSmasher Use Cases:**
+5. **Daily Organizer**: `/tools/task-smasher/daily-organizer/` - Edit in the `useCaseDefinitions` object
+6. **Goal Planner**: `/tools/task-smasher/goal-planner/` - Edit in the `useCaseDefinitions` object
+7. **Marketing Tasks**: `/tools/task-smasher/marketing-tasks/` - Edit in the `useCaseDefinitions` object
+8. **Recipe Steps**: `/tools/task-smasher/recipe-steps/` - Edit in the `useCaseDefinitions` object
+9. **Home Chores**: `/tools/task-smasher/home-chores/` - Edit in the `useCaseDefinitions` object
+10. **Trip Planner**: `/tools/task-smasher/trip-planner/` - Edit in the `useCaseDefinitions` object
+11. **Study Plan**: `/tools/task-smasher/study-plan/` - Edit in the `useCaseDefinitions` object
+12. **Event Planning**: `/tools/task-smasher/event-planning/` - Edit in the `useCaseDefinitions` object
+13. **Freelancer Projects**: `/tools/task-smasher/freelancer-projects/` - Edit in the `useCaseDefinitions` object
+14. **Shopping Tasks**: `/tools/task-smasher/shopping-tasks/` - Edit in the `useCaseDefinitions` object
+15. **DIY Projects**: `/tools/task-smasher/diy-projects/` - Edit in the `useCaseDefinitions` object
+16. **Creative Projects**: `/tools/task-smasher/creative-projects/` - Edit in the `useCaseDefinitions` object
+
+**ArticleSmasher Use Cases:**
+17. **Blog Post**: `/tools/article-smasher/blog-post/` - Edit in the `articleSmasherUseCases` object
+18. **SEO Article**: `/tools/article-smasher/seo-article/` - Edit in the `articleSmasherUseCases` object
+19. **Academic Paper**: `/tools/article-smasher/academic-paper/` - Edit in the `articleSmasherUseCases` object
+20. **News Article**: `/tools/article-smasher/news-article/` - Edit in the `articleSmasherUseCases` object
 
 When you edit the `label` or `description` in the `useCaseDefinitions` object, the changes will automatically be applied to the corresponding page's SEO settings.
 
@@ -282,11 +291,13 @@ If you want to add a completely new tool (not just a use case for TaskSmasher):
 2. Create the necessary React components for the new tool
 3. Update the routing in the main application to include the new tool
 
-## Adding a New Use Case to TaskSmasher
+## Adding a New Use Case
+
+### Adding a New Use Case to TaskSmasher
 
 If you want to add a new use case to TaskSmasher (like "Wedding Planning" or "Fitness Goals"), follow these steps:
 
-### Step 1: Edit the seoMaster.ts File
+#### Step 1: Edit the seoMaster.ts File
 
 Open `src/utils/seoMaster.ts` and add a new entry to the `useCaseDefinitions` object:
 
@@ -303,7 +314,7 @@ export const useCaseDefinitions: UseCaseDefinitionsMap = {
 };
 ```
 
-### Step 2: Add the Prompt in TaskSmasher's useCaseDefinitions.ts
+#### Step 2: Add the Prompt in TaskSmasher's useCaseDefinitions.ts
 
 Open `src/tools/task-smasher/utils/useCaseDefinitions.ts` and add a matching entry:
 
@@ -323,10 +334,66 @@ export const useCaseDefinitions = {
 
 The `prompt` is what gets sent to the AI when generating tasks, so make it detailed and specific to get the best results.
 
-### Step 3: Add an Icon (Optional)
+#### Step 3: Add an Icon (Optional)
 
 If you want to add a custom icon for your new use case, you'll need to edit the `Sidebar.tsx` component.
 
 That's it! The new use case will automatically appear in the sidebar menu, and a new page will be created at `/tools/task-smasher/wedding-planning/` with all the SEO settings automatically generated.
 
 **IMPORTANT:** Make sure the description in TaskSmasher's useCaseDefinitions.ts matches what you added to seoMaster.ts for consistency in the user interface.
+
+### Adding a New Use Case to ArticleSmasher
+
+If you want to add a new use case to ArticleSmasher (like "Product Description" or "Technical Documentation"), follow these steps:
+
+#### Step 1: Edit the seoMaster.ts File
+
+Open `src/utils/seoMaster.ts` and add a new entry to the `articleSmasherUseCases` object:
+
+```typescript
+export const articleSmasherUseCases: UseCaseDefinitionsMap = {
+  // Existing use cases...
+  
+  // Add your new use case here
+  product: {  // Use a short, unique ID (no spaces)
+    label: "Product Description",  // User-friendly name (shown to users)
+    description: "Create compelling product descriptions that convert browsers into buyers. Our Product Description generator helps you highlight features, benefits, and unique selling points.",
+    keywords: ["product", "description", "ecommerce", "features", "benefits", "selling", "conversion"]
+  }
+};
+```
+
+#### Step 2: Update ArticleSmasher's config.ts
+
+Open `src/tools/article-smasher/config.ts` and add a matching entry to the `useCases` object:
+
+```typescript
+useCases: {
+  // Existing use cases...
+  
+  // Add your new use case here
+  product: {
+    id: 'product',
+    label: 'Product Description',
+    description: 'Create compelling product descriptions that convert browsers into buyers',
+    icon: ShoppingBag, // Import an appropriate icon from lucide-react
+    promptTemplate: 'Write a product description for: {{topic}}. Highlight key features and benefits that would appeal to potential customers.'
+  }
+},
+```
+
+Also update the `routes.subRoutes` object to include the new use case:
+
+```typescript
+routes: {
+  base: '/tools/article-smasher',
+  subRoutes: {
+    // Existing routes...
+    product: '/tools/article-smasher/product-description'
+  }
+},
+```
+
+That's it! The new use case will automatically appear in the sidebar menu, and a new page will be created at `/tools/article-smasher/product-description/` with all the SEO settings automatically generated.
+
+**IMPORTANT:** Make sure the description in ArticleSmasher's config.ts matches what you added to seoMaster.ts for consistency in the user interface.
