@@ -43,6 +43,7 @@ import toolRegistry, { getToolConfig } from './tools/registry';
 // When adding a new tool, import its main component here
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
 import ArticleSmasherApp from './tools/article-smasher/ArticleSmasherApp';
+import AdminApp from './admin/AdminApp';
 import ArticleSmasherV2App from './tools/article-smasherv2/ArticleSmasherV2App';
 
 // Loading component for Suspense
@@ -96,11 +97,13 @@ const BodyClassManager = () => {
   
   useEffect(() => {
     // Remove all tool-related classes
-    document.body.classList.remove('home', ...Object.keys(toolRegistry).map(id => id));
+    document.body.classList.remove('home', 'admin', ...Object.keys(toolRegistry).map(id => id));
     
     // Add appropriate class based on the current route
     if (location.pathname === '/') {
       document.body.classList.add('home');
+    } else if (location.pathname.startsWith('/admin')) {
+      document.body.classList.add('admin');
     } else {
       // Find which tool this route belongs to
       for (const [id, config] of Object.entries(toolRegistry)) {
@@ -155,6 +158,9 @@ function App() {
             <Route path="/tools/article-smasherv2/*" element={<ArticleSmasherV2App />} />
             
             <Route path="/tools/article-smasher/" element={<ArticleSmasherApp />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin/*" element={<AdminApp />} />
             
             {/* TaskSmasher use case routes - handle both with and without trailing slash */}
             {taskSmasherConfig && taskSmasherConfig.routes.subRoutes &&

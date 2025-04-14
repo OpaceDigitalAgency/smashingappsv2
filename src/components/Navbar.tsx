@@ -155,6 +155,9 @@ const Navbar: React.FC = () => {
             <a href="/contact" className="btn-primary !py-2 !px-4 text-sm">
               Get in Touch
             </a>
+            <a href="/admin" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
+              Admin
+            </a>
           </div>
           
           <div className="md:hidden flex items-center">
@@ -274,6 +277,13 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
             >
               Get in Touch
+            </a>
+            <a
+              href="/admin"
+              className="block text-gray-700 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium mt-2"
+              onClick={() => setIsOpen(false)}
+            >
+              Admin
             </a>
           </div>
         </div>
