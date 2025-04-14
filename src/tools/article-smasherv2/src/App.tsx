@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { 
-  BookOpenText, 
-  BrainCircuit, 
-  CheckCircle, 
-  Cpu, 
-  Database, 
-  Edit3, 
-  Globe, 
-  Image as ImageIcon, 
-  Layers, 
-  MessageSquareText, 
-  Search, 
-  Settings, 
-  Sparkles, 
-  Star, 
-  TerminalSquare, 
-  ListTodo, 
+import {
+  BookOpenText,
+  BrainCircuit,
+  CheckCircle,
+  Cpu,
+  Database,
+  Edit3,
+  Globe,
+  Image as ImageIcon,
+  Layers,
+  MessageSquareText,
+  Search,
+  Settings,
+  Sparkles,
+  Star,
+  TerminalSquare,
+  ListTodo,
   ChevronDown,
   Menu,
   X,
@@ -27,9 +27,16 @@ import {
   Users,
   ArrowUpRight
 } from 'lucide-react';
-import Demo from './components/Demo';
+import ArticleWizard from './components/ArticleWizard';
+import { ArticleWizardProvider } from './contexts/ArticleWizardContext';
 
-const FeatureCard = ({ icon: Icon, title, description }) => (
+interface FeatureCardProps {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, description }) => (
   <div className="card hover:shadow-lg p-6">
     <div className="flex items-center mb-4">
       <div className="bg-primary-50 p-3 rounded-full mr-4">
@@ -41,7 +48,14 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
   </div>
 );
 
-const ProcessStep = ({ number, title, description, icon: Icon }) => (
+interface ProcessStepProps {
+  number: number;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+}
+
+const ProcessStep: React.FC<ProcessStepProps> = ({ number, title, description, icon: Icon }) => (
   <div className="flex mb-6">
     <div className="flex-shrink-0 mr-4">
       <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">
@@ -58,19 +72,24 @@ const ProcessStep = ({ number, title, description, icon: Icon }) => (
   </div>
 );
 
-const FAQ = ({ question, answer }) => {
+interface FAQProps {
+  question: string;
+  answer: string;
+}
+
+const FAQ: React.FC<FAQProps> = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
     <div className="border-b border-gray-200 py-4">
-      <button 
+      <button
         className="flex justify-between items-center w-full text-left font-medium text-gray-800"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{question}</span>
-        <ChevronDown 
-          size={20} 
-          className={`text-primary transition-transform duration-300 ${isOpen ? 'transform rotate-180' : ''}`} 
+        <ChevronDown
+          size={20}
+          className={`text-primary transition-transform duration-300 ${isOpen ? 'transform rotate-180' : ''}`}
         />
       </button>
       {isOpen && (
@@ -199,8 +218,8 @@ function HomePage() {
                 <button className="btn bg-white text-primary hover:bg-gray-100 px-6 py-3 rounded-xl font-medium">
                   Learn More
                 </button>
-                <Link to="/demo" className="btn bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-xl font-medium">
-                  View Demo
+                <Link to="/wizard" className="btn bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-xl font-medium">
+                  Try It Now
                 </Link>
               </div>
             </div>
@@ -573,7 +592,7 @@ function HomePage() {
           <ListTodo size={20} />
           <span className="text-xs mt-1">Process</span>
         </a>
-        <Link to="/demo" className="flex flex-col items-center text-primary">
+        <Link to="/wizard" className="flex flex-col items-center text-primary">
           <PenTool size={20} />
           <span className="text-xs mt-1">Try It</span>
         </Link>
@@ -594,7 +613,11 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/demo" element={<Demo />} />
+      <Route path="/wizard" element={
+        <ArticleWizardProvider>
+          <ArticleWizard />
+        </ArticleWizardProvider>
+      } />
     </Routes>
   );
 }

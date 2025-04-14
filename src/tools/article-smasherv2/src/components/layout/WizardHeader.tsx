@@ -10,7 +10,7 @@ const WizardHeader: React.FC = () => {
             <ArrowLeft className="mr-2" size={20} />
             <span className="font-medium">Back to Home</span>
           </a>
-          <h1 className="text-lg font-bold">AI Scribe Demo</h1>
+          <h1 className="text-lg font-bold">AI Scribe</h1>
           <button className="text-white hover:text-primary-50">
             <Settings size={20} />
           </button>
