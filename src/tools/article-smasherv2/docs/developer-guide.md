@@ -237,7 +237,7 @@ Each step is implemented as a separate component with its own UI and logic, but 
 
 ### AI Service Integration
 
-Article Smasher v2 now uses a unified AI service architecture that is shared across all SmashingApps.ai tools. The integration consists of:
+Article Smasher v2 is fully integrated with the unified AI service architecture that is shared across all SmashingApps.ai tools. The integration consists of:
 
 1. **Shared AI Services**: Located in `src/shared/services/`, these provide a common interface for all AI providers:
    - `AIService.ts`: Base interface and registry for all AI providers
@@ -254,6 +254,11 @@ Article Smasher v2 now uses a unified AI service architecture that is shared acr
 3. **Hook-Based Architecture**: The service uses the `useArticleAI` hook which wraps the shared `useAI` hook to make API calls to the selected provider. This ensures consistent behavior across all applications while allowing for article-specific customizations.
 
 4. **Provider Selection**: The system automatically selects the appropriate provider based on the model specified in the settings, with fallback options if the primary provider is unavailable.
+
+5. **Unified Admin Interface Integration**: The service now fully integrates with the unified admin interface:
+   - Prompts are loaded from the admin interface when available
+   - The ArticleSmasherV2 admin page redirects to the unified admin interface
+   - All AI operations use the shared AI services configured in the admin interface
 
 ## Extending the System
 
@@ -381,8 +386,12 @@ To add a new feature to Article Smasher v2:
 3. Update the UI to expose the new feature to users.
 
 4. Add any new prompt templates required for the feature.
+   - For global prompt templates, add them through the unified admin interface
+   - For local prompt templates, add them through the promptService
 
 5. Update documentation to reflect the new feature.
+
+6. If your feature requires changes to the AI service integration, ensure it works with the unified admin interface.
 
 Example: Adding a "Readability Analysis" feature:
 
@@ -699,15 +708,31 @@ The project is set up for continuous integration using GitHub Actions. The workf
 - Check that you're not creating new object references unnecessarily
 - Use the React DevTools to inspect component props and state
 
+**Problem**: "Prompt with ID not found" error
+
+**Solution**:
+- This usually happens when the prompt ID doesn't exist in the current context
+- Make sure the prompt exists in the admin interface or in local storage
+- The system will attempt to find a fallback prompt based on the category
+- Check that the ArticleSmasherV2 is properly integrated with the unified admin interface
+
 #### API Integration Issues
 
 **Problem**: AI API calls failing
 
 **Solution**:
-- Check API key and permissions
+- Check API key and permissions in the unified admin interface
 - Verify network connectivity
 - Check for rate limiting or quota issues
 - Inspect the request and response in the browser's Network tab
+- Ensure the selected AI provider is properly configured in the admin interface
+
+**Problem**: Admin interface integration not working
+
+**Solution**:
+- Make sure the ArticleSmasherV2 is properly integrated with the unified admin interface
+- Check that the window.adminContext is available when running within the main application
+- Verify that the prompts are being loaded from the admin interface
 
 #### Build Issues
 

@@ -44,9 +44,18 @@ const SettingsManagement: React.FC = () => {
   // Save settings
   const handleSaveSettings = () => {
     try {
-      // In a real implementation, we would save the settings to a database or local storage
-      // For now, we'll just show a success message
-      setSaveStatus({ success: true, message: 'Settings saved successfully' });
+      // Update global settings
+      updateGlobalSettings(globalSettings);
+      
+      // Update app-specific settings
+      Object.entries(appSettings).forEach(([appId, settings]) => {
+        updateAppSettings(appId, settings);
+      });
+      
+      // Save app-specific settings to localStorage for persistence
+      localStorage.setItem('smashingapps_appSettings', JSON.stringify(appSettings));
+      
+      setSaveStatus({ success: true, message: 'Settings saved successfully and applied to all apps' });
       
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -54,6 +63,7 @@ const SettingsManagement: React.FC = () => {
       }, 3000);
     } catch (error) {
       setSaveStatus({ success: false, message: 'Failed to save settings' });
+      console.error('Error saving settings:', error);
     }
   };
   

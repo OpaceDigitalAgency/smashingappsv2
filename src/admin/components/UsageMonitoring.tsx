@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import { 
   BarChart3, 
@@ -14,17 +14,20 @@ import {
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider } from '../../shared/types/aiProviders';
+import { getTimeLabels, getTimeSeriesData } from '../../shared/services/usageTrackingService';
 
 const UsageMonitoring: React.FC = () => {
-  const { usageStats, providers } = useAdmin();
-  const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { usageStats, timeRange, setTimeRange, providers } = useAdmin();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   
   // Handle refresh
   const handleRefresh = () => {
     setIsRefreshing(true);
     
-    // Simulate refreshing data
+    // Dispatch a custom event to refresh usage data
+    window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+    
+    // Reset refreshing state after a short delay
     setTimeout(() => {
       setIsRefreshing(false);
     }, 1000);
@@ -32,66 +35,86 @@ const UsageMonitoring: React.FC = () => {
   
   // Handle export
   const handleExport = (format: 'csv' | 'json') => {
-    // In a real implementation, we would export the data to a file
-    console.log(`Exporting usage data as ${format}`);
-  };
-  
-  // Generate random data for the charts
-  const generateRandomData = (length: number, min: number, max: number) => {
-    return Array.from({ length }, () => Math.floor(Math.random() * (max - min + 1)) + min);
-  };
-  
-  // Generate labels for the time range
-  const generateLabels = () => {
-    const now = new Date();
-    const labels: string[] = [];
+    // Create a data object to export
+    const dataToExport = {
+      timeRange,
+      totalRequests: usageStats.totalRequests,
+      totalTokens: usageStats.totalTokens,
+      costEstimate: usageStats.costEstimate,
+      requestsByProvider: usageStats.requestsByProvider,
+      tokensByProvider: usageStats.tokensByProvider,
+      costByProvider: usageStats.costByProvider,
+      requestsByApp: usageStats.requestsByApp,
+      tokensByApp: usageStats.tokensByApp,
+      costByApp: usageStats.costByApp,
+      exportDate: new Date().toISOString()
+    };
     
-    switch (timeRange) {
-      case 'day':
-        // Generate hourly labels for the past 24 hours
-        for (let i = 0; i < 24; i++) {
-          labels.push(`${i}:00`);
-        }
-        break;
-      case 'week':
-        // Generate daily labels for the past 7 days
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date(now);
-          date.setDate(date.getDate() - i);
-          labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
-        }
-        break;
-      case 'month':
-        // Generate weekly labels for the past 4 weeks
-        for (let i = 4; i >= 0; i--) {
-          const date = new Date(now);
-          date.setDate(date.getDate() - (i * 7));
-          labels.push(`Week ${4 - i}`);
-        }
-        break;
-      case 'year':
-        // Generate monthly labels for the past 12 months
-        for (let i = 0; i < 12; i++) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - (11 - i));
-          labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
-        }
-        break;
+    // Convert to the requested format
+    let content: string;
+    let mimeType: string;
+    let filename: string;
+    
+    if (format === 'json') {
+      content = JSON.stringify(dataToExport, null, 2);
+      mimeType = 'application/json';
+      filename = `usage-data-${timeRange}-${new Date().toISOString().split('T')[0]}.json`;
+    } else {
+      // Convert to CSV
+      const headers = [
+        'Provider', 'Requests', 'Tokens', 'Cost'
+      ].join(',');
+      
+      const providerRows = Object.entries(usageStats.requestsByProvider).map(([provider, requests]) => {
+        const tokens = usageStats.tokensByProvider[provider as AIProvider] || 0;
+        const cost = usageStats.costByProvider[provider as AIProvider] || 0;
+        return [provider, requests, tokens, cost.toFixed(2)].join(',');
+      });
+      
+      const appHeaders = [
+        'Application', 'Requests', 'Tokens', 'Cost'
+      ].join(',');
+      
+      const appRows = Object.entries(usageStats.requestsByApp).map(([app, requests]) => {
+        const tokens = usageStats.tokensByApp[app] || 0;
+        const cost = usageStats.costByApp[app] || 0;
+        return [app, requests, tokens, cost.toFixed(2)].join(',');
+      });
+      
+      content = [
+        `Usage Data - ${timeRange} - ${new Date().toLocaleDateString()}`,
+        `Total Requests: ${usageStats.totalRequests}`,
+        `Total Tokens: ${usageStats.totalTokens}`,
+        `Total Cost: $${usageStats.costEstimate.toFixed(2)}`,
+        '',
+        'Usage by Provider:',
+        headers,
+        ...providerRows,
+        '',
+        'Usage by Application:',
+        appHeaders,
+        ...appRows
+      ].join('\n');
+      
+      mimeType = 'text/csv';
+      filename = `usage-data-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`;
     }
     
-    return labels;
+    // Create a download link
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
   
-  // Generate random data for the charts based on the time range
-  const labels = generateLabels();
-  const requestsData = generateRandomData(labels.length, 10, 100);
-  const tokensData = generateRandomData(labels.length, 1000, 10000);
-  const costData = tokensData.map(tokens => (tokens * 0.002).toFixed(2));
-  
-  // Calculate totals
-  const totalRequests = requestsData.reduce((sum, value) => sum + value, 0);
-  const totalTokens = tokensData.reduce((sum, value) => sum + value, 0);
-  const totalCost = costData.reduce((sum, value) => sum + parseFloat(value), 0);
+  // Get time labels and data for charts
+  const labels = getTimeLabels(timeRange);
+  const { requests: requestsData, tokens: tokensData, costs: costData } = getTimeSeriesData(timeRange);
   
   return (
     <div className="p-6">
@@ -112,7 +135,7 @@ const UsageMonitoring: React.FC = () => {
             <RefreshCw className={`w-4 h-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <div className="relative">
+          <div className="relative group">
             <Button
               variant="secondary"
               size="sm"
@@ -191,7 +214,7 @@ const UsageMonitoring: React.FC = () => {
             <h2 className="text-lg font-medium text-gray-800">API Requests</h2>
             <Zap className="w-6 h-6 text-yellow-500" />
           </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{totalRequests.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-1">{usageStats.totalRequests.toLocaleString()}</p>
           <p className="text-sm text-gray-500">Total requests in selected period</p>
         </div>
         
@@ -200,7 +223,7 @@ const UsageMonitoring: React.FC = () => {
             <h2 className="text-lg font-medium text-gray-800">Tokens Used</h2>
             <Hash className="w-6 h-6 text-purple-500" />
           </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{totalTokens.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-1">{usageStats.totalTokens.toLocaleString()}</p>
           <p className="text-sm text-gray-500">Total tokens in selected period</p>
         </div>
         
@@ -209,7 +232,7 @@ const UsageMonitoring: React.FC = () => {
             <h2 className="text-lg font-medium text-gray-800">Cost Estimate</h2>
             <DollarSign className="w-6 h-6 text-green-500" />
           </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">${totalCost.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-1">${usageStats.costEstimate.toFixed(2)}</p>
           <p className="text-sm text-gray-500">Estimated cost in selected period</p>
         </div>
       </div>
@@ -227,7 +250,7 @@ const UsageMonitoring: React.FC = () => {
               <div key={index} className="flex flex-col items-center">
                 <div 
                   className="bg-blue-500 rounded-t-sm w-8" 
-                  style={{ height: `${(value / Math.max(...requestsData)) * 100}%` }}
+                  style={{ height: `${(value / Math.max(...requestsData, 1)) * 100}%` }}
                 ></div>
                 <span className="text-xs text-gray-500 mt-1">{labels[index]}</span>
               </div>
@@ -246,7 +269,7 @@ const UsageMonitoring: React.FC = () => {
               <div key={index} className="flex flex-col items-center">
                 <div 
                   className="bg-purple-500 rounded-t-sm w-8" 
-                  style={{ height: `${(value / Math.max(...tokensData)) * 100}%` }}
+                  style={{ height: `${(value / Math.max(...tokensData, 1)) * 100}%` }}
                 ></div>
                 <span className="text-xs text-gray-500 mt-1">{labels[index]}</span>
               </div>
@@ -281,11 +304,11 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(providers).map(([key, provider]) => {
-                  // Generate random data for each provider
-                  const providerRequests = Math.floor(Math.random() * totalRequests * 0.5);
-                  const providerTokens = Math.floor(Math.random() * totalTokens * 0.5);
-                  const providerCost = (providerTokens * 0.002).toFixed(2);
+                {Object.entries(usageStats.requestsByProvider).map(([key, requests]) => {
+                  const provider = key as AIProvider;
+                  const tokens = usageStats.tokensByProvider[provider] || 0;
+                  const cost = usageStats.costByProvider[provider] || 0;
+                  const providerConfig = providers[provider];
                   
                   return (
                     <tr key={key}>
@@ -293,28 +316,35 @@ const UsageMonitoring: React.FC = () => {
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-gray-100">
                             <span className="text-sm font-medium text-gray-700">
-                              {provider.name.charAt(0).toUpperCase()}
+                              {(providerConfig?.name || provider).charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {provider.name}
+                              {providerConfig?.name || provider}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {providerRequests.toLocaleString()}
+                        {requests.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {providerTokens.toLocaleString()}
+                        {tokens.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${providerCost}
+                        ${cost.toFixed(2)}
                       </td>
                     </tr>
                   );
                 })}
+                {Object.keys(usageStats.requestsByProvider).length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                      No provider usage data available for the selected time period.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -347,44 +377,51 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {[
-                  { id: 'task-smasher', name: 'Task Smasher' },
-                  { id: 'article-smasher', name: 'Article Smasher' },
-                  { id: 'article-smasherv2', name: 'Article Smasher V2' }
-                ].map(app => {
-                  // Generate random data for each app
-                  const appRequests = Math.floor(Math.random() * totalRequests * 0.5);
-                  const appTokens = Math.floor(Math.random() * totalTokens * 0.5);
-                  const appCost = (appTokens * 0.002).toFixed(2);
+                {Object.entries(usageStats.requestsByApp).map(([appId, requests]) => {
+                  const tokens = usageStats.tokensByApp[appId] || 0;
+                  const cost = usageStats.costByApp[appId] || 0;
+                  
+                  // Format app name for display
+                  const appName = appId
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
                   
                   return (
-                    <tr key={app.id}>
+                    <tr key={appId}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-gray-100">
                             <span className="text-sm font-medium text-gray-700">
-                              {app.name.charAt(0)}
+                              {appName.charAt(0)}
                             </span>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {app.name}
+                              {appName}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {appRequests.toLocaleString()}
+                        {requests.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {appTokens.toLocaleString()}
+                        {tokens.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${appCost}
+                        ${cost.toFixed(2)}
                       </td>
                     </tr>
                   );
                 })}
+                {Object.keys(usageStats.requestsByApp).length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                      No application usage data available for the selected time period.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

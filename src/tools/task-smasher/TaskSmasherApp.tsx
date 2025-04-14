@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './components/styles.css'; // Import consolidated styles for TaskSmasher
+import { getGlobalSettings } from '../../shared/services/globalSettingsService';
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
 import ModelDropdown from './components/ModelDropdown';
 import RateLimitPopup from './components/RateLimitPopup';
@@ -229,19 +230,20 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
       document.body.removeChild(effect);
     }, 800);
   };
-
-  // Add useEffect to handle fade-in animation when app loads
-  useEffect(() => {
-    // Add fade-in class to root element
-    const rootElement = document.getElementById('root');
-    if (rootElement) {
-      rootElement.classList.add('opacity-0');
-      // Small delay to ensure transition happens
-      setTimeout(() => {
-        rootElement.classList.remove('opacity-0');
-        rootElement.classList.add('opacity-100', 'transition-opacity', 'duration-500');
-      }, 100);
-    }
+// Add useEffect to handle fade-in animation when app loads
+useEffect(() => {
+  // Add fade-in class to root element
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    rootElement.classList.add('opacity-0');
+    // Small delay to ensure transition happens
+    setTimeout(() => {
+      rootElement.classList.remove('opacity-0');
+      rootElement.classList.add('opacity-100', 'transition-opacity', 'duration-500');
+    }, 100);
+  }
+}, []);
+}, [setSelectedModel]);
   }, []);
   
   // Check for preserved tasks when component loads

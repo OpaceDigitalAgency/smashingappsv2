@@ -1,5 +1,5 @@
 import { useCaseDefinitions } from './useCaseDefinitions';
-import OpenAIService from './openaiService';
+import { aiServiceRegistry } from '../../../shared/services/aiServices';
 
 type ValidationResult = {
   isValid: boolean;
@@ -42,13 +42,15 @@ export const validateTaskLocally = (task: string, useCase: string): ValidationRe
   }
   
   // Calculate confidence based on match and mismatch counts
-  const confidence = Math.min(1, Math.max(0, 
-    (matchCount / (definition.keywords.length || 1)) - 
-    (mismatchCount / (definition.negativeKeywords.length || 1))
+  // Increased weight for negative keywords to make validation more strict
+  const confidence = Math.min(1, Math.max(0,
+    (matchCount / (definition.keywords.length || 1)) -
+    (mismatchCount * 1.5 / (definition.negativeKeywords.length || 1))
   ));
   
   // If confidence is low and we found a better match
-  if (confidence < 0.3 && bestMatchUseCase !== useCase && bestMatchScore > 1) {
+  // Increased threshold from 0.3 to 0.4 to be more strict
+  if (confidence < 0.4 && bestMatchUseCase !== useCase && bestMatchScore > 1) {
     return {
       isValid: false,
       confidence: 1 - confidence,
@@ -57,11 +59,22 @@ export const validateTaskLocally = (task: string, useCase: string): ValidationRe
     };
   }
   
+  // Check specifically for negative keywords - if any are found, that's a strong signal
+  if (mismatchCount > 0) {
+    return {
+      isValid: false,
+      confidence: 0.8,
+      reason: `This task contains terms that don't fit in the current category.`,
+      suggestedUseCase: bestMatchUseCase !== useCase ? bestMatchUseCase : undefined
+    };
+  }
+  
   // Task is valid for the current use case
+  // Increased threshold from 0.3 to 0.4 to be more strict
   return {
-    isValid: confidence >= 0.3 || bestMatchUseCase === useCase,
+    isValid: confidence >= 0.4 || bestMatchUseCase === useCase,
     confidence,
-    reason: confidence < 0.3 
+    reason: confidence < 0.4
       ? "Task doesn't seem to match the current use case."
       : "Task matches the current use case."
   };
@@ -94,36 +107,45 @@ Response format (JSON):
 `;
 
     try {
-      // Use our OpenAIService to make the request through the proxy
-      const { data, rateLimit } = await OpenAIService.createChatCompletion({
+      // Get the default service (usually OpenAI)
+      const service = aiServiceRegistry.getDefaultService();
+      
+      if (!service) {
+        throw new Error('No default service available');
+      }
+      
+      // Use the shared service to make the request
+      const { data, rateLimit } = await service.createChatCompletion({
         model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
-            content: 'You are a task categorization assistant with deep knowledge of various domains. Analyze if tasks fit their assigned categories using semantic understanding rather than keyword matching. Consider related concepts, industry practices, and common workflows when determining if a task belongs in a category. For example, "web design" is related to "marketing" because websites are often marketing tools, and "meal planning" is related to "recipe steps" because both involve food preparation.'
+            content: 'You are a strict task categorization assistant with deep knowledge of various domains. Analyze if tasks fit their assigned categories using semantic understanding rather than simple keyword matching. Be particularly vigilant about tasks that contain terms from other categories. For example, "SEO" tasks should be in Marketing, not Recipe Steps, even if they mention food. Similarly, "web design" belongs in Marketing, not Home Chores. Be strict about maintaining category boundaries to ensure tasks are properly organized. If a task contains terms that are clearly from another category, mark it as invalid with high confidence.'
           },
           {
             role: 'user',
             content: prompt
           }
-        ]
-      }, recaptchaToken);
+        ],
+        temperature: 0.3,
+        maxTokens: 500
+      });
       
-      if (data.choices && data.choices[0]) {
-        try {
-          const responseContent = data.choices[0].message.content;
-          const parsedResponse = JSON.parse(responseContent);
-          
-          // Convert suggested category name to useCase id
-          let suggestedUseCase = undefined;
-          if (!parsedResponse.isValid && parsedResponse.suggestedCategory) {
-            for (const [id, def] of Object.entries(useCaseDefinitions)) {
-              if (def.label.toLowerCase() === parsedResponse.suggestedCategory.toLowerCase()) {
-                suggestedUseCase = id;
-                break;
-              }
+      try {
+        // The shared service returns content directly instead of through choices array
+        const responseContent = data.content;
+        const parsedResponse = JSON.parse(responseContent);
+        
+        // Convert suggested category name to useCase id
+        let suggestedUseCase = undefined;
+        if (!parsedResponse.isValid && parsedResponse.suggestedCategory) {
+          for (const [id, def] of Object.entries(useCaseDefinitions)) {
+            if (def.label.toLowerCase() === parsedResponse.suggestedCategory.toLowerCase()) {
+              suggestedUseCase = id;
+              break;
             }
           }
+        }
           
           return {
             isValid: parsedResponse.isValid,
@@ -131,10 +153,9 @@ Response format (JSON):
             reason: parsedResponse.reason,
             suggestedUseCase
           };
-        } catch (error) {
-          console.error('Error parsing OpenAI response:', error);
-          return validateTaskLocally(task, useCase);
-        }
+      } catch (error) {
+        console.error('Error parsing AI response:', error);
+        return validateTaskLocally(task, useCase);
       }
     } catch (error) {
       // Handle rate limiting errors

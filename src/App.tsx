@@ -24,6 +24,7 @@ import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import SEO from './components/SEO';
+import GlobalSettingsProvider from './shared/components/GlobalSettingsProvider';
 import StructuredData from './components/StructuredData';
 
 // Import main site components
@@ -121,7 +122,8 @@ const BodyClassManager = () => {
 function App() {
   return (
     <HelmetProvider>
-      <BrowserRouter>
+      <GlobalSettingsProvider>
+        <BrowserRouter>
         {/* Global SEO component - manages all meta tags */}
         <SEO />
         {/* Body class manager component */}
@@ -214,7 +216,8 @@ function App() {
           {/* Global Footer - appears on all pages */}
           <Footer />
         </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </GlobalSettingsProvider>
     </HelmetProvider>
   );
 }

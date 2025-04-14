@@ -1,9 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  PromptTemplate, 
-  PromptSettings, 
-  PromptContextType 
+import {
+  PromptTemplate,
+  PromptSettings,
+  PromptContextType
 } from '../types';
+import {
+  initAdminBridge,
+  isAdminContextAvailable,
+  getPromptsFromAdmin,
+  getPromptByIdFromAdmin,
+  addPromptToAdmin,
+  updatePromptInAdmin,
+  deletePromptFromAdmin
+} from '../utils/adminBridge';
+import { getGlobalSettings } from '../../../../shared/services/globalSettingsService';
 import {
   loadPrompts,
   savePrompts,
@@ -22,11 +32,26 @@ const PromptContext = createContext<PromptContextType | null>(null);
 // Provider component
 export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [prompts, setPrompts] = useState<PromptTemplate[]>([]);
-  const [settings, setSettings] = useState<PromptSettings>({
-    defaultModel: 'gpt-4o',
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 1000,
-    enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
+  const [settings, setSettings] = useState<PromptSettings>(() => {
+    // Try to get settings from global settings first
+    try {
+      const globalSettings = getGlobalSettings();
+      return {
+        defaultModel: globalSettings.defaultModel,
+        defaultTemperature: globalSettings.defaultTemperature,
+        defaultMaxTokens: globalSettings.defaultMaxTokens,
+        enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
+      };
+    } catch (error) {
+      console.error('Error getting global settings:', error);
+      // Fall back to default settings
+      return {
+        defaultModel: 'gpt-4o',
+        defaultTemperature: 0.7,
+        defaultMaxTokens: 1000,
+        enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
+      };
+    }
   });
   const [activePrompt, setActivePrompt] = useState<PromptTemplate | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); // Start with loading state true
@@ -35,16 +60,44 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   // Load prompts and settings on mount
   useEffect(() => {
+    // Initialize the admin bridge
+    initAdminBridge();
+    
     const initializePrompts = async () => {
       setIsLoading(true);
       try {
-        const loadedPrompts = loadPrompts();
-        const loadedSettings = loadSettings();
-        setPrompts(loadedPrompts);
-        setSettings(loadedSettings);
-        setIsInitialized(true);
+        // First try to get prompts from the admin interface
+        try {
+          // Check if we're in the admin interface context
+          if (isAdminContextAvailable()) {
+            const adminPrompts = getPromptsFromAdmin();
+            if (adminPrompts) {
+              console.log('Loading prompts from admin interface');
+              setPrompts(adminPrompts);
+              setIsInitialized(true);
+            } else {
+              // Fall back to local storage if admin prompts are not available
+              console.log('Admin prompts not available, loading prompts from local storage');
+              const loadedPrompts = loadPrompts();
+              setPrompts(loadedPrompts);
+              setIsInitialized(true);
+            }
+          } else {
+            // Fall back to local storage if admin context is not available
+            console.log('Admin interface not available, loading prompts from local storage');
+            const loadedPrompts = loadPrompts();
+            setPrompts(loadedPrompts);
+            setIsInitialized(true);
+          }
+        } catch (adminErr) {
+          console.warn('Failed to load prompts from admin interface:', adminErr);
+          // Fall back to local storage
+          const loadedPrompts = loadPrompts();
+          setPrompts(loadedPrompts);
+          setIsInitialized(true);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load prompts and settings'));
+        setError(err instanceof Error ? err : new Error('Failed to load prompts'));
         // Still mark as initialized even if there's an error, so we can use fallbacks
         setIsInitialized(true);
       } finally {
@@ -53,6 +106,47 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     };
 
     initializePrompts();
+  }, []);
+  
+  // Listen for global settings changes
+  useEffect(() => {
+    // Handler for custom event
+    const handleGlobalSettingsChanged = (e: CustomEvent) => {
+      const globalSettings = e.detail;
+      setSettings(prevSettings => ({
+        ...prevSettings,
+        defaultModel: globalSettings.defaultModel,
+        defaultTemperature: globalSettings.defaultTemperature,
+        defaultMaxTokens: globalSettings.defaultMaxTokens,
+      }));
+    };
+    
+    // Handler for storage event (for cross-tab synchronization)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'smashingapps_globalSettings' && e.newValue) {
+        try {
+          const globalSettings = JSON.parse(e.newValue);
+          setSettings(prevSettings => ({
+            ...prevSettings,
+            defaultModel: globalSettings.defaultModel,
+            defaultTemperature: globalSettings.defaultTemperature,
+            defaultMaxTokens: globalSettings.defaultMaxTokens,
+          }));
+        } catch (error) {
+          console.error('Error updating settings from storage event:', error);
+        }
+      }
+    };
+    
+    // Add event listeners
+    window.addEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      // Remove event listeners on cleanup
+      window.removeEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Add a new prompt
@@ -122,13 +216,21 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   // Get prompts by category with fallback
   const getPromptsByCategory = (category: PromptTemplate['category']) => {
-    const categoryPrompts = getPromptsByCategoryService(category);
+    // First try to get prompts from our current state
+    const categoryPrompts = prompts.filter(p => p.category === category);
     
-    // If no prompts found for the category, return default prompts
+    // If no prompts found for the category, try the service
     if (categoryPrompts.length === 0) {
-      console.warn(`No prompts found for category: ${category}. Using default prompts.`);
-      // Return default prompts for the category from promptService
-      return loadPrompts().filter(p => p.category === category);
+      console.warn(`No prompts found for category: ${category} in current state. Trying service.`);
+      const servicePrompts = getPromptsByCategoryService(category);
+      
+      if (servicePrompts.length === 0) {
+        console.warn(`No prompts found for category: ${category} in service. Using default prompts.`);
+        // Return default prompts for the category from promptService
+        return loadPrompts().filter(p => p.category === category);
+      }
+      
+      return servicePrompts;
     }
     
     return categoryPrompts;
@@ -139,8 +241,30 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     try {
       setIsLoading(true);
       const updatedSettings = { ...settings, ...settingsUpdate };
+      
+      // Save to app-specific settings
       saveSettings(updatedSettings);
       setSettings(updatedSettings);
+      
+      // Also update global settings if relevant properties are changed
+      if (settingsUpdate.defaultModel || settingsUpdate.defaultTemperature || settingsUpdate.defaultMaxTokens) {
+        try {
+          // Import the updateGlobalSettings function dynamically to avoid circular dependencies
+          const { updateGlobalSettings } = await import('../../../../shared/services/globalSettingsService');
+          
+          // Only update the properties that were changed
+          const globalSettingsUpdate: any = {};
+          if (settingsUpdate.defaultModel) globalSettingsUpdate.defaultModel = settingsUpdate.defaultModel;
+          if (settingsUpdate.defaultTemperature) globalSettingsUpdate.defaultTemperature = settingsUpdate.defaultTemperature;
+          if (settingsUpdate.defaultMaxTokens) globalSettingsUpdate.defaultMaxTokens = settingsUpdate.defaultMaxTokens;
+          
+          // Update global settings
+          updateGlobalSettings(globalSettingsUpdate);
+        } catch (error) {
+          console.error('Error updating global settings:', error);
+        }
+      }
+      
       return Promise.resolve();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update settings'));
@@ -154,7 +278,17 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const testPrompt = async (promptId: string, variables: Record<string, string>) => {
     try {
       setIsLoading(true);
-      const prompt = prompts.find(p => p.id === promptId);
+      
+      // First try to find the prompt in our current state
+      let prompt = prompts.find(p => p.id === promptId);
+      
+      // If not found, try to find it in the admin interface
+      if (!prompt && isAdminContextAvailable()) {
+        const adminPrompt = getPromptByIdFromAdmin(promptId);
+        if (adminPrompt) {
+          prompt = adminPrompt;
+        }
+      }
       
       if (!prompt) {
         console.warn(`Prompt with ID ${promptId} not found. Attempting to find a similar prompt.`);
@@ -169,16 +303,13 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
           const fallbackPrompts = getPromptsByCategory(category);
           if (fallbackPrompts.length > 0) {
             console.info(`Using fallback prompt from category: ${category}`);
-            const result = await articleAIService.testPrompt(
-              fallbackPrompts[0],
-              variables,
-              settings.defaultModel
-            );
-            return result;
+            prompt = fallbackPrompts[0];
           }
         }
         
-        throw new Error(`No suitable fallback prompt found for ID ${promptId}`);
+        if (!prompt) {
+          throw new Error(`No suitable fallback prompt found for ID ${promptId}`);
+        }
       }
       
       const result = await articleAIService.testPrompt(

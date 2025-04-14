@@ -1,60 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clear Rate Limits</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .success {
-            color: green;
-            font-weight: bold;
-        }
-        button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 10px 0;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmashingApps.ai - Admin Utilities</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Clear Rate Limits</h1>
-    <p>This page will clear the rate limit information from localStorage, allowing you to use the API again.</p>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 mb-4">SmashingApps.ai Admin Utilities</h1>
+      
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Rate Limit Management</h2>
+        <p class="text-gray-600 mb-4">
+          Use this utility to clear rate limit restrictions for testing purposes.
+        </p>
+        <button id="clearRateLimits" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
+          Clear Rate Limits
+        </button>
+        <div id="rateLimitStatus" class="mt-2 text-sm"></div>
+      </div>
+      
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Usage Data Management</h2>
+        <p class="text-gray-600 mb-4">
+          Use these utilities to manage usage data for testing the admin dashboard.
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="days" class="block text-sm font-medium text-gray-700 mb-1">Days of data:</label>
+            <input type="number" id="days" min="1" max="365" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label for="entriesPerDay" class="block text-sm font-medium text-gray-700 mb-1">Entries per day:</label>
+            <input type="number" id="entriesPerDay" min="1" max="100" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+        </div>
+        
+        <div class="flex space-x-4">
+          <button id="generateUsageData" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded">
+            Generate Sample Data
+          </button>
+          <button id="clearUsageData" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded">
+            Clear All Usage Data
+          </button>
+        </div>
+        <div id="usageDataStatus" class="mt-2 text-sm"></div>
+      </div>
+      
+      <div>
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Navigation</h2>
+        <div class="flex space-x-4">
+          <a href="/admin" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded">
+            Go to Admin Dashboard
+          </a>
+          <a href="/" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded">
+            Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { generateSampleUsageData, clearAllUsageData } from './src/shared/utils/usageTestUtils.js';
     
-    <button id="clearButton">Clear Rate Limits</button>
+    // Clear rate limits
+    document.getElementById('clearRateLimits').addEventListener('click', () => {
+      try {
+        // Clear rate limits from localStorage
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.includes('rateLimit')) {
+            keysToRemove.push(key);
+          }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        document.getElementById('rateLimitStatus').textContent = 
+          `✅ Successfully cleared ${keysToRemove.length} rate limit entries.`;
+        document.getElementById('rateLimitStatus').className = 'mt-2 text-sm text-green-600';
+      } catch (error) {
+        document.getElementById('rateLimitStatus').textContent = 
+          `❌ Error clearing rate limits: ${error.message}`;
+        document.getElementById('rateLimitStatus').className = 'mt-2 text-sm text-red-600';
+      }
+    });
     
-    <div id="result"></div>
+    // Generate sample usage data
+    document.getElementById('generateUsageData').addEventListener('click', () => {
+      try {
+        const days = parseInt(document.getElementById('days').value, 10);
+        const entriesPerDay = parseInt(document.getElementById('entriesPerDay').value, 10);
+        
+        if (isNaN(days) || days < 1 || days > 365) {
+          throw new Error('Days must be between 1 and 365');
+        }
+        
+        if (isNaN(entriesPerDay) || entriesPerDay < 1 || entriesPerDay > 100) {
+          throw new Error('Entries per day must be between 1 and 100');
+        }
+        
+        generateSampleUsageData(days, entriesPerDay);
+        
+        document.getElementById('usageDataStatus').textContent = 
+          `✅ Successfully generated sample usage data for ${days} days (${entriesPerDay} entries per day).`;
+        document.getElementById('usageDataStatus').className = 'mt-2 text-sm text-green-600';
+      } catch (error) {
+        document.getElementById('usageDataStatus').textContent = 
+          `❌ Error generating sample data: ${error.message}`;
+        document.getElementById('usageDataStatus').className = 'mt-2 text-sm text-red-600';
+      }
+    });
     
-    <script>
-        document.getElementById('clearButton').addEventListener('click', function() {
-            // Clear rate limit information
-            localStorage.removeItem('rateLimitInfo');
-            localStorage.removeItem('rateLimited');
-            localStorage.removeItem('apiCallCount');
-            localStorage.removeItem('executionCount');
-            
-            // Display success message
-            document.getElementById('result').innerHTML = '<p class="success">Rate limit information cleared successfully! You can now return to the application and continue using the API.</p>';
-            
-            // Show current localStorage state
-            const storageInfo = document.createElement('pre');
-            storageInfo.textContent = 'Current localStorage state:\n' + JSON.stringify(localStorage, null, 2);
-            document.getElementById('result').appendChild(storageInfo);
-        });
-    </script>
+    // Clear all usage data
+    document.getElementById('clearUsageData').addEventListener('click', () => {
+      try {
+        clearAllUsageData();
+        
+        document.getElementById('usageDataStatus').textContent = 
+          `✅ Successfully cleared all usage data.`;
+        document.getElementById('usageDataStatus').className = 'mt-2 text-sm text-green-600';
+      } catch (error) {
+        document.getElementById('usageDataStatus').textContent = 
+          `❌ Error clearing usage data: ${error.message}`;
+        document.getElementById('usageDataStatus').className = 'mt-2 text-sm text-red-600';
+      }
+    });
+  </script>
 </body>
 </html>

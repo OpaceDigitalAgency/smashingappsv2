@@ -7,29 +7,38 @@ import {
   Trash2, 
   Save, 
   X, 
-  Copy, 
-  ChevronDown, 
-  ChevronUp, 
-  Tag, 
-  Thermometer, 
-  Hash 
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  Tag,
+  Thermometer,
+  Hash,
+  Zap
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
 import { PromptTemplate } from '../../tools/article-smasherv2/src/types';
+import { TaskSmasherPromptTemplate } from '../../tools/task-smasher/utils/promptTemplates';
 
 const PromptManagement: React.FC = () => {
   const { 
     prompts, 
     activePrompt, 
     setActivePrompt, 
-    addPrompt, 
-    updatePrompt, 
-    deletePrompt 
+    addPrompt,
+    updatePrompt,
+    deletePrompt,
+    taskSmasherPrompts,
+    activeTaskSmasherPrompt,
+    setActiveTaskSmasherPrompt,
+    addTaskSmasherPrompt,
+    updateTaskSmasherPrompt,
+    deleteTaskSmasherPrompt
   } = useAdmin();
   
-  const [editedPrompt, setEditedPrompt] = useState<PromptTemplate | null>(null);
-  const [expandedSection, setExpandedSection] = useState<'system' | 'user' | 'settings' | null>('system');
+  const [editedPrompt, setEditedPrompt] = useState<PromptTemplate | TaskSmasherPromptTemplate | null>(null);
+  const [expandedSection, setExpandedSection] = useState<'system' | 'user' | 'subtask' | 'idea' | 'settings' | null>('system');
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterApplication, setFilterApplication] = useState<'article' | 'task' | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -37,29 +46,56 @@ const PromptManagement: React.FC = () => {
   useEffect(() => {
     if (activePrompt) {
       setEditedPrompt({ ...activePrompt });
+      setFilterApplication('article');
+    } else if (activeTaskSmasherPrompt) {
+      setEditedPrompt({ ...activeTaskSmasherPrompt });
+      setFilterApplication('task');
     } else {
       setEditedPrompt(null);
     }
-  }, [activePrompt]);
+  }, [activePrompt, activeTaskSmasherPrompt]);
 
   // Create a new prompt
-  const handleCreatePrompt = () => {
-    const newPrompt: Omit<PromptTemplate, 'id' | 'createdAt' | 'updatedAt'> = {
-      name: 'New Prompt Template',
-      description: 'Description of the new prompt template',
-      systemPrompt: 'You are a helpful assistant.',
-      userPromptTemplate: 'Please provide information about {{topic}}.',
-      category: 'topic',
-      temperature: 0.7,
-      maxTokens: 1000,
-    };
-    
-    setActivePrompt({
-      ...newPrompt,
-      id: '',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
+  const handleCreatePrompt = (type: 'article' | 'task' = 'article') => {
+    if (type === 'article') {
+      const newPrompt: Omit<PromptTemplate, 'id' | 'createdAt' | 'updatedAt'> = {
+        name: 'New Article Prompt Template',
+        description: 'Description of the new article prompt template',
+        systemPrompt: 'You are a helpful assistant.',
+        userPromptTemplate: 'Please provide information about {{topic}}.',
+        category: 'topic',
+        temperature: 0.7,
+        maxTokens: 1000,
+      };
+      
+      setActivePrompt({
+        ...newPrompt,
+        id: '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      setActiveTaskSmasherPrompt(null);
+    } else {
+      const newPrompt: Omit<TaskSmasherPromptTemplate, 'id' | 'createdAt' | 'updatedAt'> = {
+        category: 'daily',
+        label: 'New Task Prompt Template',
+        description: 'Description of the new task prompt template',
+        subtaskSystemPrompt: 'You are a task management AI assistant.',
+        subtaskUserPromptTemplate: 'Break down this task into {{breakdownLevel}} specific steps: "{{taskTitle}}"{{taskContext}}',
+        ideaSystemPrompt: 'You are a helpful assistant. Generate task ideas.',
+        ideaUserPromptTemplate: 'Generate 5 task ideas for {{category}}',
+        temperature: 0.7,
+        maxTokens: 1000,
+      };
+      
+      setActiveTaskSmasherPrompt({
+        ...newPrompt,
+        id: '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      setActivePrompt(null);
+    }
   };
 
   // Save prompt changes
@@ -67,13 +103,27 @@ const PromptManagement: React.FC = () => {
     if (!editedPrompt) return;
     
     try {
-      if (editedPrompt.id) {
-        // Update existing prompt
-        await updatePrompt(editedPrompt.id, editedPrompt);
-      } else {
-        // Add new prompt
-        const { id, createdAt, updatedAt, ...promptData } = editedPrompt;
-        await addPrompt(promptData);
+      // Check if it's an ArticleSmasher prompt or TaskSmasher prompt
+      if ('userPromptTemplate' in editedPrompt) {
+        // It's an ArticleSmasher prompt
+        if (editedPrompt.id) {
+          // Update existing prompt
+          await updatePrompt(editedPrompt.id, editedPrompt as PromptTemplate);
+        } else {
+          // Add new prompt
+          const { id, createdAt, updatedAt, ...promptData } = editedPrompt as PromptTemplate;
+          await addPrompt(promptData);
+        }
+      } else if ('subtaskUserPromptTemplate' in editedPrompt) {
+        // It's a TaskSmasher prompt
+        if (editedPrompt.id) {
+          // Update existing prompt
+          await updateTaskSmasherPrompt(editedPrompt.id, editedPrompt as TaskSmasherPromptTemplate);
+        } else {
+          // Add new prompt
+          const { id, createdAt, updatedAt, ...promptData } = editedPrompt as TaskSmasherPromptTemplate;
+          await addTaskSmasherPrompt(promptData);
+        }
       }
     } catch (error) {
       console.error('Failed to save prompt:', error);
@@ -82,18 +132,21 @@ const PromptManagement: React.FC = () => {
 
   // Delete prompt
   const handleDeletePrompt = async () => {
-    if (!activePrompt) return;
-    
     try {
-      await deletePrompt(activePrompt.id);
-      setShowDeleteConfirm(false);
+      if (activePrompt) {
+        await deletePrompt(activePrompt.id);
+        setShowDeleteConfirm(false);
+      } else if (activeTaskSmasherPrompt) {
+        await deleteTaskSmasherPrompt(activeTaskSmasherPrompt.id);
+        setShowDeleteConfirm(false);
+      }
     } catch (error) {
       console.error('Failed to delete prompt:', error);
     }
   };
 
   // Handle input changes
-  const handleInputChange = (field: keyof PromptTemplate, value: any) => {
+  const handleInputChange = (field: string, value: any) => {
     if (!editedPrompt) return;
     
     setEditedPrompt({
@@ -103,22 +156,34 @@ const PromptManagement: React.FC = () => {
   };
 
   // Toggle section expansion
-  const toggleSection = (section: 'system' | 'user' | 'settings') => {
+  const toggleSection = (section: 'system' | 'user' | 'subtask' | 'idea' | 'settings') => {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
   // Filter prompts by category and search term
-  const filteredPrompts = prompts.filter(prompt => {
+  // Filter prompts based on application, category, and search term
+  const filteredArticlePrompts = prompts.filter(prompt => {
     const matchesCategory = !filterCategory || prompt.category === filterCategory;
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prompt.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
+  });
+  
+  const filteredTaskPrompts = taskSmasherPrompts.filter(prompt => {
+    const matchesCategory = !filterCategory || prompt.category === filterCategory;
+    const matchesSearch = !searchTerm ||
+      prompt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prompt.description.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesCategory && matchesSearch;
   });
 
   // Get unique categories
-  const categories = Array.from(new Set(prompts.map(p => p.category)));
+  // Get unique categories
+  const articleCategories = Array.from(new Set(prompts.map(p => p.category)));
+  const taskCategories = Array.from(new Set(taskSmasherPrompts.map(p => p.category)));
 
   return (
     <div className="p-6">

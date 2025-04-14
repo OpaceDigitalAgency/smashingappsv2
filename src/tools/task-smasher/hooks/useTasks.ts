@@ -2,14 +2,30 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Board, EditingState, FeedbackState, Task, TaskMismatchData, TasksContextType, RateLimitInfo } from '../types';
 import { filterTasksByPriority, filterTasksByRating } from '../utils/taskUtils';
 import { validateTaskLocally, validateTaskWithAI } from '../utils/taskContextValidator';
-import OpenAIService from '../utils/openaiServiceAdapter';
-import useReCaptcha from './useReCaptcha';
+import { OpenAIServiceAdapter } from '../utils/openaiServiceAdapter';
+import useReCaptcha from '../../../shared/hooks/useReCaptcha';
+import useVoiceToText from '../../../shared/hooks/useVoiceToText';
 import { aiServiceRegistry } from '../../../shared/services/aiServices';
+import { getGlobalSettings } from '../../../shared/services/globalSettingsService';
+import { getPromptTemplateForCategory, processPromptTemplate } from '../utils/promptTemplates';
 
 export function useTasks(initialUseCase?: string): TasksContextType {
   // Removed openAIKey state as we're now using the proxy
   const [selectedModel, setSelectedModel] = useState(() => {
-    // Try to get the default model for the active provider from localStorage
+    // First try to get the model from global settings
+    try {
+      const globalSettingsStr = localStorage.getItem('smashingapps_globalSettings');
+      if (globalSettingsStr) {
+        const globalSettings = JSON.parse(globalSettingsStr);
+        if (globalSettings.defaultModel) {
+          return globalSettings.defaultModel;
+        }
+      }
+    } catch (error) {
+      console.error('Error reading global settings:', error);
+    }
+    
+    // Fall back to provider default if global settings aren't available
     const activeProvider = localStorage.getItem('smashingapps_activeProvider') || 'openai';
     const service = aiServiceRegistry.getService(activeProvider as any);
     return service ? service.getDefaultModel().id : 'gpt-3.5-turbo';
@@ -88,12 +104,28 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   // History for undo functionality
   const [history, setHistory] = useState<Board[][]>([]);
   
-  // Refs for voice input
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-
-  // Check if audio recording is available
-  const audioAvailable = typeof window !== 'undefined' && 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
+  // Voice to text functionality
+  const {
+    isRecording,
+    isProcessing: processingVoiceTranscription,
+    transcribedText,
+    startRecording,
+    stopRecording
+  } = useVoiceToText({
+    onTranscriptionComplete: (text) => {
+      setNewTask(text);
+      // Auto submit after a short delay
+      setTimeout(() => {
+        if (text.trim()) {
+          const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
+          handleAddTask(formEvent);
+        }
+      }, 1000);
+    },
+    onError: (error) => {
+      setNewTask(error.message);
+    }
+  });
 
   useEffect(() => {
     if (selectedUseCase) {
@@ -120,6 +152,46 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     // Listen for storage changes (in case API settings are updated in another tab)
     window.addEventListener('storage', handleStorageChange);
     
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Effect to update settings when global settings change
+  useEffect(() => {
+    // Initial check for global settings
+    const checkGlobalSettings = () => {
+      try {
+        const globalSettingsStr = localStorage.getItem('smashingapps_globalSettings');
+        if (globalSettingsStr) {
+          const globalSettings = JSON.parse(globalSettingsStr);
+          if (globalSettings.defaultModel) {
+            setSelectedModel(globalSettings.defaultModel);
+          }
+        }
+      } catch (error) {
+        console.error('Error reading global settings:', error);
+      }
+    };
+    
+    // Check on mount
+    checkGlobalSettings();
+    
+    // Listen for storage changes to global settings
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'smashingapps_globalSettings' && e.newValue) {
+        try {
+          const globalSettings = JSON.parse(e.newValue);
+          if (globalSettings.defaultModel) {
+            setSelectedModel(globalSettings.defaultModel);
+          }
+        } catch (error) {
+          console.error('Error updating settings from storage event:', error);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
@@ -187,11 +259,11 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     const syncRateLimitWithServer = async () => {
       try {
         console.log('Synchronizing with server rate limit on page load');
-        
         // Always fetch the latest rate limit status from the server on page load
         console.log('Fetching server rate limit on page load');
-        const serverRateLimit = await OpenAIService.getRateLimitStatus();
+        const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
         console.log('Received server rate limit:', serverRateLimit);
+
 
         // Update the client-side state with the server-side information
         setRateLimitInfo(serverRateLimit);
@@ -275,16 +347,22 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       
       // Use the updated validateTaskWithAI function that uses the proxy
       const result = await validateTaskWithAI(taskText, selectedUseCase, recaptchaToken);
-      
       // The validateTaskWithAI function doesn't return the rate limit info directly,
       // so we need to sync with the server to get the latest rate limit info
-      const serverRateLimit = await OpenAIService.getRateLimitStatus();
+      const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
       syncRateLimitInfo(serverRateLimit);
       
-      if (!result.isValid && result.confidence > 0.6) {
+      
+      // Lowered confidence threshold from 0.6 to 0.5 to catch more mismatches
+      // Also checking for specific keywords in the task that don't match the current use case
+      const taskLower = taskText.toLowerCase();
+      const isSeoInRecipe = selectedUseCase === 'recipe' && taskLower.includes('seo');
+      const isMarketingInHome = selectedUseCase === 'home' && taskLower.includes('marketing');
+      
+      if (!result.isValid && (result.confidence > 0.5 || isSeoInRecipe || isMarketingInHome)) {
         setTaskMismatch({
           showing: true,
-          reason: result.reason,
+          reason: result.reason || `This task doesn't seem to fit in the current category.`,
           suggestedUseCase: result.suggestedUseCase,
           taskText: taskText // Store the task text for later use
         });
@@ -318,8 +396,10 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         
         // Only continue with task creation if context is valid
         if (isContextValid) {
+          // Save current state to history for undo functionality
           setHistory(prev => [...prev, boards]);
           
+          // Add the new task to the todo board
           setBoards(prev => {
             const todoBoard = prev.find(board => board.id === 'todo');
             if (!todoBoard) return prev;
@@ -347,14 +427,22 @@ export function useTasks(initialUseCase?: string): TasksContextType {
             });
           });
           
+          // Clear the input field after successful task addition
           setNewTask('');
+        } else {
+          // If validation failed but no mismatch popup is showing,
+          // it might be due to rate limiting or other errors
+          if (!taskMismatch.showing) {
+            console.warn('Task validation failed but no mismatch popup is showing');
+          }
+          // We don't clear the input in this case so the user can modify their task
         }
       } finally {
         // Always set generating to false when done, regardless of success or failure
         setGenerating(false);
       }
     }
-  }, [newTask, boards, checkTaskContext]);
+  }, [newTask, boards, checkTaskContext, taskMismatch.showing]);
   
   const startEditing = useCallback((
     taskId: string, 
@@ -666,113 +754,25 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     setHistory(prev => prev.slice(0, -1));
   }, [history]);
 
+  // Wrapper functions for voice input that update TaskSmasher-specific state
   const startVoiceInput = async () => {
-    // Set processingVoice state to true instead of generating
     setProcessingVoice(true);
     setNewTask('Initializing voice recording...');
-    
-    if (!audioAvailable) {
-      alert('Microphone access is not available in this browser');
-      setProcessingVoice(false);
-      setIsListening(false);
-      return;
-    }
-
-    try {
-      // Use MediaRecorder to capture audio and send to OpenAI Whisper API
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm'
-      });
-      
-      audioChunksRef.current = [];
-      mediaRecorderRef.current = mediaRecorder;
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        audioChunksRef.current = [];
-        
-        setNewTask('Processing audio with OpenAI Whisper...');
-        
-        try {
-          // Create form data to send to API
-          const formData = new FormData();
-          formData.append('file', audioBlob, 'recording.webm');
-          formData.append('model', 'whisper-1');
-          formData.append('language', 'en');
-          
-          // Get reCAPTCHA token
-          const recaptchaToken = await getReCaptchaToken('transcribe_audio');
-          
-          // Send to our proxy endpoint
-          const response = await fetch('/.netlify/functions/openai-proxy', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'X-ReCaptcha-Token': recaptchaToken || ''
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          
-          if (data.text) {
-            setNewTask(data.text);
-            // Auto submit after a short delay
-            setTimeout(() => {
-              if (data.text.trim()) {
-                const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
-                handleAddTask(formEvent);
-              }
-            }, 1000);
-          } else {
-            throw new Error('No transcription returned');
-          }
-        } catch (error) {
-          console.error('Error processing audio:', error);
-          setNewTask(error instanceof Error ? error.message : 'Error processing audio. Please try typing instead.');
-          setProcessingVoice(false);
-        }
-        
-        setIsListening(false);
-        setProcessingVoice(false);
-        stream.getTracks().forEach(track => track.stop());
-      };
-      
-      mediaRecorder.start();
-      setIsListening(true);
-      setNewTask('Recording... Click mic to stop');
-      
-      // Automatically stop after 10 seconds
-      setTimeout(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          stopVoiceInput();
-        }
-      }, 10000);
-      
-    } catch (error) {
-      console.error('Error starting audio recording:', error);
-      setNewTask('Error accessing microphone. Please check permissions.');
-      setIsListening(false);
-      setProcessingVoice(false);
-    }
+    await startRecording();
+    setIsListening(true);
+    setNewTask('Recording... Click mic to stop');
   };
   
   const stopVoiceInput = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    // We don't reset processingVoice here because it will be reset in the onstop handler
+    stopRecording();
+    setIsListening(false);
+    setProcessingVoice(false);
   };
+  
+  // Update processingVoice state based on the shared hook's state
+  useEffect(() => {
+    setProcessingVoice(processingVoiceTranscription);
+  }, [processingVoiceTranscription]);
   
   const regenerateTask = async (taskId: string) => {
     const task = boards.flatMap(b => b.tasks).find(t => t.id === taskId);
@@ -782,8 +782,15 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     setGenerating(true);
     
     try {
-      // Use OpenAIService to make the request through the proxy
-      const { data, rateLimit } = await OpenAIService.createChatCompletion({
+      // Get the appropriate service for the model
+      const service = aiServiceRegistry.getServiceForModel(selectedModel);
+      
+      if (!service) {
+        throw new Error(`No service found for model: ${selectedModel}`);
+      }
+      
+      // Use the shared service to make the request
+      const { data, rateLimit } = await service.createChatCompletion({
         model: selectedModel,
         messages: [
           {
@@ -794,15 +801,17 @@ export function useTasks(initialUseCase?: string): TasksContextType {
             role: 'user',
             content: `Rewrite this task to make it more clear and actionable: "${task.title}"`
           }
-        ]
+        ],
+        temperature: 0.7,
+        maxTokens: 200
       });
       
       // Update rate limit information
       syncRateLimitInfo(rateLimit);
       
-      if (data.choices && data.choices[0]) {
-        const improvedTask = data.choices[0].message.content.trim();
-        
+      // The shared service returns content directly
+      const improvedTask = data.content.trim();
+      
         setHistory(prev => [...prev, boards]);
         
         setBoards(prevBoards => {
@@ -824,7 +833,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         });
         
         // Update cost
-        setTotalCost(prev => prev + (data.usage?.total_tokens || 0) * 0.000002);
+        setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
         
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
       }
@@ -900,40 +909,46 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     setBreakdownLevel(intelligentBreakdownLevel);
     
     try {
-      // Create a prompt based on the selected use case
+      // Get the prompt template for the selected use case
+      
+      // Get the appropriate prompt template for the current use case
+      const promptTemplate = getPromptTemplateForCategory(selectedUseCase || 'daily');
+      
+      // Default prompts in case no template is found
       let systemPrompt = `You are a task management AI assistant. Break down tasks into specific, actionable subtasks. Provide ${intelligentBreakdownLevel} subtasks. Return ONLY a JSON array of subtasks in the format [{"title": "Subtask title", "estimatedTime": 0.5, "priority": "low|medium|high"}].`;
       let userPrompt = `Break down this task into ${intelligentBreakdownLevel} specific, actionable subtasks: "${task.title}"${task.context ? `\nContext: ${task.context}` : ''}`;
       
-      // Customize prompts based on use case
+      // Special handling for recipe tasks
       if (selectedUseCase === 'recipe' || task.title.toLowerCase().includes('cake') || task.title.toLowerCase().includes('recipe') || task.title.toLowerCase().includes('bake') || task.title.toLowerCase().includes('cook')) {
         // For recipes, we need to ensure we get a higher number of subtasks and specific ingredients
         const recipeSubtaskCount = Math.max(intelligentBreakdownLevel, 6); // At least 6 subtasks for recipes
         setBreakdownLevel(recipeSubtaskCount);
-        
-        systemPrompt = `You are a culinary expert. Break down recipes into clear steps with a DETAILED INGREDIENTS LIST first, followed by preparation steps. The first 1-3 subtasks MUST be a list of ingredients with EXACT measurements (e.g., "Ingredients: 2 eggs, 1 cup flour, 1/2 cup sugar, 2 tbsp butter, 1 tsp vanilla extract"). Return ONLY a JSON array in the format [{"title": "Step description", "estimatedTime": time_in_minutes, "priority": "low|medium|high"}].`;
-        userPrompt = `Break down this recipe into ${recipeSubtaskCount} steps: "${task.title}".
-IMPORTANT: The first 1-3 subtasks MUST be a detailed ingredients list with exact measurements (e.g., "Ingredients: 2 eggs, 1 cup flour, 1/2 cup sugar").
-Then include detailed preparation and cooking instructions as separate steps.
-Make sure to include all necessary ingredients with precise measurements before any cooking steps.${task.context ? `\nContext: ${task.context}` : ''}`;
-      } else if (selectedUseCase === 'marketing') {
-        systemPrompt = `You are a marketing strategist. Break down marketing tasks into actionable project steps with clear deliverables. Return ONLY a JSON array in the format [{"title": "Step with deliverable", "estimatedTime": time_in_hours, "priority": "low|medium|high"}].`;
-        userPrompt = `Break down this marketing task into ${intelligentBreakdownLevel} actionable project steps: "${task.title}". Include specific deliverables, timeline, and success metrics for each step.${task.context ? `\nContext: ${task.context}` : ''}`;
-      } else if (selectedUseCase === 'goals') {
-        systemPrompt = `You are a goal-setting and personal development expert. Break down goals into actionable steps with measurable outcomes. Return ONLY a JSON array in the format [{"title": "Step description", "estimatedTime": time_in_days, "priority": "low|medium|high"}].`;
-        userPrompt = `Break down this goal into ${intelligentBreakdownLevel} actionable steps: "${task.title}". Include specific milestones, tracking methods, and success criteria for each step.${task.context ? `\nContext: ${task.context}` : ''}`;
-      } else if (selectedUseCase === 'home') {
-        systemPrompt = `You are a home organization and maintenance expert. Break down home tasks into detailed steps with required materials. Return ONLY a JSON array in the format [{"title": "Step description", "estimatedTime": time_in_minutes, "priority": "low|medium|high"}].`;
-        userPrompt = `Break down this home task into ${intelligentBreakdownLevel} detailed steps: "${task.title}". Include required materials, tools, and specific instructions for each step.${task.context ? `\nContext: ${task.context}` : ''}`;
-      } else if (selectedUseCase === 'travel') {
-        systemPrompt = `You are a travel planning expert. Break down travel plans into detailed preparation and itinerary steps. Return ONLY a JSON array in the format [{"title": "Step description", "estimatedTime": time_in_hours_or_days, "priority": "low|medium|high"}].`;
-        userPrompt = `Break down this travel plan into ${intelligentBreakdownLevel} detailed steps: "${task.title}". Include preparation tasks, booking details, and daily itinerary items.${task.context ? `\nContext: ${task.context}` : ''}`;
-      } else if (selectedUseCase === 'study') {
-        systemPrompt = `You are an educational expert. Break down study plans into focused learning sessions with specific objectives. Return ONLY a JSON array in the format [{"title": "Study session description", "estimatedTime": time_in_hours, "priority": "low|medium|high"}].`;
-        userPrompt = `Break down this study plan into ${intelligentBreakdownLevel} focused learning sessions: "${task.title}". Include specific learning objectives, resources to use, and study techniques for each session.${task.context ? `\nContext: ${task.context}` : ''}`;
       }
       
-      // Use OpenAIService to make the request through the proxy
-      const { data, rateLimit } = await OpenAIService.createChatCompletion({
+      // Use the prompt template if available
+      if (promptTemplate) {
+        systemPrompt = promptTemplate.subtaskSystemPrompt;
+        
+        // Process the user prompt template with variables
+        userPrompt = processPromptTemplate(
+          promptTemplate.subtaskUserPromptTemplate,
+          {
+            breakdownLevel: selectedUseCase === 'recipe' ? Math.max(intelligentBreakdownLevel, 6).toString() : intelligentBreakdownLevel.toString(),
+            taskTitle: task.title,
+            taskContext: task.context ? `\nContext: ${task.context}` : ''
+          }
+        );
+      }
+      
+      // Get the appropriate service for the model
+      const service = aiServiceRegistry.getServiceForModel(selectedModel);
+      
+      if (!service) {
+        throw new Error(`No service found for model: ${selectedModel}`);
+      }
+      
+      // Use the shared service to make the request
+      const { data, rateLimit } = await service.createChatCompletion({
         model: selectedModel,
         messages: [
           {
@@ -944,15 +959,17 @@ Make sure to include all necessary ingredients with precise measurements before 
             role: 'user',
             content: userPrompt
           }
-        ]
+        ],
+        temperature: 0.7,
+        maxTokens: 1000
       });
       
       // Update rate limit information
       syncRateLimitInfo(rateLimit);
       
-      if (data.choices && data.choices[0]) {
-        let subtasksContent = data.choices[0].message.content.trim();
-        
+      // The shared service returns content directly
+      let subtasksContent = data.content.trim();
+      
         // Extract the JSON array if it's wrapped in backticks
         if (subtasksContent.includes('```')) {
           subtasksContent = subtasksContent.replace(/```json|```/g, '').trim();
@@ -994,7 +1011,7 @@ Make sure to include all necessary ingredients with precise measurements before 
             });
             
             // Update cost
-            setTotalCost(prev => prev + (data.usage?.total_tokens || 0) * 0.000002);
+            setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
             
             // No need to update executionCount here as it's already updated in syncRateLimitInfo
           }
@@ -1093,33 +1110,37 @@ Make sure to include all necessary ingredients with precise measurements before 
         // Use OpenAIService to make the request through the proxy
         // Create a prompt based on the selected use case
         // Use simpler prompts to avoid timeouts
+        // Get the prompt template for the selected use case
+        
+        // Get the appropriate prompt template for the current use case
+        const promptTemplate = getPromptTemplateForCategory(selectedUseCase || 'daily');
+        
+        // Default prompts in case no template is found
         let systemPrompt = 'You are a helpful assistant. Generate 5 short task ideas, one per line.';
         let userPrompt = `Generate 5 simple task ideas for ${selectedUseCase || 'general productivity'}`;
-      
-        // Simplified prompts for each use case
-        if (selectedUseCase === 'recipe') {
-          systemPrompt = 'You are a culinary expert. Generate 5 recipe titles.';
-          userPrompt = 'Generate 5 recipe titles, one per line.';
-        } else if (selectedUseCase === 'marketing') {
-          systemPrompt = 'You are a marketing strategist. Generate 5 marketing task titles.';
-          userPrompt = 'Generate 5 marketing task titles, one per line.';
-        } else if (selectedUseCase === 'goals') {
-          systemPrompt = 'You are a goal-setting expert. Generate 5 goal titles.';
-          userPrompt = 'Generate 5 goal titles, one per line.';
-        } else if (selectedUseCase === 'home') {
-          systemPrompt = 'You are a home organization expert. Generate 5 home task titles.';
-          userPrompt = 'Generate 5 home task titles, one per line.';
-        } else if (selectedUseCase === 'travel') {
-          systemPrompt = 'You are a travel planning expert. Generate 5 travel task titles.';
-          userPrompt = 'Generate 5 travel task titles, one per line.';
-        } else if (selectedUseCase === 'study') {
-          systemPrompt = 'You are an educational expert. Generate 5 study task titles.';
-          userPrompt = 'Generate 5 study task titles, one per line.';
+        
+        // Use the prompt template if available
+        if (promptTemplate) {
+          systemPrompt = promptTemplate.ideaSystemPrompt;
+          
+          // Process the user prompt template with variables
+          userPrompt = processPromptTemplate(
+            promptTemplate.ideaUserPromptTemplate,
+            {}
+          );
         }
       
-      console.log("Sending request to OpenAI with model:", selectedModel);
+      console.log("Sending request to AI service with model:", selectedModel);
       
-      const { data, rateLimit } = await OpenAIService.createChatCompletion({
+      // Get the appropriate service for the model
+      const service = aiServiceRegistry.getServiceForModel(selectedModel);
+      
+      if (!service) {
+        throw new Error(`No service found for model: ${selectedModel}`);
+      }
+      
+      // Use the shared service to make the request
+      const { data, rateLimit } = await service.createChatCompletion({
         model: selectedModel,
         messages: [
           {
@@ -1131,26 +1152,27 @@ Make sure to include all necessary ingredients with precise measurements before 
             content: userPrompt
           }
         ],
-        max_tokens: 100, // Limit token count for faster response
+        maxTokens: 100, // Limit token count for faster response
         temperature: 0.7  // Add some randomness
-      }, recaptchaToken);
+      });
       
       console.log("Received response from OpenAI:", data);
       
       // Update rate limit information
       syncRateLimitInfo(rateLimit);
       
-      if (!data.choices || !data.choices[0]) {
-        console.error("No choices in OpenAI response");
+      // The shared service returns content directly
+      const responseText = data.content;
+      console.log("Response text:", responseText);
+      
+      if (!responseText) {
+        console.error("No content in AI response");
         alert("Failed to generate ideas. Please try again.");
         setGenerating(false);
         return;
       }
       
       // Parse the response into an array of ideas
-      const responseText = data.choices[0].message.content;
-      console.log("Response text:", responseText);
-      
       const ideas = responseText
         .split('\n')
         .filter(line => line.trim().length > 0)
@@ -1194,7 +1216,7 @@ Make sure to include all necessary ingredients with precise measurements before 
         });
 
         // Update cost
-        setTotalCost(prev => prev + (data.usage?.total_tokens || 0) * 0.000002);
+        setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
         
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
       

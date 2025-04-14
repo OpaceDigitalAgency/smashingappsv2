@@ -1,7 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { aiServiceRegistry, getModelsByProvider } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
+import { getUsageData, getFilteredUsageData, UsageData } from '../../shared/services/usageTrackingService';
+import {
+  getGlobalSettings,
+  updateGlobalSettings as updateGlobalSettingsService,
+  applyGlobalSettingsToAllApps,
+  initGlobalSettingsService
+} from '../../shared/services/globalSettingsService';
 import { PromptTemplate, PromptSettings } from '../../tools/article-smasherv2/src/types';
+import {
+  TaskSmasherPromptTemplate,
+  loadTaskSmasherPrompts,
+  saveTaskSmasherPrompts
+} from '../../tools/task-smasher/utils/promptTemplates';
 import {
   loadPrompts,
   savePrompts,
@@ -16,13 +28,21 @@ interface AdminContextType {
   updateProviderConfig: (provider: AIProvider, config: Partial<ProviderConfig>) => void;
   setApiKey: (provider: AIProvider, apiKey: string) => void;
   
-  // Prompt management
+  // Prompt management - Article Smasher
   prompts: PromptTemplate[];
   activePrompt: PromptTemplate | null;
   setActivePrompt: (prompt: PromptTemplate | null) => void;
   addPrompt: (prompt: Omit<PromptTemplate, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updatePrompt: (id: string, prompt: Partial<PromptTemplate>) => Promise<void>;
   deletePrompt: (id: string) => Promise<void>;
+  
+  // Prompt management - Task Smasher
+  taskSmasherPrompts: TaskSmasherPromptTemplate[];
+  activeTaskSmasherPrompt: TaskSmasherPromptTemplate | null;
+  setActiveTaskSmasherPrompt: (prompt: TaskSmasherPromptTemplate | null) => void;
+  addTaskSmasherPrompt: (prompt: Omit<TaskSmasherPromptTemplate, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateTaskSmasherPrompt: (id: string, prompt: Partial<TaskSmasherPromptTemplate>) => Promise<void>;
+  deleteTaskSmasherPrompt: (id: string) => Promise<void>;
   
   // Settings management
   globalSettings: {
@@ -41,14 +61,9 @@ interface AdminContextType {
   updateAppSettings: (appId: string, settings: any) => void;
   
   // Usage monitoring
-  usageStats: {
-    totalRequests: number;
-    totalTokens: number;
-    costEstimate: number;
-    requestsByProvider: Record<AIProvider, number>;
-    tokensByProvider: Record<AIProvider, number>;
-    costByProvider: Record<AIProvider, number>;
-  };
+  usageStats: UsageData;
+  timeRange: 'day' | 'week' | 'month' | 'year';
+  setTimeRange: (timeRange: 'day' | 'week' | 'month' | 'year') => void;
   
   // UI state
   activeSection: string;
@@ -65,28 +80,27 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   // Provider management state
   const [providers, setProviders] = useState<Record<AIProvider, ProviderConfig>>({} as Record<AIProvider, ProviderConfig>);
   
-  // Prompt management state
+  // Prompt management state - Article Smasher
   const [prompts, setPrompts] = useState<PromptTemplate[]>([]);
   const [activePrompt, setActivePrompt] = useState<PromptTemplate | null>(null);
   
+  // Prompt management state - Task Smasher
+  const [taskSmasherPrompts, setTaskSmasherPrompts] = useState<TaskSmasherPromptTemplate[]>([]);
+  const [activeTaskSmasherPrompt, setActiveTaskSmasherPrompt] = useState<TaskSmasherPromptTemplate | null>(null);
+  
   // Settings management state
-  const [globalSettings, setGlobalSettings] = useState({
-    defaultProvider: 'openai' as AIProvider,
-    defaultModel: 'gpt-4o',
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 1000,
+  const [globalSettings, setGlobalSettings] = useState(() => {
+    // Initialize global settings service
+    initGlobalSettingsService();
+    
+    // Get global settings from the service
+    return getGlobalSettings();
   });
   const [appSettings, setAppSettings] = useState<Record<string, any>>({});
   
   // Usage monitoring state
-  const [usageStats, setUsageStats] = useState({
-    totalRequests: 0,
-    totalTokens: 0,
-    costEstimate: 0,
-    requestsByProvider: {} as Record<AIProvider, number>,
-    tokensByProvider: {} as Record<AIProvider, number>,
-    costByProvider: {} as Record<AIProvider, number>,
-  });
+  const [usageStats, setUsageStats] = useState<UsageData>(getUsageData());
+  const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
   
   // UI state
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -140,6 +154,10 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
         
         setPrompts(loadedPrompts);
         
+        // Load prompts from Task Smasher
+        const loadedTaskSmasherPrompts = loadTaskSmasherPrompts();
+        setTaskSmasherPrompts(loadedTaskSmasherPrompts);
+        
         // Update global settings with loaded settings
         setGlobalSettings(prevSettings => ({
           ...prevSettings,
@@ -156,6 +174,30 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     
     initializePromptsAndSettings();
   }, []);
+  
+  // Initialize usage data and set up event listener for updates
+  useEffect(() => {
+    // Update usage stats based on time range
+    const updateUsageStats = () => {
+      const filteredData = getFilteredUsageData(timeRange);
+      setUsageStats(filteredData);
+    };
+    
+    // Initial update
+    updateUsageStats();
+    
+    // Listen for usage data updates
+    const handleUsageDataUpdated = (event: CustomEvent<UsageData>) => {
+      const filteredData = getFilteredUsageData(timeRange);
+      setUsageStats(filteredData);
+    };
+    
+    window.addEventListener('usage-data-updated', handleUsageDataUpdated as EventListener);
+    
+    return () => {
+      window.removeEventListener('usage-data-updated', handleUsageDataUpdated as EventListener);
+    };
+  }, [timeRange]);
 
   // Provider management functions
   const updateProviderConfig = (provider: AIProvider, config: Partial<ProviderConfig>) => {
@@ -244,7 +286,6 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       setIsLoading(false);
     }
   };
-  
   const deletePrompt = async (id: string) => {
     try {
       setIsLoading(true);
@@ -271,18 +312,106 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       setIsLoading(false);
     }
   };
+  
+  // Task Smasher prompt management functions
+  const addTaskSmasherPrompt = async (promptData: Omit<TaskSmasherPromptTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      setIsLoading(true);
+      
+      // Create a new prompt
+      const newPrompt: TaskSmasherPromptTemplate = {
+        ...promptData,
+        id: `prompt-${Date.now()}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Add the prompt to the state
+      setTaskSmasherPrompts(prevPrompts => [...prevPrompts, newPrompt]);
+      
+      // Save the prompts
+      saveTaskSmasherPrompts([...taskSmasherPrompts, newPrompt]);
+      
+      return Promise.resolve();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to add Task Smasher prompt'));
+      return Promise.reject(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const updateTaskSmasherPrompt = async (id: string, promptUpdate: Partial<TaskSmasherPromptTemplate>) => {
+    try {
+      setIsLoading(true);
+      
+      // Update the prompt
+      const updatedPrompts = taskSmasherPrompts.map(p =>
+        p.id === id
+          ? { ...p, ...promptUpdate, updatedAt: new Date() }
+          : p
+      );
+      
+      // Update the state
+      setTaskSmasherPrompts(updatedPrompts);
+      
+      // Update activeTaskSmasherPrompt if it's the one being updated
+      if (activeTaskSmasherPrompt && activeTaskSmasherPrompt.id === id) {
+        setActiveTaskSmasherPrompt({ ...activeTaskSmasherPrompt, ...promptUpdate, updatedAt: new Date() });
+      }
+      
+      // Save the prompts
+      saveTaskSmasherPrompts(updatedPrompts);
+      
+      return Promise.resolve();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update Task Smasher prompt'));
+      return Promise.reject(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const deleteTaskSmasherPrompt = async (id: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Filter out the prompt
+      const filteredPrompts = taskSmasherPrompts.filter(p => p.id !== id);
+      
+      // Update the state
+      setTaskSmasherPrompts(filteredPrompts);
+      
+      // Clear activeTaskSmasherPrompt if it's the one being deleted
+      if (activeTaskSmasherPrompt && activeTaskSmasherPrompt.id === id) {
+        setActiveTaskSmasherPrompt(null);
+      }
+      
+      // Save the prompts
+      saveTaskSmasherPrompts(filteredPrompts);
+      
+      return Promise.resolve();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to delete Task Smasher prompt'));
+      return Promise.reject(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Settings management functions
   const updateGlobalSettings = (settings: Partial<typeof globalSettings>) => {
+    // Update local state
     setGlobalSettings(prevSettings => ({
       ...prevSettings,
       ...settings,
     }));
     
-    // Update the default provider in the AI service registry
-    if (settings.defaultProvider) {
-      aiServiceRegistry.setDefaultProvider(settings.defaultProvider);
-    }
+    // Update global settings using the service
+    updateGlobalSettingsService(settings);
+    
+    // Apply the updated settings to all apps
+    applyGlobalSettingsToAllApps();
   };
   
   const updateAppSettings = (appId: string, settings: any) => {
@@ -302,13 +431,21 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     updateProviderConfig,
     setApiKey,
     
-    // Prompt management
+    // Prompt management - Article Smasher
     prompts,
     activePrompt,
     setActivePrompt,
     addPrompt,
     updatePrompt,
     deletePrompt,
+    
+    // Prompt management - Task Smasher
+    taskSmasherPrompts,
+    activeTaskSmasherPrompt,
+    setActiveTaskSmasherPrompt,
+    addTaskSmasherPrompt,
+    updateTaskSmasherPrompt,
+    deleteTaskSmasherPrompt,
     
     // Settings management
     globalSettings,
@@ -318,6 +455,8 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     
     // Usage monitoring
     usageStats,
+    timeRange,
+    setTimeRange,
     
     // UI state
     activeSection,

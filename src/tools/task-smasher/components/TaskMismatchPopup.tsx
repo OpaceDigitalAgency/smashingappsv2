@@ -89,14 +89,19 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
             </div>
             
             {/* Content */}
+            {/* Content */}
             <div className="px-4 py-4">
               <p className="text-gray-600 mb-4 text-sm leading-relaxed">{reason}</p>
               
               {suggestedUseCase && (
                 <div className="bg-indigo-50 rounded-md p-4 mb-4 border border-indigo-100">
-                  <p className="text-sm text-gray-700 text-center">
-                    Would you like to switch to <span className="font-semibold text-indigo-700">{suggestedUseCaseName}</span> instead?
+                  <p className="text-sm text-gray-700 mb-2">
+                    This task would fit better in the <span className="font-semibold text-indigo-700">{suggestedUseCaseName}</span> category.
                   </p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Proper categorization helps AI generate better subtasks</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -109,7 +114,6 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
               >
                 Ignore
               </button>
-              
               {suggestedUseCase && (
                 <button
                   onClick={handleSwitch}
@@ -119,7 +123,7 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
                     boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)'
                   }}
                 >
-                  Switch Now
+                  Switch to {suggestedUseCaseName}
                 </button>
               )}
             </div>

@@ -1,11 +1,11 @@
 /**
  * OpenAI Service Adapter
- * 
+ *
  * This file provides backward compatibility with the existing code that uses the old OpenAI service.
- * It adapts the new AIService interface to the old OpenAI service interface.
+ * It adapts the shared AIService interface to the old OpenAI service interface.
  */
 
-import OpenAIService from './openaiService';
+import { aiServiceRegistry } from '../../../shared/services/aiServices';
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 /**
@@ -74,9 +74,16 @@ export const OpenAIServiceAdapter = {
         maxTokens: request.max_tokens
       };
       
-      // Call the new service
+      // Get the appropriate service for the model
+      const service = aiServiceRegistry.getServiceForModel(request.model);
+      
+      if (!service) {
+        throw new Error(`No service found for model: ${request.model}`);
+      }
+      
+      // Call the shared service
       // Cast the messages to the expected type to handle compatibility
-      const response = await OpenAIService.createChatCompletion({
+      const response = await service.createChatCompletion({
         ...options,
         messages: options.messages as any
       });
@@ -126,7 +133,14 @@ export const OpenAIServiceAdapter = {
    */
   async getCompletion(prompt: string, model = 'gpt-3.5-turbo'): Promise<string> {
     try {
-      const response = await OpenAIService.createTextCompletion({
+      // Get the appropriate service for the model
+      const service = aiServiceRegistry.getServiceForModel(model);
+      
+      if (!service) {
+        throw new Error(`No service found for model: ${model}`);
+      }
+      
+      const response = await service.createTextCompletion({
         model,
         prompt
       });
@@ -142,7 +156,14 @@ export const OpenAIServiceAdapter = {
    * Get the current rate limit status
    */
   async getRateLimitStatus(): Promise<RateLimitInfo> {
-    return OpenAIService.getRateLimitStatus();
+    // Get the default service (usually OpenAI)
+    const service = aiServiceRegistry.getDefaultService();
+    
+    if (!service) {
+      throw new Error('No default service available');
+    }
+    
+    return service.getRateLimitStatus();
   }
 };
 

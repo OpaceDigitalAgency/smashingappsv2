@@ -1,5 +1,5 @@
-import React, { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { ReactNode, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Settings, 
@@ -18,6 +18,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { activeSection, setActiveSection } = useAdmin();
 
   // Navigation items
@@ -29,9 +30,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'usage', label: 'Usage', path: '/admin/usage', icon: <BarChart3 className="w-5 h-5" /> },
   ];
 
+  // Update active section based on location
+  useEffect(() => {
+    // Extract the section from the path
+    const path = location.pathname;
+    const section = path.split('/').pop() || 'dashboard';
+    
+    // Set the active section based on the path
+    if (section !== activeSection) {
+      setActiveSection(section);
+    }
+  }, [location.pathname, activeSection, setActiveSection]);
+
   // Handle navigation item click
-  const handleNavItemClick = (id: string) => {
+  const handleNavItemClick = (id: string, path: string) => {
     setActiveSection(id);
+    navigate(path);
   };
 
   return (
@@ -46,22 +60,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.id}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                <button
+                  className={`flex items-center w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
                     location.pathname === item.path || 
-                    (item.path === '/admin' && location.pathname === '/admin/')
+                    (item.path === '/admin' && location.pathname === '/admin/') ||
+                    (activeSection === item.id)
                       ? 'bg-indigo-50 text-indigo-600'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
-                  onClick={() => handleNavItemClick(item.id)}
+                  onClick={() => handleNavItemClick(item.id, item.path)}
                 >
                   {item.icon}
                   <span className="ml-3">{item.label}</span>
-                  {location.pathname === item.path && (
+                  {(location.pathname === item.path || activeSection === item.id) && (
                     <ChevronRight className="w-4 h-4 ml-auto" />
                   )}
-                </Link>
+                </button>
               </li>
             ))}
           </ul>

@@ -8,6 +8,8 @@ import {
 
 // Import the hook-based implementation
 import useArticleAI from '../hooks/useArticleAI';
+// Import shared AI services
+import { aiServiceRegistry, getServiceForModel } from '../../../../shared/services/aiServices';
 
 /**
  * This is a facade for the article AI service that maintains the same API
@@ -16,9 +18,13 @@ import useArticleAI from '../hooks/useArticleAI';
  * IMPORTANT: This service should NOT be used directly in React components.
  * Instead, use the useArticleAI hook directly in your components.
  * This service is provided only for backward compatibility with existing code.
+ *
+ * IMPORTANT: This service now fully integrates with the shared AI services
+ * from the unified admin interface.
  */
 class ArticleAIServiceFacade {
   private static instance: ArticleAIServiceFacade;
+  private initialized: boolean = false;
   private hookInstance: ReturnType<typeof useArticleAI> | null = null;
   
   /**
@@ -176,11 +182,41 @@ class ArticleAIServiceFacade {
       return this.hookInstance.testPrompt(prompt, variables, model);
     }
     
-    // Fallback implementation for non-React contexts
-    throw new Error(
-      'ArticleAIService.testPrompt cannot be used outside of React components. ' +
-      'Please use the useArticleAI hook directly in your React components.'
-    );
+    // Direct integration with shared AI services for non-React contexts
+    try {
+      // Process the prompt template
+      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, variables);
+      
+      // Get the appropriate service for the model
+      const service = getServiceForModel(model);
+      
+      if (!service) {
+        throw new Error(`No service found for model: ${model}`);
+      }
+      
+      // Check if the service is configured
+      if (!service.isConfigured()) {
+        throw new Error(`${service.provider} service is not configured. Please add your API key in the settings.`);
+      }
+      
+      // Execute the AI request using the service
+      const result = await service.createChatCompletion({
+        model: model,
+        messages: [
+          { role: 'system', content: prompt.systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: prompt.temperature ?? 0.7,
+        maxTokens: prompt.maxTokens,
+      });
+      
+      return result.data.content;
+    } catch (err) {
+      console.error('Error in direct AI service call:', err);
+      throw new Error(
+        'Failed to test prompt. Please ensure you have configured the AI service properly in the admin interface.'
+      );
+    }
   }
 }
 
