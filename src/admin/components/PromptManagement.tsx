@@ -38,7 +38,7 @@ const PromptManagement: React.FC = () => {
   const [editedPrompt, setEditedPrompt] = useState<PromptTemplate | TaskSmasherPromptTemplate | null>(null);
   const [expandedSection, setExpandedSection] = useState<'system' | 'user' | 'subtask' | 'idea' | 'settings' | null>('system');
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
-  const [filterApplication, setFilterApplication] = useState<'article' | 'task' | null>(null);
+  const [filterApplication, setFilterApplication] = useState<'article' | 'task' | null>('article');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -200,14 +200,38 @@ const PromptManagement: React.FC = () => {
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center">
               <h2 className="font-medium text-gray-800">Prompt Templates</h2>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleCreatePrompt}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                New
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setFilterApplication('article');
+                    setActiveTaskSmasherPrompt(null);
+                  }}
+                  className={filterApplication === 'article' ? 'bg-blue-50' : ''}
+                >
+                  Article
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setFilterApplication('task');
+                    setActivePrompt(null);
+                  }}
+                  className={filterApplication === 'task' ? 'bg-blue-50' : ''}
+                >
+                  Task
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleCreatePrompt(filterApplication || 'article')}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  New
+                </Button>
+              </div>
             </div>
             
             {/* Search and filter */}
@@ -232,49 +256,97 @@ const PromptManagement: React.FC = () => {
                 >
                   All
                 </button>
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      filterCategory === category 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                    onClick={() => setFilterCategory(category)}
-                  >
-                    {category}
-                  </button>
-                ))}
+                {filterApplication === 'article' ? (
+                  articleCategories.map(category => (
+                    <button
+                      key={category}
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        filterCategory === category
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      onClick={() => setFilterCategory(category)}
+                    >
+                      {category}
+                    </button>
+                  ))
+                ) : (
+                  taskCategories.map(category => (
+                    <button
+                      key={category}
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        filterCategory === category
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      onClick={() => setFilterCategory(category)}
+                    >
+                      {category}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
             
             {/* Prompt list */}
             <div className="overflow-y-auto max-h-[500px]">
-              {filteredPrompts.length === 0 ? (
+              {(filterApplication === 'article' ? filteredArticlePrompts : filteredTaskPrompts).length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
                   No prompts found
                 </div>
               ) : (
                 <ul className="divide-y divide-gray-100">
-                  {filteredPrompts.map(prompt => (
-                    <li 
-                      key={prompt.id}
-                      className={`p-3 hover:bg-gray-50 cursor-pointer ${
-                        activePrompt?.id === prompt.id ? 'bg-blue-50' : ''
-                      }`}
-                      onClick={() => setActivePrompt(prompt)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-medium text-gray-800">{prompt.name}</h3>
-                          <p className="text-xs text-gray-500">{prompt.description}</p>
+                  {filterApplication === 'article' ? (
+                    // Article prompts
+                    filteredArticlePrompts.map(prompt => (
+                      <li
+                        key={prompt.id}
+                        className={`p-3 hover:bg-gray-50 cursor-pointer ${
+                          activePrompt?.id === prompt.id ? 'bg-blue-50' : ''
+                        }`}
+                        onClick={() => {
+                          setActivePrompt(prompt);
+                          setActiveTaskSmasherPrompt(null);
+                          setFilterApplication('article');
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium text-gray-800">{prompt.name}</h3>
+                            <p className="text-xs text-gray-500">{prompt.description}</p>
+                          </div>
+                          <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+                            {prompt.category}
+                          </span>
                         </div>
-                        <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                          {prompt.category}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    ))
+                  ) : (
+                    // Task prompts
+                    filteredTaskPrompts.map(prompt => (
+                      <li
+                        key={prompt.id}
+                        className={`p-3 hover:bg-gray-50 cursor-pointer ${
+                          activeTaskSmasherPrompt?.id === prompt.id ? 'bg-blue-50' : ''
+                        }`}
+                        onClick={() => {
+                          setActiveTaskSmasherPrompt(prompt);
+                          setActivePrompt(null);
+                          setFilterApplication('task');
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium text-gray-800">{prompt.label}</h3>
+                            <p className="text-xs text-gray-500">{prompt.description}</p>
+                          </div>
+                          <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+                            {prompt.category}
+                          </span>
+                        </div>
+                      </li>
+                    ))
+                  )}
                 </ul>
               )}
             </div>
