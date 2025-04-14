@@ -916,12 +916,25 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       // Default prompts in case no template is found
       let systemPrompt = `You are a task management AI assistant. Break down tasks into specific, actionable subtasks. Provide ${intelligentBreakdownLevel} subtasks.
 
-IMPORTANT: You must return ONLY a valid JSON array without ANY additional text, comments, or explanations.
-DO NOT include any conversational phrases like "Here you go", "Certainly", etc.
-ONLY return the raw JSON array in this exact format:
+CRITICAL INSTRUCTION: Your response MUST ONLY contain a valid JSON array and NOTHING ELSE.
+DO NOT include ANY text before or after the JSON array.
+DO NOT include ANY markdown formatting like \`\`\`json or \`\`\`.
+DO NOT include ANY explanatory text, comments, or conversational phrases.
+DO NOT say things like "Here's the JSON", "Here you go", "Certainly", etc.
+
+ONLY return the raw JSON array in this EXACT format:
 [{"title": "Subtask title", "estimatedTime": 0.5, "priority": "low|medium|high"}, ...]
 
-Any response that is not a valid JSON array will be rejected.`;
+Example of CORRECT response:
+[{"title": "Research competitors", "estimatedTime": 1.5, "priority": "high"}, {"title": "Create outline", "estimatedTime": 0.5, "priority": "medium"}]
+
+Example of INCORRECT response:
+Here are the subtasks:
+\`\`\`json
+[{"title": "Research competitors", "estimatedTime": 1.5, "priority": "high"}]
+\`\`\`
+
+Any response that is not a valid JSON array will be rejected and cause errors.`;
       let userPrompt = `Break down this task into ${intelligentBreakdownLevel} specific, actionable subtasks: "${task.title}"${task.context ? `\nContext: ${task.context}` : ''}`;
       
       // Special handling for recipe tasks
@@ -977,10 +990,10 @@ Any response that is not a valid JSON array will be rejected.`;
       let subtasksContent = data.content.trim();
       console.log('Raw AI response:', subtasksContent);
       
-      // Attempt to extract JSON from the response
+      // Enhanced JSON extraction and parsing
       let jsonContent = subtasksContent;
       
-      // Remove markdown code blocks if present
+      // Step 1: Remove markdown code blocks if present
       if (subtasksContent.includes('```')) {
         const codeBlockMatch = subtasksContent.match(/```(?:json)?([\s\S]*?)```/);
         if (codeBlockMatch && codeBlockMatch[1]) {
@@ -990,11 +1003,14 @@ Any response that is not a valid JSON array will be rejected.`;
         }
       }
       
-      // Try to find JSON array in the response if it's embedded in text
+      // Step 2: Try to find JSON array in the response if it's embedded in text
       const jsonArrayMatch = jsonContent.match(/\[\s*\{.*\}\s*\]/s);
       if (jsonArrayMatch) {
         jsonContent = jsonArrayMatch[0];
       }
+      
+      // Step 3: Remove any non-JSON text before or after the array
+      jsonContent = jsonContent.replace(/^[^[]*(\[.*\])[^]]*$/s, '$1');
       
       try {
         console.log('Attempting to parse JSON:', jsonContent);
@@ -1040,9 +1056,9 @@ Any response that is not a valid JSON array will be rejected.`;
         } catch (error) {
           console.error('Error parsing JSON:', error);
           
-          // Attempt more aggressive JSON extraction as a fallback
+          // Advanced fallback: Convert formatted text to JSON if possible
           try {
-            // Look for anything that resembles a JSON array
+            // First try more aggressive JSON extraction
             const possibleJsonMatch = data.content.match(/\[\s*\{[\s\S]*\}\s*\]/);
             if (possibleJsonMatch) {
               const extractedJson = possibleJsonMatch[0];
@@ -1050,46 +1066,112 @@ Any response that is not a valid JSON array will be rejected.`;
               const subtasks = JSON.parse(extractedJson);
               
               if (Array.isArray(subtasks)) {
-                setHistory(prev => [...prev, boards]);
-                
-                setBoards(prevBoards => {
-                  return prevBoards.map(board => {
-                    return {
-                      ...board,
-                      tasks: board.tasks.map(t => {
-                        if (t.id === taskId) {
-                          return {
-                            ...t,
-                            expanded: true,
-                            subtasks: [
-                              ...t.subtasks,
-                              ...subtasks.map((st: any, index: number) => ({
-                                id: `subtask-${Date.now()}-${index}`,
-                                title: st.title,
-                                subtasks: [],
-                                completed: false,
-                                priority: st.priority || 'medium',
-                                estimatedTime: st.estimatedTime || 0.5,
-                                boardId: t.boardId
-                              }))
-                            ]
-                          };
-                        }
-                        return t;
-                      })
-                    };
-                  });
-                });
-                
-                // Update cost
+                updateBoardsWithSubtasks(taskId, subtasks);
                 setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
+                return; // Successfully extracted JSON
               }
+            }
+            
+            // If no JSON array found, try to parse formatted text into JSON
+            console.log('Attempting to convert formatted text to JSON');
+            const lines = data.content.split('\n').filter(line => line.trim());
+            const textBasedSubtasks = [];
+            
+            // Look for patterns like "1. Task name - 2h - high priority"
+            for (const line of lines) {
+              // Remove any numbering or bullet points
+              let cleanLine = line.replace(/^(\d+\.|\*|-)\s+/, '').trim();
+              
+              if (!cleanLine) continue;
+              
+              // Extract title, time and priority if possible
+              let title = cleanLine;
+              let estimatedTime = 0.5; // default
+              let priority = 'medium'; // default
+              
+              // Try to extract time (look for patterns like "2h", "30m", "1.5 hours")
+              const timeMatch = cleanLine.match(/(\d+\.?\d*)\s*(h|hr|hour|hours|m|min|minute|minutes)/i);
+              if (timeMatch) {
+                const value = parseFloat(timeMatch[1]);
+                const unit = timeMatch[2].toLowerCase();
+                
+                // Convert to hours
+                if (unit.startsWith('h')) {
+                  estimatedTime = value;
+                } else if (unit.startsWith('m')) {
+                  estimatedTime = value / 60;
+                }
+                
+                // Remove the time part from the title
+                title = title.replace(timeMatch[0], '').trim();
+              }
+              
+              // Try to extract priority
+              if (cleanLine.includes('high priority') || cleanLine.includes('priority: high')) {
+                priority = 'high';
+                title = title.replace(/(high priority|priority:\s*high)/i, '').trim();
+              } else if (cleanLine.includes('low priority') || cleanLine.includes('priority: low')) {
+                priority = 'low';
+                title = title.replace(/(low priority|priority:\s*low)/i, '').trim();
+              } else if (cleanLine.includes('medium priority') || cleanLine.includes('priority: medium')) {
+                priority = 'medium';
+                title = title.replace(/(medium priority|priority:\s*medium)/i, '').trim();
+              }
+              
+              // Clean up any remaining punctuation
+              title = title.replace(/[:-]\s*$/, '').trim();
+              
+              textBasedSubtasks.push({
+                title,
+                estimatedTime,
+                priority
+              });
+            }
+            
+            if (textBasedSubtasks.length > 0) {
+              console.log('Successfully converted text to subtasks:', textBasedSubtasks);
+              updateBoardsWithSubtasks(taskId, textBasedSubtasks);
+              setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
             } else {
-              console.error('Could not extract valid JSON from response');
+              console.error('Could not extract valid subtasks from text response');
             }
           } catch (secondError) {
-            console.error('Failed to extract JSON with fallback method:', secondError);
+            console.error('Failed to extract JSON with fallback methods:', secondError);
           }
+        }
+        
+        // Helper function to update boards with subtasks
+        function updateBoardsWithSubtasks(taskId: string, subtasks: any[]) {
+          setHistory(prev => [...prev, boards]);
+          
+          setBoards(prevBoards => {
+            return prevBoards.map(board => {
+              return {
+                ...board,
+                tasks: board.tasks.map(t => {
+                  if (t.id === taskId) {
+                    return {
+                      ...t,
+                      expanded: true,
+                      subtasks: [
+                        ...t.subtasks,
+                        ...subtasks.map((st: any, index: number) => ({
+                          id: `subtask-${Date.now()}-${index}`,
+                          title: st.title,
+                          subtasks: [],
+                          completed: false,
+                          priority: st.priority || 'medium',
+                          estimatedTime: st.estimatedTime || 0.5,
+                          boardId: t.boardId
+                        }))
+                      ]
+                    };
+                  }
+                  return t;
+                })
+              };
+            });
+          });
         }
     } catch (error) {
       console.error('Error generating subtasks:', error);

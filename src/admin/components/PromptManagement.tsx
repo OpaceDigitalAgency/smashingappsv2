@@ -408,8 +408,8 @@ const PromptManagement: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      value={editedPrompt.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      value={'name' in editedPrompt ? editedPrompt.name : editedPrompt.label}
+                      onChange={(e) => handleInputChange('name' in editedPrompt ? 'name' : 'label', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-200 rounded-md"
                     />
                   </div>
@@ -443,67 +443,198 @@ const PromptManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* System prompt */}
-              <div className="border-b border-gray-100">
-                <button
-                  className="w-full p-4 text-left flex items-center justify-between"
-                  onClick={() => toggleSection('system')}
-                >
-                  <div className="flex items-center">
-                    <MessageSquare className="w-5 h-5 text-blue-500 mr-2" />
-                    <h3 className="font-medium text-gray-800">System Prompt</h3>
+              {/* Conditional rendering based on prompt type */}
+              {'userPromptTemplate' in editedPrompt ? (
+                <>
+                  {/* System prompt for ArticleSmasher */}
+                  <div className="border-b border-gray-100">
+                    <button
+                      className="w-full p-4 text-left flex items-center justify-between"
+                      onClick={() => toggleSection('system')}
+                    >
+                      <div className="flex items-center">
+                        <MessageSquare className="w-5 h-5 text-blue-500 mr-2" />
+                        <h3 className="font-medium text-gray-800">System Prompt</h3>
+                      </div>
+                      {expandedSection === 'system' ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    {expandedSection === 'system' && (
+                      <div className="p-4 bg-gray-50">
+                        <textarea
+                          value={editedPrompt.systemPrompt}
+                          onChange={(e) => handleInputChange('systemPrompt', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
+                          placeholder="Enter system prompt..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          The system prompt sets the behavior and context for the AI assistant.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {expandedSection === 'system' ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
-                {expandedSection === 'system' && (
-                  <div className="p-4 bg-gray-50">
-                    <textarea
-                      value={editedPrompt.systemPrompt}
-                      onChange={(e) => handleInputChange('systemPrompt', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
-                      placeholder="Enter system prompt..."
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      The system prompt sets the behavior and context for the AI assistant.
-                    </p>
-                  </div>
-                )}
-              </div>
 
-              {/* User prompt template */}
-              <div className="border-b border-gray-100">
-                <button
-                  className="w-full p-4 text-left flex items-center justify-between"
-                  onClick={() => toggleSection('user')}
-                >
-                  <div className="flex items-center">
-                    <MessageSquare className="w-5 h-5 text-green-500 mr-2" />
-                    <h3 className="font-medium text-gray-800">User Prompt Template</h3>
+                  {/* User prompt template for ArticleSmasher */}
+                  <div className="border-b border-gray-100">
+                    <button
+                      className="w-full p-4 text-left flex items-center justify-between"
+                      onClick={() => toggleSection('user')}
+                    >
+                      <div className="flex items-center">
+                        <MessageSquare className="w-5 h-5 text-green-500 mr-2" />
+                        <h3 className="font-medium text-gray-800">User Prompt Template</h3>
+                      </div>
+                      {expandedSection === 'user' ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    {expandedSection === 'user' && (
+                      <div className="p-4 bg-gray-50">
+                        <textarea
+                          value={editedPrompt.userPromptTemplate}
+                          onChange={(e) => handleInputChange('userPromptTemplate', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
+                          placeholder="Enter user prompt template..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Use variables like {'{{topic}}'} or {'{{keyword}}'} that will be replaced with actual values.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {expandedSection === 'user' ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
-                {expandedSection === 'user' && (
-                  <div className="p-4 bg-gray-50">
-                    <textarea
-                      value={editedPrompt.userPromptTemplate}
-                      onChange={(e) => handleInputChange('userPromptTemplate', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
-                      placeholder="Enter user prompt template..."
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Use variables like {'{{topic}}'} or {'{{keyword}}'} that will be replaced with actual values.
-                    </p>
+                </>
+              ) : (
+                <>
+                  {/* Subtask System Prompt for TaskSmasher */}
+                  <div className="border-b border-gray-100">
+                    <button
+                      className="w-full p-4 text-left flex items-center justify-between"
+                      onClick={() => toggleSection('subtask')}
+                    >
+                      <div className="flex items-center">
+                        <MessageSquare className="w-5 h-5 text-blue-500 mr-2" />
+                        <h3 className="font-medium text-gray-800">Subtask System Prompt</h3>
+                      </div>
+                      {expandedSection === 'subtask' ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    {expandedSection === 'subtask' && (
+                      <div className="p-4 bg-gray-50">
+                        <textarea
+                          value={editedPrompt.subtaskSystemPrompt}
+                          onChange={(e) => handleInputChange('subtaskSystemPrompt', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
+                          placeholder="Enter subtask system prompt..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          The system prompt for generating subtasks.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+
+                  {/* Subtask User Prompt Template for TaskSmasher */}
+                  <div className="border-b border-gray-100">
+                    <button
+                      className="w-full p-4 text-left flex items-center justify-between"
+                      onClick={() => toggleSection('user')}
+                    >
+                      <div className="flex items-center">
+                        <MessageSquare className="w-5 h-5 text-green-500 mr-2" />
+                        <h3 className="font-medium text-gray-800">Subtask User Prompt Template</h3>
+                      </div>
+                      {expandedSection === 'user' ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    {expandedSection === 'user' && (
+                      <div className="p-4 bg-gray-50">
+                        <textarea
+                          value={editedPrompt.subtaskUserPromptTemplate}
+                          onChange={(e) => handleInputChange('subtaskUserPromptTemplate', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
+                          placeholder="Enter subtask user prompt template..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Use variables like {'{{breakdownLevel}}'} or {'{{taskTitle}}'} that will be replaced with actual values.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Idea System Prompt for TaskSmasher */}
+                  <div className="border-b border-gray-100">
+                    <button
+                      className="w-full p-4 text-left flex items-center justify-between"
+                      onClick={() => toggleSection('idea')}
+                    >
+                      <div className="flex items-center">
+                        <Zap className="w-5 h-5 text-yellow-500 mr-2" />
+                        <h3 className="font-medium text-gray-800">Idea System Prompt</h3>
+                      </div>
+                      {expandedSection === 'idea' ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    {expandedSection === 'idea' && (
+                      <div className="p-4 bg-gray-50">
+                        <textarea
+                          value={editedPrompt.ideaSystemPrompt}
+                          onChange={(e) => handleInputChange('ideaSystemPrompt', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
+                          placeholder="Enter idea system prompt..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          The system prompt for generating task ideas.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Idea User Prompt Template for TaskSmasher */}
+                  <div className="border-b border-gray-100">
+                    <button
+                      className="w-full p-4 text-left flex items-center justify-between"
+                      onClick={() => toggleSection('idea')}
+                    >
+                      <div className="flex items-center">
+                        <Zap className="w-5 h-5 text-orange-500 mr-2" />
+                        <h3 className="font-medium text-gray-800">Idea User Prompt Template</h3>
+                      </div>
+                      {expandedSection === 'idea' ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    {expandedSection === 'idea' && (
+                      <div className="p-4 bg-gray-50">
+                        <textarea
+                          value={editedPrompt.ideaUserPromptTemplate}
+                          onChange={(e) => handleInputChange('ideaUserPromptTemplate', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md h-32"
+                          placeholder="Enter idea user prompt template..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Use variables like {'{{category}}'} that will be replaced with actual values.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* Settings */}
               <div>
