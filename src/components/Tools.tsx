@@ -1,5 +1,5 @@
 import React from 'react';
-import { ListChecks, ChefHat, Lightbulb, Calendar, MessageSquare } from 'lucide-react';
+import { ListChecks, ChefHat, Lightbulb, Calendar, MessageSquare, BrainCircuit, FileText } from 'lucide-react';
 
 const Tools: React.FC = () => {
   const tools = [
@@ -23,6 +23,35 @@ const Tools: React.FC = () => {
       ],
       icon: ListChecks,
       color: 'from-purple-500 to-purple-600',
+      comingSoon: false
+    },
+    {
+      id: 'article-smasher',
+      name: 'ArticleSmasher',
+      description: 'AI-powered article generation and optimization.',
+      useCases: [
+        { name: 'Blog Post', path: '/tools/article-smasher/blog-post/' },
+        { name: 'SEO Article', path: '/tools/article-smasher/seo-article/' },
+        { name: 'Academic Paper', path: '/tools/article-smasher/academic-paper/' },
+        { name: 'News Article', path: '/tools/article-smasher/news-article/' }
+      ],
+      icon: FileText,
+      color: 'from-teal-500 to-teal-600',
+      comingSoon: false
+    },
+    {
+      id: 'article-smasherv2',
+      name: 'ArticleSmasher V2',
+      description: 'Advanced AI content creation with GPT-4o integration.',
+      useCases: [
+        { name: 'Blog Post', path: '/tools/article-smasherv2/blog-post/' },
+        { name: 'SEO Article', path: '/tools/article-smasherv2/seo-article/' },
+        { name: 'Academic Paper', path: '/tools/article-smasherv2/academic-paper/' },
+        { name: 'News Article', path: '/tools/article-smasherv2/news-article/' },
+        { name: 'Demo', path: '/tools/article-smasherv2/demo/' }
+      ],
+      icon: BrainCircuit,
+      color: 'from-indigo-500 to-indigo-600',
       comingSoon: false
     },
     {
@@ -89,12 +118,12 @@ const Tools: React.FC = () => {
                 ) : (
                   <>
                     <a
-                      href={tool.id === 'task-smasher' ? '/tools/task-smasher/' : `#${tool.id}`}
+                      href={['task-smasher', 'article-smasher', 'article-smasherv2'].includes(tool.id) ? `/tools/${tool.id}/` : `#${tool.id}`}
                       className="inline-flex items-center text-primary hover:text-primary-dark font-medium"
                       onClick={(e) => {
-                        if (tool.id === 'task-smasher') {
+                        if (['task-smasher', 'article-smasher', 'article-smasherv2'].includes(tool.id)) {
                           // Direct navigation without transition
-                          window.location.href = '/tools/task-smasher/';
+                          window.location.href = `/tools/${tool.id}/`;
                         }
                       }}
                     >

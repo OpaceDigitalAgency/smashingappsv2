@@ -43,6 +43,7 @@ import toolRegistry, { getToolConfig } from './tools/registry';
 // When adding a new tool, import its main component here
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
 import ArticleSmasherApp from './tools/article-smasher/ArticleSmasherApp';
+import ArticleSmasherV2App from './tools/article-smasherv2/ArticleSmasherV2App';
 
 // Loading component for Suspense
 const LoadingScreen = () => (
@@ -150,6 +151,10 @@ function App() {
             
             {/* ArticleSmasher base routes */}
             <Route path="/tools/article-smasher" element={<ArticleSmasherApp />} />
+            {/* ArticleSmasherV2 base routes */}
+            <Route path="/tools/article-smasherv2" element={<ArticleSmasherV2App />} />
+            <Route path="/tools/article-smasherv2/" element={<ArticleSmasherV2App />} />
+            
             <Route path="/tools/article-smasher/" element={<ArticleSmasherApp />} />
             
             {/* TaskSmasher use case routes - handle both with and without trailing slash */}
@@ -178,6 +183,21 @@ function App() {
                 return [
                   <Route key={`article-${id}-no-slash`} path={basePath} element={<ArticleSmasherApp />} />,
                   <Route key={`article-${id}-with-slash`} path={pathWithSlash} element={<ArticleSmasherApp />} />
+                ];
+              })
+            }
+            
+            {/* ArticleSmasherV2 use case routes */}
+            {getToolConfig('article-smasherv2')?.routes.subRoutes &&
+              Object.entries(getToolConfig('article-smasherv2')?.useCases || {}).flatMap(([id, useCase]) => {
+                const basePath = getToolConfig('article-smasherv2')?.routes.subRoutes?.[id];
+                if (!basePath) return [];
+                
+                const pathWithSlash = `${basePath}/`;
+                
+                return [
+                  <Route key={`article-v2-${id}-no-slash`} path={basePath} element={<ArticleSmasherV2App />} />,
+                  <Route key={`article-v2-${id}-with-slash`} path={pathWithSlash} element={<ArticleSmasherV2App />} />
                 ];
               })
             }
