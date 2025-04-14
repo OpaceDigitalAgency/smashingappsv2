@@ -37,13 +37,32 @@ export function initializeAIServicesWithTracking(): void {
 function getAppIdForService(provider: AIProvider): string {
   // This is a simplified mapping - in a real app, you might want to
   // determine this dynamically based on which app is using the service
+  // Get the current URL to determine which app is using the service
+  const url = window.location.href;
+  
+  // Check if the URL contains article-smasher (either v2 or original)
+  if (url.includes('article-smasher')) {
+    return 'article-smasher';
+  }
+  
+  // Check if the URL contains task-smasher
+  if (url.includes('task-smasher')) {
+    return 'task-smasher';
+  }
+  
+  // If we can't determine from the URL, try to determine from the provider
+  // This is a fallback for when the URL doesn't contain the app name
   switch (provider) {
     case 'openai':
-      return 'task-smasher'; // Default app for OpenAI
+      // If we're using OpenAI, check if we're in an article context
+      if (url.includes('article') || url.includes('content') || url.includes('blog') || url.includes('post')) {
+        return 'article-smasher';
+      }
+      return 'task-smasher';
     case 'anthropic':
       return 'article-smasher'; // Default app for Anthropic
     case 'google':
-      return 'article-smasherv2'; // Default app for Google
+      return 'article-smasher'; // Default app for Google
     case 'openrouter':
       return 'task-smasher'; // Default app for OpenRouter
     case 'image':

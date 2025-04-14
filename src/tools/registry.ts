@@ -4,13 +4,11 @@ import { CheckSquare } from 'lucide-react';
 // Import tool configurations
 import taskSmasherConfig from './task-smasher/config.ts';
 import articleSmasherConfig from './article-smasher/config.ts';
-import articleSmasherV2Config from './article-smasherv2/config.ts';
 
 // Tool registry
 const toolRegistry: Record<string, ToolConfig> = {
   'task-smasher': taskSmasherConfig,
-  'article-smasher': articleSmasherConfig,
-  'article-smasherv2': articleSmasherV2Config
+  'article-smasher': articleSmasherConfig
   // Add more tools here as they are created
 };
 
