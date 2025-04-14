@@ -28,9 +28,13 @@ Welcome to Article Smasher v2, an AI-powered content creation tool designed to s
 
 ### Setting Up Your API Key
 
-1. Navigate to the Settings page in the Article Smasher v2 interface
-2. Enter your OpenAI API key in the designated field
-3. Click "Save Settings"
+1. Navigate to the unified admin interface at smashingapps.ai/admin
+2. Go to the "Provider Management" section
+3. Select the provider you want to use (e.g., OpenAI)
+4. Enter your API key in the designated field
+5. Click "Save"
+
+> **Note**: Article Smasher v2 now uses a unified admin interface that is shared across all SmashingApps.ai tools. This provides a centralized place to manage API keys, models, and settings for all applications.
 
 ## Article Creation Workflow
 
@@ -173,9 +177,21 @@ The final step prepares your article for publication to WordPress.
 
 ### Model-Specific Tips
 
-1. **GPT-4o (Default)**: Best for comprehensive, detailed articles. Provides the highest quality output but may be slower and more expensive.
+The unified admin interface allows you to choose from multiple AI providers and models:
 
-2. **GPT-4o-mini**: Good for shorter articles or drafts. Faster and more cost-effective but may produce less detailed content.
+1. **OpenAI Models**:
+   - **GPT-4o**: Best for comprehensive, detailed articles. Provides the highest quality output but may be slower and more expensive.
+   - **GPT-4o-mini**: Good for shorter articles or drafts. Faster and more cost-effective but may produce less detailed content.
+   - **GPT-3.5 Turbo**: Most economical option for basic content.
+
+2. **Anthropic Models** (if configured):
+   - **Claude 3 Opus**: Comparable to GPT-4o with excellent reasoning capabilities.
+   - **Claude 3 Sonnet**: Balanced performance and speed.
+   - **Claude 3 Haiku**: Fast and cost-effective.
+
+3. **Google Models** (if configured):
+   - **Gemini 1.5 Pro**: Google's advanced model with strong reasoning capabilities.
+   - **Gemini 1.5 Flash**: Faster, more economical Google model.
 
 ### Content Type Tips
 
@@ -195,12 +211,13 @@ The final step prepares your article for publication to WordPress.
 
 #### API Connection Issues
 
-**Issue**: "Failed to connect to OpenAI API" or similar error messages.
+**Issue**: "Failed to connect to API" or similar error messages.
 
 **Solutions**:
-- Verify your API key is entered correctly in the settings
-- Check that your OpenAI account has available credits
+- Verify your API key is entered correctly in the unified admin interface
+- Check that your account has available credits for the selected provider
 - Ensure your internet connection is stable
+- Try a different AI provider if one is not working
 - Try refreshing the page and attempting the operation again
 
 #### Content Generation Timeout
@@ -245,13 +262,13 @@ The final step prepares your article for publication to WordPress.
 
 ## Frequently Asked Questions
 
-**Q: Do I need my own OpenAI API key?**
+**Q: Do I need my own API keys?**
 
-A: Yes, you need to provide your own OpenAI API key in the settings. This ensures you have full control over your API usage and costs.
+A: Yes, you need to provide your own API keys in the unified admin interface. You can use OpenAI, Anthropic, Google, or other providers depending on your preference. This ensures you have full control over your API usage and costs.
 
 **Q: How much does it cost to generate an article?**
 
-A: The cost depends on the length of the article and the model used. Typically, a 1500-word article using GPT-4o might cost between $0.50-$2.00 in API charges. Using GPT-4o-mini can reduce costs by 50-70%.
+A: The cost depends on the length of the article, the provider, and the model used. Typically, a 1500-word article using GPT-4o might cost between $0.50-$2.00 in API charges. Using GPT-4o-mini can reduce costs by 50-70%. Other providers like Anthropic or Google may have different pricing structures.
 
 **Q: Can I edit the content after it's generated?**
 

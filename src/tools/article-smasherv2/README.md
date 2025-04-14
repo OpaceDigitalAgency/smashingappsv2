@@ -107,14 +107,14 @@ Each step builds upon the previous one, ensuring a cohesive final article. For d
 
 ## Admin Features
 
-Administrators can configure and customize the system:
+Article Smasher v2 uses the unified admin interface at smashingapps.ai/admin, which provides centralized management for all SmashingApps.ai tools:
 
+- **Provider Management**: Configure multiple AI providers (OpenAI, Anthropic, Google, etc.)
 - **Prompt Templates**: Manage AI prompt templates for each step
-- **System Settings**: Configure API connections and model parameters
-- **User Management**: Control access permissions
-- **Analytics**: Track usage and performance
+- **Settings Management**: Configure global and app-specific settings
+- **Usage Monitoring**: Track usage and performance across all applications
 
-For detailed admin instructions, see the [Admin Guide](./docs/admin-guide.md).
+The unified admin interface ensures consistent settings and configurations across all applications. For detailed admin instructions, see the [Admin Guide](./docs/admin-guide.md).
 
 ## Development
 

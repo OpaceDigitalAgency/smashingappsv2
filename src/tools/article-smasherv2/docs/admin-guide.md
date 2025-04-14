@@ -27,8 +27,10 @@ Welcome to the Article Smasher v2 Admin Guide. This document is designed for adm
 
 The admin interface can be accessed through the following methods:
 
-1. **Direct URL**: Navigate to `/admin` from the base URL of your Article Smasher v2 installation.
-2. **Navigation Menu**: Click on the "Admin" or "Settings" link in the main navigation menu.
+1. **Direct URL**: Navigate to `https://smashingapps.ai/admin` to access the unified admin interface.
+2. **Navigation Menu**: Click on the "Admin" link in the main navigation menu.
+
+> **Note**: Article Smasher v2 now uses a unified admin interface that is shared across all SmashingApps.ai tools. This provides a centralized place to manage AI settings, prompts, and configurations for all applications.
 
 **Authentication Requirements**:
 - Admin access requires administrator privileges in WordPress
@@ -36,13 +38,13 @@ The admin interface can be accessed through the following methods:
 
 ## Admin Dashboard Overview
 
-The admin dashboard provides a comprehensive overview of the system status and quick access to all administrative functions:
+The unified admin dashboard provides a comprehensive overview of the system status and quick access to all administrative functions:
 
-- **Prompt Templates**: Manage the AI prompt templates for each stage of the article creation process
-- **System Settings**: Configure API connections, model parameters, and integration settings
-- **Analytics**: View usage statistics, API costs, and content generation metrics
-- **User Management**: Control access permissions and user roles
-- **Logs**: Access system logs for troubleshooting and auditing
+- **Dashboard**: Get an overview of system status and key metrics
+- **Provider Management**: Configure AI providers (OpenAI, Anthropic, Google, etc.)
+- **Prompt Templates**: Manage the AI prompt templates for all applications
+- **Settings**: Configure global and app-specific settings
+- **Usage Monitoring**: View usage statistics, API costs, and content generation metrics
 
 ## Managing Prompt Templates
 
@@ -125,30 +127,30 @@ To delete a prompt template:
 
 ### API Settings
 
-Configure the connection to OpenAI's API and other external services:
+Configure the connection to various AI providers through the unified Provider Management interface:
 
-1. **OpenAI API Key**: Enter your OpenAI API key
-2. **API Request Timeout**: Set the maximum time (in seconds) to wait for API responses
-3. **Retry Settings**: Configure automatic retry attempts for failed API calls
+1. **Provider Selection**: Choose from multiple AI providers (OpenAI, Anthropic, Google, etc.)
+2. **API Keys**: Enter your API keys for each provider
+3. **Default Provider**: Set the default provider for all applications
 4. **Rate Limiting**: Set usage limits to control API costs
 
 **Best Practices**:
-- Store your API key securely
+- Store your API keys securely
 - Set reasonable timeouts (15-30 seconds recommended)
-- Configure 2-3 retry attempts with exponential backoff
+- Configure fallback providers in case your primary provider is unavailable
 - Implement rate limiting based on your budget
 
 ### Model Settings
 
-Configure the AI models used for content generation:
+Configure the AI models used for content generation through the unified Settings interface:
 
-1. **Default Model**: Select the primary model (e.g., GPT-4o, GPT-4o-mini)
-2. **Fallback Model**: Select a backup model if the primary is unavailable
+1. **Default Model**: Select the primary model for each provider (e.g., GPT-4o, Claude 3 Opus)
+2. **Fallback Models**: Configure fallback models if the primary is unavailable
 3. **Default Temperature**: Set the default creativity level (0.0-1.0)
 4. **Default Max Tokens**: Set the default maximum response length
 
 **Recommended Settings**:
-- For most content: GPT-4o with temperature 0.7
+- For most content: GPT-4o or Claude 3 Opus with temperature 0.7
 - For factual content: GPT-4o with temperature 0.3-0.5
 - For creative content: GPT-4o with temperature 0.8-1.0
 - Max tokens: 1000-3000 depending on expected content length
@@ -324,3 +326,23 @@ If you encounter issues that can't be resolved using this guide:
 2. Consult the developer documentation
 3. Contact technical support at support@example.com
 4. Visit our community forum at forum.example.com
+
+## Unified Admin Interface
+
+The unified admin interface at smashingapps.ai/admin provides a centralized place to manage all SmashingApps.ai tools. This section provides additional information specific to the unified interface.
+
+### Benefits of the Unified Admin
+
+- **Single Configuration**: Manage API keys, models, and settings in one place
+- **Consistent Experience**: Use the same interface for all applications
+- **Shared Resources**: Reuse prompts and configurations across applications
+- **Centralized Monitoring**: View usage statistics for all applications
+
+### Global vs. App-Specific Settings
+
+The unified admin interface distinguishes between:
+
+- **Global Settings**: Apply to all applications (default provider, model, etc.)
+- **App-Specific Settings**: Override global settings for specific applications
+
+When configuring settings, consider whether they should apply globally or only to Article Smasher v2.

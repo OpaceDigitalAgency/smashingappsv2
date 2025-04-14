@@ -237,15 +237,23 @@ Each step is implemented as a separate component with its own UI and logic, but 
 
 ### AI Service Integration
 
-The `articleAIService` handles all interactions with AI models. It provides methods for:
+Article Smasher v2 now uses a unified AI service architecture that is shared across all SmashingApps.ai tools. The integration consists of:
 
-- Generating topic ideas
-- Generating keywords
-- Creating article outlines
-- Generating article content
-- Creating image prompts
+1. **Shared AI Services**: Located in `src/shared/services/`, these provide a common interface for all AI providers:
+   - `AIService.ts`: Base interface and registry for all AI providers
+   - `openaiService.ts`, `anthropicService.ts`, `googleService.ts`: Provider-specific implementations
+   - `aiServices.ts`: Exports all services and the registry
 
-The service uses the `useAI` hook from the shared components library to make API calls to OpenAI. It also handles parsing and processing the AI responses into the appropriate data structures.
+2. **Article-Specific Integration**: The `articleAIService` provides methods for:
+   - Generating topic ideas
+   - Generating keywords
+   - Creating article outlines
+   - Generating article content
+   - Creating image prompts
+
+3. **Hook-Based Architecture**: The service uses the `useArticleAI` hook which wraps the shared `useAI` hook to make API calls to the selected provider. This ensures consistent behavior across all applications while allowing for article-specific customizations.
+
+4. **Provider Selection**: The system automatically selects the appropriate provider based on the model specified in the settings, with fallback options if the primary provider is unavailable.
 
 ## Extending the System
 
