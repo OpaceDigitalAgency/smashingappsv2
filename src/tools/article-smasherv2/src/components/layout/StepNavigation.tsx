@@ -17,7 +17,7 @@ const Step: React.FC<StepProps> = ({ isActive, isComplete, number, title, descri
     <div className="tooltip">
       <button
         onClick={onClick}
-        className={`flex items-center p-2 rounded-lg transition-all ${
+        className={`flex items-center px-3 py-1.5 rounded-md transition-all ${
           isActive
             ? 'bg-blue-600 text-white'
             : isComplete
@@ -26,7 +26,7 @@ const Step: React.FC<StepProps> = ({ isActive, isComplete, number, title, descri
         }`}
       >
         <div
-          className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
+          className={`flex items-center justify-center w-5 h-5 rounded-full mr-1.5 ${
             isActive
               ? 'bg-white text-blue-600'
               : isComplete
@@ -34,9 +34,9 @@ const Step: React.FC<StepProps> = ({ isActive, isComplete, number, title, descri
               : 'bg-gray-200 text-gray-400'
           }`}
         >
-          {isComplete ? <CheckCircle size={16} /> : icon}
+          {isComplete ? <CheckCircle size={14} /> : icon}
         </div>
-        <span className="text-sm font-medium">{title}</span>
+        <span className="text-xs font-medium">{title}</span>
       </button>
       <div className="tooltip-text">
         <p className="font-medium mb-1">{title}</p>
@@ -104,13 +104,13 @@ const StepNavigation: React.FC = () => {
   ];
   
   return (
-    <div className="bg-white rounded-xl shadow-card p-3 mb-4">
-      <div className="flex justify-between items-center mb-2">
+    <div className="bg-white rounded-xl shadow-card p-2 mb-4">
+      <div className="flex justify-between items-center mb-1">
         <h2 className="text-lg font-bold text-gray-800">WordPress AI Content Creation</h2>
         <p className="text-gray-600 text-sm">Step {currentStep} of {totalSteps}</p>
       </div>
       
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 overflow-x-auto pb-2">
+      <div className="flex space-x-1 overflow-x-auto pb-1">
         {steps.map((step, index) => (
           <div 
             key={step.number} 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CheckCircle, ChevronDown, ChevronRight, Lock, SidebarOpen, SidebarClose, PanelLeft, PanelRight } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Lock, SidebarOpen, SidebarClose, PanelLeft, PanelRight, Info } from 'lucide-react';
 import { ARTICLE_TYPES_BY_CATEGORY, ARTICLE_TYPES } from './ArticleTypeSidebarImproved';
 
 // Re-export for other components to use
@@ -213,12 +213,18 @@ const ArticleTypeSidebar: React.FC<ArticleTypeSidebarProps> = ({
                     >
                       <div className="flex items-center w-full">
                         <span className="flex-grow text-sm">{type.label}</span>
-                        {selectedType === type.value && (
-                          <CheckCircle size={16} className="ml-2 text-white" />
-                        )}
-                        {isLocked && selectedType !== type.value && (
-                          <Lock size={14} className="ml-2 text-gray-400" />
-                        )}
+                        <div className="flex items-center">
+                          <Info 
+                            size={14} 
+                            className={`mr-1.5 ${selectedType === type.value ? 'text-white' : 'text-gray-400'}`}
+                          />
+                          {selectedType === type.value && (
+                            <CheckCircle size={16} className="text-white" />
+                          )}
+                          {isLocked && selectedType !== type.value && (
+                            <Lock size={14} className="text-gray-400" />
+                          )}
+                        </div>
                       </div>
                     </button>
                     
@@ -247,8 +253,9 @@ const ArticleTypeSidebar: React.FC<ArticleTypeSidebarProps> = ({
                       disabled={isLocked && selectedType !== type.value}
                       title={type.label}
                     >
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        {type.label.charAt(0)}
+                      <div className="w-6 h-6 flex flex-col items-center justify-center">
+                        <span>{type.label.charAt(0)}</span>
+                        <Info size={10} className="mt-0.5 text-gray-400" />
                       </div>
                     </button>
                     
@@ -269,19 +276,7 @@ const ArticleTypeSidebar: React.FC<ArticleTypeSidebarProps> = ({
         ))}
       </div>
       
-      {!isCollapsed && (
-        <button 
-          className="generate-ideas-btn mx-2 mb-4"
-          onClick={onGenerateIdeas}
-          disabled={isLocked}
-        >
-          <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 3.5V2M5.06 5.06L4 4M5.06 12.94L4 14M12 18.5V20M18.94 12.94L20 14M18.94 5.06L20 4M17.5 9H19M9 17.5H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 15C15.3137 15 18 12.3137 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9C6 12.3137 8.68629 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Generate Topic Ideas
-        </button>
-      )}
+      {/* Removed duplicate "Generate Topic Ideas" button */}
     </div>
   );
 };
