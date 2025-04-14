@@ -914,7 +914,14 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       const promptTemplate = getPromptTemplateForCategory(selectedUseCase || 'daily');
       
       // Default prompts in case no template is found
-      let systemPrompt = `You are a task management AI assistant. Break down tasks into specific, actionable subtasks. Provide ${intelligentBreakdownLevel} subtasks. Return ONLY a JSON array of subtasks in the format [{"title": "Subtask title", "estimatedTime": 0.5, "priority": "low|medium|high"}].`;
+      let systemPrompt = `You are a task management AI assistant. Break down tasks into specific, actionable subtasks. Provide ${intelligentBreakdownLevel} subtasks.
+
+IMPORTANT: You must return ONLY a valid JSON array without ANY additional text, comments, or explanations.
+DO NOT include any conversational phrases like "Here you go", "Certainly", etc.
+ONLY return the raw JSON array in this exact format:
+[{"title": "Subtask title", "estimatedTime": 0.5, "priority": "low|medium|high"}, ...]
+
+Any response that is not a valid JSON array will be rejected.`;
       let userPrompt = `Break down this task into ${intelligentBreakdownLevel} specific, actionable subtasks: "${task.title}"${task.context ? `\nContext: ${task.context}` : ''}`;
       
       // Special handling for recipe tasks
@@ -968,15 +975,31 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       
       // The shared service returns content directly
       let subtasksContent = data.content.trim();
+      console.log('Raw AI response:', subtasksContent);
       
-        // Extract the JSON array if it's wrapped in backticks
-        if (subtasksContent.includes('```')) {
-          subtasksContent = subtasksContent.replace(/```json|```/g, '').trim();
+      // Attempt to extract JSON from the response
+      let jsonContent = subtasksContent;
+      
+      // Remove markdown code blocks if present
+      if (subtasksContent.includes('```')) {
+        const codeBlockMatch = subtasksContent.match(/```(?:json)?([\s\S]*?)```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+          jsonContent = codeBlockMatch[1].trim();
+        } else {
+          jsonContent = subtasksContent.replace(/```json|```/g, '').trim();
         }
+      }
+      
+      // Try to find JSON array in the response if it's embedded in text
+      const jsonArrayMatch = jsonContent.match(/\[\s*\{.*\}\s*\]/s);
+      if (jsonArrayMatch) {
+        jsonContent = jsonArrayMatch[0];
+      }
+      
+      try {
+        console.log('Attempting to parse JSON:', jsonContent);
+        const subtasks = JSON.parse(jsonContent);
         
-        try {
-          const subtasks = JSON.parse(subtasksContent);
-          
           if (Array.isArray(subtasks)) {
             setHistory(prev => [...prev, boards]);
             
@@ -1015,7 +1038,58 @@ export function useTasks(initialUseCase?: string): TasksContextType {
             // No need to update executionCount here as it's already updated in syncRateLimitInfo
           }
         } catch (error) {
-          console.error('Error parsing subtasks:', error);
+          console.error('Error parsing JSON:', error);
+          
+          // Attempt more aggressive JSON extraction as a fallback
+          try {
+            // Look for anything that resembles a JSON array
+            const possibleJsonMatch = data.content.match(/\[\s*\{[\s\S]*\}\s*\]/);
+            if (possibleJsonMatch) {
+              const extractedJson = possibleJsonMatch[0];
+              console.log('Attempting to parse extracted JSON:', extractedJson);
+              const subtasks = JSON.parse(extractedJson);
+              
+              if (Array.isArray(subtasks)) {
+                setHistory(prev => [...prev, boards]);
+                
+                setBoards(prevBoards => {
+                  return prevBoards.map(board => {
+                    return {
+                      ...board,
+                      tasks: board.tasks.map(t => {
+                        if (t.id === taskId) {
+                          return {
+                            ...t,
+                            expanded: true,
+                            subtasks: [
+                              ...t.subtasks,
+                              ...subtasks.map((st: any, index: number) => ({
+                                id: `subtask-${Date.now()}-${index}`,
+                                title: st.title,
+                                subtasks: [],
+                                completed: false,
+                                priority: st.priority || 'medium',
+                                estimatedTime: st.estimatedTime || 0.5,
+                                boardId: t.boardId
+                              }))
+                            ]
+                          };
+                        }
+                        return t;
+                      })
+                    };
+                  });
+                });
+                
+                // Update cost
+                setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
+              }
+            } else {
+              console.error('Could not extract valid JSON from response');
+            }
+          } catch (secondError) {
+            console.error('Failed to extract JSON with fallback method:', secondError);
+          }
         }
     } catch (error) {
       console.error('Error generating subtasks:', error);
@@ -1150,8 +1224,10 @@ export function useTasks(initialUseCase?: string): TasksContextType {
             content: userPrompt
           }
         ],
-        maxTokens: 100, // Limit token count for faster response
-        temperature: 0.7  // Add some randomness
+        // Use maxTokens from the prompt template, or fall back to a default value
+        maxTokens: promptTemplate?.maxTokens || 1000,
+        // Use temperature from the prompt template, or fall back to a default value
+        temperature: promptTemplate?.temperature || 0.7
       });
       
       console.log("Received response from OpenAI:", data);
