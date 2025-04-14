@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Demo from './src/components/Demo';
+import './src/components/article-smasher-v2.css';
 
 const ArticleSmasherV2App: React.FC = () => {
   return (
