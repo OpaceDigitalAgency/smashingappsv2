@@ -6,7 +6,7 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/tools/article-smasherv2">
       <App />
     </BrowserRouter>
   </StrictMode>
