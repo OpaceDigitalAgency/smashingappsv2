@@ -1,12 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
-import { RefreshCw, Image as ImageIcon, Check, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { usePrompt } from '../../../contexts/PromptContext';
+import { RefreshCw, Image as ImageIcon, Check, X, ArrowLeft, ArrowRight, Plus as PlusIcon } from 'lucide-react';
 
 const ImageStep: React.FC = () => {
-  const { title, images, setImages, goToNextStep, goToPreviousStep } = useArticleWizard();
+  const { 
+    title, 
+    selectedKeywords,
+    images, 
+    setImages, 
+    generating,
+    setGenerating,
+    generateImages,
+    goToNextStep, 
+    goToPreviousStep 
+  } = useArticleWizard();
   
-  const [isGenerating, setIsGenerating] = useState(false);
+  const { prompts, settings } = usePrompt();
+  
+  // Get the image prompt template
+  const imagePrompts = prompts.filter(p => p.category === 'image');
+  const imagePrompt = imagePrompts.length > 0 ? imagePrompts[0] : null;
+  
   const [prompt, setPrompt] = useState('');
+  const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
+  
+  // Set default prompt based on title
+  useEffect(() => {
+    if (title && !prompt) {
+      setPrompt(`${title} in a modern, professional style`);
+    }
+  }, [title]);
   
   // Toggle image selection
   const toggleImageSelection = (id: string) => {
@@ -26,36 +50,11 @@ const ImageStep: React.FC = () => {
     );
   };
   
-  // Generate new images
-  const generateImages = () => {
-    setIsGenerating(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      // Sample new images
-      const newImages = [
-        {
-          id: `img${images.length + 1}`,
-          url: 'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-          alt: 'WordPress Security Dashboard',
-          caption: 'Modern WordPress security dashboard interface',
-          isSelected: false,
-          type: 'section'
-        },
-        {
-          id: `img${images.length + 2}`,
-          url: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-          alt: 'Secure Coding',
-          caption: 'Secure coding practices for WordPress development',
-          isSelected: false,
-          type: 'section'
-        }
-      ];
-      
-      setImages([...images, ...newImages]);
-      setIsGenerating(false);
-      setPrompt('');
-    }, 2000);
+  // Handle generate images
+  const handleGenerateImages = async () => {
+    if (title && selectedKeywords.length > 0) {
+      await generateImages(title, selectedKeywords);
+    }
   };
   
   // Get selected images
@@ -63,21 +62,40 @@ const ImageStep: React.FC = () => {
     return images.filter(img => img.isSelected);
   };
   
+  // Generate suggested prompts based on title and keywords
+  const generateSuggestedPrompts = () => {
+    if (!title) return;
+    
+    const suggestions = [
+      `${title} in a modern, professional style`,
+      `Illustration of ${title} with clean, minimalist design`,
+      `3D render of ${title} concept with vibrant colors`,
+      `${title} with ${selectedKeywords[0] || ''} theme, photorealistic`
+    ];
+    
+    setSuggestedPrompts(suggestions);
+  };
+  
+  // Use suggested prompt
+  const useSuggestedPrompt = (suggestion: string) => {
+    setPrompt(suggestion);
+  };
+  
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-gray-800">Image Generation</h3>
         <button 
-          onClick={() => setIsGenerating(false)}
+          onClick={generateSuggestedPrompts}
           className="btn btn-ghost text-sm py-1 px-3 flex items-center"
         >
           <RefreshCw className="mr-1" size={14} />
-          Regenerate
+          Suggest Prompts
         </button>
       </div>
       
       <p className="text-gray-600 mb-4">
-        Generate and select images for your article using DALL-E 3.
+        Generate and select images for your article using AI image generation.
       </p>
       
       {/* Image Generation Form */}
@@ -101,11 +119,11 @@ const ImageStep: React.FC = () => {
               className="input pr-24"
             />
             <button
-              onClick={generateImages}
-              disabled={isGenerating}
-              className="absolute right-2 top-2 bg-primary text-white px-3 py-1 rounded-md text-sm hover:bg-primary-dark"
+              onClick={handleGenerateImages}
+              disabled={generating || !prompt.trim()}
+              className="absolute right-2 top-2 bg-primary text-white px-3 py-1 rounded-md text-sm hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {isGenerating ? (
+              {generating ? (
                 <>
                   <RefreshCw className="inline-block mr-1 animate-spin" size={14} />
                   Generating...
@@ -119,6 +137,24 @@ const ImageStep: React.FC = () => {
             Describe the image you want to generate. Be specific for better results.
           </p>
         </div>
+        
+        {/* Suggested Prompts */}
+        {suggestedPrompts.length > 0 && (
+          <div className="mb-3">
+            <h5 className="text-xs font-medium text-gray-700 mb-2">Suggested Prompts:</h5>
+            <div className="flex flex-wrap gap-2">
+              {suggestedPrompts.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => useSuggestedPrompt(suggestion)}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-1 rounded-md transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         
         <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
           <h5 className="text-xs font-medium text-blue-800 mb-1">Prompt Tips</h5>
@@ -138,7 +174,7 @@ const ImageStep: React.FC = () => {
           <span className="text-xs text-gray-500">{getSelectedImages().length} selected</span>
         </div>
         
-        {isGenerating ? (
+        {generating ? (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
             <RefreshCw className="animate-spin mx-auto mb-3 text-primary" size={24} />
             <p className="text-gray-600">Generating images...</p>
@@ -167,7 +203,7 @@ const ImageStep: React.FC = () => {
                         : 'bg-white/80 text-gray-700 hover:bg-white'
                     }`}
                   >
-                    {image.isSelected ? <Check size={16} /> : <Plus size={16} />}
+                    {image.isSelected ? <Check size={16} /> : <PlusIcon size={16} />}
                   </button>
                 </div>
                 
@@ -235,24 +271,5 @@ const ImageStep: React.FC = () => {
     </div>
   );
 };
-
-// Plus icon component
-const Plus = ({ size = 24, ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <line x1="12" y1="5" x2="12" y2="19"></line>
-    <line x1="5" y1="12" x2="19" y2="12"></line>
-  </svg>
-);
 
 export default ImageStep;

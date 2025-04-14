@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
 import { RefreshCw, Pencil, Sparkles, Zap, ArrowRight } from 'lucide-react';
+import PromptRunner from '../../../../../../shared/components/PromptRunner/PromptRunner';
+import { usePrompt } from '../../../contexts/PromptContext';
 
 interface TopicOptionProps {
   text: string;
@@ -30,27 +32,40 @@ const TopicStep: React.FC = () => {
     selectedTopicIndex, 
     setSelectedTopicIndex,
     isGeneratingIdeas,
+    setIsGeneratingIdeas,
     generateTopicIdeas,
+    topicSuggestions,
+    selectedArticleType,
     goToNextStep
   } = useArticleWizard();
   
-  // Sample topic suggestions
-  const topicSuggestions = [
-    "How to Optimize WordPress for Speed", 
-    "Ultimate Guide to WordPress Security", 
-    "Top 10 WordPress Themes for Business",
-    "WordPress vs Headless CMS Comparison"
-  ];
+  const { prompts, settings } = usePrompt();
+  
+  // Get the topic prompt template
+  const topicPrompts = prompts.filter(p => p.category === 'topic');
+  const topicPrompt = topicPrompts.length > 0 ? topicPrompts[0] : null;
   
   const handleTopicSelection = (suggestion: string, index: number) => {
     setTitle(suggestion);
     setSelectedTopicIndex(index);
   };
   
-  const regenerateTopic = () => {
-    // This would typically call an API to generate new topics
-    // For now, we'll just use the existing generateTopicIdeas function
-    generateTopicIdeas();
+  const handleGenerateTopics = async () => {
+    await generateTopicIdeas();
+  };
+  
+  // Get the article type label
+  const getArticleTypeLabel = () => {
+    const articleTypes = [
+      { value: 'blog-post', label: 'Blog Post' },
+      { value: 'seo-article', label: 'SEO Article' },
+      { value: 'academic-paper', label: 'Academic Paper' },
+      { value: 'news-article', label: 'News Article' },
+      { value: 'product-description', label: 'Product Description' }
+    ];
+    
+    const selectedType = articleTypes.find(type => type.value === selectedArticleType);
+    return selectedType?.label || selectedArticleType;
   };
   
   return (
@@ -91,7 +106,7 @@ const TopicStep: React.FC = () => {
           </h4>
           <div className="flex items-center">
             <button
-              onClick={regenerateTopic}
+              onClick={handleGenerateTopics}
               className="btn btn-ghost text-sm py-1 px-3 flex items-center mr-2"
               disabled={isGeneratingIdeas}
             >
@@ -99,7 +114,7 @@ const TopicStep: React.FC = () => {
               {isGeneratingIdeas ? 'Regenerating...' : 'Regenerate'}
             </button>
             <button
-              onClick={generateTopicIdeas}
+              onClick={handleGenerateTopics}
               className="btn btn-primary text-sm py-1 px-3 flex items-center"
               disabled={isGeneratingIdeas}
             >
@@ -117,16 +132,37 @@ const TopicStep: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {topicSuggestions.map((suggestion, i) => (
-            <TopicOption
-              key={i}
-              text={suggestion}
-              isSelected={selectedTopicIndex === i}
-              onClick={() => handleTopicSelection(suggestion, i)}
-            />
-          ))}
-        </div>
+        
+        {topicPrompt && (
+          <div className="mb-4">
+            {isGeneratingIdeas ? (
+              <div className="flex items-center justify-center p-6">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <span className="ml-3 text-gray-600">Generating topic ideas...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {topicSuggestions.map((suggestion, i) => (
+                  <TopicOption
+                    key={i}
+                    text={suggestion}
+                    isSelected={selectedTopicIndex === i}
+                    onClick={() => handleTopicSelection(suggestion, i)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {!topicPrompt && (
+          <div className="text-center py-4">
+            <p className="text-gray-500 mb-2">No topic prompt template found</p>
+            <p className="text-sm text-gray-600">
+              Please configure a topic prompt template in the admin section.
+            </p>
+          </div>
+        )}
       </div>
       
       {/* No duplicate navigation buttons here - using FixedNavigation component instead */}

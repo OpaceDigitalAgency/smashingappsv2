@@ -1,0 +1,12 @@
+{
+  "name": "article-smasher-v2-tests",
+  "version": "1.0.0",
+  "description": "Test suite for Article Smasher V2",
+  "main": "test-article-smasher.js",
+  "scripts": {
+    "test": "node test-article-smasher.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  }
+}

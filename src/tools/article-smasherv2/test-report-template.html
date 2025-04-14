@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Smasher V2 Test Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #0068B3;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            text-align: center;
+            padding: 10px;
+        }
+        .summary-item h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #666;
+        }
+        .summary-item p {
+            margin: 5px 0 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .error { color: #dc3545; }
+        .test-section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .section-header {
+            background-color: #f0f9ff;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .section-content {
+            padding: 15px;
+            display: none;
+        }
+        .section-content.active {
+            display: block;
+        }
+        .test-case {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .test-case:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .test-case h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .test-case h3 span {
+            margin-left: 10px;
+        }
+        .test-details {
+            margin-left: 25px;
+        }
+        .test-log {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .screenshot {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .screenshot img {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .status-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-success {
+            background-color: #28a745;
+        }
+        .status-warning {
+            background-color: #ffc107;
+        }
+        .status-error {
+            background-color: #dc3545;
+        }
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Article Smasher V2 Test Report</h1>
+        <p id="test-date">Run on: {{TEST_DATE}}</p>
+    </header>
+
+    <div class="summary">
+        <div class="summary-item">
+            <h3>Total Tests</h3>
+            <p>{{TOTAL_TESTS}}</p>
+        </div>
+        <div class="summary-item">
+            <h3>Passed</h3>
+            <p class="success">{{PASSED_TESTS}}</p>
+        </div>
+        <div class="summary-item">
+            <h3>Warnings</h3>
+            <p class="warning">{{WARNING_TESTS}}</p>
+        </div>
+        <div class="summary-item">
+            <h3>Failed</h3>
+            <p class="error">{{FAILED_TESTS}}</p>
+        </div>
+        <div class="summary-item">
+            <h3>Duration</h3>
+            <p>{{TEST_DURATION}}</p>
+        </div>
+    </div>
+
+    <div id="test-sections">
+        <!-- Test sections will be inserted here -->
+        {{TEST_SECTIONS}}
+    </div>
+
+    <footer>
+        <p>Article Smasher V2 Test Suite - Generated automatically</p>
+    </footer>
+
+    <script>
+        // Toggle section visibility
+        document.querySelectorAll('.section-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+
+        // Expand the first section by default
+        document.querySelector('.section-content').classList.add('active');
+    </script>
+</body>
+</html>

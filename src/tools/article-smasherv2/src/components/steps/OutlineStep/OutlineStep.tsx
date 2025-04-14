@@ -1,56 +1,139 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
-import { RefreshCw, List, Plus, Trash2 } from 'lucide-react';
+import { usePrompt } from '../../../contexts/PromptContext';
+import { RefreshCw, List, Plus, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { OutlineItem } from '../../../types';
 
 const OutlineStep: React.FC = () => {
-  const { title, selectedKeywords } = useArticleWizard();
+  const { 
+    title, 
+    selectedKeywords, 
+    outline,
+    setOutline,
+    generating,
+    setGenerating,
+    generateOutline
+  } = useArticleWizard();
   
-  // Sample outline points
-  const [outlinePoints, setOutlinePoints] = React.useState([
-    "Introduction to WordPress Security",
-    "Common WordPress Security Vulnerabilities",
-    "Essential Security Plugins for WordPress",
-    "Hardening WordPress Configuration",
-    "Regular Maintenance and Updates",
-    "Backup Strategies for WordPress",
-    "Monitoring and Responding to Security Threats",
-    "Conclusion and Next Steps"
-  ]);
+  const { prompts, settings } = usePrompt();
   
-  const [newPoint, setNewPoint] = React.useState('');
-  const [isGenerating, setIsGenerating] = React.useState(false);
+  // Get the outline prompt template
+  const outlinePrompts = prompts.filter(p => p.category === 'outline');
+  const outlinePrompt = outlinePrompts.length > 0 ? outlinePrompts[0] : null;
+  
+  const [newPoint, setNewPoint] = useState('');
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  
+  // Convert flat outline points to hierarchical structure for display
+  const [flatOutlinePoints, setFlatOutlinePoints] = useState<string[]>([]);
+  
+  // Effect to flatten outline for simple display
+  useEffect(() => {
+    if (outline && outline.length > 0) {
+      const flattenOutline = (items: OutlineItem[], prefix = ''): string[] => {
+        return items.reduce((acc: string[], item) => {
+          const itemPrefix = prefix ? `${prefix}.${item.level}` : `${item.level}`;
+          acc.push(`${itemPrefix}. ${item.title}`);
+          
+          if (item.children && item.children.length > 0) {
+            acc.push(...flattenOutline(item.children, itemPrefix));
+          }
+          
+          return acc;
+        }, []);
+      };
+      
+      setFlatOutlinePoints(flattenOutline(outline));
+    } else {
+      setFlatOutlinePoints([]);
+    }
+  }, [outline]);
+  
+  const toggleItemExpanded = (id: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
   
   const addOutlinePoint = () => {
     if (newPoint.trim()) {
-      setOutlinePoints([...outlinePoints, newPoint.trim()]);
+      // Create a new outline item
+      const newItem: OutlineItem = {
+        id: `outline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title: newPoint.trim(),
+        level: 1,
+        children: []
+      };
+      
+      // Add to the outline
+      setOutline([...outline, newItem]);
       setNewPoint('');
     }
   };
   
-  const removeOutlinePoint = (index: number) => {
-    setOutlinePoints(outlinePoints.filter((_, i) => i !== index));
+  const removeOutlineItem = (id: string) => {
+    // Recursive function to filter out the item and its children
+    const filterOutItem = (items: OutlineItem[]): OutlineItem[] => {
+      return items.filter(item => {
+        if (item.id === id) return false;
+        
+        if (item.children && item.children.length > 0) {
+          item.children = filterOutItem(item.children);
+        }
+        
+        return true;
+      });
+    };
+    
+    setOutline(filterOutItem(outline));
   };
   
-  const regenerateOutline = () => {
-    setIsGenerating(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      // Generate new outline based on title and keywords
-      const newOutline = [
-        `Introduction to ${title}`,
-        "Understanding the Core Concepts",
-        "Key Benefits and Advantages",
-        "Common Challenges and Solutions",
-        "Best Practices and Implementation Tips",
-        "Case Studies and Real-World Examples",
-        "Tools and Resources",
-        "Conclusion and Next Steps"
-      ];
-      
-      setOutlinePoints(newOutline);
-      setIsGenerating(false);
-    }, 1500);
+  const handleGenerateOutline = async () => {
+    if (title && selectedKeywords.length > 0) {
+      await generateOutline(title, selectedKeywords);
+    }
+  };
+  
+  // Recursive function to render outline items
+  const renderOutlineItems = (items: OutlineItem[], level = 0) => {
+    return items.map((item, index) => (
+      <div key={item.id} className="ml-4">
+        <div className="flex items-center group my-2">
+          {item.children && item.children.length > 0 ? (
+            <button
+              onClick={() => toggleItemExpanded(item.id)}
+              className="mr-1 text-gray-500 hover:text-gray-700"
+            >
+              {expandedItems[item.id] ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
+            </button>
+          ) : (
+            <div className="w-4 h-4 mr-1"></div>
+          )}
+          
+          <div className="flex-grow px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800">
+            {item.title}
+          </div>
+          
+          <button
+            onClick={() => removeOutlineItem(item.id)}
+            className="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+        
+        {item.children && item.children.length > 0 && expandedItems[item.id] && (
+          <div className="ml-4 border-l-2 border-gray-200 pl-2">
+            {renderOutlineItems(item.children, level + 1)}
+          </div>
+        )}
+      </div>
+    ));
   };
   
   return (
@@ -58,12 +141,12 @@ const OutlineStep: React.FC = () => {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-gray-800">Article Outline</h3>
         <button 
-          onClick={regenerateOutline} 
+          onClick={handleGenerateOutline} 
           className="btn btn-ghost text-sm py-1 px-3 flex items-center"
-          disabled={isGenerating}
+          disabled={generating || !title || selectedKeywords.length === 0}
         >
-          <RefreshCw className={`mr-1 ${isGenerating ? 'animate-spin' : ''}`} size={14} />
-          {isGenerating ? 'Generating...' : 'Regenerate'}
+          <RefreshCw className={`mr-1 ${generating ? 'animate-spin' : ''}`} size={14} />
+          {generating ? 'Generating...' : 'Generate Outline'}
         </button>
       </div>
       
@@ -101,22 +184,23 @@ const OutlineStep: React.FC = () => {
           Outline Points
         </h4>
         
-        <div className="space-y-2 mb-4">
-          {outlinePoints.map((point, index) => (
-            <div key={index} className="flex items-center group">
-              <div className="w-6 text-center text-gray-400">{index + 1}.</div>
-              <div className="flex-grow px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800">
-                {point}
-              </div>
-              <button
-                onClick={() => removeOutlinePoint(index)}
-                className="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
-        </div>
+        {generating ? (
+          <div className="flex items-center justify-center p-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-gray-600">Generating outline...</span>
+          </div>
+        ) : outline.length > 0 ? (
+          <div className="space-y-1 mb-4">
+            {renderOutlineItems(outline)}
+          </div>
+        ) : (
+          <div className="text-center py-4 mb-4">
+            <p className="text-gray-500">No outline points yet</p>
+            <p className="text-sm text-gray-400">
+              Click "Generate Outline" or add points manually below
+            </p>
+          </div>
+        )}
         
         <div className="flex items-center">
           <div className="w-6 text-center text-gray-400">

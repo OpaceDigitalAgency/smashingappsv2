@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
+import { usePrompt } from '../../../contexts/PromptContext';
 import {
   RefreshCw,
   FileText,
@@ -14,80 +15,72 @@ import {
 } from 'lucide-react';
 
 const ContentStep: React.FC = () => {
-  const { title, selectedKeywords, htmlOutput, setHtmlOutput, generating, setGenerating } = useArticleWizard();
+  const { 
+    title, 
+    selectedKeywords, 
+    outline,
+    htmlOutput, 
+    setHtmlOutput, 
+    generating, 
+    setGenerating,
+    articleContent,
+    setArticleContent,
+    generateContent
+  } = useArticleWizard();
+  
+  const { prompts, settings } = usePrompt();
+  
+  // Get the content prompt template
+  const contentPrompts = prompts.filter(p => p.category === 'content');
+  const contentPrompt = contentPrompts.length > 0 ? contentPrompts[0] : null;
   
   const [showSettings, setShowSettings] = useState(false);
   const [contentLength, setContentLength] = useState('medium');
   const [contentTone, setContentTone] = useState('informative');
   const [includeStats, setIncludeStats] = useState(true);
   const [includeExamples, setIncludeExamples] = useState(true);
+  const [readingTime, setReadingTime] = useState('5 min');
   
-  // Sample content
-  const sampleContent = `
-    <h1>Ultimate Guide to WordPress Security</h1>
-    
-    <p>WordPress powers over 40% of all websites on the internet, making it a prime target for hackers and malicious actors. In this comprehensive guide, we'll explore essential WordPress security measures to keep your website safe and secure.</p>
-    
-    <h2>Common WordPress Security Vulnerabilities</h2>
-    
-    <p>WordPress sites face several common security threats:</p>
-    
-    <ul>
-      <li><strong>Outdated software</strong>: Running outdated versions of WordPress core, themes, or plugins</li>
-      <li><strong>Weak credentials</strong>: Using easily guessable usernames and passwords</li>
-      <li><strong>Vulnerable plugins</strong>: Installing poorly coded or unmaintained plugins</li>
-      <li><strong>Brute force attacks</strong>: Automated attempts to guess login credentials</li>
-      <li><strong>SQL injection</strong>: Exploiting vulnerabilities to insert malicious SQL code</li>
-    </ul>
-    
-    <h2>Essential Security Plugins for WordPress</h2>
-    
-    <p>These security plugins can significantly enhance your WordPress site's protection:</p>
-    
-    <ol>
-      <li><strong>Wordfence Security</strong>: Provides a firewall, malware scanner, and login security features</li>
-      <li><strong>Sucuri Security</strong>: Offers malware scanning, security hardening, and post-hack security actions</li>
-      <li><strong>iThemes Security</strong>: Includes 30+ ways to secure and protect your WordPress site</li>
-      <li><strong>All In One WP Security & Firewall</strong>: A comprehensive security solution with an easy-to-use interface</li>
-    </ol>
-    
-    <h2>Hardening WordPress Configuration</h2>
-    
-    <p>Beyond plugins, these configuration changes can strengthen your WordPress security:</p>
-    
-    <ul>
-      <li>Change the default database prefix from "wp_" to something unique</li>
-      <li>Disable file editing through the WordPress admin</li>
-      <li>Implement SSL encryption (HTTPS) for your entire site</li>
-      <li>Set proper file permissions (typically 644 for files and 755 for directories)</li>
-      <li>Hide your WordPress version number from public view</li>
-    </ul>
-    
-    <h2>Regular Maintenance and Updates</h2>
-    
-    <p>Consistent maintenance is crucial for WordPress security:</p>
-    
-    <ul>
-      <li>Update WordPress core as soon as security releases are available</li>
-      <li>Keep all themes and plugins updated to their latest versions</li>
-      <li>Remove any unused themes and plugins</li>
-      <li>Regularly scan your site for malware and suspicious activity</li>
-      <li>Monitor your site's error logs for unusual patterns</li>
-    </ul>
-    
-    <h2>Conclusion</h2>
-    
-    <p>WordPress security is not a one-time setup but an ongoing process. By implementing the strategies outlined in this guide, you can significantly reduce the risk of your site being compromised. Remember that security is about layers of protection – the more security measures you implement, the better protected your WordPress site will be.</p>
-  `;
+  // Calculate reading time based on content length
+  useEffect(() => {
+    if (articleContent) {
+      const wordCount = articleContent.text.split(/\s+/).length;
+      const minutes = Math.ceil(wordCount / 200); // Average reading speed is about 200 words per minute
+      setReadingTime(`${minutes} min`);
+    }
+  }, [articleContent]);
   
-  const generateContent = () => {
-    setGenerating(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setHtmlOutput(sampleContent);
-      setGenerating(false);
-    }, 3000);
+  const handleGenerateContent = async () => {
+    if (title && selectedKeywords.length > 0 && outline.length > 0) {
+      await generateContent(title, selectedKeywords, outline);
+    }
+  };
+  
+  const copyContent = () => {
+    if (articleContent) {
+      navigator.clipboard.writeText(articleContent.text)
+        .then(() => {
+          alert('Content copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy content:', err);
+          alert('Failed to copy content. Please try again.');
+        });
+    }
+  };
+  
+  const saveContent = () => {
+    if (articleContent) {
+      const blob = new Blob([articleContent.text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.replace(/\s+/g, '-').toLowerCase()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
   
   return (
@@ -207,7 +200,7 @@ const ContentStep: React.FC = () => {
             </div>
             <div className="flex items-center gap-1.5">
               <Clock size={14} className="text-primary" />
-              <span>Reading Time: 5 min</span>
+              <span>Reading Time: {readingTime}</span>
             </div>
           </div>
         </div>
@@ -215,10 +208,18 @@ const ContentStep: React.FC = () => {
         {htmlOutput ? (
           <div className="relative">
             <div className="absolute top-4 right-4 flex gap-2">
-              <button className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" title="Copy content">
+              <button 
+                onClick={copyContent}
+                className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" 
+                title="Copy content"
+              >
                 <Copy size={16} className="text-gray-600" />
               </button>
-              <button className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" title="Save content">
+              <button 
+                onClick={saveContent}
+                className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" 
+                title="Save content"
+              >
                 <Save size={16} className="text-gray-600" />
               </button>
             </div>
@@ -247,12 +248,21 @@ const ContentStep: React.FC = () => {
               Click the button below to generate high-quality content based on your topic, keywords, and outline.
             </p>
             <button
-              onClick={generateContent}
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors shadow-sm"
+              onClick={handleGenerateContent}
+              disabled={!title || selectedKeywords.length === 0 || outline.length === 0}
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               <Sparkles size={16} />
               <span>Generate Content</span>
             </button>
+            
+            {(!title || selectedKeywords.length === 0 || outline.length === 0) && (
+              <p className="text-red-500 text-sm mt-2">
+                {!title ? "Please set a title first. " : ""}
+                {selectedKeywords.length === 0 ? "Please select keywords. " : ""}
+                {outline.length === 0 ? "Please create an outline. " : ""}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -261,7 +271,7 @@ const ContentStep: React.FC = () => {
       {htmlOutput && (
         <div className="flex justify-end">
           <button
-            onClick={generateContent}
+            onClick={handleGenerateContent}
             className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-5 rounded-lg border border-gray-200 transition-colors shadow-sm"
             disabled={generating}
           >
