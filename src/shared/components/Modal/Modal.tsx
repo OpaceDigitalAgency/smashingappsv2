@@ -51,14 +51,15 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-6"
       onClick={handleBackdropClick}
     >
-      <div 
+      <div
         ref={modalRef}
-        className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} animate-in fade-in duration-300`}
+        className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} animate-in fade-in duration-300 max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
+        style={{ maxHeight: 'calc(100vh - 2rem)' }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">{title}</h3>
@@ -71,7 +72,7 @@ export const Modal: React.FC<ModalProps> = ({
           </button>
         </div>
         
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 overflow-y-auto flex-grow">
           {children}
         </div>
         

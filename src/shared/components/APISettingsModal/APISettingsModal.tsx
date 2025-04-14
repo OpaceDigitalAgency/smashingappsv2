@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Key, Check, AlertCircle, Info } from 'lucide-react';
 import Modal from '../Modal/Modal';
+import './APISettingsModal.css';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import { aiServiceRegistry } from '../../services/AIService';
 import { AIProvider } from '../../types/aiProviders';
@@ -122,6 +123,19 @@ const APISettingsModal: React.FC<APISettingsModalProps> = ({ show, onClose }) =>
   const setProviderAsActive = (provider: AIProvider) => {
     setActiveProvider(provider);
     aiServiceRegistry.setDefaultProvider(provider);
+    
+    // Also update the localStorage directly to ensure consistency
+    localStorage.setItem('smashingapps_activeProvider', provider);
+    
+    // Check if API key is configured for this provider
+    const service = aiServiceRegistry.getService(provider);
+    if (service && !service.isConfigured()) {
+      // Show validation message prompting for API key
+      setValidationStatus(prev => ({
+        ...prev,
+        [provider]: { valid: false, message: 'Please add your API key for this provider' }
+      }));
+    }
   };
   
   // Get provider display name
@@ -177,7 +191,7 @@ const APISettingsModal: React.FC<APISettingsModalProps> = ({ show, onClose }) =>
         </>
       }
     >
-      <div className="flex flex-col space-y-6">
+      <div className="flex flex-col space-y-6 api-settings-modal-content">
         <div className="bg-indigo-50 p-4 rounded-md">
           <div className="flex items-start">
             <Info className="h-5 w-5 text-indigo-500 mt-0.5 mr-2" />
@@ -192,18 +206,18 @@ const APISettingsModal: React.FC<APISettingsModalProps> = ({ show, onClose }) =>
         
         {/* Provider tabs */}
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-4 overflow-x-auto">
+          <nav className="-mb-px api-settings-tabs">
             {services.map(service => (
               <button
                 key={service.provider}
                 onClick={() => setSelectedProvider(service.provider)}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`api-settings-tab-button py-2 px-2 border-b-2 font-medium text-sm flex items-center ${
                   selectedProvider === service.provider
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                {getProviderDisplayName(service.provider)}
+                <span>{getProviderDisplayName(service.provider)}</span>
                 {service.provider === activeProvider && (
                   <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                     Active
@@ -239,13 +253,13 @@ const APISettingsModal: React.FC<APISettingsModalProps> = ({ show, onClose }) =>
                 
                 <div className="bg-gray-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-gray-900">Available Models</h4>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="mt-2 api-settings-models-list">
                     {service.getModels().map(model => (
-                      <div key={model.id} className="text-sm text-gray-700 flex items-center">
-                        <span className="w-4 h-4 mr-2 bg-indigo-100 rounded-full flex items-center justify-center">
-                          <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                      <div key={model.id} className="api-settings-model-item">
+                        <span className="api-settings-model-item-dot">
+                          <span className="api-settings-model-item-dot-inner"></span>
                         </span>
-                        {model.name}
+                        <span className="api-settings-model-item-name">{model.name}</span>
                       </div>
                     ))}
                   </div>
@@ -255,32 +269,36 @@ const APISettingsModal: React.FC<APISettingsModalProps> = ({ show, onClose }) =>
                   <label htmlFor={`api-key-${service.provider}`} className="block text-sm font-medium text-gray-700">
                     API Key
                   </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
-                    <input
-                      type="password"
-                      name={`api-key-${service.provider}`}
-                      id={`api-key-${service.provider}`}
-                      className="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder={`Enter your ${getProviderDisplayName(service.provider)} API key`}
-                      value={apiKeys[service.provider] || ''}
-                      onChange={(e) => handleApiKeyChange(service.provider, e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => saveApiKey(service.provider)}
-                      className="ml-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      Save
-                    </button>
-                    {apiKeys[service.provider] && (
+                  <div className="mt-1 api-settings-input-group">
+                    <div className="api-key-input">
+                      <input
+                        type="password"
+                        name={`api-key-${service.provider}`}
+                        id={`api-key-${service.provider}`}
+                        className="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder={`Enter your ${getProviderDisplayName(service.provider)} API key`}
+                        value={apiKeys[service.provider] || ''}
+                        onChange={(e) => handleApiKeyChange(service.provider, e.target.value)}
+                      />
+                    </div>
+                    <div className="api-key-actions mt-2 sm:mt-0">
                       <button
                         type="button"
-                        onClick={() => removeApiKey(service.provider)}
-                        className="ml-3 inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        onClick={() => saveApiKey(service.provider)}
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       >
-                        Remove
+                        Save
                       </button>
-                    )}
+                      {apiKeys[service.provider] && (
+                        <button
+                          type="button"
+                          onClick={() => removeApiKey(service.provider)}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ml-2"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   </div>
                   
                   {validationStatus[service.provider] && (

@@ -1,0 +1,113 @@
+/* APISettingsModal specific styles */
+
+/* Ensure the modal content is properly scrollable */
+.api-settings-modal-content {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Responsive tab navigation */
+.api-settings-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.api-settings-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.api-settings-tabs::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+
+/* Tab button styles */
+.api-settings-tab-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Responsive form layout */
+.api-settings-form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .api-settings-form-row {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* Fix for the blank box issue next to API key input */
+.api-settings-input-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .api-settings-input-group {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .api-settings-input-group .api-key-input {
+    flex-grow: 1;
+    min-width: 0;
+  }
+  
+  .api-settings-input-group .api-key-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+  }
+}
+
+/* Ensure models list doesn't overflow */
+.api-settings-models-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.api-settings-model-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #374151;
+  overflow: hidden;
+}
+
+.api-settings-model-item-dot {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  background-color: #e0e7ff;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.api-settings-model-item-dot-inner {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #6366f1;
+  border-radius: 9999px;
+}
+
+.api-settings-model-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
