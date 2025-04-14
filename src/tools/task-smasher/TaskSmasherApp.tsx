@@ -243,8 +243,6 @@ useEffect(() => {
     }, 100);
   }
 }, []);
-}, [setSelectedModel]);
-  }, []);
   
   // Check for preserved tasks when component loads
   useEffect(() => {
