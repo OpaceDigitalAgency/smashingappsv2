@@ -3,7 +3,7 @@ import { useArticleWizard } from '../../contexts/ArticleWizardContext';
 import WizardHeader from './WizardHeader';
 import FixedNavigation from './FixedNavigation';
 import StepNavigation from './StepNavigation';
-import ArticleTypeSidebarImproved from '../ArticleTypeSidebarImproved';
+import ArticleTypeSidebar from '../ArticleTypeSidebar';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -27,8 +27,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         
         <div className="main-content-flex">
           {/* Sidebar - always visible for consistent layout */}
-          <div className="md:w-72 flex-shrink-0">
-            <ArticleTypeSidebarImproved
+          <div className="flex-shrink-0">
+            <ArticleTypeSidebar
               selectedType={selectedArticleType}
               onSelectType={setSelectedArticleType}
               isLocked={isArticleTypeLocked || currentStep > 1}

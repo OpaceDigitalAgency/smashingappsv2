@@ -57,14 +57,6 @@ const TopicStep: React.FC = () => {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-gray-800">Select Your Topic</h3>
-        <button 
-          onClick={regenerateTopic} 
-          className="btn btn-ghost text-sm py-1 px-3 flex items-center"
-          disabled={isGeneratingIdeas}
-        >
-          <RefreshCw className={`mr-1 ${isGeneratingIdeas ? 'animate-spin' : ''}`} size={14} />
-          {isGeneratingIdeas ? 'Regenerating...' : 'Regenerate'}
-        </button>
       </div>
       
       <p className="text-gray-600 mb-4">
@@ -97,23 +89,33 @@ const TopicStep: React.FC = () => {
             <Sparkles className="text-primary mr-2" size={18} />
             AI Topic Suggestions
           </h4>
-          <button 
-            onClick={generateTopicIdeas}
-            className="btn btn-ghost text-sm py-1 px-3 flex items-center"
-            disabled={isGeneratingIdeas}
-          >
-            {isGeneratingIdeas ? (
-              <>
-                <RefreshCw className="mr-1 animate-spin" size={14} />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Zap className="mr-1" size={14} />
-                Generate Ideas
-              </>
-            )}
-          </button>
+          <div className="flex items-center">
+            <button
+              onClick={regenerateTopic}
+              className="btn btn-ghost text-sm py-1 px-3 flex items-center mr-2"
+              disabled={isGeneratingIdeas}
+            >
+              <RefreshCw className={`mr-1 ${isGeneratingIdeas ? 'animate-spin' : ''}`} size={14} />
+              {isGeneratingIdeas ? 'Regenerating...' : 'Regenerate'}
+            </button>
+            <button
+              onClick={generateTopicIdeas}
+              className="btn btn-primary text-sm py-1 px-3 flex items-center"
+              disabled={isGeneratingIdeas}
+            >
+              {isGeneratingIdeas ? (
+                <>
+                  <RefreshCw className="mr-1 animate-spin" size={14} />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Zap className="mr-1" size={14} />
+                  Generate Ideas
+                </>
+              )}
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {topicSuggestions.map((suggestion, i) => (
@@ -127,17 +129,7 @@ const TopicStep: React.FC = () => {
         </div>
       </div>
       
-      {/* Navigation Buttons */}
-      <div className="flex justify-end mt-8">
-        <button 
-          onClick={goToNextStep}
-          className="btn btn-primary py-2 px-6 rounded-lg flex items-center"
-          disabled={!title.trim()}
-        >
-          Continue
-          <ArrowRight className="ml-2" size={16} />
-        </button>
-      </div>
+      {/* No duplicate navigation buttons here - using FixedNavigation component instead */}
     </div>
   );
 };

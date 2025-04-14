@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useArticleWizard } from '../../contexts/ArticleWizardContext';
 import { Copy, Code, Share2 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
@@ -17,10 +17,33 @@ const CompleteArticle: React.FC = () => {
     return images.filter(img => img.isSelected);
   };
   
+  // State for image positions
+  const [imagePositions, setImagePositions] = useState<Record<string, string>>({});
+  
   // Handle drag and drop
   const onDragEnd = (result: DropResult) => {
-    // Implement drag and drop logic here
-    console.log('Drag ended', result);
+    const { source, destination, draggableId } = result;
+    
+    // If dropped outside a droppable area
+    if (!destination) return;
+    
+    // If dropped in the article content area
+    if (destination.droppableId.startsWith('content-section-')) {
+      // Update image positions
+      setImagePositions({
+        ...imagePositions,
+        [draggableId]: destination.droppableId
+      });
+      
+      // Show success message
+      const imageElement = document.getElementById(`image-${draggableId}`);
+      if (imageElement) {
+        imageElement.classList.add('drop-success');
+        setTimeout(() => {
+          imageElement.classList.remove('drop-success');
+        }, 1000);
+      }
+    }
   };
   
   // Copy text to clipboard
@@ -86,7 +109,12 @@ const CompleteArticle: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Main content area */}
           <div className="flex-grow">
-            <ArticleContent title={title} content={htmlOutput} />
+            <ArticleContent 
+              title={title} 
+              content={htmlOutput} 
+              imagePositions={imagePositions}
+              images={getSelectedImages()}
+            />
           </div>
           
           {/* Image bank */}

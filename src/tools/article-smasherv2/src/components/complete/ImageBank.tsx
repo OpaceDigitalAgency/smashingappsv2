@@ -1,6 +1,6 @@
 import React from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, MoveIcon } from 'lucide-react';
 
 interface ImageItem {
   id: string;
@@ -38,18 +38,28 @@ const ImageBank: React.FC<ImageBankProps> = ({ images }) => {
               {images.length > 0 ? (
                 images.map((image, index) => (
                   <Draggable key={image.id} draggableId={image.id} index={index}>
-                    {(provided) => (
+                    {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200"
+                        id={`image-${image.id}`}
+                        className={`bg-gray-50 rounded-lg overflow-hidden border border-gray-200 transition-all duration-300 ${
+                          snapshot.isDragging ? 'shadow-lg scale-105' : ''
+                        }`}
                       >
-                        <img
-                          src={image.url}
-                          alt={image.alt}
-                          className="w-full h-32 object-cover"
-                        />
+                        <div className="relative">
+                          <img
+                            src={image.url}
+                            alt={image.alt}
+                            className="w-full h-32 object-cover"
+                          />
+                          <div 
+                            {...provided.dragHandleProps}
+                            className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-md cursor-move hover:bg-gray-100"
+                          >
+                            <MoveIcon size={16} className="text-gray-600" />
+                          </div>
+                        </div>
                         <div className="p-2">
                           <div className="flex justify-between items-center mb-1">
                             <span className="text-xs font-medium text-gray-700">

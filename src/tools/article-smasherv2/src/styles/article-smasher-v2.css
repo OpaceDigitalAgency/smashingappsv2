@@ -2,9 +2,10 @@
 
 /* Override the mobile-container class for article-smasherv2 */
 .article-smasherv2-container .mobile-container {
-  max-width: 1200px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   padding-left: 1rem !important;
   padding-right: 1rem !important;
 }
@@ -143,6 +144,90 @@
   transition: background-color 0.2s;
   margin-top: 1rem;
   width: 100%;
+}
+
+/* Drag and drop styles */
+.drop-success {
+  animation: dropSuccess 1s ease-in-out;
+}
+
+@keyframes dropSuccess {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(0, 104, 179, 0); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 104, 179, 0.5); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(0, 104, 179, 0); }
+}
+
+.drop-success-animation {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Tooltip styles for nav items */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  left: 100%;
+  margin-left: 10px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Fix for blank buttons */
+button:empty {
+  display: none;
+}
+
+/* Improved keyword controls */
+.keyword-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.keyword-add-btn {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+.keyword-add-btn:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.keyword-remove-btn {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.keyword-remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
 }
 
 .generate-ideas-btn:hover:not(:disabled) {

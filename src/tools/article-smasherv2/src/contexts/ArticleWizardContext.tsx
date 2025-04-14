@@ -139,9 +139,8 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   };
   
   const handleStepClick = (step: number) => {
-    if (step <= currentStep) {
-      setCurrentStep(step);
-    }
+    // Allow navigation to any step
+    setCurrentStep(step);
   };
   
   // Generate topic ideas based on the selected article type

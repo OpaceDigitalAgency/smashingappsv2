@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
-import { Search, RefreshCw, Info, X, ChevronRight, Download } from 'lucide-react';
+import { Search, RefreshCw, Info, X, ChevronRight, Download, Check, Plus } from 'lucide-react';
 
 interface KeywordData {
   keyword: string;
@@ -133,7 +133,8 @@ const KeywordStepImproved: React.FC = () => {
                 <span>{keyword}</span>
                 <button
                   onClick={() => toggleKeywordSelection(keyword)}
-                  className="ml-2 text-primary hover:text-primary-dark"
+                  className="ml-2 text-red-500 hover:text-red-700 bg-white rounded-full p-0.5"
+                  title="Remove keyword"
                 >
                   <X size={14} />
                 </button>
@@ -213,16 +214,25 @@ const KeywordStepImproved: React.FC = () => {
                   <div className="flex-grow">
                     <div className="flex items-center">
                       <h4 className="text-sm font-medium text-gray-800">{keyword.keyword}</h4>
-                      <button
-                        onClick={() => toggleKeywordSelection(keyword.keyword)}
-                        className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
-                          selectedKeywords.includes(keyword.keyword)
-                            ? 'bg-primary-50 text-primary'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {selectedKeywords.includes(keyword.keyword) ? 'Selected' : 'Select'}
-                      </button>
+                      
+                      {/* New add/remove controls */}
+                      {selectedKeywords.includes(keyword.keyword) ? (
+                        <button
+                          onClick={() => toggleKeywordSelection(keyword.keyword)}
+                          className="ml-2 p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          title="Remove keyword"
+                        >
+                          <X size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => toggleKeywordSelection(keyword.keyword)}
+                          className="ml-2 p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                          title="Add keyword"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      )}
                     </div>
                     
                     <div className="flex items-center mt-2 text-xs text-gray-500 space-x-4">
@@ -241,7 +251,24 @@ const KeywordStepImproved: React.FC = () => {
                     </div>
                   </div>
                   
-                  <ChevronRight size={16} className="text-gray-400" />
+                  {/* Action button */}
+                  {selectedKeywords.includes(keyword.keyword) ? (
+                    <button
+                      onClick={() => toggleKeywordSelection(keyword.keyword)}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                      title="Remove keyword"
+                    >
+                      <X size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggleKeywordSelection(keyword.keyword)}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                      title="Add keyword"
+                    >
+                      <Check size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
