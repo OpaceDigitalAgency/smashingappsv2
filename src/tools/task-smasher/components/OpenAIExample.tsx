@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import OpenAIService from '../utils/openaiService';
+import OpenAIService from '../../../shared/services/openaiService';
 
 interface OpenAIExampleProps {
   onClose: () => void;
@@ -14,6 +14,7 @@ const OpenAIExample: React.FC<OpenAIExampleProps> = ({ onClose }) => {
     limit: number;
     remaining: number;
     reset: Date;
+    used: number;
   } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +35,7 @@ const OpenAIExample: React.FC<OpenAIExampleProps> = ({ onClose }) => {
         messages: [{ role: 'user', content: prompt }],
       });
       
-      setResponse(data.choices[0]?.message.content || 'No response');
+      setResponse(data.content || 'No response');
       setRateLimit(rateLimit);
     } catch (err) {
       if (err instanceof Error && err.message.includes('Rate limit exceeded')) {
@@ -91,6 +92,7 @@ const OpenAIExample: React.FC<OpenAIExampleProps> = ({ onClose }) => {
           <div className="mb-4 p-3 bg-gray-100 rounded">
             <h3 className="font-semibold">Rate Limit Status:</h3>
             <p>Limit: {rateLimit.limit} requests per day</p>
+            <p>Used: {rateLimit.used} requests</p>
             <p>Remaining: {rateLimit.remaining} requests</p>
             <p>Resets: {rateLimit.reset.toLocaleString()}</p>
           </div>
