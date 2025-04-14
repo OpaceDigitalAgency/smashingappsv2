@@ -45,7 +45,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // Handle navigation item click
   const handleNavItemClick = (id: string, path: string) => {
     setActiveSection(id);
-    navigate(path);
+    // Use window.location.href for hard navigation instead of navigate
+    window.location.href = path;
   };
 
   return (
