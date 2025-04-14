@@ -1,33 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Sparkles, 
-  Pencil, 
-  Search, 
-  FileText, 
-  CheckCircle, 
-  Image as ImageIcon, 
-  BookOpen, 
-  Sliders, 
-  ChevronRight, 
-  MousePointer, 
-  ChevronsRight, 
-  Copy, 
-  Download, 
-  FileText as FileTextIcon, 
-  Share2, 
-  Settings, 
-  RefreshCw, 
-  Info, 
+import {
+  ArrowLeft,
+  Sparkles,
+  Pencil,
+  Search,
+  FileText,
+  CheckCircle,
+  Image as ImageIcon,
+  BookOpen,
+  Sliders,
+  ChevronRight,
+  MousePointer,
+  ChevronsRight,
+  Copy,
+  Download,
+  FileText as FileTextIcon,
+  Share2,
+  Settings,
+  RefreshCw,
+  Info,
   ExternalLink,
   Code,
   MoveVertical,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import KeywordService, { KeywordData } from '../services/KeywordService';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { convert } from 'html-to-text';
+import ArticleTypeSidebar, { ARTICLE_TYPES } from './ArticleTypeSidebar';
+import './article-smasher-v2.css';
 
 interface StepProps {
   isActive: boolean;
@@ -210,6 +212,9 @@ const Demo: React.FC = () => {
   const [title, setTitle] = useState('');
   const [generating, setGenerating] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
+  const [selectedArticleType, setSelectedArticleType] = useState<string>("blog-post");
+  const [isArticleTypeLocked, setIsArticleTypeLocked] = useState(false);
+  const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>(['wordpress ai content generator', 'gpt for wordpress']);
   const [keywords, setKeywords] = useState<KeywordData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -319,6 +324,71 @@ const Demo: React.FC = () => {
   
   const [htmlOutput, setHtmlOutput] = useState('');
   const htmlOutputRef = useRef<HTMLDivElement>(null);
+  
+  
+  // Generate topic ideas based on the selected article type
+  const generateTopicIdeas = () => {
+    setIsGeneratingIdeas(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // Get the selected article type label
+      const selectedType = ARTICLE_TYPES.find(type => type.value === selectedArticleType);
+      
+      // Generate topic suggestions based on the article type
+      let newSuggestions: string[] = [];
+      
+      switch (selectedArticleType) {
+        case 'blog-post':
+          newSuggestions = [
+            "10 Essential WordPress Plugins for Bloggers in 2025",
+            "How to Increase Blog Traffic Using AI Tools",
+            "The Ultimate Guide to WordPress Blog Monetization",
+            "7 Blog Writing Tips to Engage Your Audience"
+          ];
+          break;
+        case 'seo-article':
+          newSuggestions = [
+            "SEO Best Practices for WordPress Websites in 2025",
+            "How to Optimize WordPress Content for Featured Snippets",
+            "Local SEO Strategies for Small Business Websites",
+            "Technical SEO Checklist for WordPress Sites"
+          ];
+          break;
+        case 'academic-paper':
+          newSuggestions = [
+            "The Impact of AI on Content Creation: A Systematic Review",
+            "Analyzing User Engagement Metrics in Digital Publishing",
+            "Comparative Study of Content Management Systems in Higher Education",
+            "Ethical Considerations in AI-Generated Academic Content"
+          ];
+          break;
+        case 'news-article':
+          newSuggestions = [
+            "Breaking: WordPress Releases Major Security Update",
+            "New AI Content Tools Revolutionize Digital Publishing",
+            "WordPress Market Share Reaches Record High in 2025",
+            "Google Algorithm Update Impacts WordPress Sites: What to Know"
+          ];
+          break;
+        default:
+          newSuggestions = [
+            `${selectedType?.label} about WordPress and AI Integration`,
+            `${selectedType?.label} on Content Creation Best Practices`,
+            `${selectedType?.label} for Digital Marketing Strategy`,
+            `${selectedType?.label} on SEO Optimization Techniques`
+          ];
+      }
+      
+      // Update the topic suggestions
+      topicSuggestions.splice(0, topicSuggestions.length, ...newSuggestions);
+      
+      // Reset states
+      setIsGeneratingIdeas(false);
+      setSelectedTopicIndex(null);
+      setTitle('');
+    }, 1500);
+  };
   
   const topicSuggestions = [
     "How to Optimize WordPress for Speed", 
@@ -736,10 +806,22 @@ const Demo: React.FC = () => {
           </div>
         </div>
         
-        {/* Step Content */}
-        <div className="bg-white rounded-xl shadow-card p-4 mb-20">
-          {!showComplete ? (
-            <>
+        {/* Main Content Area with Sidebar */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Article Type Sidebar */}
+          <div className="md:w-64 flex-shrink-0">
+            <ArticleTypeSidebar
+              selectedType={selectedArticleType}
+              onSelectType={setSelectedArticleType}
+              isLocked={isArticleTypeLocked || currentStep > 1}
+              onGenerateIdeas={generateTopicIdeas}
+            />
+          </div>
+          
+          {/* Step Content */}
+          <div className="flex-grow bg-white rounded-xl shadow-card p-4 mb-20">
+            {!showComplete ? (
+              <>
               {currentStep === 1 && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -772,10 +854,29 @@ const Demo: React.FC = () => {
                   </div>
                   
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-800 mb-2 flex items-center">
-                      <Sparkles className="text-primary mr-2" size={18} />
-                      AI Topic Suggestions
-                    </h4>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium text-gray-800 flex items-center">
+                        <Sparkles className="text-primary mr-2" size={18} />
+                        AI Topic Suggestions
+                      </h4>
+                      <button
+                        onClick={generateTopicIdeas}
+                        className="btn btn-ghost text-sm py-1 px-3 flex items-center"
+                        disabled={isGeneratingIdeas}
+                      >
+                        {isGeneratingIdeas ? (
+                          <>
+                            <RefreshCw className="mr-1 animate-spin" size={14} />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="mr-1" size={14} />
+                            Generate Ideas
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {topicSuggestions.map((suggestion, i) => (
                         <TopicOption
@@ -1264,9 +1365,11 @@ const Demo: React.FC = () => {
                 </div>
               )}
             </>
+          </div>
+        </div>
           ) : (
             // Complete view with full article and export options with image drag and drop
-            <div>
+            <div className="complete-article-container">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-800">Complete Article</h3>
                 <div className="flex space-x-2">
@@ -1294,7 +1397,7 @@ const Demo: React.FC = () => {
               </div>
               
               <DragDropContext onDragEnd={onDragEnd}>
-                <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col md:flex-row gap-6">
                   {/* Main content area */}
                   <div className="flex-grow">
                     <div className="bg-white rounded-lg border border-gray-200 p-5 mb-4">
