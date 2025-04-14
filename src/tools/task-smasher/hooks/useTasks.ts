@@ -836,7 +836,6 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
         
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
-      }
     } catch (error) {
       console.error('Error regenerating task:', error);
       
