@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
-import { RefreshCw, FileText, Sliders, ChevronRight } from 'lucide-react';
+import {
+  RefreshCw,
+  FileText,
+  Sliders,
+  ChevronRight,
+  Clock,
+  Tag,
+  Save,
+  Copy,
+  Sparkles,
+  Zap
+} from 'lucide-react';
 
 const ContentStep: React.FC = () => {
   const { title, selectedKeywords, htmlOutput, setHtmlOutput, generating, setGenerating } = useArticleWizard();
@@ -80,36 +91,41 @@ const ContentStep: React.FC = () => {
   };
   
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-gray-800">Content Generation</h3>
-        <button 
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 mb-1">Content Generation</h3>
+          <p className="text-gray-600">
+            Generate high-quality content based on your topic, keywords, and outline.
+          </p>
+        </div>
+        <button
           onClick={() => setShowSettings(!showSettings)}
-          className="btn btn-ghost text-sm py-1 px-3 flex items-center"
+          className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 transition-colors shadow-sm"
         >
-          <Sliders className="mr-1" size={14} />
-          Settings
+          <Sliders className="text-primary" size={16} />
+          <span>{showSettings ? 'Hide Settings' : 'Show Settings'}</span>
         </button>
       </div>
       
-      <p className="text-gray-600 mb-4">
-        Generate high-quality content based on your topic, keywords, and outline.
-      </p>
-      
       {/* Settings Panel */}
       {showSettings && (
-        <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Content Settings</h4>
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm transition-all duration-300 ease-in-out">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="text-primary" size={18} />
+            <h4 className="text-base font-semibold text-gray-800">Content Settings</h4>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Content Length
               </label>
               <select
                 value={contentLength}
                 onChange={(e) => setContentLength(e.target.value)}
-                className="input text-sm"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-primary transition-all"
               >
                 <option value="short">Short (~500 words)</option>
                 <option value="medium">Medium (~1000 words)</option>
@@ -118,14 +134,14 @@ const ContentStep: React.FC = () => {
               </select>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Content Tone
               </label>
               <select
                 value={contentTone}
                 onChange={(e) => setContentTone(e.target.value)}
-                className="input text-sm"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-primary transition-all"
               >
                 <option value="informative">Informative</option>
                 <option value="conversational">Conversational</option>
@@ -136,72 +152,106 @@ const ContentStep: React.FC = () => {
             </div>
           </div>
           
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="includeStats"
-                checked={includeStats}
-                onChange={(e) => setIncludeStats(e.target.checked)}
-                className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-              />
-              <label htmlFor="includeStats" className="ml-2 text-sm text-gray-700">
-                Include statistics and data points
-              </label>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  id="includeStats"
+                  checked={includeStats}
+                  onChange={(e) => setIncludeStats(e.target.checked)}
+                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="includeStats" className="font-medium text-gray-700">
+                  Include statistics and data points
+                </label>
+                <p className="text-gray-500">Add relevant statistics to make your content more authoritative</p>
+              </div>
             </div>
             
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="includeExamples"
-                checked={includeExamples}
-                onChange={(e) => setIncludeExamples(e.target.checked)}
-                className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-              />
-              <label htmlFor="includeExamples" className="ml-2 text-sm text-gray-700">
-                Include examples and case studies
-              </label>
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  id="includeExamples"
+                  checked={includeExamples}
+                  onChange={(e) => setIncludeExamples(e.target.checked)}
+                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="includeExamples" className="font-medium text-gray-700">
+                  Include examples and case studies
+                </label>
+                <p className="text-gray-500">Add practical examples to illustrate key points</p>
+              </div>
             </div>
           </div>
         </div>
       )}
       
       {/* Content Preview */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4">
-        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex justify-between items-center">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-3 flex flex-col md:flex-row justify-between md:items-center gap-2">
           <div className="flex items-center">
             <FileText className="text-primary mr-2" size={18} />
-            <h4 className="text-sm font-medium text-gray-700">Article Content</h4>
+            <h4 className="text-base font-medium text-gray-800">Article Content</h4>
           </div>
           
-          <div className="flex items-center text-xs text-gray-500">
-            <span>Keywords: {selectedKeywords.length}</span>
-            <ChevronRight size={14} className="mx-1" />
-            <span>Estimated Reading Time: 5 min</span>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1.5">
+              <Tag size={14} className="text-primary" />
+              <span>Keywords: {selectedKeywords.length}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock size={14} className="text-primary" />
+              <span>Reading Time: 5 min</span>
+            </div>
           </div>
         </div>
         
         {htmlOutput ? (
-          <div className="p-4 prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: htmlOutput }} />
+          <div className="relative">
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" title="Copy content">
+                <Copy size={16} className="text-gray-600" />
+              </button>
+              <button className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" title="Save content">
+                <Save size={16} className="text-gray-600" />
+              </button>
+            </div>
+            <div className="p-6 prose prose-sm max-w-none">
+              <div dangerouslySetInnerHTML={{ __html: htmlOutput }} />
+            </div>
           </div>
         ) : generating ? (
-          <div className="p-8 text-center">
-            <RefreshCw className="animate-spin mx-auto mb-3 text-primary" size={24} />
-            <p className="text-gray-600">Generating your content...</p>
-            <p className="text-xs text-gray-500 mt-1">This may take a minute or two</p>
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
+              <RefreshCw className="animate-spin text-primary" size={28} />
+            </div>
+            <h4 className="text-lg font-medium text-gray-800 mb-2">Generating your content...</h4>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Our AI is crafting high-quality content based on your topic, keywords, and outline.
+              This may take a minute or two.
+            </p>
           </div>
         ) : (
-          <div className="p-8 text-center">
-            <p className="text-gray-600 mb-2">No content generated yet</p>
-            <p className="text-sm text-gray-500 mb-4">
-              Click the button below to generate content based on your topic, keywords, and outline.
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
+              <Zap className="text-primary" size={28} />
+            </div>
+            <h4 className="text-lg font-medium text-gray-800 mb-2">Ready to Generate Content</h4>
+            <p className="text-gray-600 max-w-md mx-auto mb-6">
+              Click the button below to generate high-quality content based on your topic, keywords, and outline.
             </p>
             <button
               onClick={generateContent}
-              className="btn btn-primary py-2 px-4 text-sm"
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors shadow-sm"
             >
-              Generate Content
+              <Sparkles size={16} />
+              <span>Generate Content</span>
             </button>
           </div>
         )}
@@ -209,21 +259,21 @@ const ContentStep: React.FC = () => {
       
       {/* Action Buttons */}
       {htmlOutput && (
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end">
           <button
             onClick={generateContent}
-            className="btn btn-outline py-2 px-4 text-sm flex items-center"
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-5 rounded-lg border border-gray-200 transition-colors shadow-sm"
             disabled={generating}
           >
             {generating ? (
               <>
-                <RefreshCw className="mr-2 animate-spin" size={14} />
-                Regenerating...
+                <RefreshCw className="animate-spin text-primary" size={16} />
+                <span>Regenerating...</span>
               </>
             ) : (
               <>
-                <RefreshCw className="mr-2" size={14} />
-                Regenerate
+                <RefreshCw className="text-primary" size={16} />
+                <span>Regenerate Content</span>
               </>
             )}
           </button>

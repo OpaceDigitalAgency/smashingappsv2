@@ -23,7 +23,10 @@ import {
   Code,
   MoveVertical,
   X,
-  Zap
+  Zap,
+  Tag,
+  List,
+  Send
 } from 'lucide-react';
 import KeywordService, { KeywordData } from '../services/KeywordService';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -55,27 +58,27 @@ interface ContentSection {
   images: ImageItem[];
 }
 
-const Step: React.FC<StepProps> = ({ isActive, isComplete, number, title, onClick }) => (
-  <div 
+const Step: React.FC<StepProps & { icon: React.ReactNode }> = ({ isActive, isComplete, number, title, icon, onClick }) => (
+  <div
     onClick={onClick}
-    className={`flex items-center px-3 py-1.5 rounded-lg text-sm cursor-pointer ${
-      isActive 
-        ? 'bg-primary text-white' 
-        : isComplete 
-          ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100' 
-          : 'bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100'
+    className={`flex items-center px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors ${
+      isActive
+        ? 'bg-purple-600 text-white'
+        : isComplete
+          ? 'bg-green-100 text-green-800 border border-green-300 hover:bg-green-200'
+          : 'bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200'
     }`}
   >
-    <div 
+    <div
       className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-        isActive 
-          ? 'bg-white text-primary' 
-          : isComplete 
-            ? 'bg-green-100 text-green-700' 
-            : 'bg-gray-100 text-gray-500'
+        isActive
+          ? 'bg-white text-purple-600'
+          : isComplete
+            ? 'bg-green-200 text-green-800'
+            : 'bg-gray-200 text-gray-400'
       }`}
     >
-      {isComplete ? <CheckCircle size={14} /> : number}
+      {isComplete ? <CheckCircle size={14} /> : icon}
     </div>
     <span className="font-medium">{title}</span>
   </div>
@@ -761,46 +764,52 @@ const Demo: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-3 gap-2">
-            <Step 
+            <Step
               isActive={currentStep === 1}
               isComplete={currentStep > 1}
               number={1}
               title="Topic"
+              icon={<FileText size={14} />}
               onClick={() => handleStepClick(1)}
             />
-            <Step 
+            <Step
               isActive={currentStep === 2}
               isComplete={currentStep > 2}
               number={2}
               title="Keywords"
+              icon={<Tag size={14} />}
               onClick={() => handleStepClick(2)}
             />
-            <Step 
+            <Step
               isActive={currentStep === 3}
               isComplete={currentStep > 3}
               number={3}
               title="Outline"
+              icon={<List size={14} />}
               onClick={() => handleStepClick(3)}
             />
-            <Step 
+            <Step
               isActive={currentStep === 4}
               isComplete={currentStep > 4}
               number={4}
               title="Content"
+              icon={<FileText size={14} />}
               onClick={() => handleStepClick(4)}
             />
-            <Step 
+            <Step
               isActive={currentStep === 5}
               isComplete={currentStep > 5}
               number={5}
               title="Images"
+              icon={<ImageIcon size={14} />}
               onClick={() => handleStepClick(5)}
             />
-            <Step 
+            <Step
               isActive={currentStep === 6}
               isComplete={currentStep > 6}
               number={6}
               title="Publish"
+              icon={<Send size={14} />}
               onClick={() => handleStepClick(6)}
             />
           </div>

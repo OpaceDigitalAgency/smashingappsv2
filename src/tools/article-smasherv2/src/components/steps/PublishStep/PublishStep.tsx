@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
-import { CheckCircle, FileText, Image as ImageIcon, Tag } from 'lucide-react';
+import { CheckCircle, FileText, Image as ImageIcon, Tag, FileDown, Eye, FileCode, ChevronDown } from 'lucide-react';
 
 const PublishStep: React.FC = () => {
   const { 
@@ -10,6 +10,12 @@ const PublishStep: React.FC = () => {
     images,
     setShowComplete
   } = useArticleWizard();
+  
+  // State for form values
+  const [status, setStatus] = useState('publish');
+  const [category, setCategory] = useState('wordpress');
+  const [author, setAuthor] = useState('admin');
+  const [tags, setTags] = useState('');
   
   // Get selected images
   const getSelectedImages = () => {
@@ -84,71 +90,128 @@ const PublishStep: React.FC = () => {
       </div>
       
       {/* Publishing Options */}
-      <div className="bg-primary-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-800 mb-3">Publishing Options</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select className="input text-sm">
-              <option>Publish immediately</option>
-              <option>Save as draft</option>
-              <option>Schedule publication</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <select className="input text-sm">
-              <option>WordPress</option>
-              <option>Artificial Intelligence</option>
-              <option>Content Marketing</option>
-              <option>SEO</option>
-            </select>
-          </div>
+      <div className="bg-white rounded-lg shadow-md border border-indigo-100 mb-4 overflow-hidden">
+        {/* Card Header */}
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-medium text-gray-800">Publishing Options</h3>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Author
-            </label>
-            <select className="input text-sm">
-              <option>Admin</option>
-              <option>Editor</option>
-              <option>Contributor</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tags
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Add tags separated by commas"
-                className="input pl-8 text-sm"
-              />
-              <Tag className="absolute left-3 top-3 text-gray-400" size={16} />
+        {/* Card Content */}
+        <div className="p-5 space-y-6">
+          {/* First row of dropdowns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Status Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <div className="relative">
+                <select 
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                >
+                  <option value="publish">Publish immediately</option>
+                  <option value="draft">Save as draft</option>
+                  <option value="schedule">Schedule publication</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Category Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <div className="relative">
+                <select 
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                >
+                  <option value="wordpress">WordPress</option>
+                  <option value="ai">Artificial Intelligence</option>
+                  <option value="content">Content Marketing</option>
+                  <option value="seo">SEO</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="flex flex-col md:flex-row gap-2">
-          <button 
-            onClick={handlePublish}
-            className="btn btn-primary text-sm py-2 px-4 w-full md:w-auto flex items-center justify-center"
-          >
-            Preview Complete Article
-          </button>
-          <button className="btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm py-2 px-4 w-full md:w-auto flex items-center justify-center">
-            Export as HTML
-          </button>
-          <button className="btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm py-2 px-4 w-full md:w-auto flex items-center justify-center">
-            Export as Markdown
-          </button>
+          
+          {/* Second row of dropdowns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Author Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Author
+              </label>
+              <div className="relative">
+                <select 
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="contributor">Contributor</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Tags Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="Add tags separated by commas"
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 pl-10 pr-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <Tag className="absolute left-3 top-2.5 text-indigo-500" size={16} />
+              </div>
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="flex flex-col md:flex-row gap-3 pt-2">
+            {/* Preview Button */}
+            <button 
+              onClick={handlePublish}
+              className="flex-1 bg-indigo-600 text-white rounded-lg font-medium py-2 px-4 flex items-center justify-center hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              <span>Preview Complete Article</span>
+            </button>
+            
+            {/* Export HTML Button */}
+            <button 
+              className="flex-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium py-2 px-4 flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              <span>Export as HTML</span>
+            </button>
+            
+            {/* Export Markdown Button */}
+            <button 
+              className="flex-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium py-2 px-4 flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+            >
+              <FileCode className="mr-2 h-4 w-4" />
+              <span>Export as Markdown</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
