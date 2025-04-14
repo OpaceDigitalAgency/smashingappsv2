@@ -20,7 +20,7 @@
  * See CONTRIBUTING.md for more detailed guidelines.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import SEO from './components/SEO';
@@ -36,26 +36,23 @@ import CTA from './components/CTA';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 
+// Import tool registry
+import toolRegistry, { getToolConfig } from './tools/registry';
+
 // Import tool components
 // When adding a new tool, import its main component here
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
-// import YourNewToolApp from './tools/your-new-tool/YourNewToolApp';
+import ArticleSmasherApp from './tools/article-smasher/ArticleSmasherApp';
 
-// Define placeholder use cases for routing
-const useCaseDefinitions = {
-  daily: { label: "Daily Organizer", description: "Everyday tasks" },
-  goals: { label: "Goal Planner", description: "Long-term objectives" },
-  marketing: { label: "Marketing Tasks", description: "Marketing campaigns" },
-  recipe: { label: "Recipe Steps", description: "Cooking recipes" },
-  home: { label: "Home Chores", description: "Household tasks" },
-  travel: { label: "Trip Planner", description: "Travel planning" },
-  study: { label: "Study Plan", description: "Academic tasks" },
-  events: { label: "Event Planning", description: "Party planning" },
-  freelance: { label: "Freelancer Projects", description: "Client work" },
-  shopping: { label: "Shopping Tasks", description: "Shopping lists" },
-  diy: { label: "DIY Projects", description: "Do-it-yourself projects" },
-  creative: { label: "Creative Projects", description: "Creative endeavors" }
-};
+// Loading component for Suspense
+const LoadingScreen = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
+
+// Get the TaskSmasher tool configuration
+const taskSmasherConfig = getToolConfig('task-smasher');
 
 // HomePage component for the root route (without Navbar since it's now global)
 const HomePage = () => (
@@ -97,14 +94,20 @@ const BodyClassManager = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Remove existing classes
-    document.body.classList.remove('home', 'task-smasher');
+    // Remove all tool-related classes
+    document.body.classList.remove('home', ...Object.keys(toolRegistry).map(id => id));
     
     // Add appropriate class based on the current route
     if (location.pathname === '/') {
       document.body.classList.add('home');
-    } else if (location.pathname.includes('/tools/task-smasher')) {
-      document.body.classList.add('task-smasher');
+    } else {
+      // Find which tool this route belongs to
+      for (const [id, config] of Object.entries(toolRegistry)) {
+        if (location.pathname.includes(config.routes.base)) {
+          document.body.classList.add(id);
+          break;
+        }
+      }
     }
   }, [location.pathname]);
   
@@ -140,26 +143,44 @@ function App() {
               This ensures URLs work consistently regardless of how they're entered.
             */}
             
+            {/* Generate routes for all registered tools */}
             {/* TaskSmasher base routes - handle both with and without trailing slash */}
             <Route path="/tools/task-smasher" element={<TaskSmasherApp />} />
             <Route path="/tools/task-smasher/" element={<TaskSmasherApp />} />
             
-            {/* Add new tool routes here following the same pattern */}
-            {/* Example:
-            <Route path="/tools/your-new-tool" element={<YourNewToolApp />} />
-            <Route path="/tools/your-new-tool/" element={<YourNewToolApp />} />
-            */}
+            {/* ArticleSmasher base routes */}
+            <Route path="/tools/article-smasher" element={<ArticleSmasherApp />} />
+            <Route path="/tools/article-smasher/" element={<ArticleSmasherApp />} />
             
             {/* TaskSmasher use case routes - handle both with and without trailing slash */}
-            {Object.entries(useCaseDefinitions).flatMap(([id, definition]) => {
-              const basePath = `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}`;
-              const pathWithSlash = `${basePath}/`;
-              
-              return [
-                <Route key={`${id}-no-slash`} path={basePath} element={<TaskSmasherApp />} />,
-                <Route key={`${id}-with-slash`} path={pathWithSlash} element={<TaskSmasherApp />} />
-              ];
-            })}
+            {taskSmasherConfig && taskSmasherConfig.routes.subRoutes &&
+              Object.entries(taskSmasherConfig.useCases).flatMap(([id, useCase]) => {
+                const basePath = taskSmasherConfig.routes.subRoutes?.[id];
+                if (!basePath) return [];
+                
+                const pathWithSlash = `${basePath}/`;
+                
+                return [
+                  <Route key={`${id}-no-slash`} path={basePath} element={<TaskSmasherApp />} />,
+                  <Route key={`${id}-with-slash`} path={pathWithSlash} element={<TaskSmasherApp />} />
+                ];
+              })
+            }
+            
+            {/* ArticleSmasher use case routes */}
+            {getToolConfig('article-smasher')?.routes.subRoutes &&
+              Object.entries(getToolConfig('article-smasher')?.useCases || {}).flatMap(([id, useCase]) => {
+                const basePath = getToolConfig('article-smasher')?.routes.subRoutes?.[id];
+                if (!basePath) return [];
+                
+                const pathWithSlash = `${basePath}/`;
+                
+                return [
+                  <Route key={`article-${id}-no-slash`} path={basePath} element={<ArticleSmasherApp />} />,
+                  <Route key={`article-${id}-with-slash`} path={pathWithSlash} element={<ArticleSmasherApp />} />
+                ];
+              })
+            }
             
             {/* Catch-all redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

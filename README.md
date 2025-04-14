@@ -4,7 +4,7 @@ A modern suite of AI-powered productivity tools, hosted at [smashingapps.ai](htt
 
 ## Overview
 
-SmashingApps.ai provides intuitive, AI-powered tools to help users "smash" through specific tasks. The application consists of a main landing page and various specialized tools, with the primary tool being TaskSmasher.
+SmashingApps.ai provides intuitive, AI-powered tools to help users "smash" through specific tasks. The application consists of a main landing page and various specialized tools, including TaskSmasher and ArticleSmasher.
 
 ## Application Structure
 
@@ -12,13 +12,283 @@ This is a unified React application that combines:
 
 1. **Main Homepage** (`/`) - Introduces the brand and links to various tools
 2. **TaskSmasher** (`/tools/task-smasher/`) - AI-powered task management application with various use cases
+3. **ArticleSmasher** (`/tools/article-smasher/`) - AI-powered content creation tool with specialized use cases
 
-### Unified Architecture
+## Refactored Architecture
 
-- The application uses React Router for client-side routing
-- Both the homepage and TaskSmasher are part of the same React application
-- All routes are handled through React Router
-- The app is built as a single SPA (Single Page Application)
+The application has been refactored to use a modular, component-based architecture that makes it easy to add new tools and maintain existing ones.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      SmashingApps.ai                        │
+│                                                             │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
+│  │  Homepage   │    │ TaskSmasher │    │ArticleSmasher│     │
+│  └─────────────┘    └─────────────┘    └─────────────┘     │
+│         │                 │                  │              │
+│         └─────────────────┼──────────────────┘              │
+│                           │                                 │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                 Shared Components                    │   │
+│  │                                                     │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌────────┐  │   │
+│  │  │ Button  │  │  Card   │  │ Dropdown│  │ Modal  │  │   │
+│  │  └─────────┘  └─────────┘  └─────────┘  └────────┘  │   │
+│  │                                                     │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────────────────┐  │   │
+│  │  │ Loading │  │RateLimit│  │    PromptRunner     │  │   │
+│  │  │Indicator│  │ Popup   │  │                     │  │   │
+│  │  └─────────┘  └─────────┘  └─────────────────────┘  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                           │                                 │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                 Shared Services                      │   │
+│  │                                                     │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌────────┐  │   │
+│  │  │ AI      │  │ Rate    │  │ Local   │  │ReCaptcha│  │   │
+│  │  │ Service │  │ Limiting│  │ Storage │  │ Service │  │   │
+│  │  └─────────┘  └─────────┘  └─────────┘  └────────┘  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Architecture Components
+
+1. **Tool Configuration System**: Each tool is defined by a configuration object that specifies its capabilities, routes, and use cases.
+2. **Shared Component Library**: Reusable UI components that maintain consistent design and functionality across tools.
+3. **Shared Services**: Common functionality like AI integration, rate limiting, and storage.
+4. **Tool Registry**: Central registry for all tools in the platform.
+
+## Shared Component Library
+
+The shared component library provides reusable UI components that maintain a consistent look and feel across all tools in the platform. Components are designed to be flexible, customizable, and easy to use.
+
+### Available Components
+
+- **Button**: Customizable button with variants, sizes, and loading states
+- **Card**: Container component with optional title and footer
+- **Dropdown**: Select component for choosing from a list of options
+- **LoadingIndicator**: Visual indicator for loading states
+- **Modal**: Dialog component for displaying content in a modal window
+- **PromptRunner**: Component for running AI prompts and displaying results
+- **RateLimitPopup**: Component for displaying rate limit information
+
+### Usage Example
+
+```tsx
+import { Button, Card, Dropdown } from '../../shared';
+
+const MyComponent = () => {
+  return (
+    <Card title="My Card">
+      <Dropdown
+        label="Options"
+        value={selectedOption}
+        options={options}
+        onChange={handleChange}
+      />
+      <Button variant="primary" onClick={handleClick}>
+        Submit
+      </Button>
+    </Card>
+  );
+};
+```
+
+## Tool Configuration System
+
+The tool configuration system allows for easy definition and management of tools in the platform. Each tool is defined by a configuration object that specifies its capabilities, routes, and use cases.
+
+### Tool Configuration Structure
+
+```typescript
+interface ToolConfig {
+  id: string;                 // Unique identifier for the tool
+  name: string;               // Display name
+  description: string;        // Brief description
+  icon: LucideIcon;           // Icon component
+  routes: {                   // Routing information
+    base: string;             // Base route for the tool
+    subRoutes?: Record<string, string>; // Sub-routes for use cases
+  };
+  capabilities: {             // Tool capabilities
+    ai: {                     // AI capabilities
+      enabled: boolean;
+      defaultModel: string;
+      availableModels: string[];
+      systemPromptTemplate: string;
+    };
+    export: {                 // Export capabilities
+      enabled: boolean;
+      formats: string[];
+    };
+    // Other capabilities...
+  };
+  useCases: Record<string, {  // Use cases for the tool
+    id: string;
+    label: string;
+    description: string;
+    icon?: LucideIcon;
+    promptTemplate?: string;
+  }>;
+  defaultUseCase: string;     // Default use case
+  metaTags: {                 // SEO metadata
+    title: string;
+    description: string;
+    ogImage: string;
+  };
+}
+```
+
+### Tool Registry
+
+The tool registry is a central repository for all tools in the platform. It provides methods for retrieving tool configurations by ID or route.
+
+```typescript
+// src/tools/registry.ts
+const toolRegistry: Record<string, ToolConfig> = {
+  'task-smasher': taskSmasherConfig,
+  'article-smasher': articleSmasherConfig
+  // Add more tools here as they are created
+};
+```
+
+## Adding a New Tool to the Platform
+
+To add a new tool to the SmashingApps platform, follow these steps:
+
+1. **Create a new directory** for your tool in `src/tools/your-tool-name/`
+
+2. **Create a configuration file** for your tool:
+
+   ```typescript
+   // src/tools/your-tool-name/config.ts
+   import { ToolConfig } from '../../shared/types';
+   import { YourIcon } from 'lucide-react';
+
+   const yourToolConfig: ToolConfig = {
+     id: 'your-tool-name',
+     name: 'Your Tool Name',
+     description: 'Brief description of your tool',
+     icon: YourIcon,
+     routes: {
+       base: '/tools/your-tool-name',
+       subRoutes: {
+         // Define sub-routes for use cases
+         useCase1: '/tools/your-tool-name/use-case-1',
+         useCase2: '/tools/your-tool-name/use-case-2',
+       }
+     },
+     capabilities: {
+       // Define capabilities
+       ai: {
+         enabled: true,
+         defaultModel: 'gpt-3.5-turbo',
+         availableModels: ['gpt-3.5-turbo', 'gpt-4'],
+         systemPromptTemplate: 'You are an AI assistant that helps with...'
+       },
+       // Other capabilities...
+     },
+     useCases: {
+       // Define use cases
+       useCase1: {
+         id: 'useCase1',
+         label: 'Use Case 1',
+         description: 'Description of use case 1',
+         promptTemplate: 'Template for use case 1: {{input}}'
+       },
+       // Other use cases...
+     },
+     defaultUseCase: 'useCase1',
+     metaTags: {
+       title: 'Your Tool Name | SmashingApps.ai',
+       description: 'SEO description for your tool',
+       ogImage: 'https://smashingapps.ai/og/your-tool-name.png'
+     }
+   };
+
+   export default yourToolConfig;
+   ```
+
+3. **Create the main component** for your tool:
+
+   ```typescript
+   // src/tools/your-tool-name/YourToolApp.tsx
+   import React from 'react';
+   import { useLocation } from 'react-router-dom';
+   import {
+     Button,
+     Card,
+     Dropdown,
+     useAI
+   } from '../../shared';
+   import config from './config';
+   import SEO from '../../components/SEO';
+
+   const YourToolApp: React.FC = () => {
+     // Implement your tool's UI and functionality
+     return (
+       <div>
+         {/* Your tool's UI */}
+       </div>
+     );
+   };
+
+   export default YourToolApp;
+   ```
+
+4. **Register your tool** in the tool registry:
+
+   ```typescript
+   // src/tools/registry.ts
+   import yourToolConfig from './your-tool-name/config';
+
+   const toolRegistry: Record<string, ToolConfig> = {
+     'task-smasher': taskSmasherConfig,
+     'article-smasher': articleSmasherConfig,
+     'your-tool-name': yourToolConfig
+     // Add more tools here as they are created
+   };
+   ```
+
+5. **Add your tool to the routing** in `src/App.tsx`:
+
+   ```typescript
+   // src/App.tsx
+   import YourToolApp from './tools/your-tool-name/YourToolApp';
+
+   // In your Routes component
+   <Route path="/tools/your-tool-name/*" element={<YourToolApp />} />
+   ```
+
+6. **Create a README.md** file for your tool:
+
+   ```markdown
+   # Your Tool Name
+
+   Brief description of your tool.
+
+   ## Features
+
+   - Feature 1
+   - Feature 2
+   - Feature 3
+
+   ## Use Cases
+
+   - Use Case 1: Description
+   - Use Case 2: Description
+
+   ## Configuration
+
+   See the [main README](../../README.md) for information on the shared architecture and component library.
+
+   ### Tool-Specific Configuration
+
+   - Configuration option 1
+   - Configuration option 2
+   ```
 
 ## Development
 
@@ -30,8 +300,8 @@ This is a unified React application that combines:
 
 1. Clone the repository
    ```
-   git clone https://github.com/OpaceDigitalAgency/smashingapps.git
-   cd smashingapps
+   git clone https://github.com/OpaceDigitalAgency/smashingapps-unified.git
+   cd smashingapps-unified
    ```
 
 2. Install dependencies
@@ -76,6 +346,12 @@ Currently available tools:
   - Goal Planner
   - Marketing Tasks
   - And more...
+
+- **ArticleSmasher** - AI-powered content creation with specialized use cases:
+  - Blog Post
+  - SEO Article
+  - Academic Paper
+  - News Article
 
 ## Common Settings for Non-Technical Users
 
