@@ -210,7 +210,7 @@ export const clearAllLimitsAndUsage = (): void => {
   
   // Dispatch an event to notify components that rate limits have been cleared
   window.dispatchEvent(new CustomEvent('rate-limits-cleared'));
-  
+  console.log('All rate limits and usage data cleared successfully!');
   console.log('All rate limits and usage data cleared successfully');
 };
 
