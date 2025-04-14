@@ -1,5 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
 import { PromptTemplate, PromptSettings } from '../types';
+
+// Function to create deterministic IDs based on prompt name and category
+const createDeterministicId = (name: string, category: string): string => {
+  // Create a simple hash from the name and category
+  const baseString = `${name}-${category}`.toLowerCase().replace(/\s+/g, '-');
+  return `prompt-${baseString}`;
+};
 
 // Local storage keys
 const PROMPTS_STORAGE_KEY = 'article_smasher_prompts';
@@ -8,7 +14,7 @@ const SETTINGS_STORAGE_KEY = 'article_smasher_prompt_settings';
 // Default prompt templates
 const DEFAULT_PROMPTS: PromptTemplate[] = [
   {
-    id: uuidv4(),
+    id: createDeterministicId('Topic Generator', 'topic'),
     name: 'Topic Generator',
     description: 'Generates article topic ideas based on the selected article type',
     systemPrompt: 'You are a professional content strategist specializing in creating engaging article topics. Your task is to generate 5 compelling topic ideas for the specified article type.',
@@ -20,7 +26,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     updatedAt: new Date()
   },
   {
-    id: uuidv4(),
+    id: createDeterministicId('Keyword Researcher', 'keyword'),
     name: 'Keyword Researcher',
     description: 'Identifies relevant keywords for the selected topic',
     systemPrompt: 'You are an SEO expert specializing in keyword research. Your task is to identify the most relevant keywords for the given topic.',
@@ -32,7 +38,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     updatedAt: new Date()
   },
   {
-    id: uuidv4(),
+    id: createDeterministicId('Article Outliner', 'outline'),
     name: 'Article Outliner',
     description: 'Creates a detailed outline for the article based on the topic and keywords',
     systemPrompt: 'You are a professional content outliner. Your task is to create a comprehensive, well-structured outline for an article based on the provided topic and keywords.',
@@ -44,7 +50,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     updatedAt: new Date()
   },
   {
-    id: uuidv4(),
+    id: createDeterministicId('Content Generator', 'content'),
     name: 'Content Generator',
     description: 'Generates the full article content based on the outline',
     systemPrompt: 'You are a professional content writer specializing in creating engaging, informative articles. Your task is to write a complete article following the provided outline and incorporating the specified keywords naturally.',
@@ -56,7 +62,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     updatedAt: new Date()
   },
   {
-    id: uuidv4(),
+    id: createDeterministicId('Image Prompt Generator', 'image'),
     name: 'Image Prompt Generator',
     description: 'Creates prompts for generating images related to the article',
     systemPrompt: 'You are a professional image prompt creator. Your task is to create detailed prompts for generating images that complement the article content.',
@@ -148,7 +154,7 @@ export const addPrompt = (prompt: Omit<PromptTemplate, 'id' | 'createdAt' | 'upd
   const prompts = loadPrompts();
   const newPrompt: PromptTemplate = {
     ...prompt,
-    id: uuidv4(),
+    id: createDeterministicId(prompt.name, prompt.category),
     createdAt: new Date(),
     updatedAt: new Date()
   };

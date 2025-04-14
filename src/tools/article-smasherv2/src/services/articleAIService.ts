@@ -1,27 +1,55 @@
-import { useAI } from '../../../../shared/hooks/useAI';
 import { processPromptTemplate } from './promptService';
-import { 
-  PromptTemplate, 
-  KeywordData, 
-  OutlineItem, 
-  ArticleContent,
-  ImageItem
+import {
+  PromptTemplate,
+  KeywordData,
+  OutlineItem,
+  ArticleContent
 } from '../types';
 
+// Import the hook-based implementation
+import useArticleAI from '../hooks/useArticleAI';
+
 /**
- * Service for generating article content using AI
+ * This is a facade for the article AI service that maintains the same API
+ * but delegates to the hook-based implementation when used in React components.
+ *
+ * IMPORTANT: This service should NOT be used directly in React components.
+ * Instead, use the useArticleAI hook directly in your components.
+ * This service is provided only for backward compatibility with existing code.
  */
-export class ArticleAIService {
-  private static instance: ArticleAIService;
+class ArticleAIServiceFacade {
+  private static instance: ArticleAIServiceFacade;
+  private hookInstance: ReturnType<typeof useArticleAI> | null = null;
   
   /**
    * Get the singleton instance
    */
-  public static getInstance(): ArticleAIService {
-    if (!ArticleAIService.instance) {
-      ArticleAIService.instance = new ArticleAIService();
+  public static getInstance(): ArticleAIServiceFacade {
+    if (!ArticleAIServiceFacade.instance) {
+      ArticleAIServiceFacade.instance = new ArticleAIServiceFacade();
     }
-    return ArticleAIService.instance;
+    return ArticleAIServiceFacade.instance;
+  }
+  
+  /**
+   * Set the hook instance - this should be called from a React component
+   * that uses the useArticleAI hook
+   */
+  public setHookInstance(instance: ReturnType<typeof useArticleAI>): void {
+    this.hookInstance = instance;
+  }
+  
+  /**
+   * Check if the hook instance is available
+   */
+  private checkHookInstance(): void {
+    if (!this.hookInstance) {
+      console.warn(
+        'ArticleAIService is being used without a hook instance. ' +
+        'This may cause React hook rules violations. ' +
+        'Please use the useArticleAI hook directly in your React components.'
+      );
+    }
   }
   
   /**
@@ -33,34 +61,17 @@ export class ArticleAIService {
     subject: string = 'digital marketing',
     model: string = 'gpt-4o'
   ): Promise<string[]> {
-    try {
-      // Process the prompt template
-      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
-        articleType,
-        subject
-      });
-      
-      // Execute the AI request
-      const { execute } = useAI();
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
-      
-      // Parse the result into an array of topics
-      const topics = result.content
-        .split(/\d+\./)
-        .map(topic => topic.trim())
-        .filter(topic => topic.length > 0);
-      
-      return topics;
-    } catch (error) {
-      console.error('Error generating topics:', error);
-      throw error;
+    this.checkHookInstance();
+    
+    if (this.hookInstance) {
+      return this.hookInstance.generateTopics(prompt, articleType, subject, model);
     }
+    
+    // Fallback implementation for non-React contexts
+    throw new Error(
+      'ArticleAIService.generateTopics cannot be used outside of React components. ' +
+      'Please use the useArticleAI hook directly in your React components.'
+    );
   }
   
   /**
@@ -71,50 +82,17 @@ export class ArticleAIService {
     title: string,
     model: string = 'gpt-4o'
   ): Promise<KeywordData[]> {
-    try {
-      // Process the prompt template
-      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
-        title
-      });
-      
-      // Execute the AI request
-      const { execute } = useAI();
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
-      
-      // Parse the result into keyword data
-      // This is a simplified parsing logic - in a real implementation,
-      // you would need more robust parsing based on the AI's response format
-      const keywordLines = result.content.split('\n').filter(line => line.trim().length > 0);
-      
-      const keywords: KeywordData[] = keywordLines.map(line => {
-        // Extract keyword and metrics using regex
-        const keywordMatch = line.match(/^(.*?)(?:\s*-\s*|:\s*)/);
-        const volumeMatch = line.match(/volume:\s*(high|medium|low)/i);
-        const difficultyMatch = line.match(/difficulty:\s*(\d+)/i);
-        const cpcMatch = line.match(/cpc:\s*(\d+\.?\d*)/i);
-        
-        return {
-          keyword: keywordMatch ? keywordMatch[1].trim() : line.trim(),
-          volume: volumeMatch ? 
-            (volumeMatch[1].toLowerCase() === 'high' ? 1000 : 
-             volumeMatch[1].toLowerCase() === 'medium' ? 500 : 100) : 
-            Math.floor(Math.random() * 1000),
-          difficulty: difficultyMatch ? parseInt(difficultyMatch[1]) : Math.floor(Math.random() * 10) + 1,
-          cpc: cpcMatch ? parseFloat(cpcMatch[1]) : Math.random() * 5
-        };
-      });
-      
-      return keywords;
-    } catch (error) {
-      console.error('Error generating keywords:', error);
-      throw error;
+    this.checkHookInstance();
+    
+    if (this.hookInstance) {
+      return this.hookInstance.generateKeywords(prompt, title, model);
     }
+    
+    // Fallback implementation for non-React contexts
+    throw new Error(
+      'ArticleAIService.generateKeywords cannot be used outside of React components. ' +
+      'Please use the useArticleAI hook directly in your React components.'
+    );
   }
   
   /**
@@ -126,29 +104,17 @@ export class ArticleAIService {
     keywords: string[],
     model: string = 'gpt-4o'
   ): Promise<OutlineItem[]> {
-    try {
-      // Process the prompt template
-      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
-        title,
-        keywords: keywords.join(', ')
-      });
-      
-      // Execute the AI request
-      const { execute } = useAI();
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
-      
-      // Parse the result into outline items
-      return this.parseOutlineFromText(result.content);
-    } catch (error) {
-      console.error('Error generating outline:', error);
-      throw error;
+    this.checkHookInstance();
+    
+    if (this.hookInstance) {
+      return this.hookInstance.generateOutline(prompt, title, keywords, model);
     }
+    
+    // Fallback implementation for non-React contexts
+    throw new Error(
+      'ArticleAIService.generateOutline cannot be used outside of React components. ' +
+      'Please use the useArticleAI hook directly in your React components.'
+    );
   }
   
   /**
@@ -161,33 +127,17 @@ export class ArticleAIService {
     outline: OutlineItem[],
     model: string = 'gpt-4o'
   ): Promise<ArticleContent> {
-    try {
-      // Convert outline to text format
-      const outlineText = this.outlineToText(outline);
-      
-      // Process the prompt template
-      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
-        title,
-        keywords: keywords.join(', '),
-        outline: outlineText
-      });
-      
-      // Execute the AI request
-      const { execute } = useAI();
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
-      
-      // Parse the result into article content
-      return this.parseContentFromText(result.content);
-    } catch (error) {
-      console.error('Error generating content:', error);
-      throw error;
+    this.checkHookInstance();
+    
+    if (this.hookInstance) {
+      return this.hookInstance.generateContent(prompt, title, keywords, outline, model);
     }
+    
+    // Fallback implementation for non-React contexts
+    throw new Error(
+      'ArticleAIService.generateContent cannot be used outside of React components. ' +
+      'Please use the useArticleAI hook directly in your React components.'
+    );
   }
   
   /**
@@ -199,33 +149,17 @@ export class ArticleAIService {
     keywords: string[],
     model: string = 'gpt-4o'
   ): Promise<string[]> {
-    try {
-      // Process the prompt template
-      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
-        title,
-        keywords: keywords.join(', ')
-      });
-      
-      // Execute the AI request
-      const { execute } = useAI();
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
-      
-      // Parse the result into image prompts
-      const promptLines = result.content.split(/\d+\./)
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-      
-      return promptLines;
-    } catch (error) {
-      console.error('Error generating image prompts:', error);
-      throw error;
+    this.checkHookInstance();
+    
+    if (this.hookInstance) {
+      return this.hookInstance.generateImagePrompts(prompt, title, keywords, model);
     }
+    
+    // Fallback implementation for non-React contexts
+    throw new Error(
+      'ArticleAIService.generateImagePrompts cannot be used outside of React components. ' +
+      'Please use the useArticleAI hook directly in your React components.'
+    );
   }
   
   /**
@@ -236,246 +170,22 @@ export class ArticleAIService {
     variables: Record<string, string>,
     model: string = 'gpt-4o'
   ): Promise<string> {
-    try {
-      // Process the prompt template
-      const userPrompt = processPromptTemplate(prompt.userPromptTemplate, variables);
-      
-      // Execute the AI request
-      const { execute } = useAI();
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
-      
-      return result.content;
-    } catch (error) {
-      console.error('Error testing prompt:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Parse outline from text
-   * This is a simplified implementation - in a real-world scenario,
-   * you would need more robust parsing based on the AI's response format
-   */
-  private parseOutlineFromText(text: string): OutlineItem[] {
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-    const outline: OutlineItem[] = [];
-    const stack: OutlineItem[] = [];
+    this.checkHookInstance();
     
-    lines.forEach(line => {
-      const trimmedLine = line.trim();
-      
-      // Skip lines that don't look like outline items
-      if (!trimmedLine.match(/^[I\d]+\.|^[A-Z]\.|^•|^-|^Introduction|^Conclusion/i)) {
-        return;
-      }
-      
-      // Determine the level based on indentation or numbering
-      let level = 1;
-      if (trimmedLine.match(/^\s+/)) {
-        level = Math.ceil(trimmedLine.match(/^\s+/)![0].length / 2);
-      } else if (trimmedLine.match(/^[A-Z]\./)) {
-        level = 2;
-      } else if (trimmedLine.match(/^[a-z]\./)) {
-        level = 3;
-      } else if (trimmedLine.match(/^•|^-/)) {
-        level = stack.length > 0 ? stack[stack.length - 1].level + 1 : 2;
-      }
-      
-      // Extract the title (remove numbering/bullets)
-      const title = trimmedLine.replace(/^[I\d]+\.|^[A-Za-z]\.|^•|^-|\s+/g, '').trim();
-      
-      const item: OutlineItem = {
-        id: `outline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        title,
-        level,
-        children: []
-      };
-      
-      // Add to the appropriate parent based on level
-      if (level === 1) {
-        outline.push(item);
-        stack.length = 0;
-        stack.push(item);
-      } else {
-        // Find the appropriate parent
-        while (stack.length > 0 && stack[stack.length - 1].level >= level) {
-          stack.pop();
-        }
-        
-        if (stack.length === 0) {
-          outline.push(item);
-        } else {
-          stack[stack.length - 1].children.push(item);
-        }
-        
-        stack.push(item);
-      }
-    });
-    
-    return outline;
-  }
-  
-  /**
-   * Convert outline to text format
-   */
-  private outlineToText(outline: OutlineItem[], level: number = 0): string {
-    let result = '';
-    
-    outline.forEach((item, index) => {
-      // Add indentation based on level
-      const indent = '  '.repeat(level);
-      
-      // Add numbering based on level
-      let prefix = '';
-      if (level === 0) {
-        prefix = `${index + 1}. `;
-      } else if (level === 1) {
-        prefix = `${String.fromCharCode(97 + index)}. `;
-      } else {
-        prefix = '• ';
-      }
-      
-      // Add the item title
-      result += `${indent}${prefix}${item.title}\n`;
-      
-      // Add children recursively
-      if (item.children.length > 0) {
-        result += this.outlineToText(item.children, level + 1);
-      }
-    });
-    
-    return result;
-  }
-  
-  /**
-   * Parse content from text
-   * This is a simplified implementation - in a real-world scenario,
-   * you would need more robust parsing based on the AI's response format
-   */
-  private parseContentFromText(text: string): ArticleContent {
-    // Split the content into sections based on headings
-    const sections: { heading: string; content: string }[] = [];
-    let currentHeading = '';
-    let currentContent = '';
-    
-    // Simple regex to identify headings (lines starting with # or lines with === or --- underneath)
-    const lines = text.split('\n');
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Check if this line is a heading
-      const isHeading = line.startsWith('#') || 
-                        (i < lines.length - 1 && (lines[i + 1].startsWith('===') || lines[i + 1].startsWith('---')));
-      
-      if (isHeading) {
-        // Save the previous section if it exists
-        if (currentHeading) {
-          sections.push({
-            heading: currentHeading,
-            content: currentContent.trim()
-          });
-        }
-        
-        // Extract the heading text
-        currentHeading = line.replace(/^#+\s+/, '').trim();
-        
-        // Skip the next line if it's a heading underline
-        if (i < lines.length - 1 && (lines[i + 1].startsWith('===') || lines[i + 1].startsWith('---'))) {
-          i++;
-        }
-        
-        currentContent = '';
-      } else {
-        // Add to the current content
-        currentContent += line + '\n';
-      }
+    if (this.hookInstance) {
+      return this.hookInstance.testPrompt(prompt, variables, model);
     }
     
-    // Add the last section
-    if (currentHeading) {
-      sections.push({
-        heading: currentHeading,
-        content: currentContent.trim()
-      });
-    }
-    
-    // Convert to HTML
-    const html = this.convertToHtml(text);
-    
-    return {
-      html,
-      text,
-      sections
-    };
-  }
-  
-  /**
-   * Convert markdown text to HTML
-   * This is a simplified implementation - in a real-world scenario,
-   * you would use a proper markdown parser
-   */
-  private convertToHtml(text: string): string {
-    let html = '';
-    const lines = text.split('\n');
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Skip empty lines
-      if (!line.trim()) {
-        html += '<br>\n';
-        continue;
-      }
-      
-      // Check for headings
-      if (line.startsWith('#')) {
-        const headingMatch = line.match(/^#+/);
-        const level = headingMatch ? headingMatch[0].length : 1;
-        const content = line.replace(/^#+\s+/, '');
-        html += `<h${level}>${content}</h${level}>\n`;
-        continue;
-      }
-      
-      // Check for underlined headings
-      if (i < lines.length - 1) {
-        if (lines[i + 1].startsWith('===')) {
-          html += `<h1>${line}</h1>\n`;
-          i++; // Skip the next line
-          continue;
-        } else if (lines[i + 1].startsWith('---')) {
-          html += `<h2>${line}</h2>\n`;
-          i++; // Skip the next line
-          continue;
-        }
-      }
-      
-      // Check for lists
-      if (line.match(/^\s*[-*+]\s/)) {
-        const content = line.replace(/^\s*[-*+]\s/, '');
-        html += `<li>${content}</li>\n`;
-        continue;
-      }
-      
-      // Check for numbered lists
-      if (line.match(/^\s*\d+\.\s/)) {
-        const content = line.replace(/^\s*\d+\.\s/, '');
-        html += `<li>${content}</li>\n`;
-        continue;
-      }
-      
-      // Regular paragraph
-      html += `<p>${line}</p>\n`;
-    }
-    
-    return html;
+    // Fallback implementation for non-React contexts
+    throw new Error(
+      'ArticleAIService.testPrompt cannot be used outside of React components. ' +
+      'Please use the useArticleAI hook directly in your React components.'
+    );
   }
 }
 
-export default ArticleAIService.getInstance();
+// Export the singleton instance
+export default ArticleAIServiceFacade.getInstance();
+
+// Also export the class for type checking
+export { ArticleAIServiceFacade as ArticleAIService };

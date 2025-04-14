@@ -141,5 +141,6 @@ export interface PromptContextType {
   updateSettings: (settings: Partial<PromptSettings>) => Promise<void>;
   testPrompt: (promptId: string, variables: Record<string, string>) => Promise<string>;
   isLoading: boolean;
+  isInitialized: boolean; // Added to track when prompts are fully loaded
   error: Error | null;
 }

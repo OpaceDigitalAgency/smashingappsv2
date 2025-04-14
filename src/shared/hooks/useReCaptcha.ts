@@ -18,13 +18,20 @@ declare global {
  */
 export function useReCaptcha(siteKey?: string) {
   const [isReady, setIsReady] = useState(false);
-  const recaptchaSiteKey = siteKey || process.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get the reCAPTCHA site key with fallback handling
+  const recaptchaSiteKey = siteKey ||
+    (typeof import.meta !== 'undefined' ? import.meta.env.VITE_RECAPTCHA_SITE_KEY : '') ||
+    '';
 
   // Initialize reCAPTCHA when the component mounts
   useEffect(() => {
     // Skip if no site key is provided
     if (!recaptchaSiteKey) {
-      console.warn('No reCAPTCHA site key provided');
+      const errorMsg = 'No reCAPTCHA site key provided. Please add VITE_RECAPTCHA_SITE_KEY to your .env file.';
+      console.warn(errorMsg);
+      setError(errorMsg);
       return;
     }
 
@@ -75,7 +82,11 @@ export function useReCaptcha(siteKey?: string) {
     }
   }, [recaptchaSiteKey, isReady]);
 
-  return { getReCaptchaToken };
+  return {
+    getReCaptchaToken,
+    error,
+    isReady
+  };
 }
 
 export default useReCaptcha;

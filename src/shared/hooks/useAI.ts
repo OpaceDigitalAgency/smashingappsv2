@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AIExecuteOptions, AIExecuteResult, UseAIReturn } from '../types';
 import { AIProvider } from '../types/aiProviders';
 import useReCaptcha from './useReCaptcha';
@@ -14,7 +14,14 @@ import { aiServiceRegistry, getServiceForModel } from '../services/aiServices';
 export function useAI(): UseAIReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { getReCaptchaToken } = useReCaptcha();
+  const { getReCaptchaToken, error: recaptchaError } = useReCaptcha();
+  
+  // Set error if reCAPTCHA has an error
+  useEffect(() => {
+    if (recaptchaError) {
+      setError(new Error(recaptchaError));
+    }
+  }, [recaptchaError]);
   
   // Get the active provider from localStorage
   const { value: activeProvider } = useLocalStorage<AIProvider>(

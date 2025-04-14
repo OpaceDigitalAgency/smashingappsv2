@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ARTICLE_TYPES } from '../components/ArticleTypeSidebar';
 import { usePrompt } from './PromptContext';
-import articleAIService from '../services/articleAIService';
 import { KeywordData, ImageItem, OutlineItem, ArticleContent, ArticleWizardContextType } from '../types';
+import { useArticleAIService } from '../hooks/useArticleAIService';
 
 const ArticleWizardContext = createContext<ArticleWizardContextType | null>(null);
 
 export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const { prompts, settings } = usePrompt();
+  const { prompts, settings, isInitialized } = usePrompt();
+  const articleAI = useArticleAIService();
   
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
@@ -73,6 +74,11 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Generate topic ideas based on the selected article type
   const generateTopicIdeas = async () => {
     try {
+      // Check if prompts are initialized
+      if (!isInitialized) {
+        throw new Error('Prompts are not yet initialized');
+      }
+      
       setIsGeneratingIdeas(true);
       
       // Get the topic prompt template
@@ -86,7 +92,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       const selectedType = ARTICLE_TYPES.find(type => type.value === selectedArticleType);
       
       // Generate topics using AI
-      const topics = await articleAIService.generateTopics(
+      const topics = await articleAI.generateTopics(
         topicPrompts[0],
         selectedType?.label || selectedArticleType,
         'digital marketing',
@@ -116,6 +122,11 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Generate keywords based on the selected topic
   const generateKeywords = async (topic: string) => {
     try {
+      // Check if prompts are initialized
+      if (!isInitialized) {
+        throw new Error('Prompts are not yet initialized');
+      }
+      
       setIsLoadingKeywords(true);
       
       // Get the keyword prompt template
@@ -126,7 +137,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       }
       
       // Generate keywords using AI
-      const generatedKeywords = await articleAIService.generateKeywords(
+      const generatedKeywords = await articleAI.generateKeywords(
         keywordPrompts[0],
         topic,
         settings.defaultModel
@@ -155,6 +166,11 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Generate outline based on topic and keywords
   const generateOutline = async (topic: string, keywords: string[]) => {
     try {
+      // Check if prompts are initialized
+      if (!isInitialized) {
+        throw new Error('Prompts are not yet initialized');
+      }
+      
       setGenerating(true);
       
       // Get the outline prompt template
@@ -165,7 +181,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       }
       
       // Generate outline using AI
-      const generatedOutline = await articleAIService.generateOutline(
+      const generatedOutline = await articleAI.generateOutline(
         outlinePrompts[0],
         topic,
         keywords,
@@ -224,6 +240,11 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Generate content based on outline and keywords
   const generateContent = async (topic: string, keywords: string[], outline: OutlineItem[]) => {
     try {
+      // Check if prompts are initialized
+      if (!isInitialized) {
+        throw new Error('Prompts are not yet initialized');
+      }
+      
       setGenerating(true);
       
       // Get the content prompt template
@@ -234,7 +255,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       }
       
       // Generate content using AI
-      const generatedContent = await articleAIService.generateContent(
+      const generatedContent = await articleAI.generateContent(
         contentPrompts[0],
         topic,
         keywords,
@@ -277,6 +298,11 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Generate image prompts based on topic and keywords
   const generateImages = async (topic: string, keywords: string[]) => {
     try {
+      // Check if prompts are initialized
+      if (!isInitialized) {
+        throw new Error('Prompts are not yet initialized');
+      }
+      
       setGenerating(true);
       
       // Get the image prompt template
@@ -287,7 +313,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       }
       
       // Generate image prompts using AI
-      const imagePromptTexts = await articleAIService.generateImagePrompts(
+      const imagePromptTexts = await articleAI.generateImagePrompts(
         imagePrompts[0],
         topic,
         keywords,

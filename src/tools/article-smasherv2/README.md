@@ -49,7 +49,10 @@ npm install
 VITE_OPENAI_API_KEY=your-api-key-here
 VITE_DEFAULT_MODEL=gpt-4o
 VITE_WORDPRESS_API_URL=https://your-wordpress-site.com/wp-json
+VITE_RECAPTCHA_SITE_KEY=your-recaptcha-site-key-here
 ```
+
+> **Note:** The application uses Google reCAPTCHA for security. You'll need to obtain a reCAPTCHA v3 site key from the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin).
 
 4. Start the development server:
 ```bash
