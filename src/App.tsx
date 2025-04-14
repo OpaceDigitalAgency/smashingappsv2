@@ -44,7 +44,7 @@ import toolRegistry, { getToolConfig } from './tools/registry';
 // When adding a new tool, import its main component here
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
 import AdminApp from './admin/AdminApp';
-import ArticleSmasherV2App from './tools/article-smasher/ArticleSmasherV2App';
+import ArticleSmasherV2App from './tools/article-smasher/ArticleSmasherApp';
 
 // Loading component for Suspense
 const LoadingScreen = () => (
