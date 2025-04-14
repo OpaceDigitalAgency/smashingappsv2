@@ -179,7 +179,7 @@ class LegacyAIService {
       
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '10', 10),
         remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
@@ -249,7 +249,7 @@ class LegacyAIService {
       
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
-        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '60', 10),
+        limit: parseInt(response.headers.get('X-RateLimit-Limit') || '10', 10),
         remaining: parseInt(response.headers.get('X-RateLimit-Remaining') || '0', 10),
         reset: new Date(response.headers.get('X-RateLimit-Reset') || Date.now() + 3600000),
         used: parseInt(response.headers.get('X-RateLimit-Used') || '0', 10)
@@ -261,7 +261,7 @@ class LegacyAIService {
       
       // Return default values if we can't get the actual limits
       return {
-        limit: 60,
+        limit: 10,
         remaining: 20,
         reset: new Date(Date.now() + 3600000),  // Reset after 1 hour
         used: 0

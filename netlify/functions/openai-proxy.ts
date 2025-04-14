@@ -11,7 +11,7 @@
  * - Handles errors and timeouts
  *
  * KEY SETTINGS TO MODIFY:
- * - Line 12: RATE_LIMIT - Maximum API calls per user (default: 60)
+ * - Line 12: RATE_LIMIT - Maximum API calls per user (default: 10)
  * - Line 13: RATE_LIMIT_WINDOW - Time window for rate limits (default: 24 hours)
  * - Line 152: timeout - Request timeout in milliseconds (default: 60000 = 60 seconds)
  */
@@ -60,7 +60,7 @@ const RECAPTCHA_SCORE_THRESHOLD = 0.5; // Minimum score to consider human (0.0 t
 
 // USAGE LIMITS - Controls how many AI requests each user can make
 // Change these values to adjust the usage limits
-const RATE_LIMIT = 60; // MAXIMUM API CALLS ALLOWED PER USER
+const RATE_LIMIT = 10; // MAXIMUM API CALLS ALLOWED PER USER
 const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Function to verify reCAPTCHA token

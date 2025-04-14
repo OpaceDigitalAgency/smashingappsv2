@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Zap, DollarSign, Info, MessageSquare, Settings, Star } from 'lucide-react';
-import { getModelsByCategory, getModelsByProvider, aiServiceRegistry } from '../../../shared/services/aiServices';
+import { getModelsByCategory, getModelsByProvider, aiServiceRegistry, getServiceForModel } from '../../../shared/services/aiServices';
 import { AIModel } from '../../../shared/types/aiProviders';
 
 interface ModelDropdownProps {
@@ -38,7 +38,7 @@ const ModelDropdown: React.FC<ModelDropdownProps> = ({
     setModelsByCategory(getModelsByCategory());
     
     // Get active provider from localStorage or use default
-    const storedProvider = localStorage.getItem('taskSmasher_activeProvider');
+    const storedProvider = localStorage.getItem('smashingapps_activeProvider');
     if (storedProvider) {
       setActiveProvider(storedProvider);
     } else {
@@ -65,7 +65,29 @@ const ModelDropdown: React.FC<ModelDropdownProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
               <select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                onChange={(e) => {
+                  const newModel = e.target.value;
+                  setSelectedModel(newModel);
+                  
+                  // Get the provider for the selected model
+                  const service = getServiceForModel(newModel);
+                  if (service) {
+                    const provider = service.provider;
+                    setActiveProvider(provider);
+                    
+                    // Save the active provider to localStorage
+                    localStorage.setItem('smashingapps_activeProvider', provider);
+                    
+                    // Set as default provider in the registry
+                    aiServiceRegistry.setDefaultProvider(provider);
+                    
+                    // Check if API key is set for this provider
+                    if (!service.isConfigured()) {
+                      // Open API settings modal to prompt for API key
+                      onOpenAPISettings();
+                    }
+                  }
+                }}
                 className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white w-full sm:w-[250px] appearance-none bg-no-repeat bg-right"
                 style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23555%22%20d%3D%22M6%208L0%202h12z%22%2F%3E%3C%2Fsvg%3E')", backgroundPosition: "right 0.5rem center", paddingRight: "2rem" }}
               >

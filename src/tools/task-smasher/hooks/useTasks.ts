@@ -4,10 +4,16 @@ import { filterTasksByPriority, filterTasksByRating } from '../utils/taskUtils';
 import { validateTaskLocally, validateTaskWithAI } from '../utils/taskContextValidator';
 import OpenAIService from '../utils/openaiServiceAdapter';
 import useReCaptcha from './useReCaptcha';
+import { aiServiceRegistry } from '../../../shared/services/aiServices';
 
 export function useTasks(initialUseCase?: string): TasksContextType {
   // Removed openAIKey state as we're now using the proxy
-  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
+  const [selectedModel, setSelectedModel] = useState(() => {
+    // Try to get the default model for the active provider from localStorage
+    const activeProvider = localStorage.getItem('smashingapps_activeProvider') || 'openai';
+    const service = aiServiceRegistry.getService(activeProvider as any);
+    return service ? service.getDefaultModel().id : 'gpt-3.5-turbo';
+  });
   const [totalCost, setTotalCost] = useState(() => {
     const savedCost = localStorage.getItem('totalCost');
     return savedCost ? parseFloat(savedCost) : 0;
@@ -96,6 +102,28 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       document.documentElement.style.setProperty('--secondary-light', `var(--${selectedUseCase}-secondary)`);
     }
   }, [selectedUseCase]);
+  
+  // Effect to update the selected model when the active provider changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const activeProvider = localStorage.getItem('smashingapps_activeProvider');
+      if (activeProvider) {
+        const service = aiServiceRegistry.getService(activeProvider as any);
+        if (service) {
+          // Get the default model for this provider
+          const defaultModel = service.getDefaultModel().id;
+          setSelectedModel(defaultModel);
+        }
+      }
+    };
+    
+    // Listen for storage changes (in case API settings are updated in another tab)
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Initialize with provided use case or default to daily organizer
   useEffect(() => {
