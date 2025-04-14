@@ -6,20 +6,12 @@
  */
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import App from './src/App';
+import Demo from './src/components/Demo';
 
 const ArticleSmasherV2App: React.FC = () => {
   return (
     <div className="article-smasherv2-container">
-      {/* Wrap the App component with BrowserRouter only in development */}
-      {process.env.NODE_ENV === 'development' ? (
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      ) : (
-        <App />
-      )}
+      <Demo />
     </div>
   );
 };
