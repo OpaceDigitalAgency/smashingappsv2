@@ -1,11 +1,11 @@
 import React from 'react';
 import { useArticleWizard } from '../contexts/ArticleWizardContext';
 import MainLayout from './layout/MainLayout';
-import TopicStep from './steps/TopicStep/TopicStep';
+import TopicStep from './steps/TopicStep/TopicStepWithNav';
 import KeywordStep from './steps/KeywordStep/KeywordStep';
 import OutlineStep from './steps/OutlineStep/OutlineStep';
 import ContentStep from './steps/ContentStep/ContentStep';
-import ImageStep from './steps/ImageStep/ImageStep';
+import ImageStep from './steps/ImageStep/ImageStepWithNav';
 import PublishStep from './steps/PublishStep/PublishStep';
 import CompleteArticle from './complete/CompleteArticle';
 

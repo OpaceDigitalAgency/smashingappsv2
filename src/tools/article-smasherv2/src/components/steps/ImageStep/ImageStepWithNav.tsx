@@ -214,40 +214,24 @@ const ImageStep: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
-    
-    {/* Navigation Buttons */}
-    <div className="flex justify-between mt-8">
-      <button
-        onClick={() => useArticleWizard().goToPreviousStep()}
-        className="btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 py-2 px-4 rounded-lg"
-      >
-        Back
-      </button>
-      <button
-        onClick={() => useArticleWizard().goToNextStep()}
-        className="btn btn-primary py-2 px-6 rounded-lg"
-      >
-        Continue
-      </button>
-    </div>
-    
-    {/* Navigation Buttons */}
-    <div className="flex justify-between mt-8">
-      <button
-        onClick={goToPreviousStep}
-        className="btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 py-2 px-4 rounded-lg flex items-center"
-      >
-        <ArrowLeft className="mr-2" size={16} />
-        Back
-      </button>
-      <button
-        onClick={goToNextStep}
-        className="btn btn-primary py-2 px-6 rounded-lg flex items-center"
-      >
-        Continue
-        <ArrowRight className="ml-2" size={16} />
-      </button>
+      
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-8">
+        <button 
+          onClick={goToPreviousStep}
+          className="btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 py-2 px-4 rounded-lg flex items-center"
+        >
+          <ArrowLeft className="mr-2" size={16} />
+          Back
+        </button>
+        <button 
+          onClick={goToNextStep}
+          className="btn btn-primary py-2 px-6 rounded-lg flex items-center"
+        >
+          Continue
+          <ArrowRight className="ml-2" size={16} />
+        </button>
+      </div>
     </div>
   );
 };
