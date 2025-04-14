@@ -27,12 +27,11 @@ const AdminApp: React.FC = () => {
       <AdminLayout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin/providers" element={<ProviderManagement />} />
-          <Route path="/admin/prompts" element={<PromptManagement />} />
-          <Route path="/admin/settings" element={<SettingsManagement />} />
-          <Route path="/admin/usage" element={<UsageMonitoring />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          <Route path="providers" element={<ProviderManagement />} />
+          <Route path="prompts" element={<PromptManagement />} />
+          <Route path="settings" element={<SettingsManagement />} />
+          <Route path="usage" element={<UsageMonitoring />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AdminLayout>
     </AdminProvider>

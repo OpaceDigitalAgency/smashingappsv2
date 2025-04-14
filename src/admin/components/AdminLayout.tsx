@@ -21,7 +21,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { activeSection, setActiveSection } = useAdmin();
 
-  // Navigation items
+  // Navigation items with correct paths
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', path: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
     { id: 'providers', label: 'Providers', path: '/admin/providers', icon: <Server className="w-5 h-5" /> },
