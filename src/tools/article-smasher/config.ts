@@ -68,6 +68,9 @@ const articleSmasherConfig: ToolConfig = {
     }
   },
   defaultUseCase: 'blog',
+  // NOTE: The metaTags section below is kept for backward compatibility and reference.
+  // For SEO purposes, the centralized seoMaster.ts file is now the single source of truth.
+  // Any changes to SEO should be made in src/utils/seoMaster.ts instead of here.
   metaTags: {
     title: 'ArticleSmasher | AI-Powered Content Creation Tool',
     description: 'Create high-quality articles, blog posts, and SEO content with AI assistance',

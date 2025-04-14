@@ -361,12 +361,12 @@ This section provides easy-to-follow instructions for making common changes to t
 
 #### Main Website SEO (Homepage and General Settings)
 
-**File Location:** `src/utils/metaConfig.cjs` (Lines 12-19)
+**File Location:** `src/utils/seoMaster.ts`
 
-This file contains SEO settings for the main website. To edit:
+This file is the single source of truth for all SEO-related content across the entire application. To edit:
 
 1. Open the file in any text editor
-2. Find the `defaultMetaConfig` section (around line 12)
+2. Find the `defaultMeta` section
 3. Edit the following fields:
    - `title`: The main website title
    - `description`: The main website description
@@ -374,56 +374,62 @@ This file contains SEO settings for the main website. To edit:
    - `keywords`: Keywords for search engines
 
 Example:
-```javascript
-const defaultMetaConfig = {
-  title: 'SmashingApps.ai | AI-Powered Productivity Tools',
-  description: 'Discover AI-powered micro-apps that help you smash through tasks with smart, focused tools. Boost your productivity with our suite of specialized AI assistants.',
+```typescript
+export const defaultMeta: MetaConfig = {
+  title: 'SmashingApps.ai | Free AI Productivity Apps & Tools',
+  description: 'Get things done faster with free AI planners and smart to-do lists. Smash tasks easily using auto task management from SmashingApps.ai.',
   image: `${BASE_URL}/og/default.png`,
   canonical: BASE_URL,
+  urlPath: '/',
   robots: 'index, follow',
-  keywords: 'AI tools, productivity, task management, AI apps, SmashingApps, AI assistants'
+  keywords: 'free ai planner, magic to-do, ai task manager, ai task planner, smart to-do lists, auto task manager, ai to-do lists'
+  // ...
 };
 ```
 
-#### Tool-Specific SEO (TaskSmasher and Other Tools)
+#### Tool-Specific SEO (TaskSmasher, ArticleSmasher, and Other Tools)
 
-**File Location:** `src/utils/metaConfig.cjs` (Lines 22-73)
+**File Location:** `src/utils/seoMaster.ts` (routeMeta section)
 
 To edit SEO for specific tools:
 
-1. Find the `metaConfig` section (around line 22)
+1. Find the `routeMeta` section
 2. Locate the specific tool path (e.g., `/tools/task-smasher/`)
 3. Edit the title, description, and other fields
 
 Example for TaskSmasher:
-```javascript
+```typescript
 '/tools/task-smasher/': {
-  title: 'TaskSmasher – AI Task Planner | Break Down Complex Tasks Easily',
-  description: 'Use AI to break down overwhelming tasks into manageable subtasks. TaskSmasher helps you organize, prioritize, and complete tasks efficiently with AI assistance.',
+  title: 'TaskSmasher - Free AI Planner | Magic To-Do Lists & AI Task Manager',
+  description: 'Smash complex tasks into smart, manageable lists using our free AI planner. TaskSmasher is an AI task manager tool that creates magic to-do lists for greater productivity.',
   image: `${BASE_URL}/og/task-smasher.png`,
   canonical: `${BASE_URL}/tools/task-smasher/`,
+  urlPath: '/tools/task-smasher/',
   keywords: 'task management, AI task breakdown, AI TO-DO planner, AI Task planner, productivity tool, task organizer',
   // ...
 }
 ```
 
-#### Use Case SEO (Goal Planner, Daily Organizer, etc.)
+#### Use Case SEO (Goal Planner, Daily Organizer, Blog Post, etc.)
 
-**File Location:** `src/utils/metaConfig.cjs` (Lines 77-126)
+**File Location:** `src/utils/seoMaster.ts`
 
 To edit SEO for specific use cases:
 
-1. Find the `useCaseDefinitions` section (around line 77)
+1. Find the appropriate use case definitions section (`useCaseDefinitions` for TaskSmasher or `articleSmasherUseCases` for ArticleSmasher)
 2. Locate the specific use case (e.g., `goals` for Goal Planner)
-3. Edit the label and description
+3. Edit the label, description, and keywords
 
-Example:
-```javascript
+Example for TaskSmasher use case:
+```typescript
 goals: {
   label: "Goal Planner",
-  description: "Break down long-term objectives into actionable steps with our AI Goal Planner. Set SMART goals, track progress, and achieve your ambitions with structured planning."
+  description: "Achieve goals faster using our free AI task planner. Break down objectives into smart to-do lists.",
+  keywords: ["goal", "objective", "milestone", "achieve", "accomplish", "target"]
 }
 ```
+
+For more detailed information about the SEO system, please refer to the [SEO documentation](src/utils/SEO_README.md).
 
 ### OpenAI API Settings
 

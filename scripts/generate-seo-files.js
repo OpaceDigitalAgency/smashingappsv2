@@ -47,13 +47,21 @@ const routes = [
   { path: '/', priority: 1.0, changefreq: 'weekly' },
   { path: '/contact', priority: 0.7, changefreq: 'monthly' },
   { path: '/tools/task-smasher/', priority: 0.9, changefreq: 'weekly' },
+  { path: '/tools/article-smasher/', priority: 0.9, changefreq: 'weekly' },
   
   // Add all TaskSmasher use case routes
   ...Object.entries(useCaseDefinitions).map(([id, definition]) => ({
     path: `/tools/task-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`,
     priority: 0.8,
     changefreq: 'weekly'
-  }))
+  })),
+  
+  // Add all ArticleSmasher use case routes
+  ...(seoMaster.articleSmasherUseCases ? Object.entries(seoMaster.articleSmasherUseCases).map(([id, definition]) => ({
+    path: `/tools/article-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`,
+    priority: 0.8,
+    changefreq: 'weekly'
+  })) : [])
 ];
 
 // Generate sitemap.xml

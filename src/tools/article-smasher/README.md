@@ -170,6 +170,16 @@ To add new export formats:
 
 1. Edit the `capabilities.export.formats` array in `src/tools/article-smasher/config.ts`
 2. Implement the export functionality in the `exportArticle` function in `ArticleSmasherApp.tsx`
+## SEO Configuration
+
+ArticleSmasher uses the centralized SEO system defined in `src/utils/seoMaster.ts`. This system provides:
+
+- Meta tags for the main ArticleSmasher page
+- Meta tags for each use case page (Blog Post, SEO Article, Academic Paper, News Article)
+- Structured data for search engines
+- Open Graph tags for social sharing
+
+The SEO configuration is no longer managed through the `metaTags` section in the config file, but instead through the centralized `seoMaster.ts` file. This ensures consistency across the platform and simplifies SEO management.
 
 ## Future Enhancements
 
@@ -180,4 +190,5 @@ Planned enhancements for ArticleSmasher include:
 - Article optimization suggestions
 - Voice input for article topics
 - Templates for different article types
+- Saving and loading article drafts
 - Saving and loading article drafts

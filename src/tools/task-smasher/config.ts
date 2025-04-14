@@ -132,6 +132,9 @@ const taskSmasherConfig: ToolConfig = {
     }
   },
   defaultUseCase: 'daily',
+  // NOTE: The metaTags section below is kept for backward compatibility and reference.
+  // For SEO purposes, the centralized seoMaster.ts file is now the single source of truth.
+  // Any changes to SEO should be made in src/utils/seoMaster.ts instead of here.
   metaTags: {
     title: 'TaskSmasher | Free AI Task Planner & Magic To-Do Lists',
     description: 'AI-powered task management that breaks down complex tasks into simple, actionable steps',
