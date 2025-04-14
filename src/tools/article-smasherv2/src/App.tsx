@@ -609,6 +609,14 @@ function HomePage() {
   );
 }
 
+/**
+ * App component for standalone mode
+ *
+ * This component is only used when the tool is run independently,
+ * not when it's integrated into the main SmashingApps.ai application.
+ *
+ * When integrated, the ArticleSmasherV2App component is used directly.
+ */
 function App() {
   return (
     <Routes>
