@@ -141,6 +141,10 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   const handleStepClick = (step: number) => {
     // Allow navigation to any step
     setCurrentStep(step);
+    // Reset showComplete when navigating to any step
+    if (showComplete) {
+      setShowComplete(false);
+    }
   };
   
   // Generate topic ideas based on the selected article type

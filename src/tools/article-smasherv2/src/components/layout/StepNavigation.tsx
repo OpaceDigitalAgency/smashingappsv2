@@ -17,7 +17,7 @@ const Step: React.FC<StepProps> = ({ isActive, isComplete, number, title, descri
     <div className="tooltip">
       <button
         onClick={onClick}
-        className={`flex items-center px-3 py-1.5 rounded-md transition-all ${
+        className={`flex items-center justify-center px-3 py-2 rounded-md transition-all w-full ${
           isActive
             ? 'bg-blue-600 text-white'
             : isComplete
@@ -110,7 +110,7 @@ const StepNavigation: React.FC = () => {
         <p className="text-gray-600 text-sm">Step {currentStep} of {totalSteps}</p>
       </div>
       
-      <div className="flex space-x-1 overflow-x-auto pb-1">
+      <div className="flex justify-between overflow-hidden pb-1">
         {steps.map((step, index) => (
           <div 
             key={step.number} 

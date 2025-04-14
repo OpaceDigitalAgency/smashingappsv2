@@ -24,12 +24,15 @@
 
 /* Hide scrollbars but keep functionality */
 .article-smasherv2-container * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+  overflow: visible !important;
 }
 
 .article-smasherv2-container *::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Style for the article type sidebar */
