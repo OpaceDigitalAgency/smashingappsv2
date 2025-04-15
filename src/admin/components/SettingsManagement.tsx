@@ -38,6 +38,11 @@ const SettingsManagement: React.FC = () => {
   // Handle global settings change
   const handleGlobalSettingsChange = (field: keyof typeof globalSettings, value: any) => {
     updateGlobalSettings({ [field]: value });
+    
+    // If provider changed, refresh the models list
+    if (field === 'aiProvider' && value.provider !== globalSettings.aiProvider.provider) {
+      refreshProviderModels();
+    }
   };
   
   // Handle app settings change
@@ -75,10 +80,16 @@ const SettingsManagement: React.FC = () => {
   const handleResetSettings = () => {
     // Reset global settings to defaults
     updateGlobalSettings({
-      defaultProvider: 'openai',
-      defaultModel: 'gpt-4o',
-      defaultTemperature: 0.7,
-      defaultMaxTokens: 1000,
+      aiProvider: {
+        provider: 'openai',
+        apiKey: '',
+        defaultModel: 'gpt-3.5-turbo',
+        defaultSystemPrompt: '',
+        defaultOptions: {
+          temperature: 0.7,
+          maxTokens: 2000
+        }
+      }
     });
     
     // Show success message
@@ -144,8 +155,8 @@ const SettingsManagement: React.FC = () => {
                     Default Provider
                   </label>
                   <select
-                    value={globalSettings.defaultProvider}
-                    onChange={(e) => handleGlobalSettingsChange('defaultProvider', e.target.value as AIProvider)}
+                    value={globalSettings.aiProvider.provider}
+                    onChange={(e) => handleGlobalSettingsChange('aiProvider', { ...globalSettings.aiProvider, provider: e.target.value as AIProvider })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-md"
                   >
                     {Object.entries(providers).map(([key, provider]) => (
@@ -161,11 +172,11 @@ const SettingsManagement: React.FC = () => {
                   </label>
                   <div className="flex items-center">
                     <select
-                      value={globalSettings.defaultModel}
-                      onChange={(e) => handleGlobalSettingsChange('defaultModel', e.target.value)}
+                      value={globalSettings.aiProvider.defaultModel}
+                      onChange={(e) => handleGlobalSettingsChange('aiProvider', { ...globalSettings.aiProvider, defaultModel: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-200 rounded-md"
                     >
-                      {providers[globalSettings.defaultProvider]?.models.map(model => (
+                      {providers[globalSettings.aiProvider.provider]?.models.map(model => (
                         <option key={model.id} value={model.id}>
                           {model.name}
                         </option>
@@ -194,12 +205,18 @@ const SettingsManagement: React.FC = () => {
                       min="0"
                       max="2"
                       step="0.1"
-                      value={globalSettings.defaultTemperature}
-                      onChange={(e) => handleGlobalSettingsChange('defaultTemperature', parseFloat(e.target.value))}
+                      value={globalSettings.aiProvider.defaultOptions.temperature}
+                      onChange={(e) => handleGlobalSettingsChange('aiProvider', {
+                        ...globalSettings.aiProvider,
+                        defaultOptions: {
+                          ...globalSettings.aiProvider.defaultOptions,
+                          temperature: parseFloat(e.target.value)
+                        }
+                      })}
                       className="flex-1 mr-2"
                     />
                     <span className="text-sm font-medium w-10 text-center">
-                      {globalSettings.defaultTemperature}
+                      {globalSettings.aiProvider.defaultOptions.temperature}
                     </span>
                   </div>
                 </div>
@@ -211,8 +228,14 @@ const SettingsManagement: React.FC = () => {
                     type="number"
                     min="1"
                     max="32000"
-                    value={globalSettings.defaultMaxTokens}
-                    onChange={(e) => handleGlobalSettingsChange('defaultMaxTokens', parseInt(e.target.value))}
+                    value={globalSettings.aiProvider.defaultOptions.maxTokens}
+                    onChange={(e) => handleGlobalSettingsChange('aiProvider', {
+                      ...globalSettings.aiProvider,
+                      defaultOptions: {
+                        ...globalSettings.aiProvider.defaultOptions,
+                        maxTokens: parseInt(e.target.value)
+                      }
+                    })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-md"
                   />
                 </div>
