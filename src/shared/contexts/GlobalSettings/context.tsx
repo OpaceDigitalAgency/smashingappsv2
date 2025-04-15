@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { GlobalSettings, GlobalSettingsContextValue, DEFAULT_SETTINGS } from './types';
+import { synchronizeSettings } from '../../utils/settingsSynchronizer';
 
 // Define action types
 type GlobalSettingsAction = 
@@ -105,6 +106,10 @@ export function GlobalSettingsProvider({ children }: { children: React.ReactNode
       validateSettings(updatedSettings);
       setStoredSettings(updatedSettings);
       dispatch({ type: 'UPDATE_SETTINGS', payload: newSettings });
+      
+      // Synchronize settings across different localStorage keys
+      synchronizeSettings();
+      console.log('[GlobalSettings] Synchronized settings across localStorage keys');
     } catch (error) {
       const settingsError = error instanceof Error ? error : new GlobalSettingsError('Unknown error updating settings');
       dispatch({ type: 'SET_ERROR', payload: settingsError });

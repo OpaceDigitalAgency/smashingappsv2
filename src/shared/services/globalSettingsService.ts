@@ -1,11 +1,12 @@
 /**
  * Global Settings Service
- * 
+ *
  * This service provides a unified settings management system that synchronizes
  * settings between TaskSmasher and ArticleSmasher.
  */
 
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { synchronizeSettings } from '../utils/settingsSynchronizer';
 
 // Define the GlobalSettings interface
 export interface GlobalSettings {
@@ -136,6 +137,10 @@ export function updateGlobalSettings(newSettings: Partial<GlobalSettings>): Glob
     const event = new CustomEvent(SETTINGS_CHANGED_EVENT, { detail: updatedSettings });
     window.dispatchEvent(event);
     console.log('[GlobalSettingsService] Dispatched settings changed event');
+    
+    // Synchronize settings across different localStorage keys
+    synchronizeSettings();
+    console.log('[GlobalSettingsService] Synchronized settings across localStorage keys');
     
     return updatedSettings;
   } catch (error) {
