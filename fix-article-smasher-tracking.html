@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Article Smasher Usage Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover {
+            background: #0b7dda;
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #d32f2f;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .results {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fix Article Smasher Usage Tracking</h1>
+    
+    <div class="card">
+        <h2>Problem</h2>
+        <p>Article Smasher usage is not being correctly tracked or displayed in the admin interface. This tool will help diagnose and fix the issue.</p>
+    </div>
+    
+    <div class="card">
+        <h2>Actions</h2>
+        <button id="runFix">Run Complete Fix</button>
+        <button id="logState" class="secondary">Log Current State</button>
+        <button id="setFlags" class="secondary">Set Article Smasher Flags</button>
+        <button id="addTestData" class="secondary">Add Test Data</button>
+        <button id="forceRefresh" class="secondary">Force Refresh</button>
+        <button id="clearData" class="danger">Clear All Data</button>
+    </div>
+    
+    <div class="results">
+        <h2>Results</h2>
+        <div id="output"></div>
+    </div>
+    
+    <script src="fix-article-smasher-tracking.js"></script>
+    <script>
+        // Function to log to the output div
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const pre = document.createElement('pre');
+            pre.className = type;
+            pre.textContent = message;
+            output.appendChild(pre);
+            console.log(message);
+        }
+        
+        // Clear output
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+        
+        // Clear all data
+        function clearAllData() {
+            clearOutput();
+            log('Clearing all localStorage data...');
+            localStorage.clear();
+            log('All localStorage data cleared successfully', 'success');
+        }
+        
+        // Event listeners
+        document.getElementById('runFix').addEventListener('click', function() {
+            clearOutput();
+            log('Running complete fix...');
+            try {
+                const result = runFix();
+                log('Fix completed successfully', 'success');
+                log('Initial state: ' + JSON.stringify(result.initialState, null, 2));
+                log('Final state: ' + JSON.stringify(result.finalState, null, 2));
+            } catch (error) {
+                log('Error running fix: ' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('logState').addEventListener('click', function() {
+            clearOutput();
+            log('Logging current state...');
+            try {
+                const state = logUsageTrackingState();
+                log('Current state logged successfully', 'success');
+                log('App flags: ' + JSON.stringify(state.appFlags, null, 2));
+                log('Article Smasher usage: ' + JSON.stringify({
+                    requests: state.articleSmasherRequests,
+                    tokens: state.articleSmasherTokens,
+                    historyEntries: state.articleSmasherEntries.length
+                }, null, 2));
+            } catch (error) {
+                log('Error logging state: ' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('setFlags').addEventListener('click', function() {
+            clearOutput();
+            log('Setting Article Smasher flags...');
+            try {
+                setArticleSmasherFlags();
+                log('Article Smasher flags set successfully', 'success');
+                const flags = {
+                    article_smasher_app: localStorage.getItem('article_smasher_app'),
+                    article_wizard_state: localStorage.getItem('article_wizard_state'),
+                    FORCE_APP_ID: localStorage.getItem('FORCE_APP_ID'),
+                    current_app: localStorage.getItem('current_app')
+                };
+                log('Current flags: ' + JSON.stringify(flags, null, 2));
+            } catch (error) {
+                log('Error setting flags: ' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('addTestData').addEventListener('click', function() {
+            clearOutput();
+            log('Adding test data...');
+            try {
+                addArticleSmasherTestData();
+                log('Test data added successfully', 'success');
+                const state = logUsageTrackingState();
+                log('Article Smasher usage: ' + JSON.stringify({
+                    requests: state.articleSmasherRequests,
+                    tokens: state.articleSmasherTokens,
+                    historyEntries: state.articleSmasherEntries.length
+                }, null, 2));
+            } catch (error) {
+                log('Error adding test data: ' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('forceRefresh').addEventListener('click', function() {
+            clearOutput();
+            log('Forcing refresh...');
+            try {
+                forceRefreshUsageData();
+                log('Refresh completed successfully', 'success');
+                const state = logUsageTrackingState();
+                log('Article Smasher usage: ' + JSON.stringify({
+                    requests: state.articleSmasherRequests,
+                    tokens: state.articleSmasherTokens,
+                    historyEntries: state.articleSmasherEntries.length
+                }, null, 2));
+            } catch (error) {
+                log('Error forcing refresh: ' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('clearData').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all localStorage data? This cannot be undone.')) {
+                clearAllData();
+            }
+        });
+        
+        // Log initial state
+        window.addEventListener('load', function() {
+            log('Page loaded. Ready to fix Article Smasher usage tracking.');
+        });
+    </script>
+</body>
+</html>
