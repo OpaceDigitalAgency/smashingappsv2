@@ -19,10 +19,22 @@ export function wrapAIService(service: AIService, appId: string): AIService {
   if (!appId || appId === 'unknown-app') {
     console.warn('[DEBUG] Wrapping service with invalid app ID:', appId);
     
-    // Try to determine app ID from localStorage flags
-    if (localStorage.getItem('article_smasher_app') ||
-        localStorage.getItem('article_wizard_state') ||
-        window.location.pathname.includes('article-smasher')) {
+    // Try to determine app ID from localStorage flags in priority order
+    // 1. FORCE_APP_ID has highest priority
+    const forcedAppId = localStorage.getItem('FORCE_APP_ID');
+    if (forcedAppId) {
+      console.log(`[DEBUG] Found FORCE_APP_ID, using ${forcedAppId} as app ID`);
+      appId = forcedAppId;
+    }
+    // 2. current_app has second priority
+    else if (localStorage.getItem('current_app')) {
+      appId = localStorage.getItem('current_app') || 'unknown-app';
+      console.log(`[DEBUG] Found current_app, using ${appId} as app ID`);
+    }
+    // 3. App-specific flags have third priority
+    else if (localStorage.getItem('article_smasher_app') ||
+             localStorage.getItem('article_wizard_state') ||
+             window.location.pathname.includes('article-smasher')) {
       console.log('[DEBUG] Found ArticleSmasher indicators, using article-smasher as app ID');
       appId = 'article-smasher';
     } else if (localStorage.getItem('task_list_state') ||
@@ -216,6 +228,10 @@ function estimateTokensFromMessages(messages: Array<{ role: string; content: str
 export function initializeUsageTracking(): void {
   console.log('[DEBUG] Initializing usage tracking');
   console.log('[DEBUG] App identification flags:', {
+    // High priority flags
+    FORCE_APP_ID: localStorage.getItem('FORCE_APP_ID'),
+    current_app: localStorage.getItem('current_app'),
+    // App-specific flags
     article_smasher_app: localStorage.getItem('article_smasher_app'),
     article_wizard_state: localStorage.getItem('article_wizard_state'),
     task_list_state: localStorage.getItem('task_list_state')

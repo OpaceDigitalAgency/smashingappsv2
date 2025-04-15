@@ -42,18 +42,38 @@ export const getServiceForModel = (modelId: string) => {
   // Get the current app ID from localStorage or URL
   let appId = 'unknown-app';
   
-  // First check localStorage
-  if (localStorage.getItem('article_wizard_state')) {
+  // Check for app identification flags in priority order
+  // 1. FORCE_APP_ID has highest priority
+  const forcedAppId = localStorage.getItem('FORCE_APP_ID');
+  if (forcedAppId) {
+    console.log(`[APP IDENTIFICATION] Using forced app ID: ${forcedAppId}`);
+    appId = forcedAppId;
+  }
+  // 2. current_app has second priority
+  else if (localStorage.getItem('current_app')) {
+    appId = localStorage.getItem('current_app') || 'unknown-app';
+    console.log(`[APP IDENTIFICATION] Using current_app: ${appId}`);
+  }
+  // 3. App-specific flags have third priority
+  else if (localStorage.getItem('article_smasher_app') || localStorage.getItem('article_wizard_state')) {
     appId = 'article-smasher';
+    console.log('[APP IDENTIFICATION] Using article-smasher based on app-specific flags');
   } else if (localStorage.getItem('task_list_state')) {
     appId = 'task-smasher';
-  } else {
-    // Then check URL path
+    console.log('[APP IDENTIFICATION] Using task-smasher based on app-specific flags');
+  }
+  // 4. URL path has lowest priority
+  else {
+    // Check URL path as a fallback
     const path = window.location.pathname;
     if (path.includes('/article-smasher') || path.includes('/tools/article-smasher')) {
       appId = 'article-smasher';
+      console.log('[APP IDENTIFICATION] Using article-smasher based on URL path');
     } else if (path.includes('/task-smasher') || path.includes('/tools/task-smasher')) {
       appId = 'task-smasher';
+      console.log('[APP IDENTIFICATION] Using task-smasher based on URL path');
+    } else {
+      console.log(`[APP IDENTIFICATION] Using default app ID: ${appId}`);
     }
   }
   
