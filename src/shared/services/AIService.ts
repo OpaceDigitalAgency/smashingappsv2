@@ -158,6 +158,12 @@ class LegacyAIService {
     rateLimit: RateLimitInfo;
   }> {
     try {
+      // FORCE MODEL OVERRIDE: Always use gpt-3.5-turbo regardless of requested model
+      const originalModel = request.model;
+      request.model = 'gpt-3.5-turbo';
+      
+      console.log(`[LEGACY SERVICE] Forcing model to ${request.model} instead of ${originalModel}`);
+      
       // Prepare headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -167,6 +173,9 @@ class LegacyAIService {
       if (recaptchaToken) {
         headers['X-ReCaptcha-Token'] = recaptchaToken;
       }
+      
+      // Add model override header to ensure proxy respects our model choice
+      headers['X-Force-Model'] = 'gpt-3.5-turbo';
       
       // Use the Netlify function proxy instead of direct API
       const response = await fetch('/.netlify/functions/openai-proxy', {
@@ -213,6 +222,8 @@ class LegacyAIService {
    * Get a simple text completion from the AI service
    */
   async getCompletion(prompt: string, model = 'gpt-3.5-turbo'): Promise<string> {
+    // Always use gpt-3.5-turbo regardless of what's passed in
+    model = 'gpt-3.5-turbo';
     try {
       const { data } = await this.createChatCompletion({
         model,

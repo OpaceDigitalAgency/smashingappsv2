@@ -30,11 +30,26 @@ const ArticleSmasherApp: React.FC = () => {
   
   // Initialize admin bridge and AI services with usage tracking
   useEffect(() => {
-    console.log('ArticleSmasherApp: Initializing admin bridge and AI services');
+    console.log('ArticleSmasherApp: Initializing admin bridge and AI services with FORCED APP ID');
     
-    // Set localStorage flags to identify the app - use multiple flags for redundancy
-    localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
+    // DIRECT APPROACH: Force app identification with multiple redundant methods
+    // Set multiple localStorage flags to identify the app with redundancy
+    localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
     localStorage.setItem('article_smasher_app', 'true');
+    localStorage.setItem('FORCE_APP_ID', 'article-smasher');
+    localStorage.setItem('current_app', 'article-smasher');
+    
+    // Directly modify usage data to ensure app is tracked correctly
+    const usageDataKey = 'smashingapps_usage_data';
+    try {
+      const usageData = JSON.parse(localStorage.getItem(usageDataKey) || '{}');
+      if (!usageData.requestsByApp) usageData.requestsByApp = {};
+      if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
+      localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+      console.log('ArticleSmasherApp: Directly ensured article-smasher exists in usage data');
+    } catch (e) {
+      console.error('Error ensuring article-smasher in usage data:', e);
+    }
     
     // Initialize the admin bridge
     initAdminBridge();
@@ -44,24 +59,33 @@ const ArticleSmasherApp: React.FC = () => {
     initializeAIServicesWithTracking();
     console.log('ArticleSmasherApp: AI services initialized');
     
-    // Set a periodic check to ensure the app ID flags remain set
+    // Set a more aggressive periodic check to ensure the app ID flags remain set
     const intervalId = setInterval(() => {
-      if (!localStorage.getItem('article_smasher_app')) {
-        console.log('ArticleSmasherApp: Restoring missing app ID flag');
-        localStorage.setItem('article_smasher_app', 'true');
+      // Force app ID flags with every check
+      localStorage.setItem('article_smasher_app', 'true');
+      localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
+      localStorage.setItem('FORCE_APP_ID', 'article-smasher');
+      localStorage.setItem('current_app', 'article-smasher');
+      
+      console.log('ArticleSmasherApp: Forced app ID flags refreshed');
+      
+      // Also directly ensure the app exists in usage tracking data
+      try {
+        const usageData = JSON.parse(localStorage.getItem(usageDataKey) || '{}');
+        if (!usageData.requestsByApp) usageData.requestsByApp = {};
+        if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
+        localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+      } catch (e) {
+        console.error('Error in interval ensuring article-smasher in usage data:', e);
       }
-      if (!localStorage.getItem('article_wizard_state')) {
-        console.log('ArticleSmasherApp: Restoring missing wizard state flag');
-        localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
-      }
-    }, 10000); // Check every 10 seconds
+    }, 5000); // More frequent check - every 5 seconds
     
-    // Cleanup function
+    // Cleanup function - but don't actually clean up the app ID flags
     return () => {
       clearInterval(intervalId);
-      localStorage.removeItem('article_wizard_state');
-      // Don't remove the article_smasher_app flag on unmount to ensure persistence
-      // between page refreshes and navigation
+      // IMPORTANT: We intentionally DO NOT remove any app ID flags on unmount
+      // to ensure persistence between page refreshes and navigation
+      console.log('ArticleSmasherApp: Component unmounting, but keeping app ID flags');
     };
   }, []); // Run only once on mount
   

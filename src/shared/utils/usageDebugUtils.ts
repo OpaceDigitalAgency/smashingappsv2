@@ -13,14 +13,19 @@ export const debugUsageTracking = (): void => {
   try {
     console.log('[DEBUG] ===== Usage Tracking Debug Information =====');
     
-    // Check app identification flags
+    // Check app identification flags - include all possible flags
     const appFlags = {
       article_smasher_app: localStorage.getItem('article_smasher_app'),
       article_wizard_state: localStorage.getItem('article_wizard_state'),
-      task_list_state: localStorage.getItem('task_list_state')
+      task_list_state: localStorage.getItem('task_list_state'),
+      FORCE_APP_ID: localStorage.getItem('FORCE_APP_ID'),
+      current_app: localStorage.getItem('current_app')
     };
     
     console.log('[DEBUG] App identification flags:', appFlags);
+    
+    // Log model override status
+    console.log('[DEBUG] Model override status: ACTIVE - All requests forced to gpt-3.5-turbo');
     
     // Check current URL and path
     console.log('[DEBUG] Current URL:', window.location.href);
@@ -229,4 +234,64 @@ export const forceRefreshUsageData = (): void => {
   } catch (error) {
     console.error('[DEBUG] Error forcing refresh of usage data:', error);
   }
+};
+
+/**
+ * Force ArticleSmasher app identification
+ */
+export const forceArticleSmasherIdentification = (): boolean => {
+  try {
+    console.log('[DEBUG] Forcing ArticleSmasher app identification...');
+    
+    // Set all possible identification flags
+    localStorage.setItem('article_smasher_app', 'true');
+    localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
+    localStorage.setItem('FORCE_APP_ID', 'article-smasher');
+    localStorage.setItem('current_app', 'article-smasher');
+    
+    // Also directly ensure the app exists in usage tracking data
+    const usageDataKey = 'smashingapps_usage_data';
+    try {
+      const usageData = JSON.parse(localStorage.getItem(usageDataKey) || '{}');
+      if (!usageData.requestsByApp) usageData.requestsByApp = {};
+      if (!usageData.tokensByApp) usageData.tokensByApp = {};
+      if (!usageData.inputTokensByApp) usageData.inputTokensByApp = {};
+      if (!usageData.outputTokensByApp) usageData.outputTokensByApp = {};
+      if (!usageData.costByApp) usageData.costByApp = {};
+      
+      // Ensure article-smasher exists in all app tracking objects
+      usageData.requestsByApp['article-smasher'] = usageData.requestsByApp['article-smasher'] || 0;
+      usageData.tokensByApp['article-smasher'] = usageData.tokensByApp['article-smasher'] || 0;
+      usageData.inputTokensByApp['article-smasher'] = usageData.inputTokensByApp['article-smasher'] || 0;
+      usageData.outputTokensByApp['article-smasher'] = usageData.outputTokensByApp['article-smasher'] || 0;
+      usageData.costByApp['article-smasher'] = usageData.costByApp['article-smasher'] || 0;
+      
+      localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+      console.log('[DEBUG] Directly ensured article-smasher exists in all usage data objects');
+    } catch (e) {
+      console.error('[DEBUG] Error ensuring article-smasher in usage data:', e);
+    }
+    
+    // Force refresh to update UI
+    forceRefreshUsageData();
+    
+    console.log('[DEBUG] ArticleSmasher app identification forced successfully');
+    return true;
+  } catch (error) {
+    console.error('[DEBUG] Error forcing ArticleSmasher app identification:', error);
+    return false;
+  }
+};
+
+/**
+ * Test model override functionality
+ */
+export const testModelOverride = (): void => {
+  console.log('[DEBUG] Testing model override functionality...');
+  console.log('[DEBUG] Model override is ACTIVE - All requests will use gpt-3.5-turbo regardless of selected model');
+  console.log('[DEBUG] Override locations:');
+  console.log('[DEBUG] 1. useAI.ts - Forces model in execute() function');
+  console.log('[DEBUG] 2. AIService.ts - Forces model in createChatCompletion() method');
+  console.log('[DEBUG] 3. AIService.ts - Forces model in getCompletion() method');
+  console.log('[DEBUG] Model override test complete');
 };

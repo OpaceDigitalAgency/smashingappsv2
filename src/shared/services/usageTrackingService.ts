@@ -167,21 +167,48 @@ export const trackApiRequest = (
 ): void => {
   console.log(`[DEBUG] Tracking API request for provider: ${provider}, app: ${app}, tokens: ${tokens}, model: ${model}`);
   
-  // Validate app ID
-  if (!app || app === 'unknown-app') {
+  // DIRECT APPROACH: Force app identification with multiple checks
+  
+  // First check for direct force flag
+  const forcedAppId = localStorage.getItem('FORCE_APP_ID');
+  if (forcedAppId) {
+    console.log(`[DEBUG] Using forced app ID from FORCE_APP_ID: ${forcedAppId}`);
+    app = forcedAppId;
+  }
+  // Then check for current_app
+  else if (localStorage.getItem('current_app')) {
+    console.log(`[DEBUG] Using app ID from current_app: ${localStorage.getItem('current_app')}`);
+    app = localStorage.getItem('current_app') || app;
+  }
+  // Then check app-specific flags
+  else if (!app || app === 'unknown-app') {
     console.warn('[DEBUG] Attempting to track request with invalid app ID:', app);
     
-    // Try to determine app ID from localStorage flags
-    if (localStorage.getItem('article_smasher_app') || localStorage.getItem('article_wizard_state')) {
-      console.log('[DEBUG] Found ArticleSmasher flags, overriding app ID');
+    // Try to determine app ID from localStorage flags with more aggressive checks
+    if (localStorage.getItem('article_smasher_app') ||
+        localStorage.getItem('article_wizard_state') ||
+        window.location.pathname.includes('article-smasher')) {
+      console.log('[DEBUG] Found ArticleSmasher indicators, forcing app ID');
       app = 'article-smasher';
-    } else if (localStorage.getItem('task_list_state')) {
-      console.log('[DEBUG] Found TaskSmasher flags, overriding app ID');
+    } else if (localStorage.getItem('task_list_state') ||
+               window.location.pathname.includes('task-smasher')) {
+      console.log('[DEBUG] Found TaskSmasher indicators, forcing app ID');
       app = 'task-smasher';
     }
-    
-    console.log('[DEBUG] Final app ID for tracking:', app);
   }
+  
+  // Final fallback - if we still don't have a valid app ID, check DOM
+  if (!app || app === 'unknown-app') {
+    if (document.querySelector('.article-smasher-container')) {
+      console.log('[DEBUG] Found article-smasher-container in DOM, forcing app ID');
+      app = 'article-smasher';
+    } else if (document.querySelector('.task-smasher-container')) {
+      console.log('[DEBUG] Found task-smasher-container in DOM, forcing app ID');
+      app = 'task-smasher';
+    }
+  }
+  
+  console.log('[DEBUG] Final app ID for tracking:', app);
   
   const usageData = getUsageData();
   const timestampMs = timestamp ? timestamp.getTime() : Date.now();

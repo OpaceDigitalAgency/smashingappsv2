@@ -15,7 +15,13 @@ import {
   Bug,
   RefreshCcw
 } from 'lucide-react';
-import { debugUsageTracking, fixUsageTrackingData, forceRefreshUsageData } from '../../shared/utils/usageDebugUtils';
+import {
+  debugUsageTracking,
+  fixUsageTrackingData,
+  forceRefreshUsageData,
+  forceArticleSmasherIdentification,
+  testModelOverride
+} from '../../shared/utils/usageDebugUtils';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider, ProviderConfig } from '../../shared/types/aiProviders';
 import {
@@ -632,6 +638,21 @@ const UsageMonitoring: React.FC = () => {
                 <RefreshCw className={`w-4 h-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Force Refresh
               </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => {
+                  // Use our dedicated function to force ArticleSmasher app ID
+                  const success = forceArticleSmasherIdentification();
+                  if (success) {
+                    alert('ArticleSmasher app ID forced successfully!');
+                  } else {
+                    alert('Error forcing ArticleSmasher app ID. Check console for details.');
+                  }
+                }}
+              >
+                Force ArticleSmasher ID
+              </Button>
             </div>
           </div>
           
@@ -643,10 +664,41 @@ const UsageMonitoring: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${localStorage.getItem('article_smasher_app') ? 'bg-green-500' : 'bg-red-500'}`}></div>
                   <span className="text-sm">article_smasher_app</span>
+                  <button
+                    className="text-xs text-blue-500 hover:underline"
+                    onClick={() => {
+                      localStorage.setItem('article_smasher_app', 'true');
+                      forceRefreshUsageData();
+                    }}
+                  >
+                    Set
+                  </button>
                 </div>
                 <div className="flex items-center space-x-2 mt-1">
                   <div className={`w-3 h-3 rounded-full ${localStorage.getItem('article_wizard_state') ? 'bg-green-500' : 'bg-red-500'}`}></div>
                   <span className="text-sm">article_wizard_state</span>
+                  <button
+                    className="text-xs text-blue-500 hover:underline"
+                    onClick={() => {
+                      localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
+                      forceRefreshUsageData();
+                    }}
+                  >
+                    Set
+                  </button>
+                </div>
+                <div className="flex items-center space-x-2 mt-1">
+                  <div className={`w-3 h-3 rounded-full ${localStorage.getItem('FORCE_APP_ID') === 'article-smasher' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm">FORCE_APP_ID</span>
+                  <button
+                    className="text-xs text-blue-500 hover:underline"
+                    onClick={() => {
+                      localStorage.setItem('FORCE_APP_ID', 'article-smasher');
+                      forceRefreshUsageData();
+                    }}
+                  >
+                    Set
+                  </button>
                 </div>
               </div>
               <div>
@@ -654,6 +706,15 @@ const UsageMonitoring: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${localStorage.getItem('task_list_state') ? 'bg-green-500' : 'bg-red-500'}`}></div>
                   <span className="text-sm">task_list_state</span>
+                  <button
+                    className="text-xs text-blue-500 hover:underline"
+                    onClick={() => {
+                      localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
+                      forceRefreshUsageData();
+                    }}
+                  >
+                    Set
+                  </button>
                 </div>
               </div>
             </div>
@@ -692,7 +753,35 @@ const UsageMonitoring: React.FC = () => {
                 <li>Click "Log Debug Info" to output detailed debugging information to the console</li>
                 <li>Click "Fix Data" to repair any corrupted usage tracking data</li>
                 <li>Click "Force Refresh" to update the UI with the latest data</li>
+                <li>Click "Force ArticleSmasher ID" to directly set all ArticleSmasher identification flags</li>
               </ol>
+            </div>
+            
+            {/* Direct Model Override Status */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Model Override Status</h3>
+              <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                <p className="text-sm font-medium text-yellow-800">Model Override Active</p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  All requests are being forced to use <span className="font-mono">gpt-3.5-turbo</span> regardless of selected model.
+                </p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  This override is applied in both useAI.ts and AIService.ts.
+                </p>
+              </div>
+              
+              <div className="mt-3 flex items-center">
+                <button
+                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200"
+                  onClick={() => {
+                    // Use our dedicated function to test model override
+                    testModelOverride();
+                    alert('Model override test complete. Check console for results.');
+                  }}
+                >
+                  Test Model Override
+                </button>
+              </div>
             </div>
           </div>
         </div>
