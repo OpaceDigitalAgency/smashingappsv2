@@ -40,6 +40,45 @@ const TaskSmasherApp: React.FC = () => {
   // Use a default use case or get it from props/context if needed later
   const initialUseCase = 'daily';
 
+  // Set app identification flags when component mounts
+  useEffect(() => {
+    const initializeApp = async () => {
+      console.log('TaskSmasherApp: Starting initialization');
+      
+      try {
+        // First, clear any Article Smasher flags to prevent incorrect identification
+        localStorage.removeItem('article_smasher_app');
+        localStorage.removeItem('article_wizard_state');
+        
+        // Set high-priority flags for Task Smasher
+        localStorage.setItem('FORCE_APP_ID', 'task-smasher');
+        localStorage.setItem('current_app', 'task-smasher');
+        localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
+        
+        console.log('TaskSmasherApp: App identification flags set successfully');
+      } catch (error) {
+        console.error('Error during TaskSmasher initialization:', error);
+      }
+    };
+
+    // Run initialization
+    initializeApp();
+    
+    // Set a periodic check to ensure the app ID flags remain set
+    const intervalId = setInterval(() => {
+      // Force app ID flags with every check
+      localStorage.setItem('FORCE_APP_ID', 'task-smasher');
+      localStorage.setItem('current_app', 'task-smasher');
+      localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
+    }, 5000); // Check every 5 seconds
+    
+    // Cleanup function
+    return () => {
+      clearInterval(intervalId);
+      console.log('TaskSmasherApp: Component unmounting, but keeping app ID flags');
+    };
+  }, []); // Run only once on mount
+
   return (
     <ReCaptchaProvider>
       <TasksProvider initialUseCase={initialUseCase}>
