@@ -6,22 +6,8 @@ import { OpenAIServiceAdapter } from '../utils/openaiServiceAdapter';
 import useReCaptcha from '../../../shared/hooks/useReCaptcha';
 import useVoiceToText from '../../../shared/hooks/useVoiceToText';
 import { aiServiceRegistry } from '../../../shared/services/aiServices';
+import { getGlobalSettings } from '../../../shared/services/globalSettingsService';
 import { getPromptTemplateForCategory, processPromptTemplate } from '../utils/promptTemplates';
-
-// Import the globalSettingsService directly to avoid TypeScript errors
-const getGlobalSettings = () => {
-  try {
-    // Try to get settings from localStorage directly
-    const settingsStr = localStorage.getItem('smashingapps-global-settings');
-    if (settingsStr) {
-      return JSON.parse(settingsStr);
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting global settings:', error);
-    return null;
-  }
-};
 
 export function useTasks(initialUseCase?: string): TasksContextType {
   // Removed openAIKey state as we're now using the proxy
@@ -263,22 +249,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Listen for global settings changes from the GlobalSettingsProvider
-    const handleGlobalSettingsChanged = (event: CustomEvent) => {
-      const newSettings = event.detail;
-      console.log('Global settings changed event received:', newSettings);
-      
-      if (newSettings && newSettings.aiProvider && newSettings.aiProvider.defaultModel) {
-        console.log('Setting model from global settings event:', newSettings.aiProvider.defaultModel);
-        setSelectedModel(newSettings.aiProvider.defaultModel);
-        localStorage.setItem('smashingapps_activeModel', newSettings.aiProvider.defaultModel);
-      }
-    };
-    
-    window.addEventListener('smashingapps-globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
-    
     // Set up an interval to periodically sync the model setting with global settings
-    // This is a fallback in case the event listeners don't work
     const intervalId = setInterval(() => {
       try {
         const globalSettings = getGlobalSettings();
@@ -298,7 +269,6 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('smashingapps-globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
       clearInterval(intervalId);
     };
   }, []);

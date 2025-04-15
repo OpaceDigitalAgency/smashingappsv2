@@ -80,7 +80,7 @@ export function GlobalSettingsProvider({ children }: { children: React.ReactNode
     value: storedSettings,
     setValue: setStoredSettings,
     remove: removeStoredSettings
-  } = useLocalStorage<GlobalSettings>('smashingapps-global-settings', DEFAULT_SETTINGS);
+  } = useLocalStorage<GlobalSettings>('global-settings', DEFAULT_SETTINGS);
 
   // Create initial state
   const initialState: GlobalSettingsContextValue = {
@@ -132,20 +132,6 @@ export function GlobalSettingsProvider({ children }: { children: React.ReactNode
   // Initialize settings
   useEffect(() => {
     try {
-      // Migrate data from old key to new key
-      const oldSettings = localStorage.getItem('global-settings');
-      if (oldSettings) {
-        console.log('[GlobalSettings] Migrating settings from global-settings to smashingapps-global-settings');
-        try {
-          const parsedSettings = JSON.parse(oldSettings);
-          setStoredSettings(parsedSettings);
-          localStorage.removeItem('global-settings');
-          console.log('[GlobalSettings] Migration complete');
-        } catch (migrationError) {
-          console.error('[GlobalSettings] Error parsing old settings:', migrationError);
-        }
-      }
-
       validateSettings(storedSettings);
       dispatch({ type: 'UPDATE_SETTINGS', payload: storedSettings });
     } catch (error) {
