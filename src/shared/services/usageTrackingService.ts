@@ -87,6 +87,38 @@ export const getUsageData = (): UsageData => {
       let modified = false;
       
       // Ensure all required objects exist
+      // Initialize provider-related objects
+      if (!parsedData.requestsByProvider) {
+        console.warn('[DEBUG] Missing requestsByProvider in stored usage data, initializing it');
+        parsedData.requestsByProvider = createInitialProviderRecord();
+        modified = true;
+      }
+      
+      if (!parsedData.tokensByProvider) {
+        console.warn('[DEBUG] Missing tokensByProvider in stored usage data, initializing it');
+        parsedData.tokensByProvider = createInitialProviderRecord();
+        modified = true;
+      }
+      
+      if (!parsedData.inputTokensByProvider) {
+        console.warn('[DEBUG] Missing inputTokensByProvider in stored usage data, initializing it');
+        parsedData.inputTokensByProvider = createInitialProviderRecord();
+        modified = true;
+      }
+      
+      if (!parsedData.outputTokensByProvider) {
+        console.warn('[DEBUG] Missing outputTokensByProvider in stored usage data, initializing it');
+        parsedData.outputTokensByProvider = createInitialProviderRecord();
+        modified = true;
+      }
+      
+      if (!parsedData.costByProvider) {
+        console.warn('[DEBUG] Missing costByProvider in stored usage data, initializing it');
+        parsedData.costByProvider = createInitialProviderRecord();
+        modified = true;
+      }
+
+      // Initialize app-related objects
       if (!parsedData.requestsByApp) {
         console.warn('[DEBUG] Missing requestsByApp in stored usage data, initializing it');
         parsedData.requestsByApp = {};
@@ -149,11 +181,14 @@ export const getUsageData = (): UsageData => {
         console.log('[DEBUG] Saved updated usage data with fixed app stats');
       }
       
-      // Log app-specific stats for debugging
-      console.log('[DEBUG] Retrieved usage data with app stats:', {
+      // Log app-specific and provider-specific stats for debugging
+      console.log('[DEBUG] Retrieved usage data with stats:', {
         requestsByApp: parsedData.requestsByApp,
         tokensByApp: parsedData.tokensByApp,
-        costByApp: parsedData.costByApp
+        costByApp: parsedData.costByApp,
+        requestsByProvider: parsedData.requestsByProvider,
+        tokensByProvider: parsedData.tokensByProvider,
+        costByProvider: parsedData.costByProvider
       });
       
       return parsedData;
