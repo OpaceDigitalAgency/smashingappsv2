@@ -31,6 +31,15 @@ import {
   saveSettings,
 } from '../../tools/article-smasher/src/services/promptService';
 
+// Helper function to create initialized provider record
+const createInitialProviderRecord = (): Record<AIProvider, number> => ({
+  openai: 0,
+  openrouter: 0,
+  anthropic: 0,
+  google: 0,
+  image: 0
+});
+
 // Define the context type
 interface AdminContextType {
   // Provider management
@@ -107,6 +116,14 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const [usageStats, setUsageStats] = useState<UsageData>(() => {
     // Initialize with filtered data based on default time range
     const initialData = getFilteredUsageData('month');
+    
+    // Ensure provider-related objects are initialized
+    if (!initialData.requestsByProvider) initialData.requestsByProvider = createInitialProviderRecord();
+    if (!initialData.tokensByProvider) initialData.tokensByProvider = createInitialProviderRecord();
+    if (!initialData.inputTokensByProvider) initialData.inputTokensByProvider = createInitialProviderRecord();
+    if (!initialData.outputTokensByProvider) initialData.outputTokensByProvider = createInitialProviderRecord();
+    if (!initialData.costByProvider) initialData.costByProvider = createInitialProviderRecord();
+    
     return initialData;
   });
   // timeRange controls filtering of usage data for both summary metrics and detailed tables
@@ -352,6 +369,14 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
           console.warn('[DEBUG] No filtered data returned');
           return;
         }
+
+        // Ensure provider-related objects are initialized
+        if (!filteredData.requestsByProvider) filteredData.requestsByProvider = createInitialProviderRecord();
+        if (!filteredData.tokensByProvider) filteredData.tokensByProvider = createInitialProviderRecord();
+        if (!filteredData.inputTokensByProvider) filteredData.inputTokensByProvider = createInitialProviderRecord();
+        if (!filteredData.outputTokensByProvider) filteredData.outputTokensByProvider = createInitialProviderRecord();
+        if (!filteredData.costByProvider) filteredData.costByProvider = createInitialProviderRecord();
+
         setUsageStats(filteredData);
       } catch (error) {
         console.error('[DEBUG] Error handling usage data update:', error);
@@ -367,6 +392,14 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
           console.warn('[DEBUG] No filtered data returned');
           return;
         }
+
+        // Ensure provider-related objects are initialized
+        if (!filteredData.requestsByProvider) filteredData.requestsByProvider = createInitialProviderRecord();
+        if (!filteredData.tokensByProvider) filteredData.tokensByProvider = createInitialProviderRecord();
+        if (!filteredData.inputTokensByProvider) filteredData.inputTokensByProvider = createInitialProviderRecord();
+        if (!filteredData.outputTokensByProvider) filteredData.outputTokensByProvider = createInitialProviderRecord();
+        if (!filteredData.costByProvider) filteredData.costByProvider = createInitialProviderRecord();
+
         setUsageStats(filteredData);
       } catch (error) {
         console.error('[DEBUG] Error refreshing usage data:', error);
