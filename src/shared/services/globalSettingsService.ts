@@ -41,6 +41,11 @@ export const getGlobalSettings = (): GlobalSettings => {
       const parsed = JSON.parse(settingsStr);
       console.log('[globalSettingsService] getGlobalSettings: loaded from storage', parsed);
       return parsed;
+    } else {
+      // Only set defaults if settings are truly missing
+      setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
+      console.log('[globalSettingsService] getGlobalSettings: using defaults', DEFAULT_GLOBAL_SETTINGS);
+      return DEFAULT_GLOBAL_SETTINGS;
     }
   } catch (error) {
     console.error('[globalSettingsService] Error loading global settings:', error);
@@ -49,11 +54,9 @@ export const getGlobalSettings = (): GlobalSettings => {
     }
     // Optionally, throw here to surface the error in the UI
     // throw error;
+    // As a fallback, return defaults (but do NOT set them to storage)
+    return DEFAULT_GLOBAL_SETTINGS;
   }
-  // Initialize with defaults if no stored settings
-  setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
-  console.log('[globalSettingsService] getGlobalSettings: using defaults', DEFAULT_GLOBAL_SETTINGS);
-  return DEFAULT_GLOBAL_SETTINGS;
 };
 
 /**
