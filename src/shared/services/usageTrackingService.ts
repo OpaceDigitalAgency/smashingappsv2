@@ -705,17 +705,21 @@ export const getTimeSeriesData = (
   }
   
   // Aggregate data into time segments
-  usageData.usageHistory.forEach(entry => {
-    if (entry.timestamp >= startTime) {
-      const segmentIndex = Math.floor((entry.timestamp - startTime) / segmentDuration);
-      if (segmentIndex >= 0 && segmentIndex < labels.length) {
-        requests[segmentIndex] += entry.requests;
-        tokens[segmentIndex] += entry.tokens;
-        inputTokens[segmentIndex] += entry.inputTokens || 0;
-        outputTokens[segmentIndex] += entry.outputTokens || 0;
-        costs[segmentIndex] = (parseFloat(costs[segmentIndex]) + entry.cost).toFixed(2);
+  try {
+    (usageData.usageHistory || []).forEach(entry => {
+      if (entry && entry.timestamp >= startTime) {
+        const segmentIndex = Math.floor((entry.timestamp - startTime) / segmentDuration);
+        if (segmentIndex >= 0 && segmentIndex < labels.length) {
+          requests[segmentIndex] += entry.requests || 0;
+          tokens[segmentIndex] += entry.tokens || 0;
+          inputTokens[segmentIndex] += entry.inputTokens || 0;
+          outputTokens[segmentIndex] += entry.outputTokens || 0;
+          costs[segmentIndex] = (parseFloat(costs[segmentIndex]) + (entry.cost || 0)).toFixed(2);
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('[DEBUG] Error aggregating time series data:', error);
+  }
   return { requests, tokens, inputTokens, outputTokens, costs };
 };
