@@ -76,7 +76,7 @@ const initialUsageData: UsageData = {
 };
 
 // Local storage key for usage data
-const USAGE_DATA_KEY = 'smashingapps_usage_data';
+export const USAGE_DATA_KEY = 'smashingapps_usage_data';
 
 // Get usage data from local storage or initialize if not exists
 export const getUsageData = (): UsageData => {
@@ -648,11 +648,11 @@ export const getTimeLabels = (timeRange: 'day' | 'week' | 'month' | 'year'): str
       }
       break;
     case 'month':
-      // Generate weekly labels for the past 4 weeks
-      for (let i = 4; i >= 0; i--) {
+      // Generate daily labels for the past 30 days
+      for (let i = 29; i >= 0; i--) {
         const date = new Date(now);
-        date.setDate(date.getDate() - (i * 7));
-        labels.push(`Week ${4 - i}`);
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }));
       }
       break;
     case 'year':
@@ -701,8 +701,8 @@ export const getTimeSeriesData = (
       startTime = now - 7 * segmentDuration;
       break;
     case 'month':
-      segmentDuration = 7 * 24 * 60 * 60 * 1000; // 1 week
-      startTime = now - 5 * segmentDuration;
+      segmentDuration = 24 * 60 * 60 * 1000; // 1 day
+      startTime = now - 30 * segmentDuration; // 30 days
       break;
     case 'year':
       segmentDuration = 30 * 24 * 60 * 60 * 1000; // ~1 month
@@ -713,15 +713,23 @@ export const getTimeSeriesData = (
   // Aggregate data into time segments
   try {
     (usageData.usageHistory || []).forEach(entry => {
-      if (entry && entry.timestamp >= startTime) {
-        const segmentIndex = Math.floor((entry.timestamp - startTime) / segmentDuration);
-        if (segmentIndex >= 0 && segmentIndex < labels.length) {
-          requests[segmentIndex] += entry.requests || 0;
-          tokens[segmentIndex] += entry.tokens || 0;
-          inputTokens[segmentIndex] += entry.inputTokens || 0;
-          outputTokens[segmentIndex] += entry.outputTokens || 0;
-          costs[segmentIndex] = (parseFloat(costs[segmentIndex]) + (entry.cost || 0)).toFixed(2);
+      if (entry && typeof entry.timestamp === 'number') {
+        // Ensure timestamp is within range
+        if (entry.timestamp >= startTime && entry.timestamp <= now) {
+          const segmentIndex = Math.floor((entry.timestamp - startTime) / segmentDuration);
+          if (segmentIndex >= 0 && segmentIndex < labels.length) {
+            // Add the data to the appropriate segment
+            requests[segmentIndex] += entry.requests || 0;
+            tokens[segmentIndex] += entry.tokens || 0;
+            inputTokens[segmentIndex] += entry.inputTokens || 0;
+            outputTokens[segmentIndex] += entry.outputTokens || 0;
+            costs[segmentIndex] = (parseFloat(costs[segmentIndex]) + (entry.cost || 0)).toFixed(2);
+          } else {
+            console.warn(`[DEBUG] Entry timestamp ${new Date(entry.timestamp).toISOString()} produced invalid segment index ${segmentIndex}`);
+          }
         }
+      } else {
+        console.warn('[DEBUG] Invalid entry timestamp:', entry?.timestamp);
       }
     });
   } catch (error) {

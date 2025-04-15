@@ -45,22 +45,36 @@ export function initializeAIServicesWithTracking(): void {
 function getAppIdForService(provider: AIProvider): string {
   console.log('[DEBUG] Determining app ID for provider:', provider);
   
-  // First try to determine from localStorage
+  // Check for forced app ID first
+  const forcedAppId = localStorage.getItem('FORCE_APP_ID');
+  if (forcedAppId) {
+    console.log('[DEBUG] Using forced app ID:', forcedAppId);
+    return forcedAppId;
+  }
+
+  // Check current_app next
+  const currentApp = localStorage.getItem('current_app');
+  if (currentApp) {
+    console.log('[DEBUG] Using current_app:', currentApp);
+    return currentApp;
+  }
+  
+  // Then check app-specific flags
+  const articleSmasherFlag = localStorage.getItem('article_smasher_app');
   const articleState = localStorage.getItem('article_wizard_state');
   const taskState = localStorage.getItem('task_list_state');
-  const articleSmasherFlag = localStorage.getItem('article_smasher_app');
   
-  if (articleSmasherFlag) {
+  if (articleSmasherFlag === 'true') {
     console.log('[DEBUG] Detected ArticleSmasher from dedicated flag');
     return 'article-smasher';
   }
   
-  if (articleState) {
+  if (articleState && !taskState) {
     console.log('[DEBUG] Detected ArticleSmasher from localStorage state');
     return 'article-smasher';
   }
   
-  if (taskState) {
+  if (taskState && !articleState) {
     console.log('[DEBUG] Detected TaskSmasher from localStorage state');
     return 'task-smasher';
   }

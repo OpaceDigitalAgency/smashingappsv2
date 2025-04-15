@@ -12,6 +12,7 @@ import { PromptProvider } from './src/contexts/PromptContext';
 import ArticleWizard from './src/components/ArticleWizard';
 import { initAdminBridge } from './src/utils/adminBridge';
 import { initializeAIServicesWithTracking } from '../../shared/services/initializeAIServices';
+import { USAGE_DATA_KEY } from '../../shared/services/usageTrackingService';
 import './src/components/article-smasher.css';
 
 /**
@@ -30,34 +31,56 @@ const ArticleSmasherApp: React.FC = () => {
   
   // Initialize admin bridge and AI services with usage tracking
   useEffect(() => {
-    console.log('ArticleSmasherApp: Initializing admin bridge and AI services with FORCED APP ID');
-    
-    // DIRECT APPROACH: Force app identification with multiple redundant methods
-    // Set multiple localStorage flags to identify the app with redundancy
-    localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
-    localStorage.setItem('article_smasher_app', 'true');
-    localStorage.setItem('FORCE_APP_ID', 'article-smasher');
-    localStorage.setItem('current_app', 'article-smasher');
-    
-    // Directly modify usage data to ensure app is tracked correctly
-    const usageDataKey = 'smashingapps_usage_data';
-    try {
-      const usageData = JSON.parse(localStorage.getItem(usageDataKey) || '{}');
-      if (!usageData.requestsByApp) usageData.requestsByApp = {};
-      if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
-      localStorage.setItem(usageDataKey, JSON.stringify(usageData));
-      console.log('ArticleSmasherApp: Directly ensured article-smasher exists in usage data');
-    } catch (e) {
-      console.error('Error ensuring article-smasher in usage data:', e);
-    }
-    
-    // Initialize the admin bridge
-    initAdminBridge();
-    
-    // Initialize AI services with usage tracking
-    console.log('ArticleSmasherApp: Calling initializeAIServicesWithTracking');
-    initializeAIServicesWithTracking();
-    console.log('ArticleSmasherApp: AI services initialized');
+
+    const initializeApp = async () => {
+      console.log('ArticleSmasherApp: Starting initialization');
+      
+      try {
+        // First, clear any existing app flags to prevent incorrect identification
+        localStorage.removeItem('task_list_state');
+        localStorage.removeItem('FORCE_APP_ID');
+        localStorage.removeItem('current_app');
+        
+        // Set primary ArticleSmasher flag first
+        localStorage.setItem('article_smasher_app', 'true');
+        
+        // Small delay to ensure primary flag is set
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Set additional ArticleSmasher flags
+        localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
+        localStorage.setItem('FORCE_APP_ID', 'article-smasher');
+        localStorage.setItem('current_app', 'article-smasher');
+        
+        // Initialize the admin bridge
+        initAdminBridge();
+        
+        // Another small delay to ensure all flags are set
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Initialize AI services with usage tracking
+        console.log('ArticleSmasherApp: Calling initializeAIServicesWithTracking');
+        initializeAIServicesWithTracking();
+        console.log('ArticleSmasherApp: AI services initialized');
+        
+        // Ensure app exists in usage data
+        const usageData = JSON.parse(localStorage.getItem(USAGE_DATA_KEY) || '{}');
+        if (!usageData.requestsByApp) usageData.requestsByApp = {};
+        if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
+        localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(usageData));
+        console.log('ArticleSmasherApp: Ensured article-smasher exists in usage data');
+        
+        console.log('ArticleSmasherApp: Initialization complete');
+      } catch (error) {
+        console.error('Error during ArticleSmasher initialization:', error);
+        throw error; // Re-throw to be caught by the outer catch
+      }
+    };
+
+    // Run initialization
+    initializeApp().catch(error => {
+      console.error('Failed to initialize ArticleSmasher:', error);
+    });
     
     // Set a more aggressive periodic check to ensure the app ID flags remain set
     const intervalId = setInterval(() => {
@@ -71,10 +94,10 @@ const ArticleSmasherApp: React.FC = () => {
       
       // Also directly ensure the app exists in usage tracking data
       try {
-        const usageData = JSON.parse(localStorage.getItem(usageDataKey) || '{}');
+        const usageData = JSON.parse(localStorage.getItem(USAGE_DATA_KEY) || '{}');
         if (!usageData.requestsByApp) usageData.requestsByApp = {};
         if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
-        localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+        localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(usageData));
       } catch (e) {
         console.error('Error in interval ensuring article-smasher in usage data:', e);
       }
