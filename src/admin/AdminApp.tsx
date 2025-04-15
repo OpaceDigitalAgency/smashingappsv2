@@ -14,6 +14,7 @@ import ProviderManagement from './components/ProviderManagement';
 import PromptManagement from './components/PromptManagement';
 import SettingsManagement from './components/SettingsManagement';
 import UsageMonitoring from './components/UsageMonitoring';
+import Debug from './components/Debug';
 import { AdminProvider } from './contexts/AdminContext';
 
 /**
@@ -93,6 +94,7 @@ const AdminApp: React.FC = () => {
             <Route path="prompts" element={<PromptManagement />} />
             <Route path="settings" element={<SettingsManagement />} />
             <Route path="usage" element={<UsageMonitoring />} />
+            <Route path="debug" element={<Debug />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AdminLayout>

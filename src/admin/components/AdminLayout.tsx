@@ -3,11 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Settings, 
-  Server, 
-  MessageSquare, 
-  BarChart3, 
-  ChevronRight, 
-  LogOut 
+  Server,
+  MessageSquare,
+  BarChart3,
+  ChevronRight,
+  LogOut,
+  Bug
 } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import Card from '../../shared/components/Card/Card';
@@ -44,6 +45,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'prompts', label: 'Prompts', path: '/admin/prompts', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'settings', label: 'Settings', path: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     { id: 'usage', label: 'Usage', path: '/admin/usage', icon: <BarChart3 className="w-5 h-5" /> },
+    { id: 'debug', label: 'Debug', path: '/admin/debug', icon: <Bug className="w-5 h-5" /> },
   ];
 
   // Update active section based on location
