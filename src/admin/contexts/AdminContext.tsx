@@ -1,3 +1,13 @@
+/**
+ * Extend the Window interface for diagnostics
+ */
+declare global {
+  interface Window {
+    __ADMIN_CONTEXT_ERROR__?: string;
+    __ADMIN_CONTEXT_STATE__?: any;
+    __ADMIN_CONTEXT_FATAL__?: any;
+  }
+}
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { aiServiceRegistry, getModelsByProvider } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
@@ -615,82 +625,148 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
 
 // Custom hook to use the admin context
 export const useAdmin = () => {
-  const context = useContext(AdminContext);
-  if (!context) {
-    console.error('useAdmin called outside of AdminProvider - this is a programming error');
-    
-    // Instead of throwing an error, return a fallback context with default values
-    // This prevents the app from crashing when the context is missing
+  try {
+    const context = useContext(AdminContext);
+    if (!context) {
+      const err = new Error('useAdmin called outside of AdminProvider - this is a programming error');
+      // Log full stack and context
+      console.error(err.stack || err.message, { context });
+      // Display a visible error in the UI if possible
+      if (typeof window !== "undefined") {
+        (window as Window).__ADMIN_CONTEXT_ERROR__ = err.stack || err.message;
+      }
+      // Return fallback context with error
+      return {
+        // Provider management
+        providers: {} as Record<AIProvider, ProviderConfig>,
+        refreshProviderModels: async () => {},
+        updateProviderConfig: () => {},
+        setApiKey: () => {},
+        
+        // Prompt management - Article Smasher
+        prompts: [],
+        activePrompt: null,
+        setActivePrompt: () => {},
+        addPrompt: async () => {},
+        updatePrompt: async () => {},
+        deletePrompt: async () => {},
+        
+        // Prompt management - Task Smasher
+        taskSmasherPrompts: [],
+        activeTaskSmasherPrompt: null,
+        setActiveTaskSmasherPrompt: () => {},
+        addTaskSmasherPrompt: async () => {},
+        updateTaskSmasherPrompt: async () => {},
+        deleteTaskSmasherPrompt: async () => {},
+        
+        // Settings management
+        globalSettings: {
+          defaultProvider: 'openai' as AIProvider,
+          defaultModel: 'gpt-3.5-turbo',
+          defaultTemperature: 0.7,
+          defaultMaxTokens: 1000
+        },
+        appSettings: {
+          'task-smasher': {
+            defaultBoardLayout: 'kanban',
+            defaultUseCase: 'daily'
+          },
+          'article-smasher': {
+            defaultArticleType: 'blog',
+            enableImageGeneration: false
+          }
+        },
+        updateGlobalSettings: () => {},
+        updateAppSettings: () => {},
+        
+        // Usage monitoring
+        usageStats: {
+          totalRequests: 0,
+          costEstimate: 0,
+          totalTokens: 0,
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          requestsByProvider: Object.create(null) as Record<AIProvider, number>,
+          tokensByProvider: Object.create(null) as Record<AIProvider, number>,
+          costByProvider: Object.create(null) as Record<AIProvider, number>,
+          inputTokensByProvider: Object.create(null) as Record<AIProvider, number>,
+          outputTokensByProvider: Object.create(null) as Record<AIProvider, number>,
+          requestsByApp: Object.create(null) as Record<string, number>,
+          tokensByApp: Object.create(null) as Record<string, number>,
+          costByApp: Object.create(null) as Record<string, number>,
+          inputTokensByApp: Object.create(null) as Record<string, number>,
+          outputTokensByApp: Object.create(null) as Record<string, number>
+        } as UsageData,
+        timeRange: 'month' as 'day' | 'week' | 'month' | 'year',
+        setTimeRange: () => {},
+        
+        // UI state
+        activeSection: 'dashboard',
+        setActiveSection: () => {},
+        isLoading: false,
+        error: err
+      };
+    }
+    // Log context state for debugging
+    if (typeof window !== "undefined") {
+      (window as Window).__ADMIN_CONTEXT_STATE__ = context;
+    }
+    return context;
+  } catch (fatalError) {
+    // Log and expose any fatal error
+    console.error("Fatal error in useAdmin:", fatalError);
+    if (typeof window !== "undefined") {
+      (window as Window).__ADMIN_CONTEXT_FATAL__ = fatalError;
+    }
     return {
-      // Provider management
-      providers: {} as Record<AIProvider, ProviderConfig>,
+      providers: {},
       refreshProviderModels: async () => {},
       updateProviderConfig: () => {},
       setApiKey: () => {},
-      
-      // Prompt management - Article Smasher
       prompts: [],
       activePrompt: null,
       setActivePrompt: () => {},
       addPrompt: async () => {},
       updatePrompt: async () => {},
       deletePrompt: async () => {},
-      
-      // Prompt management - Task Smasher
       taskSmasherPrompts: [],
       activeTaskSmasherPrompt: null,
       setActiveTaskSmasherPrompt: () => {},
       addTaskSmasherPrompt: async () => {},
       updateTaskSmasherPrompt: async () => {},
       deleteTaskSmasherPrompt: async () => {},
-      
-      // Settings management
       globalSettings: {
         defaultProvider: 'openai' as AIProvider,
         defaultModel: 'gpt-3.5-turbo',
         defaultTemperature: 0.7,
         defaultMaxTokens: 1000
       },
-      appSettings: {
-        'task-smasher': {
-          defaultBoardLayout: 'kanban',
-          defaultUseCase: 'daily'
-        },
-        'article-smasher': {
-          defaultArticleType: 'blog',
-          enableImageGeneration: false
-        }
-      },
+      appSettings: {},
       updateGlobalSettings: () => {},
       updateAppSettings: () => {},
-      
-      // Usage monitoring
       usageStats: {
         totalRequests: 0,
         costEstimate: 0,
         totalTokens: 0,
         totalInputTokens: 0,
         totalOutputTokens: 0,
-        requestsByProvider: {} as Record<AIProvider, number>,
-        tokensByProvider: {} as Record<AIProvider, number>,
-        costByProvider: {} as Record<AIProvider, number>,
-        inputTokensByProvider: {} as Record<AIProvider, number>,
-        outputTokensByProvider: {} as Record<AIProvider, number>,
-        requestsByApp: {} as Record<string, number>,
-        tokensByApp: {} as Record<string, number>,
-        costByApp: {} as Record<string, number>,
-        inputTokensByApp: {} as Record<string, number>,
-        outputTokensByApp: {} as Record<string, number>
-      } as UsageData,
-      timeRange: 'month' as 'day' | 'week' | 'month' | 'year',
+        requestsByProvider: Object.create(null),
+        tokensByProvider: Object.create(null),
+        costByProvider: Object.create(null),
+        inputTokensByProvider: Object.create(null),
+        outputTokensByProvider: Object.create(null),
+        requestsByApp: {},
+        tokensByApp: {},
+        costByApp: {},
+        inputTokensByApp: {},
+        outputTokensByApp: {}
+      },
+      timeRange: 'month',
       setTimeRange: () => {},
-      
-      // UI state
       activeSection: 'dashboard',
       setActiveSection: () => {},
       isLoading: false,
-      error: new Error('useAdmin called outside of AdminProvider')
+      error: fatalError
     };
   }
-  return context;
 };
