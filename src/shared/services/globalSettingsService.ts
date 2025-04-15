@@ -42,8 +42,8 @@ export const getGlobalSettings = (): GlobalSettings => {
       console.log('[globalSettingsService] getGlobalSettings: loaded from storage', parsed);
       return parsed;
     } else {
-      // Only set defaults if settings are truly missing
-      setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
+      // Only set defaults if settings are truly missing, and prevent sync loop
+      setGlobalSettings(DEFAULT_GLOBAL_SETTINGS, true);
       console.log('[globalSettingsService] getGlobalSettings: using defaults', DEFAULT_GLOBAL_SETTINGS);
       return DEFAULT_GLOBAL_SETTINGS;
     }
