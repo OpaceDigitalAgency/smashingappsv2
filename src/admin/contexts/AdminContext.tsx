@@ -353,8 +353,25 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   useEffect(() => {
     // Update usage stats based on time range
     const updateUsageStats = () => {
-      const filteredData = getFilteredUsageData(timeRange);
-      setUsageStats(filteredData);
+      try {
+        console.log('[DEBUG] Updating usage stats');
+        const filteredData = getFilteredUsageData(timeRange);
+        if (!filteredData) {
+          console.warn('[DEBUG] No filtered data returned');
+          return;
+        }
+
+        // Ensure provider-related objects are initialized
+        if (!filteredData.requestsByProvider) filteredData.requestsByProvider = createInitialProviderRecord();
+        if (!filteredData.tokensByProvider) filteredData.tokensByProvider = createInitialProviderRecord();
+        if (!filteredData.inputTokensByProvider) filteredData.inputTokensByProvider = createInitialProviderRecord();
+        if (!filteredData.outputTokensByProvider) filteredData.outputTokensByProvider = createInitialProviderRecord();
+        if (!filteredData.costByProvider) filteredData.costByProvider = createInitialProviderRecord();
+
+        setUsageStats(filteredData);
+      } catch (error) {
+        console.error('[DEBUG] Error updating usage stats:', error);
+      }
     };
     
     // Initial update

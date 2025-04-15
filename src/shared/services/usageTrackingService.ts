@@ -32,7 +32,7 @@ export interface UsageData {
 }
 
 // Helper function to create initialized provider record
-const createInitialProviderRecord = (): Record<AIProvider, number> => ({
+export const createInitialProviderRecord = (): Record<AIProvider, number> => ({
   openai: 0,
   openrouter: 0,
   anthropic: 0,
@@ -421,6 +421,13 @@ export const getFilteredUsageData = (
   if (!usageData.outputTokensByApp) usageData.outputTokensByApp = { 'article-smasher': 0, 'task-smasher': 0 };
   if (!usageData.costByApp) usageData.costByApp = { 'article-smasher': 0, 'task-smasher': 0 };
   if (!usageData.usageHistory) usageData.usageHistory = [];
+
+  // Ensure provider-related objects are initialized in input data
+  if (!usageData.requestsByProvider) usageData.requestsByProvider = createInitialProviderRecord();
+  if (!usageData.tokensByProvider) usageData.tokensByProvider = createInitialProviderRecord();
+  if (!usageData.inputTokensByProvider) usageData.inputTokensByProvider = createInitialProviderRecord();
+  if (!usageData.outputTokensByProvider) usageData.outputTokensByProvider = createInitialProviderRecord();
+  if (!usageData.costByProvider) usageData.costByProvider = createInitialProviderRecord();
   
   const now = Date.now();
   let cutoffTime: number;
