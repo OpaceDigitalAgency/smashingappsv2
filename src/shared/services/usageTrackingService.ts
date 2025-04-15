@@ -31,6 +31,15 @@ export interface UsageData {
   }[];
 }
 
+// Helper function to create initialized provider record
+const createInitialProviderRecord = (): Record<AIProvider, number> => ({
+  openai: 0,
+  openrouter: 0,
+  anthropic: 0,
+  google: 0,
+  image: 0
+});
+
 // Initialize with empty usage data that includes both apps
 const initialUsageData: UsageData = {
   totalRequests: 0,
@@ -38,11 +47,11 @@ const initialUsageData: UsageData = {
   totalInputTokens: 0,
   totalOutputTokens: 0,
   costEstimate: 0,
-  requestsByProvider: {} as Record<AIProvider, number>,
-  tokensByProvider: {} as Record<AIProvider, number>,
-  inputTokensByProvider: {} as Record<AIProvider, number>,
-  outputTokensByProvider: {} as Record<AIProvider, number>,
-  costByProvider: {} as Record<AIProvider, number>,
+  requestsByProvider: createInitialProviderRecord(),
+  tokensByProvider: createInitialProviderRecord(),
+  inputTokensByProvider: createInitialProviderRecord(),
+  outputTokensByProvider: createInitialProviderRecord(),
+  costByProvider: createInitialProviderRecord(),
   requestsByApp: {
     'article-smasher': 0,
     'task-smasher': 0
@@ -442,11 +451,11 @@ export const getFilteredUsageData = (
     totalInputTokens: 0,
     totalOutputTokens: 0,
     costEstimate: 0,
-    requestsByProvider: {} as Record<AIProvider, number>,
-    tokensByProvider: {} as Record<AIProvider, number>,
-    inputTokensByProvider: {} as Record<AIProvider, number>,
-    outputTokensByProvider: {} as Record<AIProvider, number>,
-    costByProvider: {} as Record<AIProvider, number>,
+    requestsByProvider: createInitialProviderRecord(),
+    tokensByProvider: createInitialProviderRecord(),
+    inputTokensByProvider: createInitialProviderRecord(),
+    outputTokensByProvider: createInitialProviderRecord(),
+    costByProvider: createInitialProviderRecord(),
     requestsByApp: {
       'article-smasher': 0,
       'task-smasher': 0
