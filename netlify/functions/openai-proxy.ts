@@ -149,6 +149,140 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     };
   }
   
+  // For models endpoint - fetch available models from the provider
+  if (event.httpMethod === "GET" && event.path.endsWith("/models")) {
+    console.log("Models request received");
+    
+    // Get provider from headers
+    const provider = event.headers["x-provider"] || "openai";
+    console.log(`Provider for models request: ${provider}`);
+    
+    // Get API key from headers or environment variable
+    let apiKey = event.headers["x-api-key"] || null;
+    
+    // If no API key in headers, use environment variable based on provider
+    if (!apiKey) {
+      switch (provider) {
+        case "openai":
+          apiKey = process.env.OPENAI_API_KEY || null;
+          break;
+        case "openrouter":
+          apiKey = process.env.OPENROUTER_API_KEY || null;
+          break;
+        case "anthropic":
+          apiKey = process.env.ANTHROPIC_API_KEY || null;
+          break;
+        case "google":
+          apiKey = process.env.GOOGLE_API_KEY || null;
+          break;
+        default:
+          apiKey = process.env.OPENAI_API_KEY || null;
+      }
+    }
+    
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "API key not configured" })
+      };
+    }
+    
+    try {
+      // Initialize the appropriate client based on the provider
+      let openai, anthropic, googleAI;
+      let models = [];
+      
+      switch (provider) {
+        case "openai":
+          // OPENAI CONNECTION SETTINGS
+          openai = new OpenAI({
+            apiKey: apiKey,
+            timeout: 30000, // 30 second timeout for model listing
+            maxRetries: 2
+          });
+          
+          // Fetch models from OpenAI
+          const openaiModels = await openai.models.list();
+          models = openaiModels.data;
+          break;
+          
+        case "anthropic":
+          // For Anthropic, we don't have a direct models endpoint in their API
+          // Return a predefined list of models
+          models = [
+            { id: "claude-3-opus", object: "model" },
+            { id: "claude-3-sonnet", object: "model" },
+            { id: "claude-3-haiku", object: "model" },
+            { id: "claude-2.1", object: "model" }
+          ];
+          break;
+          
+        case "google":
+          // For Google, we don't have a direct models endpoint in their API
+          // Return a predefined list of models
+          models = [
+            { id: "gemini-1.5-pro", object: "model" },
+            { id: "gemini-1.5-flash", object: "model" },
+            { id: "gemini-1.0-pro", object: "model" }
+          ];
+          break;
+          
+        case "openrouter":
+          // OPENROUTER CONNECTION SETTINGS
+          openai = new OpenAI({
+            apiKey: apiKey,
+            baseURL: "https://openrouter.ai/api/v1",
+            timeout: 30000,
+            maxRetries: 2
+          });
+          
+          // Fetch models from OpenRouter
+          const openRouterModels = await openai.models.list();
+          models = openRouterModels.data;
+          break;
+          
+        default:
+          // Default to OpenAI
+          openai = new OpenAI({
+            apiKey: apiKey,
+            timeout: 30000,
+            maxRetries: 2
+          });
+          
+          // Fetch models from OpenAI
+          const defaultModels = await openai.models.list();
+          models = defaultModels.data;
+      }
+      
+      // Add rate limit headers
+      const headers = {
+        "Content-Type": "application/json",
+        "X-RateLimit-Limit": String(RATE_LIMIT),
+        "X-RateLimit-Remaining": String(RATE_LIMIT - 1),
+        "X-RateLimit-Reset": new Date(Date.now() + RATE_LIMIT_WINDOW).toISOString(),
+        "X-RateLimit-Used": "1"
+      };
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ data: models })
+      };
+    } catch (error) {
+      console.error(`Error fetching models for ${provider}:`, error);
+      
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          error: "Failed to fetch models",
+          message: error instanceof Error ? error.message : "Unknown error"
+        })
+      };
+    }
+  }
+  
   // Validate request method for other endpoints
   if (event.httpMethod !== "POST") {
     return {

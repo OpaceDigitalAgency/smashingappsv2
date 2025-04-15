@@ -138,7 +138,7 @@ const UsageMonitoring: React.FC = () => {
   
   // Get time labels and data for charts
   const labels = getTimeLabels(timeRange);
-  const { requests: requestsData, tokens: tokensData, costs: costData } = getTimeSeriesData(timeRange);
+  const { requests: requestsData, tokens: tokensData, inputTokens: inputTokensData, outputTokens: outputTokensData, costs: costData } = getTimeSeriesData(timeRange);
   
   return (
     <div className="p-6">
@@ -248,7 +248,7 @@ const UsageMonitoring: React.FC = () => {
       </div>
       
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-gray-800">API Requests</h2>
@@ -264,7 +264,10 @@ const UsageMonitoring: React.FC = () => {
             <Hash className="w-6 h-6 text-purple-500" />
           </div>
           <p className="text-3xl font-bold text-gray-900 mb-1">{usageStats.totalTokens.toLocaleString()}</p>
-          <p className="text-sm text-gray-500">Total tokens in selected period</p>
+          <p className="text-sm text-gray-500">
+            Input: {(usageStats.totalInputTokens || 0).toLocaleString()} |
+            Output: {(usageStats.totalOutputTokens || 0).toLocaleString()}
+          </p>
         </div>
         
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -273,7 +276,18 @@ const UsageMonitoring: React.FC = () => {
             <DollarSign className="w-6 h-6 text-green-500" />
           </div>
           <p className="text-3xl font-bold text-gray-900 mb-1">${usageStats.costEstimate.toFixed(2)}</p>
-          <p className="text-sm text-gray-500">Estimated cost in selected period</p>
+          <p className="text-sm text-gray-500">Based on model-specific rates</p>
+        </div>
+        
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-800">Average Cost</h2>
+            <DollarSign className="w-6 h-6 text-blue-500" />
+          </div>
+          <p className="text-3xl font-bold text-gray-900 mb-1">
+            ${usageStats.totalTokens > 0 ? ((usageStats.costEstimate / usageStats.totalTokens) * 1000).toFixed(4) : '0.0000'}
+          </p>
+          <p className="text-sm text-gray-500">Per 1K tokens</p>
         </div>
       </div>
       
@@ -302,18 +316,44 @@ const UsageMonitoring: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-gray-800">Tokens Used</h2>
-            <LineChart className="w-5 h-5 text-gray-400" />
+            <div className="flex items-center text-xs">
+              <div className="w-3 h-3 bg-purple-500 rounded-sm mr-1"></div>
+              <span className="mr-3">Total</span>
+              <div className="w-3 h-3 bg-blue-400 rounded-sm mr-1"></div>
+              <span className="mr-3">Input</span>
+              <div className="w-3 h-3 bg-green-400 rounded-sm mr-1"></div>
+              <span>Output</span>
+            </div>
           </div>
           <div className="h-64 flex items-end justify-between">
-            {tokensData.map((value, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div 
-                  className="bg-purple-500 rounded-t-sm w-8" 
-                  style={{ height: `${(value / Math.max(...tokensData, 1)) * 100}%` }}
-                ></div>
-                <span className="text-xs text-gray-500 mt-1">{labels[index]}</span>
-              </div>
-            ))}
+            {tokensData.map((value, index) => {
+              const inputValue = inputTokensData[index];
+              const outputValue = outputTokensData[index];
+              const maxValue = Math.max(...tokensData, 1);
+              
+              return (
+                <div key={index} className="flex flex-col items-center">
+                  <div className="relative w-12 flex justify-center">
+                    {/* Total tokens bar */}
+                    <div
+                      className="bg-purple-500 rounded-t-sm w-8 absolute"
+                      style={{ height: `${(value / maxValue) * 100}%`, zIndex: 1 }}
+                    ></div>
+                    {/* Input tokens bar */}
+                    <div
+                      className="bg-blue-400 rounded-t-sm w-4 absolute left-0"
+                      style={{ height: `${(inputValue / maxValue) * 100}%`, zIndex: 2 }}
+                    ></div>
+                    {/* Output tokens bar */}
+                    <div
+                      className="bg-green-400 rounded-t-sm w-4 absolute right-0"
+                      style={{ height: `${(outputValue / maxValue) * 100}%`, zIndex: 2 }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">{labels[index]}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -336,10 +376,13 @@ const UsageMonitoring: React.FC = () => {
                     Requests
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tokens
+                    Tokens (Input/Output)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Avg. Cost/1K
                   </th>
                 </tr>
               </thead>
@@ -361,7 +404,7 @@ const UsageMonitoring: React.FC = () => {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {providerConfig?.name || provider}
+                              {providerConfig?.name || provider} {providerConfig?.defaultModel ? providerConfig.defaultModel.split('/')[1] : ''}
                             </div>
                           </div>
                         </div>
@@ -371,16 +414,23 @@ const UsageMonitoring: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {tokens.toLocaleString()}
+                        <span className="text-xs text-gray-400">
+                          ({(usageStats.inputTokensByProvider[provider] || 0).toLocaleString()} /
+                          {(usageStats.outputTokensByProvider[provider] || 0).toLocaleString()})
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${cost.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${tokens > 0 ? ((cost / tokens) * 1000).toFixed(4) : '0.0000'}
                       </td>
                     </tr>
                   );
                 })}
                 {Object.keys(usageStats.requestsByProvider).length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                       No provider usage data available for the selected time period.
                     </td>
                   </tr>
@@ -409,10 +459,13 @@ const UsageMonitoring: React.FC = () => {
                     Requests
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tokens
+                    Tokens (Input/Output)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Avg. Cost/1K
                   </th>
                 </tr>
               </thead>
@@ -448,16 +501,23 @@ const UsageMonitoring: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {tokens.toLocaleString()}
+                        <span className="text-xs text-gray-400">
+                          ({(usageStats.inputTokensByApp[appId] || 0).toLocaleString()} /
+                          {(usageStats.outputTokensByApp[appId] || 0).toLocaleString()})
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${cost.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${tokens > 0 ? ((cost / tokens) * 1000).toFixed(4) : '0.0000'}
                       </td>
                     </tr>
                   );
                 })}
                 {Object.keys(usageStats.requestsByApp).length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                       No application usage data available for the selected time period.
                     </td>
                   </tr>

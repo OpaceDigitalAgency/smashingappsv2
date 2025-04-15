@@ -25,6 +25,7 @@ import {
 interface AdminContextType {
   // Provider management
   providers: Record<AIProvider, ProviderConfig>;
+  refreshProviderModels: () => Promise<void>;
   updateProviderConfig: (provider: AIProvider, config: Partial<ProviderConfig>) => void;
   setApiKey: (provider: AIProvider, apiKey: string) => void;
   
@@ -142,6 +143,47 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     
     initializeProviders();
   }, []);
+  
+  // Function to refresh provider models from APIs
+  const refreshProviderModels = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      // Get all registered services
+      const services = aiServiceRegistry.getAllServices();
+      const updatedProviderConfigs = { ...providers };
+      
+      // Force refresh models for each service
+      for (const service of services) {
+        if (service.isConfigured()) {
+          // For services that have implemented dynamic model fetching,
+          // this will trigger a fresh API call to get the latest models
+          if (typeof (service as any).fetchModelsFromAPI === 'function') {
+            await (service as any).fetchModelsFromAPI();
+          }
+          
+          // Get the updated models
+          const updatedModels = service.getModels();
+          const provider = service.provider;
+          
+          // Update the provider config
+          updatedProviderConfigs[provider] = {
+            ...updatedProviderConfigs[provider],
+            models: updatedModels,
+          };
+        }
+      }
+      
+      // Update the providers state
+      setProviders(updatedProviderConfigs);
+      
+      return Promise.resolve();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to refresh provider models'));
+      return Promise.reject(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Initialize prompts and settings on mount
   useEffect(() => {
@@ -428,6 +470,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const contextValue: AdminContextType = {
     // Provider management
     providers,
+    refreshProviderModels,
     updateProviderConfig,
     setApiKey,
     

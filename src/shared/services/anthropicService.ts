@@ -23,8 +23,8 @@ import {
   AIResponse
 } from '../types/aiProviders';
 
-// Anthropic Models
-const ANTHROPIC_MODELS: AnthropicModel[] = [
+// Default Anthropic Models (fallback if API fetch fails)
+const DEFAULT_ANTHROPIC_MODELS: AnthropicModel[] = [
   {
     id: 'claude-3-opus',
     name: 'Claude 3 Opus',
@@ -51,17 +51,23 @@ const ANTHROPIC_MODELS: AnthropicModel[] = [
     maxTokens: 200000,
     costPer1KTokens: { input: 0.00025, output: 0.00125 },
     category: 'cost-optimized'
-  },
-  {
-    id: 'claude-2.1',
-    name: 'Claude 2.1',
-    provider: 'anthropic',
-    description: 'Previous generation model',
-    maxTokens: 100000,
-    costPer1KTokens: { input: 0.008, output: 0.024 },
-    category: 'legacy'
   }
 ];
+
+// Model pricing information for models that might not include it in the API response
+const MODEL_PRICING_MAP: Record<string, { input: number; output: number }> = {
+  'claude-3-opus': { input: 0.015, output: 0.075 },
+  'claude-3-sonnet': { input: 0.003, output: 0.015 },
+  'claude-3-haiku': { input: 0.00025, output: 0.00125 },
+  'claude-2.1': { input: 0.008, output: 0.024 },
+  'claude-2.0': { input: 0.008, output: 0.024 },
+  'claude-instant-1': { input: 0.0008, output: 0.0024 }
+};
+
+// Cache key for storing fetched models
+const MODELS_CACHE_KEY = 'anthropic_models_cache';
+// Cache expiration time (24 hours in milliseconds)
+const CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
 
 /**
  * Anthropic Service Implementation
@@ -72,24 +78,31 @@ class AnthropicServiceImpl implements AIService {
   private apiKeyStorageKey = 'anthropic_api_key';
   private rateLimitStorageKey = 'anthropic_rateLimitInfo';
   private apiCallCountKey = 'anthropic_apiCallCount';
+  private cachedModels: AnthropicModel[] | null = null;
   
   constructor() {
     // Try to load API key from localStorage
     this.apiKey = localStorage.getItem(this.apiKeyStorageKey);
+    
+    // Try to load cached models from localStorage
+    this.loadCachedModels();
+    
+    // Fetch models in the background
+    this.fetchModelsFromAPI();
   }
   
   /**
    * Get available models for Anthropic
    */
   getModels(): AIModel[] {
-    return ANTHROPIC_MODELS;
+    return this.cachedModels || DEFAULT_ANTHROPIC_MODELS;
   }
   
   /**
    * Get the default model for Anthropic
    */
   getDefaultModel(): AIModel {
-    return ANTHROPIC_MODELS.find(model => model.id === 'claude-3-haiku') || ANTHROPIC_MODELS[0];
+    return this.cachedModels?.find(model => model.id === 'claude-3-haiku') || DEFAULT_ANTHROPIC_MODELS[0];
   }
   
   /**
@@ -355,6 +368,189 @@ class AnthropicServiceImpl implements AIService {
         used: 0
       };
     }
+  }
+  
+  /**
+   * Fetch available models from Anthropic API
+   * This method is public so it can be called from the AdminContext
+   */
+  async fetchModelsFromAPI(): Promise<void> {
+    // Skip if no API key is available
+    if (!this.apiKey) {
+      console.log('No Anthropic API key available, skipping model fetch');
+      return;
+    }
+    
+    try {
+      // Check if we have valid cached models
+      const cachedData = localStorage.getItem(MODELS_CACHE_KEY);
+      if (cachedData) {
+        const { models, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        
+        // If cache is still valid, use it
+        if (cacheAge < CACHE_EXPIRATION && models.length > 0) {
+          console.log('Using cached Anthropic models');
+          this.cachedModels = models;
+          return;
+        }
+      }
+      
+      console.log('Fetching Anthropic models from API...');
+      
+      // Prepare headers
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Provider': this.provider,
+        'X-Request-Type': 'models'
+      };
+      
+      // Add API key
+      if (this.apiKey) {
+        headers['X-API-Key'] = this.apiKey;
+      }
+      
+      // Use the Netlify function proxy to fetch models
+      const response = await fetch('/.netlify/functions/openai-proxy/models', {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Process the models data
+      const fetchedModels: AnthropicModel[] = [];
+      
+      // Anthropic API response format might be different, adjust as needed
+      const modelsList = data.models || data.data || [];
+      
+      modelsList.forEach((model: any) => {
+        const modelId = model.id || model.name;
+        const pricing = MODEL_PRICING_MAP[modelId] || { input: 0.001, output: 0.002 };
+        let category = 'legacy';
+        
+        // Categorize models
+        let modelCategory: 'featured' | 'reasoning' | 'cost-optimized' | 'legacy' | 'image' = 'legacy';
+        
+        if (modelId.includes('opus')) {
+          modelCategory = 'featured';
+        } else if (modelId.includes('sonnet')) {
+          modelCategory = 'reasoning';
+        } else if (modelId.includes('haiku')) {
+          modelCategory = 'cost-optimized';
+        }
+        
+        fetchedModels.push({
+          id: modelId,
+          name: this.formatModelName(modelId),
+          provider: 'anthropic',
+          description: this.getModelDescription(modelId),
+          maxTokens: this.getModelMaxTokens(modelId),
+          costPer1KTokens: pricing,
+          category: modelCategory
+        });
+      });
+      
+      // If no models were returned, use the default models
+      if (fetchedModels.length === 0) {
+        console.log('No Anthropic models returned from API, using defaults');
+        fetchedModels.push(...DEFAULT_ANTHROPIC_MODELS);
+      }
+      
+      // Update cached models
+      this.cachedModels = fetchedModels;
+      
+      // Save to localStorage with timestamp
+      localStorage.setItem(MODELS_CACHE_KEY, JSON.stringify({
+        models: fetchedModels,
+        timestamp: Date.now()
+      }));
+      
+      console.log(`Fetched ${fetchedModels.length} Anthropic models`);
+    } catch (error) {
+      console.error('Error fetching Anthropic models:', error);
+      // If fetch fails, load from cache if available
+      this.loadCachedModels();
+    }
+  }
+  
+  /**
+   * Load cached models from localStorage
+   */
+  private loadCachedModels(): void {
+    try {
+      const cachedData = localStorage.getItem(MODELS_CACHE_KEY);
+      if (cachedData) {
+        const { models, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        
+        // Use cached models even if expired (better than nothing)
+        if (models && Array.isArray(models) && models.length > 0) {
+          console.log('Loaded cached Anthropic models');
+          this.cachedModels = models;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cached models:', error);
+    }
+  }
+  
+  /**
+   * Format model name for display
+   */
+  private formatModelName(modelId: string): string {
+    // Remove provider prefix if present
+    let name = modelId.replace('anthropic/', '');
+    
+    // Split by hyphens and dots
+    const parts = name.split(/[-\.]/);
+    return parts.map(part => {
+      // Handle special cases
+      if (part === 'claude') return 'Claude';
+      if (part === '3') return '3';
+      if (part === '2') return '2';
+      if (part === '1') return '1';
+      
+      // Capitalize first letter
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  }
+  
+  /**
+   * Get model description based on model ID
+   */
+  private getModelDescription(modelId: string): string {
+    if (modelId.includes('opus')) {
+      return 'Most powerful Claude model';
+    } else if (modelId.includes('sonnet')) {
+      return 'Balanced performance and speed';
+    } else if (modelId.includes('haiku')) {
+      return 'Fast and cost-effective';
+    } else if (modelId.includes('claude-2')) {
+      return 'Previous generation model';
+    } else if (modelId.includes('instant')) {
+      return 'Fastest response time';
+    }
+    return 'Anthropic language model';
+  }
+  
+  /**
+   * Get model max tokens based on model ID
+   */
+  private getModelMaxTokens(modelId: string): number {
+    if (modelId.includes('claude-3')) {
+      return 200000;
+    } else if (modelId.includes('claude-2')) {
+      return 100000;
+    } else if (modelId.includes('instant')) {
+      return 100000;
+    }
+    return 100000; // Default
   }
 }
 

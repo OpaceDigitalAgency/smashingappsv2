@@ -296,7 +296,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   };
   
   // Generate image prompts based on topic and keywords
-  const generateImages = async (topic: string, keywords: string[]) => {
+  const generateImages = async (topic: string, keywords: string[], imageModel: string = 'dall-e-3') => {
     try {
       // Check if prompts are initialized
       if (!isInitialized) {
@@ -320,16 +320,56 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
         settings.defaultModel
       );
       
-      // For now, we'll just use placeholder images
-      // In a real implementation, you would use these prompts to generate images with an image generation API
-      const newImages: ImageItem[] = imagePromptTexts.map((prompt, index) => ({
-        id: `img-${Date.now()}-${index}`,
-        url: `https://images.unsplash.com/photo-${1550000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80`,
-        alt: prompt.substring(0, 30),
-        caption: prompt.substring(0, 50),
-        isSelected: index === 0,
-        type: index === 0 ? 'featured' : 'section'
-      }));
+      // Import the ImageService
+      const ImageService = (await import('../../../../shared/services/imageService')).default;
+      
+      // Check if ImageService is configured
+      if (!ImageService.isConfigured()) {
+        throw new Error('Image service is not configured. Please add your API key in the settings.');
+      }
+      
+      // Generate actual images using the ImageService
+      const newImages: ImageItem[] = [];
+      
+      // Process each prompt and generate an image
+      for (let i = 0; i < imagePromptTexts.length; i++) {
+        const prompt = imagePromptTexts[i];
+        try {
+          // Generate the image using DALL-E
+          const result = await ImageService.createImage({
+            model: imageModel,
+            prompt: prompt,
+            size: '1024x1024',
+            n: 1
+          });
+          
+          // Add the generated image to the list
+          if (result.data.images.length > 0) {
+            newImages.push({
+              id: `img-${Date.now()}-${i}`,
+              url: result.data.images[0],
+              alt: prompt.substring(0, 30),
+              caption: prompt.substring(0, 50),
+              isSelected: i === 0,
+              type: i === 0 ? 'featured' : 'section',
+              prompt: prompt // Store the original prompt for reference
+            });
+          }
+        } catch (error) {
+          console.error(`Error generating image for prompt: ${prompt}`, error);
+          // Add a placeholder for failed image generation
+          newImages.push({
+            id: `img-${Date.now()}-${i}`,
+            url: '', // Empty URL to indicate failure
+            alt: prompt.substring(0, 30),
+            caption: prompt.substring(0, 50) + ' (Generation failed)',
+            isSelected: false,
+            type: 'section',
+            prompt: prompt,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
       
       // Update the images
       setImages(newImages);
@@ -339,19 +379,12 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       setImages([
         {
           id: 'img1',
-          url: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
-          alt: 'WordPress with AI',
-          caption: 'AI-powered WordPress content creation',
+          url: 'https://via.placeholder.com/1024x1024?text=Image+Generation+Failed',
+          alt: 'Image generation failed',
+          caption: 'Image generation failed. Please try again.',
           isSelected: true,
-          type: 'featured'
-        },
-        {
-          id: 'img2',
-          url: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
-          alt: 'AI Content Generation',
-          caption: 'Next-generation content creation with AI',
-          isSelected: false,
-          type: 'section'
+          type: 'featured',
+          error: error instanceof Error ? error.message : 'Unknown error'
         }
       ]);
     } finally {

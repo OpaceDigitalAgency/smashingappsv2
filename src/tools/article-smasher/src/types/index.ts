@@ -36,6 +36,8 @@ export interface ImageItem {
   caption: string;
   isSelected: boolean;
   type?: string;
+  prompt?: string;  // The original prompt used to generate the image
+  error?: string;   // Error message if image generation failed
 }
 
 export interface OutlineItem {
@@ -126,7 +128,7 @@ export interface ArticleWizardContextType {
   generateKeywords: (topic: string) => Promise<void>;
   generateOutline: (topic: string, keywords: string[]) => Promise<void>;
   generateContent: (topic: string, keywords: string[], outline: OutlineItem[]) => Promise<void>;
-  generateImages: (topic: string, keywords: string[]) => Promise<void>;
+  generateImages: (topic: string, keywords: string[], imageModel?: string) => Promise<void>;
 }
 
 export interface PromptContextType {

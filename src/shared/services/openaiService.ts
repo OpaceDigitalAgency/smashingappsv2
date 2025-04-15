@@ -25,17 +25,8 @@ import {
   AIResponse
 } from '../types/aiProviders';
 
-// OpenAI Models
-const OPENAI_MODELS: OpenAIModel[] = [
-  {
-    id: 'gpt-4.5-preview',
-    name: 'GPT-4.5 Preview',
-    provider: 'openai',
-    description: 'Largest and most capable',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.01, output: 0.03 },
-    category: 'featured'
-  },
+// Default OpenAI Models (fallback if API fetch fails)
+const DEFAULT_OPENAI_MODELS: OpenAIModel[] = [
   {
     id: 'gpt-4o',
     name: 'GPT-4o',
@@ -46,40 +37,13 @@ const OPENAI_MODELS: OpenAIModel[] = [
     category: 'featured'
   },
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o mini',
-    provider: 'openai',
-    description: 'Fast, affordable',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.0015, output: 0.006 },
-    category: 'cost-optimized'
-  },
-  {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    provider: 'openai',
-    description: 'Previous generation',
-    maxTokens: 128000,
-    costPer1KTokens: { input: 0.01, output: 0.03 },
-    category: 'legacy'
-  },
-  {
-    id: 'gpt-4',
-    name: 'GPT-4',
-    provider: 'openai',
-    description: 'Standard version',
-    maxTokens: 8192,
-    costPer1KTokens: { input: 0.03, output: 0.06 },
-    category: 'legacy'
-  },
-  {
     id: 'gpt-3.5-turbo',
     name: 'GPT-3.5 Turbo',
     provider: 'openai',
     description: 'Most affordable',
     maxTokens: 16385,
     costPer1KTokens: { input: 0.0005, output: 0.0015 },
-    category: 'legacy'
+    category: 'cost-optimized'
   },
   {
     id: 'dall-e-3',
@@ -89,17 +53,22 @@ const OPENAI_MODELS: OpenAIModel[] = [
     category: 'image',
     supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
     supportedFormats: ['png', 'jpeg']
-  } as any, // Type casting as any to avoid TypeScript error with ImageModel
-  {
-    id: 'dall-e-2',
-    name: 'DALL-E 2',
-    provider: 'openai',
-    description: 'Standard image generation',
-    category: 'image',
-    supportedSizes: ['256x256', '512x512', '1024x1024'],
-    supportedFormats: ['png', 'jpeg']
   } as any // Type casting as any to avoid TypeScript error with ImageModel
 ];
+
+// Model pricing information for models that might not include it in the API response
+const MODEL_PRICING_MAP: Record<string, { input: number; output: number }> = {
+  'gpt-4o': { input: 0.01, output: 0.03 },
+  'gpt-4o-mini': { input: 0.0015, output: 0.006 },
+  'gpt-4-turbo': { input: 0.01, output: 0.03 },
+  'gpt-4': { input: 0.03, output: 0.06 },
+  'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
+};
+
+// Cache key for storing fetched models
+const MODELS_CACHE_KEY = 'openai_models_cache';
+// Cache expiration time (24 hours in milliseconds)
+const CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
 
 /**
  * OpenAI Service Implementation
@@ -110,24 +79,31 @@ class OpenAIServiceImpl implements AIService {
   private apiKeyStorageKey = 'openai_api_key';
   private rateLimitStorageKey = 'rateLimitInfo';
   private apiCallCountKey = 'apiCallCount';
+  private cachedModels: OpenAIModel[] | null = null;
   
   constructor() {
     // Try to load API key from localStorage
     this.apiKey = localStorage.getItem(this.apiKeyStorageKey);
+    
+    // Try to load cached models from localStorage
+    this.loadCachedModels();
+    
+    // Fetch models in the background
+    this.fetchModelsFromAPI();
   }
   
   /**
    * Get available models for OpenAI
    */
   getModels(): AIModel[] {
-    return OPENAI_MODELS;
+    return this.cachedModels || DEFAULT_OPENAI_MODELS;
   }
   
   /**
    * Get the default model for OpenAI
    */
   getDefaultModel(): AIModel {
-    return OPENAI_MODELS.find(model => model.id === 'gpt-3.5-turbo') || OPENAI_MODELS[0];
+    return this.cachedModels?.find(model => model.id === 'gpt-3.5-turbo') || DEFAULT_OPENAI_MODELS[0];
   }
   
   /**
@@ -483,6 +459,206 @@ class OpenAIServiceImpl implements AIService {
         used: 0
       };
     }
+  }
+  
+  /**
+   * Fetch available models from OpenAI API
+   * This method is public so it can be called from the AdminContext
+   */
+  async fetchModelsFromAPI(): Promise<void> {
+    // Skip if no API key is available
+    if (!this.apiKey) {
+      console.log('No OpenAI API key available, skipping model fetch');
+      return;
+    }
+    
+    try {
+      // Check if we have valid cached models
+      const cachedData = localStorage.getItem(MODELS_CACHE_KEY);
+      if (cachedData) {
+        const { models, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        
+        // If cache is still valid, use it
+        if (cacheAge < CACHE_EXPIRATION && models.length > 0) {
+          console.log('Using cached OpenAI models');
+          this.cachedModels = models;
+          return;
+        }
+      }
+      
+      console.log('Fetching OpenAI models from API...');
+      
+      // Prepare headers
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Provider': this.provider,
+        'X-Request-Type': 'models'
+      };
+      
+      // Add API key
+      if (this.apiKey) {
+        headers['X-API-Key'] = this.apiKey;
+      }
+      
+      // Use the Netlify function proxy to fetch models
+      const response = await fetch('/.netlify/functions/openai-proxy/models', {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Process the models data
+      const fetchedModels: OpenAIModel[] = [];
+      
+      // Process chat models
+      const chatModels = data.data.filter((model: any) =>
+        model.id.includes('gpt') && !model.id.includes('instruct')
+      );
+      
+      chatModels.forEach((model: any) => {
+        const modelId = model.id;
+        const pricing = MODEL_PRICING_MAP[modelId] || { input: 0.001, output: 0.002 };
+        let category = 'legacy';
+        
+        // Categorize models
+        let modelCategory: 'featured' | 'reasoning' | 'cost-optimized' | 'legacy' | 'image' = 'legacy';
+        
+        if (modelId.includes('gpt-4o')) {
+          modelCategory = 'featured';
+        } else if (modelId.includes('gpt-4')) {
+          modelCategory = 'featured';
+        } else if (modelId.includes('gpt-3.5')) {
+          modelCategory = 'cost-optimized';
+        }
+        
+        fetchedModels.push({
+          id: modelId,
+          name: this.formatModelName(modelId),
+          provider: 'openai',
+          description: this.getModelDescription(modelId),
+          maxTokens: this.getModelMaxTokens(modelId),
+          costPer1KTokens: pricing,
+          category: modelCategory
+        });
+      });
+      
+      // Add DALL-E models (these are not returned by the models API)
+      fetchedModels.push({
+        id: 'dall-e-3',
+        name: 'DALL-E 3',
+        provider: 'openai',
+        description: 'Advanced image generation',
+        category: 'image',
+        supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
+        supportedFormats: ['png', 'jpeg']
+      } as any);
+      
+      fetchedModels.push({
+        id: 'dall-e-2',
+        name: 'DALL-E 2',
+        provider: 'openai',
+        description: 'Standard image generation',
+        category: 'image',
+        supportedSizes: ['256x256', '512x512', '1024x1024'],
+        supportedFormats: ['png', 'jpeg']
+      } as any);
+      
+      // Update cached models
+      this.cachedModels = fetchedModels;
+      
+      // Save to localStorage with timestamp
+      localStorage.setItem(MODELS_CACHE_KEY, JSON.stringify({
+        models: fetchedModels,
+        timestamp: Date.now()
+      }));
+      
+      console.log(`Fetched ${fetchedModels.length} OpenAI models`);
+    } catch (error) {
+      console.error('Error fetching OpenAI models:', error);
+      // If fetch fails, load from cache if available
+      this.loadCachedModels();
+    }
+  }
+  
+  /**
+   * Load cached models from localStorage
+   */
+  private loadCachedModels(): void {
+    try {
+      const cachedData = localStorage.getItem(MODELS_CACHE_KEY);
+      if (cachedData) {
+        const { models, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        
+        // Use cached models even if expired (better than nothing)
+        if (models && Array.isArray(models) && models.length > 0) {
+          console.log('Loaded cached OpenAI models');
+          this.cachedModels = models;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cached models:', error);
+    }
+  }
+  
+  /**
+   * Format model name for display
+   */
+  private formatModelName(modelId: string): string {
+    // Remove provider prefix if present
+    let name = modelId.replace('openai/', '');
+    
+    // Split by hyphens and capitalize each part
+    const parts = name.split('-');
+    return parts.map(part => {
+      // Handle special cases
+      if (part === 'gpt') return 'GPT';
+      if (part === '3.5') return '3.5';
+      if (part === '4o') return '4o';
+      if (part === '4') return '4';
+      
+      // Capitalize first letter
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  }
+  
+  /**
+   * Get model description based on model ID
+   */
+  private getModelDescription(modelId: string): string {
+    if (modelId.includes('gpt-4o')) {
+      return 'Fast, intelligent, flexible';
+    } else if (modelId.includes('gpt-4')) {
+      return 'Most capable GPT model';
+    } else if (modelId.includes('gpt-3.5')) {
+      return 'Fast and cost-effective';
+    }
+    return 'OpenAI language model';
+  }
+  
+  /**
+   * Get model max tokens based on model ID
+   */
+  private getModelMaxTokens(modelId: string): number {
+    if (modelId.includes('gpt-4o')) {
+      return 128000;
+    } else if (modelId.includes('gpt-4-32k')) {
+      return 32768;
+    } else if (modelId.includes('gpt-4')) {
+      return 8192;
+    } else if (modelId.includes('gpt-3.5-16k')) {
+      return 16385;
+    } else if (modelId.includes('gpt-3.5')) {
+      return 4096;
+    }
+    return 4096; // Default
   }
 }
 

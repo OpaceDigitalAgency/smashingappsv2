@@ -17,8 +17,15 @@ const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   defaultMaxTokens: 1000,
 };
 
-// Storage key for global settings
+// Storage keys for settings
 const GLOBAL_SETTINGS_KEY = 'smashingapps_globalSettings';
+const ARTICLE_SMASHER_SETTINGS_KEY = 'article_smasher_prompt_settings';
+const TASK_SMASHER_PROVIDER_KEY = 'smashingapps_activeProvider';
+
+// Custom events for settings changes
+const GLOBAL_SETTINGS_CHANGED_EVENT = 'globalSettingsChanged';
+const TASK_SMASHER_SETTINGS_CHANGED_EVENT = 'taskSmasherSettingsChanged';
+const ARTICLE_SMASHER_SETTINGS_CHANGED_EVENT = 'articleSmasherSettingsChanged';
 
 /**
  * Get global settings from localStorage
@@ -41,12 +48,17 @@ export const getGlobalSettings = (): GlobalSettings => {
 /**
  * Save global settings to localStorage
  */
-export const setGlobalSettings = (settings: GlobalSettings): void => {
+export const setGlobalSettings = (settings: GlobalSettings, skipSync: boolean = false): void => {
   try {
     localStorage.setItem(GLOBAL_SETTINGS_KEY, JSON.stringify(settings));
     
     // Dispatch a custom event to notify all components of the change
-    window.dispatchEvent(new CustomEvent('globalSettingsChanged', { detail: settings }));
+    window.dispatchEvent(new CustomEvent(GLOBAL_SETTINGS_CHANGED_EVENT, { detail: settings }));
+    
+    // Sync with apps if not skipped
+    if (!skipSync) {
+      applyGlobalSettingsToAllApps();
+    }
   } catch (error) {
     console.error('Error saving global settings:', error);
   }
@@ -55,14 +67,14 @@ export const setGlobalSettings = (settings: GlobalSettings): void => {
 /**
  * Update global settings
  */
-export const updateGlobalSettings = (settings: Partial<GlobalSettings>): GlobalSettings => {
+export const updateGlobalSettings = (settings: Partial<GlobalSettings>, skipSync: boolean = false): GlobalSettings => {
   const currentSettings = getGlobalSettings();
   const updatedSettings = {
     ...currentSettings,
     ...settings,
   };
   
-  setGlobalSettings(updatedSettings);
+  setGlobalSettings(updatedSettings, skipSync);
   
   // Update the default provider in the AI service registry
   if (settings.defaultProvider) {
@@ -73,37 +85,71 @@ export const updateGlobalSettings = (settings: Partial<GlobalSettings>): GlobalS
 };
 
 /**
- * Apply global settings to ArticleSmasherV2
+ * Get ArticleSmasher settings from localStorage
+ */
+export const getArticleSmasherSettings = () => {
+  try {
+    const settingsStr = localStorage.getItem(ARTICLE_SMASHER_SETTINGS_KEY);
+    if (settingsStr) {
+      return JSON.parse(settingsStr);
+    }
+  } catch (error) {
+    console.error('Error loading ArticleSmasher settings:', error);
+  }
+  
+  // Initialize with global settings if no stored settings
+  const globalSettings = getGlobalSettings();
+  const defaultSettings = {
+    defaultModel: globalSettings.defaultModel,
+    defaultTemperature: globalSettings.defaultTemperature,
+    defaultMaxTokens: globalSettings.defaultMaxTokens,
+    enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
+  };
+  
+  localStorage.setItem(ARTICLE_SMASHER_SETTINGS_KEY, JSON.stringify(defaultSettings));
+  return defaultSettings;
+};
+
+/**
+ * Get TaskSmasher settings
+ */
+export const getTaskSmasherSettings = () => {
+  try {
+    const activeProvider = localStorage.getItem(TASK_SMASHER_PROVIDER_KEY);
+    const globalSettings = getGlobalSettings();
+    
+    return {
+      activeProvider: activeProvider || globalSettings.defaultProvider,
+      ...globalSettings
+    };
+  } catch (error) {
+    console.error('Error loading TaskSmasher settings:', error);
+    return getGlobalSettings();
+  }
+};
+
+/**
+ * Apply global settings to ArticleSmasher
  */
 export const applyGlobalSettingsToArticleSmasher = (): void => {
   try {
     const globalSettings = getGlobalSettings();
+    const articleSmasherSettings = getArticleSmasherSettings();
     
-    // Get ArticleSmasherV2 settings from localStorage
-    const ARTICLE_SMASHER_SETTINGS_KEY = 'article_smasher_prompt_settings';
-    const settingsStr = localStorage.getItem(ARTICLE_SMASHER_SETTINGS_KEY);
-    let articleSmasherSettings;
-    
-    if (settingsStr) {
-      articleSmasherSettings = JSON.parse(settingsStr);
-    } else {
-      articleSmasherSettings = {
-        defaultModel: globalSettings.defaultModel,
-        defaultTemperature: globalSettings.defaultTemperature,
-        defaultMaxTokens: globalSettings.defaultMaxTokens,
-        enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
-      };
-    }
-    
-    // Update ArticleSmasherV2 settings with global settings
+    // Update ArticleSmasher settings with global settings
     articleSmasherSettings.defaultModel = globalSettings.defaultModel;
     articleSmasherSettings.defaultTemperature = globalSettings.defaultTemperature;
     articleSmasherSettings.defaultMaxTokens = globalSettings.defaultMaxTokens;
     
     // Save updated settings
     localStorage.setItem(ARTICLE_SMASHER_SETTINGS_KEY, JSON.stringify(articleSmasherSettings));
+    
+    // Dispatch event to notify ArticleSmasher of the change
+    window.dispatchEvent(new CustomEvent(ARTICLE_SMASHER_SETTINGS_CHANGED_EVENT, {
+      detail: articleSmasherSettings
+    }));
   } catch (error) {
-    console.error('Error applying global settings to ArticleSmasherV2:', error);
+    console.error('Error applying global settings to ArticleSmasher:', error);
   }
 };
 
@@ -114,13 +160,57 @@ export const applyGlobalSettingsToTaskSmasher = (): void => {
   try {
     const globalSettings = getGlobalSettings();
     
-    // Update the active provider and model in localStorage
-    localStorage.setItem('smashingapps_activeProvider', globalSettings.defaultProvider);
+    // Update the active provider in localStorage
+    localStorage.setItem(TASK_SMASHER_PROVIDER_KEY, globalSettings.defaultProvider);
     
     // Dispatch a custom event to notify TaskSmasher of the change
-    window.dispatchEvent(new CustomEvent('taskSmasherSettingsChanged', { detail: globalSettings }));
+    window.dispatchEvent(new CustomEvent(TASK_SMASHER_SETTINGS_CHANGED_EVENT, {
+      detail: globalSettings
+    }));
   } catch (error) {
     console.error('Error applying global settings to TaskSmasher:', error);
+  }
+};
+
+/**
+ * Apply ArticleSmasher settings to global settings
+ */
+export const applyArticleSmasherSettingsToGlobal = (): void => {
+  try {
+    const articleSmasherSettings = getArticleSmasherSettings();
+    
+    // Update global settings with ArticleSmasher settings
+    updateGlobalSettings({
+      defaultModel: articleSmasherSettings.defaultModel,
+      defaultTemperature: articleSmasherSettings.defaultTemperature,
+      defaultMaxTokens: articleSmasherSettings.defaultMaxTokens
+    }, true); // Skip sync to avoid circular updates
+    
+    // Apply to TaskSmasher only
+    applyGlobalSettingsToTaskSmasher();
+  } catch (error) {
+    console.error('Error applying ArticleSmasher settings to global:', error);
+  }
+};
+
+/**
+ * Apply TaskSmasher settings to global settings
+ */
+export const applyTaskSmasherSettingsToGlobal = (): void => {
+  try {
+    const activeProvider = localStorage.getItem(TASK_SMASHER_PROVIDER_KEY);
+    
+    if (activeProvider) {
+      // Update global settings with TaskSmasher provider
+      updateGlobalSettings({
+        defaultProvider: activeProvider as AIProvider
+      }, true); // Skip sync to avoid circular updates
+      
+      // Apply to ArticleSmasher only
+      applyGlobalSettingsToArticleSmasher();
+    }
+  } catch (error) {
+    console.error('Error applying TaskSmasher settings to global:', error);
   }
 };
 
@@ -149,11 +239,32 @@ export const initGlobalSettingsService = (): void => {
   window.addEventListener('storage', (e) => {
     if (e.key === GLOBAL_SETTINGS_KEY && e.newValue) {
       try {
-        const settings = JSON.parse(e.newValue);
         applyGlobalSettingsToAllApps();
       } catch (error) {
-        console.error('Error handling storage event:', error);
+        console.error('Error handling global settings storage event:', error);
+      }
+    } else if (e.key === ARTICLE_SMASHER_SETTINGS_KEY && e.newValue) {
+      try {
+        applyArticleSmasherSettingsToGlobal();
+      } catch (error) {
+        console.error('Error handling ArticleSmasher settings storage event:', error);
+      }
+    } else if (e.key === TASK_SMASHER_PROVIDER_KEY && e.newValue) {
+      try {
+        applyTaskSmasherSettingsToGlobal();
+      } catch (error) {
+        console.error('Error handling TaskSmasher settings storage event:', error);
       }
     }
+  });
+  
+  // Listen for ArticleSmasher settings changes
+  window.addEventListener(ARTICLE_SMASHER_SETTINGS_CHANGED_EVENT, () => {
+    applyArticleSmasherSettingsToGlobal();
+  });
+  
+  // Listen for TaskSmasher settings changes
+  window.addEventListener(TASK_SMASHER_SETTINGS_CHANGED_EVENT, () => {
+    applyTaskSmasherSettingsToGlobal();
   });
 };

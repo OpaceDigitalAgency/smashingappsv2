@@ -23,8 +23,8 @@ import {
   AIResponse
 } from '../types/aiProviders';
 
-// Google Models
-const GOOGLE_MODELS: GoogleModel[] = [
+// Default Google Models (fallback if API fetch fails)
+const DEFAULT_GOOGLE_MODELS: GoogleModel[] = [
   {
     id: 'gemini-1.5-pro',
     name: 'Gemini 1.5 Pro',
@@ -42,17 +42,21 @@ const GOOGLE_MODELS: GoogleModel[] = [
     maxTokens: 32768,
     costPer1KTokens: { input: 0.0005, output: 0.0015 },
     category: 'cost-optimized'
-  },
-  {
-    id: 'gemini-1.0-pro',
-    name: 'Gemini 1.0 Pro',
-    provider: 'google',
-    description: 'Previous generation',
-    maxTokens: 32768,
-    costPer1KTokens: { input: 0.0025, output: 0.0075 },
-    category: 'legacy'
   }
 ];
+
+// Model pricing information for models that might not include it in the API response
+const MODEL_PRICING_MAP: Record<string, { input: number; output: number }> = {
+  'gemini-1.5-pro': { input: 0.0025, output: 0.0075 },
+  'gemini-1.5-flash': { input: 0.0005, output: 0.0015 },
+  'gemini-1.0-pro': { input: 0.0025, output: 0.0075 },
+  'gemini-1.0-ultra': { input: 0.00175, output: 0.0035 }
+};
+
+// Cache key for storing fetched models
+const MODELS_CACHE_KEY = 'google_models_cache';
+// Cache expiration time (24 hours in milliseconds)
+const CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
 
 /**
  * Google Service Implementation
@@ -63,24 +67,31 @@ class GoogleServiceImpl implements AIService {
   private apiKeyStorageKey = 'google_api_key';
   private rateLimitStorageKey = 'google_rateLimitInfo';
   private apiCallCountKey = 'google_apiCallCount';
+  private cachedModels: GoogleModel[] | null = null;
   
   constructor() {
     // Try to load API key from localStorage
     this.apiKey = localStorage.getItem(this.apiKeyStorageKey);
+    
+    // Try to load cached models from localStorage
+    this.loadCachedModels();
+    
+    // Fetch models in the background
+    this.fetchModelsFromAPI();
   }
   
   /**
    * Get available models for Google
    */
   getModels(): AIModel[] {
-    return GOOGLE_MODELS;
+    return this.cachedModels || DEFAULT_GOOGLE_MODELS;
   }
   
   /**
    * Get the default model for Google
    */
   getDefaultModel(): AIModel {
-    return GOOGLE_MODELS.find(model => model.id === 'gemini-1.5-flash') || GOOGLE_MODELS[0];
+    return this.cachedModels?.find(model => model.id === 'gemini-1.5-flash') || DEFAULT_GOOGLE_MODELS[0];
   }
   
   /**
@@ -340,6 +351,187 @@ class GoogleServiceImpl implements AIService {
         used: 0
       };
     }
+  }
+  
+  /**
+   * Fetch available models from Google API
+   * This method is public so it can be called from the AdminContext
+   */
+  async fetchModelsFromAPI(): Promise<void> {
+    // Skip if no API key is available
+    if (!this.apiKey) {
+      console.log('No Google API key available, skipping model fetch');
+      return;
+    }
+    
+    try {
+      // Check if we have valid cached models
+      const cachedData = localStorage.getItem(MODELS_CACHE_KEY);
+      if (cachedData) {
+        const { models, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        
+        // If cache is still valid, use it
+        if (cacheAge < CACHE_EXPIRATION && models.length > 0) {
+          console.log('Using cached Google models');
+          this.cachedModels = models;
+          return;
+        }
+      }
+      
+      console.log('Fetching Google models from API...');
+      
+      // Prepare headers
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Provider': this.provider,
+        'X-Request-Type': 'models'
+      };
+      
+      // Add API key
+      if (this.apiKey) {
+        headers['X-API-Key'] = this.apiKey;
+      }
+      
+      // Use the Netlify function proxy to fetch models
+      const response = await fetch('/.netlify/functions/openai-proxy/models', {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Process the models data
+      const fetchedModels: GoogleModel[] = [];
+      
+      // Google API response format might be different, adjust as needed
+      const modelsList = data.models || data.data || [];
+      
+      modelsList.forEach((model: any) => {
+        const modelId = model.id || model.name;
+        const pricing = MODEL_PRICING_MAP[modelId] || { input: 0.001, output: 0.002 };
+        let category = 'legacy';
+        
+        // Categorize models
+        let modelCategory: 'featured' | 'reasoning' | 'cost-optimized' | 'legacy' | 'image' = 'legacy';
+        
+        if (modelId.includes('gemini-1.5-pro')) {
+          modelCategory = 'featured';
+        } else if (modelId.includes('gemini-1.5-flash')) {
+          modelCategory = 'cost-optimized';
+        } else if (modelId.includes('gemini-1.0-ultra')) {
+          modelCategory = 'featured';
+        } else if (modelId.includes('gemini-1.0')) {
+          modelCategory = 'legacy';
+        }
+        
+        fetchedModels.push({
+          id: modelId,
+          name: this.formatModelName(modelId),
+          provider: 'google',
+          description: this.getModelDescription(modelId),
+          maxTokens: this.getModelMaxTokens(modelId),
+          costPer1KTokens: pricing,
+          category: modelCategory
+        });
+      });
+      
+      // If no models were returned, use the default models
+      if (fetchedModels.length === 0) {
+        console.log('No Google models returned from API, using defaults');
+        fetchedModels.push(...DEFAULT_GOOGLE_MODELS);
+      }
+      
+      // Update cached models
+      this.cachedModels = fetchedModels;
+      
+      // Save to localStorage with timestamp
+      localStorage.setItem(MODELS_CACHE_KEY, JSON.stringify({
+        models: fetchedModels,
+        timestamp: Date.now()
+      }));
+      
+      console.log(`Fetched ${fetchedModels.length} Google models`);
+    } catch (error) {
+      console.error('Error fetching Google models:', error);
+      // If fetch fails, load from cache if available
+      this.loadCachedModels();
+    }
+  }
+  
+  /**
+   * Load cached models from localStorage
+   */
+  private loadCachedModels(): void {
+    try {
+      const cachedData = localStorage.getItem(MODELS_CACHE_KEY);
+      if (cachedData) {
+        const { models, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        
+        // Use cached models even if expired (better than nothing)
+        if (models && Array.isArray(models) && models.length > 0) {
+          console.log('Loaded cached Google models');
+          this.cachedModels = models;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cached models:', error);
+    }
+  }
+  
+  /**
+   * Format model name for display
+   */
+  private formatModelName(modelId: string): string {
+    // Remove provider prefix if present
+    let name = modelId.replace('google/', '');
+    
+    // Split by hyphens and dots
+    const parts = name.split(/[-\.]/);
+    return parts.map(part => {
+      // Handle special cases
+      if (part === 'gemini') return 'Gemini';
+      if (part === '1') return '1';
+      if (part === '0') return '0';
+      if (part === '5') return '5';
+      
+      // Capitalize first letter
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  }
+  
+  /**
+   * Get model description based on model ID
+   */
+  private getModelDescription(modelId: string): string {
+    if (modelId.includes('gemini-1.5-pro')) {
+      return 'Most capable Gemini model';
+    } else if (modelId.includes('gemini-1.5-flash')) {
+      return 'Fast and efficient';
+    } else if (modelId.includes('gemini-1.0-pro')) {
+      return 'Previous generation';
+    } else if (modelId.includes('gemini-1.0-ultra')) {
+      return 'High performance model';
+    }
+    return 'Google language model';
+  }
+  
+  /**
+   * Get model max tokens based on model ID
+   */
+  private getModelMaxTokens(modelId: string): number {
+    if (modelId.includes('gemini-1.5')) {
+      return 32768;
+    } else if (modelId.includes('gemini-1.0')) {
+      return 32768;
+    }
+    return 32768; // Default
   }
 }
 

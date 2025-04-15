@@ -1,12 +1,14 @@
 /**
  * AI Provider Types
- * 
+ *
  * This file defines types and interfaces for multiple AI model providers:
  * - OpenAI
  * - Open Router
  * - Claude (Anthropic)
  * - Gemini (Google)
  * - Image generation models
+ *
+ * Each model includes cost information for accurate usage tracking and billing.
  */
 
 // Provider identifiers
@@ -126,3 +128,68 @@ export interface AIResponse<T> {
   data: T;
   rateLimit: RateLimitInfo;
 }
+
+/**
+ * Model-specific pricing constants
+ * These rates are based on OpenAI's pricing as of April 2025
+ * https://openai.com/pricing
+ */
+export const MODEL_PRICING = {
+  // GPT-4 models
+  'gpt-4': {
+    input: 0.03,    // $0.03 per 1K input tokens
+    output: 0.06    // $0.06 per 1K output tokens
+  },
+  'gpt-4-32k': {
+    input: 0.06,    // $0.06 per 1K input tokens
+    output: 0.12    // $0.12 per 1K output tokens
+  },
+  'gpt-4-turbo': {
+    input: 0.01,    // $0.01 per 1K input tokens
+    output: 0.03    // $0.03 per 1K output tokens
+  },
+  'gpt-4-vision': {
+    input: 0.01,    // $0.01 per 1K input tokens
+    output: 0.03    // $0.03 per 1K output tokens
+  },
+  
+  // GPT-3.5 models
+  'gpt-3.5-turbo': {
+    input: 0.0005,  // $0.0005 per 1K input tokens
+    output: 0.0015  // $0.0015 per 1K output tokens
+  },
+  'gpt-3.5-turbo-16k': {
+    input: 0.001,   // $0.001 per 1K input tokens
+    output: 0.002   // $0.002 per 1K output tokens
+  },
+  
+  // Claude models
+  'claude-3-opus': {
+    input: 0.015,   // $0.015 per 1K input tokens
+    output: 0.075   // $0.075 per 1K output tokens
+  },
+  'claude-3-sonnet': {
+    input: 0.003,   // $0.003 per 1K input tokens
+    output: 0.015   // $0.015 per 1K output tokens
+  },
+  'claude-3-haiku': {
+    input: 0.00025, // $0.00025 per 1K input tokens
+    output: 0.00125 // $0.00125 per 1K output tokens
+  },
+  
+  // Gemini models
+  'gemini-pro': {
+    input: 0.00025, // $0.00025 per 1K input tokens
+    output: 0.0005  // $0.0005 per 1K output tokens
+  },
+  'gemini-ultra': {
+    input: 0.00175, // $0.00175 per 1K input tokens
+    output: 0.0035  // $0.0035 per 1K output tokens
+  },
+  
+  // Default fallback rates
+  'default': {
+    input: 0.001,   // $0.001 per 1K input tokens
+    output: 0.002   // $0.002 per 1K output tokens
+  }
+};

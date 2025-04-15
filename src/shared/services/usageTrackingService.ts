@@ -1,23 +1,33 @@
-import { AIProvider } from '../types/aiProviders';
+import { AIProvider, AIModel, MODEL_PRICING } from '../types/aiProviders';
+import { aiServiceRegistry } from './AIService';
 
 // Define the usage data structure
 export interface UsageData {
   totalRequests: number;
   totalTokens: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
   costEstimate: number;
   requestsByProvider: Record<AIProvider, number>;
   tokensByProvider: Record<AIProvider, number>;
+  inputTokensByProvider: Record<AIProvider, number>;
+  outputTokensByProvider: Record<AIProvider, number>;
   costByProvider: Record<AIProvider, number>;
   requestsByApp: Record<string, number>;
   tokensByApp: Record<string, number>;
+  inputTokensByApp: Record<string, number>;
+  outputTokensByApp: Record<string, number>;
   costByApp: Record<string, number>;
   usageHistory: {
     timestamp: number;
     requests: number;
     tokens: number;
+    inputTokens: number;
+    outputTokens: number;
     cost: number;
     provider: AIProvider;
     app: string;
+    model?: string;
   }[];
 }
 
@@ -25,12 +35,18 @@ export interface UsageData {
 const initialUsageData: UsageData = {
   totalRequests: 0,
   totalTokens: 0,
+  totalInputTokens: 0,
+  totalOutputTokens: 0,
   costEstimate: 0,
   requestsByProvider: {} as Record<AIProvider, number>,
   tokensByProvider: {} as Record<AIProvider, number>,
+  inputTokensByProvider: {} as Record<AIProvider, number>,
+  outputTokensByProvider: {} as Record<AIProvider, number>,
   costByProvider: {} as Record<AIProvider, number>,
   requestsByApp: {},
   tokensByApp: {},
+  inputTokensByApp: {},
+  outputTokensByApp: {},
   costByApp: {},
   usageHistory: []
 };
@@ -75,6 +91,8 @@ export const trackApiRequest = (
   tokens: number,
   app: string,
   model: string,
+  inputTokens?: number,
+  outputTokens?: number,
   timestamp?: Date
 ): void => {
   console.log(`Tracking API request for provider: ${provider}, app: ${app}, tokens: ${tokens}, model: ${model}`);
@@ -82,23 +100,56 @@ export const trackApiRequest = (
   const usageData = getUsageData();
   const timestampMs = timestamp ? timestamp.getTime() : Date.now();
   
-  // Calculate cost (simplified - in a real app you'd use different rates per model)
-  const costPerToken = 0.002; // Example rate
-  const cost = tokens * costPerToken;
+  // Get input and output tokens
+  const actualInputTokens = inputTokens || Math.floor(tokens * 0.7); // Default to 70% input if not specified
+  const actualOutputTokens = outputTokens || (tokens - actualInputTokens); // Default to remaining tokens if not specified
+  
+  // Get model-specific cost rates
+  let inputCostPer1K = MODEL_PRICING.default.input;
+  let outputCostPer1K = MODEL_PRICING.default.output;
+  
+  // First try to get rates from the MODEL_PRICING constants
+  const modelKey = model.split('/').pop() || model; // Extract model name from full ID if needed
+  if (MODEL_PRICING[modelKey as keyof typeof MODEL_PRICING]) {
+    inputCostPer1K = MODEL_PRICING[modelKey as keyof typeof MODEL_PRICING].input;
+    outputCostPer1K = MODEL_PRICING[modelKey as keyof typeof MODEL_PRICING].output;
+  }
+  // If not found in constants, try to get from the model info via service registry
+  else {
+    const service = aiServiceRegistry.getServiceForModel(model);
+    if (service) {
+      const modelInfo = service.getModels().find(m => m.id === model);
+      if (modelInfo && modelInfo.costPer1KTokens) {
+        inputCostPer1K = modelInfo.costPer1KTokens.input;
+        outputCostPer1K = modelInfo.costPer1KTokens.output;
+      }
+    }
+  }
+  
+  // Calculate cost based on input and output token rates
+  const inputCost = (actualInputTokens / 1000) * inputCostPer1K;
+  const outputCost = (actualOutputTokens / 1000) * outputCostPer1K;
+  const cost = inputCost + outputCost;
   
   // Update total stats
   usageData.totalRequests += 1;
   usageData.totalTokens += tokens;
+  usageData.totalInputTokens += actualInputTokens;
+  usageData.totalOutputTokens += actualOutputTokens;
   usageData.costEstimate += cost;
   
   // Update provider stats
   usageData.requestsByProvider[provider] = (usageData.requestsByProvider[provider] || 0) + 1;
   usageData.tokensByProvider[provider] = (usageData.tokensByProvider[provider] || 0) + tokens;
+  usageData.inputTokensByProvider[provider] = (usageData.inputTokensByProvider[provider] || 0) + actualInputTokens;
+  usageData.outputTokensByProvider[provider] = (usageData.outputTokensByProvider[provider] || 0) + actualOutputTokens;
   usageData.costByProvider[provider] = (usageData.costByProvider[provider] || 0) + cost;
   
   // Update app stats
   usageData.requestsByApp[app] = (usageData.requestsByApp[app] || 0) + 1;
   usageData.tokensByApp[app] = (usageData.tokensByApp[app] || 0) + tokens;
+  usageData.inputTokensByApp[app] = (usageData.inputTokensByApp[app] || 0) + actualInputTokens;
+  usageData.outputTokensByApp[app] = (usageData.outputTokensByApp[app] || 0) + actualOutputTokens;
   usageData.costByApp[app] = (usageData.costByApp[app] || 0) + cost;
   
   // Add to history
@@ -106,9 +157,12 @@ export const trackApiRequest = (
     timestamp: timestampMs,
     requests: 1,
     tokens,
+    inputTokens: actualInputTokens,
+    outputTokens: actualOutputTokens,
     cost,
     provider,
-    app
+    app,
+    model
   });
   
   // Limit history size (keep last 1000 entries)
@@ -154,12 +208,18 @@ export const getFilteredUsageData = (
   const filteredData: UsageData = {
     totalRequests: 0,
     totalTokens: 0,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
     costEstimate: 0,
     requestsByProvider: {} as Record<AIProvider, number>,
     tokensByProvider: {} as Record<AIProvider, number>,
+    inputTokensByProvider: {} as Record<AIProvider, number>,
+    outputTokensByProvider: {} as Record<AIProvider, number>,
     costByProvider: {} as Record<AIProvider, number>,
     requestsByApp: {},
     tokensByApp: {},
+    inputTokensByApp: {},
+    outputTokensByApp: {},
     costByApp: {},
     usageHistory: filteredHistory
   };
@@ -168,16 +228,22 @@ export const getFilteredUsageData = (
   filteredHistory.forEach(entry => {
     filteredData.totalRequests += entry.requests;
     filteredData.totalTokens += entry.tokens;
+    filteredData.totalInputTokens += entry.inputTokens || 0;
+    filteredData.totalOutputTokens += entry.outputTokens || 0;
     filteredData.costEstimate += entry.cost;
     
     // Update provider stats
     filteredData.requestsByProvider[entry.provider] = (filteredData.requestsByProvider[entry.provider] || 0) + entry.requests;
     filteredData.tokensByProvider[entry.provider] = (filteredData.tokensByProvider[entry.provider] || 0) + entry.tokens;
+    filteredData.inputTokensByProvider[entry.provider] = (filteredData.inputTokensByProvider[entry.provider] || 0) + (entry.inputTokens || 0);
+    filteredData.outputTokensByProvider[entry.provider] = (filteredData.outputTokensByProvider[entry.provider] || 0) + (entry.outputTokens || 0);
     filteredData.costByProvider[entry.provider] = (filteredData.costByProvider[entry.provider] || 0) + entry.cost;
     
     // Update app stats
     filteredData.requestsByApp[entry.app] = (filteredData.requestsByApp[entry.app] || 0) + entry.requests;
     filteredData.tokensByApp[entry.app] = (filteredData.tokensByApp[entry.app] || 0) + entry.tokens;
+    filteredData.inputTokensByApp[entry.app] = (filteredData.inputTokensByApp[entry.app] || 0) + (entry.inputTokens || 0);
+    filteredData.outputTokensByApp[entry.app] = (filteredData.outputTokensByApp[entry.app] || 0) + (entry.outputTokens || 0);
     filteredData.costByApp[entry.app] = (filteredData.costByApp[entry.app] || 0) + entry.cost;
   });
   
@@ -258,12 +324,20 @@ export const getTimeLabels = (timeRange: 'day' | 'week' | 'month' | 'year'): str
 // Get time-based data for charts
 export const getTimeSeriesData = (
   timeRange: 'day' | 'week' | 'month' | 'year'
-): { requests: number[], tokens: number[], costs: string[] } => {
+): {
+  requests: number[],
+  tokens: number[],
+  inputTokens: number[],
+  outputTokens: number[],
+  costs: string[]
+} => {
   const usageData = getUsageData();
   const now = Date.now();
   const labels = getTimeLabels(timeRange);
   const requests: number[] = Array(labels.length).fill(0);
   const tokens: number[] = Array(labels.length).fill(0);
+  const inputTokens: number[] = Array(labels.length).fill(0);
+  const outputTokens: number[] = Array(labels.length).fill(0);
   const costs: string[] = Array(labels.length).fill('0.00');
   
   // Calculate time segments based on time range
@@ -296,10 +370,12 @@ export const getTimeSeriesData = (
       if (segmentIndex >= 0 && segmentIndex < labels.length) {
         requests[segmentIndex] += entry.requests;
         tokens[segmentIndex] += entry.tokens;
+        inputTokens[segmentIndex] += entry.inputTokens || 0;
+        outputTokens[segmentIndex] += entry.outputTokens || 0;
         costs[segmentIndex] = (parseFloat(costs[segmentIndex]) + entry.cost).toFixed(2);
       }
     }
   });
-  
-  return { requests, tokens, costs };
+  return { requests, tokens, inputTokens, outputTokens, costs };
+};
 };

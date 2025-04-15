@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
-import { 
+import {
   Settings, 
   Save, 
   RefreshCw, 
@@ -9,19 +9,23 @@ import {
   ChevronDown, 
   ChevronUp, 
   Globe, 
-  Layers 
+  Layers,
+  RefreshCcw
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider } from '../../shared/types/aiProviders';
 
 const SettingsManagement: React.FC = () => {
-  const { 
-    globalSettings, 
-    updateGlobalSettings, 
-    appSettings, 
+  const {
+    globalSettings,
+    updateGlobalSettings,
+    appSettings,
     updateAppSettings,
-    providers
+    providers,
+    refreshProviderModels
   } = useAdmin();
+  
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [expandedSection, setExpandedSection] = useState<'global' | 'app' | null>('global');
   const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null);
@@ -86,6 +90,25 @@ const SettingsManagement: React.FC = () => {
     }, 3000);
   };
   
+  // Handle refreshing models
+  const handleRefreshModels = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshProviderModels();
+      setSaveStatus({ success: true, message: 'Models refreshed successfully' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSaveStatus(null);
+      }, 3000);
+    } catch (error) {
+      setSaveStatus({ success: false, message: 'Failed to refresh models' });
+      console.error('Error refreshing models:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -136,17 +159,27 @@ const SettingsManagement: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Default Model
                   </label>
-                  <select
-                    value={globalSettings.defaultModel}
-                    onChange={(e) => handleGlobalSettingsChange('defaultModel', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                  >
-                    {providers[globalSettings.defaultProvider]?.models.map(model => (
-                      <option key={model.id} value={model.id}>
-                        {model.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center">
+                    <select
+                      value={globalSettings.defaultModel}
+                      onChange={(e) => handleGlobalSettingsChange('defaultModel', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                    >
+                      {providers[globalSettings.defaultProvider]?.models.map(model => (
+                        <option key={model.id} value={model.id}>
+                          {model.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleRefreshModels}
+                      className="ml-2 p-2 text-blue-500 hover:text-blue-700 rounded-md hover:bg-gray-100"
+                      title="Refresh models from API"
+                      disabled={isRefreshing}
+                    >
+                      <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
                 </div>
               </div>
               

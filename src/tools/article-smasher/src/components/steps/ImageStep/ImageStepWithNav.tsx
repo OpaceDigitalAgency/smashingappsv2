@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
 import { usePrompt } from '../../../contexts/PromptContext';
-import { RefreshCw, Image as ImageIcon, Check, X, ArrowLeft, ArrowRight, Plus as PlusIcon } from 'lucide-react';
+import { RefreshCw, Image as ImageIcon, Check, X, ArrowLeft, ArrowRight, Plus as PlusIcon, AlertCircle } from 'lucide-react';
+import ImageService from '../../../../../../shared/services/imageService';
+import { ImageModel } from '../../../../../../shared/types/aiProviders';
 
 const ImageStep: React.FC = () => {
   const { 
@@ -16,7 +18,7 @@ const ImageStep: React.FC = () => {
     goToPreviousStep 
   } = useArticleWizard();
   
-  const { prompts, settings } = usePrompt();
+  const { prompts, settings, updateSettings } = usePrompt();
   
   // Get the image prompt template
   const imagePrompts = prompts.filter(p => p.category === 'image');
@@ -24,6 +26,19 @@ const ImageStep: React.FC = () => {
   
   const [prompt, setPrompt] = useState('');
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
+  const [imageModels, setImageModels] = useState<ImageModel[]>([]);
+  const [selectedImageModel, setSelectedImageModel] = useState<string>('dall-e-3');
+  const [textModel, setTextModel] = useState<string>(settings.defaultModel);
+  
+  // Load available image models
+  useEffect(() => {
+    const models = ImageService.getModels();
+    setImageModels(models as ImageModel[]);
+    
+    // Set default image model
+    const defaultModel = ImageService.getDefaultModel();
+    setSelectedImageModel(defaultModel.id);
+  }, []);
   
   // Set default prompt based on title
   useEffect(() => {
@@ -53,8 +68,20 @@ const ImageStep: React.FC = () => {
   // Handle generate images
   const handleGenerateImages = async () => {
     if (title && selectedKeywords.length > 0) {
-      await generateImages(title, selectedKeywords);
+      await generateImages(title, selectedKeywords, selectedImageModel);
     }
+  };
+  
+  // Handle text model change
+  const handleTextModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newModel = e.target.value;
+    setTextModel(newModel);
+    updateSettings({ ...settings, defaultModel: newModel });
+  };
+  
+  // Handle image model change
+  const handleImageModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedImageModel(e.target.value);
   };
   
   // Get selected images
@@ -97,6 +124,56 @@ const ImageStep: React.FC = () => {
       <p className="text-gray-600 mb-4">
         Generate and select images for your article using AI image generation.
       </p>
+      
+      {/* Model Selection */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">Model Selection</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+          <div>
+            <label htmlFor="textModel" className="block text-sm font-medium text-gray-700 mb-1">
+              Text Generation Model
+            </label>
+            <select
+              id="textModel"
+              value={textModel}
+              onChange={handleTextModelChange}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4-turbo">GPT-4 Turbo</option>
+              <option value="claude-3-haiku">Claude 3 Haiku</option>
+              <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+              <option value="claude-3-opus">Claude 3 Opus</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Model used for generating article content and prompts
+            </p>
+          </div>
+          
+          <div>
+            <label htmlFor="imageModel" className="block text-sm font-medium text-gray-700 mb-1">
+              Image Generation Model
+            </label>
+            <select
+              id="imageModel"
+              value={selectedImageModel}
+              onChange={handleImageModelChange}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              {imageModels.map(model => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Model used for generating images
+            </p>
+          </div>
+        </div>
+      </div>
       
       {/* Image Generation Form */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
@@ -190,11 +267,29 @@ const ImageStep: React.FC = () => {
                 }`}
               >
                 <div className="relative">
-                  <img
-                    src={image.url}
-                    alt={image.alt}
-                    className="w-full h-48 object-cover"
-                  />
+                  {image.url ? (
+                    <img
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        // Handle image loading errors
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = `https://via.placeholder.com/1024x1024?text=${encodeURIComponent(image.alt)}`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} />
+                        <p className="text-sm text-red-500">Image generation failed</p>
+                        {image.error && (
+                          <p className="text-xs text-gray-500 mt-1">{image.error}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <button
                     onClick={() => toggleImageSelection(image.id)}
                     className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center ${
