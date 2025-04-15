@@ -20,7 +20,8 @@ import {
   getGlobalSettings,
   updateGlobalSettings as updateGlobalSettingsService,
   applyGlobalSettingsToAllApps,
-  initGlobalSettingsService
+  initGlobalSettingsService,
+  GlobalSettings
 } from '../../shared/services/globalSettingsService';
 import { PromptTemplate, PromptSettings } from '../../tools/article-smasher/src/types';
 import {
@@ -34,6 +35,14 @@ import {
   loadSettings,
   saveSettings,
 } from '../../tools/article-smasher/src/services/promptService';
+
+// Default settings
+const DEFAULT_SETTINGS: GlobalSettings = {
+  defaultProvider: 'openai',
+  defaultModel: 'gpt-4o',
+  defaultTemperature: 0.7,
+  defaultMaxTokens: 1000,
+};
 
 // Define the context type
 interface AdminContextType {
@@ -60,19 +69,9 @@ interface AdminContextType {
   deleteTaskSmasherPrompt: (id: string) => Promise<void>;
   
   // Settings management
-  globalSettings: {
-    defaultProvider: AIProvider;
-    defaultModel: string;
-    defaultTemperature: number;
-    defaultMaxTokens: number;
-  };
+  globalSettings: GlobalSettings;
   appSettings: Record<string, any>;
-  updateGlobalSettings: (settings: Partial<{
-    defaultProvider: AIProvider;
-    defaultModel: string;
-    defaultTemperature: number;
-    defaultMaxTokens: number;
-  }>) => void;
+  updateGlobalSettings: (settings: Partial<GlobalSettings>) => void;
   updateAppSettings: (appId: string, settings: any) => void;
   
   // Usage monitoring
@@ -104,39 +103,64 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const [activeTaskSmasherPrompt, setActiveTaskSmasherPrompt] = useState<TaskSmasherPromptTemplate | null>(null);
   
   // Settings management state
-  const [globalSettings, setGlobalSettings] = useState(getGlobalSettings());
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>(DEFAULT_SETTINGS);
   const [appSettings, setAppSettings] = useState<Record<string, any>>({});
-
-  // Initialize global settings service
+  const [isSettingsInitialized, setIsSettingsInitialized] = useState(false);
+  
+  // Initialize global settings
   useEffect(() => {
-    console.log('AdminContext: Initializing global settings service');
-    let isInitialized = false;
-
-    try {
-      if (!isInitialized) {
-        initGlobalSettingsService();
-        isInitialized = true;
-        console.log('AdminContext: Global settings service initialized');
+    let isMounted = true;
+    
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === 'smashingapps_globalSettings' && e.newValue && isMounted) {
+        try {
+          const newSettings = JSON.parse(e.newValue);
+          setGlobalSettings(newSettings);
+        } catch (error) {
+          console.error('Error parsing global settings from storage:', error);
+        }
       }
-    } catch (error) {
-      console.error('AdminContext: Error initializing global settings service:', error);
-      setError(error instanceof Error ? error : new Error('Failed to initialize global settings'));
-    }
-
-    // Cleanup function to remove event listeners
-    return () => {
-      console.log('AdminContext: Cleaning up global settings service');
-      window.removeEventListener('storage', () => {});
-      window.removeEventListener('globalSettingsChanged', () => {});
-      window.removeEventListener('articleSmasherSettingsChanged', () => {});
-      window.removeEventListener('taskSmasherSettingsChanged', () => {});
     };
-  }, []); // Empty dependency array ensures this only runs once
+
+    const handleGlobalSettingsChanged = (e: CustomEvent) => {
+      if (isMounted) {
+        setGlobalSettings(e.detail);
+      }
+    };
+
+    const initializeSettings = async () => {
+      if (!isSettingsInitialized && isMounted) {
+        try {
+          console.log('AdminContext: Initializing global settings');
+          initGlobalSettingsService();
+          const settings = getGlobalSettings();
+          setGlobalSettings(settings);
+          setIsSettingsInitialized(true);
+          console.log('AdminContext: Global settings initialized successfully');
+        } catch (error) {
+          console.error('AdminContext: Error initializing global settings:', error);
+          setError(error instanceof Error ? error : new Error('Failed to initialize global settings'));
+          setIsSettingsInitialized(true); // Mark as initialized even on error to prevent loops
+        }
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('storage', handleStorageEvent);
+    window.addEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
+
+    // Initialize settings
+    initializeSettings();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      window.removeEventListener('storage', handleStorageEvent);
+      window.removeEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
+    };
+  }, [isSettingsInitialized]);
   
   // Usage monitoring state
-  // Define time range type to match usageTrackingService
-  type TimeRange = 'day' | 'week' | 'month' | 'year';
-  
   const [usageStats, setUsageStats] = useState<UsageData>(getUsageData());
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   
@@ -333,7 +357,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
         setTaskSmasherPrompts(loadedTaskSmasherPrompts);
         
         // Update global settings with loaded settings
-        setGlobalSettings(prevSettings => ({
+        setGlobalSettings((prevSettings: GlobalSettings) => ({
           ...prevSettings,
           defaultModel: loadedSettings.defaultModel,
           defaultTemperature: loadedSettings.defaultTemperature,
@@ -463,6 +487,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       setIsLoading(false);
     }
   };
+  
   const deletePrompt = async (id: string) => {
     try {
       setIsLoading(true);
@@ -532,7 +557,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       // Update the state
       setTaskSmasherPrompts(updatedPrompts);
       
-      // Update activeTaskSmasherPrompt if it's the one being updated
+      // Update activePrompt if it's the one being updated
       if (activeTaskSmasherPrompt && activeTaskSmasherPrompt.id === id) {
         setActiveTaskSmasherPrompt({ ...activeTaskSmasherPrompt, ...promptUpdate, updatedAt: new Date() });
       }
@@ -559,7 +584,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       // Update the state
       setTaskSmasherPrompts(filteredPrompts);
       
-      // Clear activeTaskSmasherPrompt if it's the one being deleted
+      // Clear activePrompt if it's the one being deleted
       if (activeTaskSmasherPrompt && activeTaskSmasherPrompt.id === id) {
         setActiveTaskSmasherPrompt(null);
       }
@@ -575,20 +600,18 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       setIsLoading(false);
     }
   };
-
+  
   // Settings management functions
-  const updateGlobalSettings = (settings: Partial<typeof globalSettings>) => {
-    // Update local state
-    setGlobalSettings(prevSettings => ({
-      ...prevSettings,
-      ...settings,
-    }));
-    
-    // Update global settings using the service
-    updateGlobalSettingsService(settings);
-    
-    // Apply the updated settings to all apps
-    applyGlobalSettingsToAllApps();
+  const updateGlobalSettings = (settings: Partial<GlobalSettings>) => {
+    try {
+      // Update global settings using the service
+      updateGlobalSettingsService(settings);
+      
+      // Apply the updated settings to all apps
+      applyGlobalSettingsToAllApps();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update global settings'));
+    }
   };
   
   const updateAppSettings = (appId: string, settings: any) => {
@@ -687,113 +710,26 @@ export const useAdmin = () => {
         deleteTaskSmasherPrompt: async () => {},
         
         // Settings management
-        globalSettings: {
-          defaultProvider: 'openai' as AIProvider,
-          defaultModel: 'gpt-3.5-turbo',
-          defaultTemperature: 0.7,
-          defaultMaxTokens: 1000
-        },
-        appSettings: {
-          'task-smasher': {
-            defaultBoardLayout: 'kanban',
-            defaultUseCase: 'daily'
-          },
-          'article-smasher': {
-            defaultArticleType: 'blog',
-            enableImageGeneration: false
-          }
-        },
+        globalSettings: DEFAULT_SETTINGS,
+        appSettings: {},
         updateGlobalSettings: () => {},
         updateAppSettings: () => {},
         
         // Usage monitoring
-        usageStats: {
-          totalRequests: 0,
-          costEstimate: 0,
-          totalTokens: 0,
-          totalInputTokens: 0,
-          totalOutputTokens: 0,
-          requestsByProvider: Object.create(null) as Record<AIProvider, number>,
-          tokensByProvider: Object.create(null) as Record<AIProvider, number>,
-          costByProvider: Object.create(null) as Record<AIProvider, number>,
-          inputTokensByProvider: Object.create(null) as Record<AIProvider, number>,
-          outputTokensByProvider: Object.create(null) as Record<AIProvider, number>,
-          requestsByApp: Object.create(null) as Record<string, number>,
-          tokensByApp: Object.create(null) as Record<string, number>,
-          costByApp: Object.create(null) as Record<string, number>,
-          inputTokensByApp: Object.create(null) as Record<string, number>,
-          outputTokensByApp: Object.create(null) as Record<string, number>
-        } as UsageData,
-        timeRange: 'month' as 'day' | 'week' | 'month' | 'year',
+        usageStats: getUsageData(),
+        timeRange: 'month' as TimeRange,
         setTimeRange: () => {},
         
         // UI state
         activeSection: 'dashboard',
         setActiveSection: () => {},
         isLoading: false,
-        error: err
-      };
-    }
-    // Log context state for debugging
-    if (typeof window !== "undefined") {
-      (window as Window).__ADMIN_CONTEXT_STATE__ = context;
+        error: err,
+      } as AdminContextType;
     }
     return context;
-  } catch (fatalError) {
-    // Log and expose any fatal error
-    console.error("Fatal error in useAdmin:", fatalError);
-    if (typeof window !== "undefined") {
-      (window as Window).__ADMIN_CONTEXT_FATAL__ = fatalError;
-    }
-    return {
-      providers: {},
-      refreshProviderModels: async () => {},
-      updateProviderConfig: () => {},
-      setApiKey: () => {},
-      prompts: [],
-      activePrompt: null,
-      setActivePrompt: () => {},
-      addPrompt: async () => {},
-      updatePrompt: async () => {},
-      deletePrompt: async () => {},
-      taskSmasherPrompts: [],
-      activeTaskSmasherPrompt: null,
-      setActiveTaskSmasherPrompt: () => {},
-      addTaskSmasherPrompt: async () => {},
-      updateTaskSmasherPrompt: async () => {},
-      deleteTaskSmasherPrompt: async () => {},
-      globalSettings: {
-        defaultProvider: 'openai' as AIProvider,
-        defaultModel: 'gpt-3.5-turbo',
-        defaultTemperature: 0.7,
-        defaultMaxTokens: 1000
-      },
-      appSettings: {},
-      updateGlobalSettings: () => {},
-      updateAppSettings: () => {},
-      usageStats: {
-        totalRequests: 0,
-        costEstimate: 0,
-        totalTokens: 0,
-        totalInputTokens: 0,
-        totalOutputTokens: 0,
-        requestsByProvider: Object.create(null),
-        tokensByProvider: Object.create(null),
-        costByProvider: Object.create(null),
-        inputTokensByProvider: Object.create(null),
-        outputTokensByProvider: Object.create(null),
-        requestsByApp: {},
-        tokensByApp: {},
-        costByApp: {},
-        inputTokensByApp: {},
-        outputTokensByApp: {}
-      },
-      timeRange: 'month',
-      setTimeRange: () => {},
-      activeSection: 'dashboard',
-      setActiveSection: () => {},
-      isLoading: false,
-      error: fatalError
-    };
+  } catch (err) {
+    console.error('Critical error in useAdmin:', err);
+    throw err;
   }
 };
