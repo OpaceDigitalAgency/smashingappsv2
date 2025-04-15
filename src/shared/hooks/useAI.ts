@@ -39,16 +39,20 @@ export function useAI(): UseAIReturn {
     setIsLoading(true);
     setError(null);
     
+    // Store the original requested model for tracking purposes
+    const requestedModel = options.model;
+    
     // FORCE MODEL OVERRIDE: Always use gpt-3.5-turbo regardless of requested model
     const forcedModel = 'gpt-3.5-turbo';
-    console.log(`[MODEL OVERRIDE] Forcing model to ${forcedModel} instead of ${options.model}`);
+    console.log(`[MODEL OVERRIDE] Forcing model to ${forcedModel} instead of ${requestedModel}`);
     
     try {
       // Get reCAPTCHA token
       const recaptchaToken = await getReCaptchaToken('ai_request');
       
-      // Get the appropriate service for OpenAI (since we're forcing gpt-3.5-turbo)
-      const service = getServiceForModel(forcedModel);
+      // Get the appropriate service for the requested model first, then fallback to forced model
+      // This ensures proper app tracking while still using the forced model
+      let service = getServiceForModel(requestedModel) || getServiceForModel(forcedModel);
       
       if (!service) {
         throw new Error(`No service found for model: ${forcedModel}`);
@@ -58,6 +62,9 @@ export function useAI(): UseAIReturn {
       if (!service.isConfigured()) {
         throw new Error(`${service.provider} service is not configured. Please add your API key in the settings.`);
       }
+      
+      // Store the original model in a variable for tracking
+      console.log(`[TRACKING] Original requested model: ${requestedModel}, using for tracking purposes`);
       
       // Execute the AI request using the enhanced service with forced model
       const result = await service.createChatCompletion({
@@ -81,6 +88,9 @@ export function useAI(): UseAIReturn {
         
         // Get reCAPTCHA token again if needed
         const recaptchaToken = await getReCaptchaToken('ai_request');
+        
+        // Store the original model in a variable for tracking in fallback path
+        console.log(`[TRACKING] Original requested model in fallback: ${requestedModel}, using for tracking purposes`);
         
         // Execute the AI request using the legacy service
         const result = await LegacyAIService.createChatCompletion({

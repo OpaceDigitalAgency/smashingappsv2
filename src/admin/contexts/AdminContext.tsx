@@ -105,6 +105,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   
   // Usage monitoring state
   const [usageStats, setUsageStats] = useState<UsageData>(getUsageData());
+  // timeRange controls filtering of usage data for both summary metrics and detailed tables
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   
   // UI state
@@ -329,10 +330,19 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       setUsageStats(filteredData);
     };
     
+    // Listen for manual refresh requests
+    const handleRefreshUsageData = () => {
+      console.log('[DEBUG] Handling refresh-usage-data event');
+      const filteredData = getFilteredUsageData(timeRange);
+      setUsageStats(filteredData);
+    };
+    
     window.addEventListener('usage-data-updated', handleUsageDataUpdated as EventListener);
+    window.addEventListener('refresh-usage-data', handleRefreshUsageData);
     
     return () => {
       window.removeEventListener('usage-data-updated', handleUsageDataUpdated as EventListener);
+      window.removeEventListener('refresh-usage-data', handleRefreshUsageData);
     };
   }, [timeRange]);
 

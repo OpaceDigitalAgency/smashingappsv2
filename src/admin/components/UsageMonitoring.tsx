@@ -45,6 +45,8 @@ const UsageMonitoring: React.FC = () => {
     setIsRefreshing(true);
     
     // Dispatch a custom event to refresh usage data
+    // This event is handled by the AdminContext component to update the usageStats state
+    // which refreshes both the summary metrics and the detailed tables
     window.dispatchEvent(new CustomEvent('refresh-usage-data'));
     
     // Reset refreshing state after a short delay
@@ -542,25 +544,19 @@ const UsageMonitoring: React.FC = () => {
                     const outputTokens = (usageStats.outputTokensByApp as Record<string, number>)[appId] || 0;
                     const cost = (usageStats.costByApp as Record<string, number>)[appId] || 0;
                     
-                    // Format app name for display
-                    const appName = appId === 'article-smasher' ? 'Article Smasher' :
-                                  appId === 'task-smasher' ? 'Task Smasher' :
-                                  appId.split('-')
-                                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                      .join(' ');
+                    // Format app name for display - use a more generic approach
+                    const appName = appId.split('-')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
                     
                     // Calculate percentage of total requests
                     const percentOfTotal = ((requests / usageStats.totalRequests) * 100).toFixed(1);
                   
                   return (
-                    <tr key={appId} className={appId === 'article-smasher' ? 'bg-blue-50' : ''}>
+                    <tr key={appId}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className={`flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full ${
-                            appId === 'article-smasher' ? 'bg-blue-100 text-blue-700' :
-                            appId === 'task-smasher' ? 'bg-purple-100 text-purple-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
+                          <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700">
                             <span className="text-sm font-medium">
                               {appName.charAt(0)}
                             </span>

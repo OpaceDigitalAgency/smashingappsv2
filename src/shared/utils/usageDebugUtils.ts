@@ -118,6 +118,14 @@ export const debugUsageTracking = (): void => {
 
 /**
  * Fix common issues with usage tracking data
+ *
+ * This function repairs corrupted or incomplete usage tracking data by:
+ * 1. Ensuring all required data structures exist
+ * 2. Recalculating app-specific stats from the usage history
+ * 3. Dispatching an event to update the UI with the fixed data
+ *
+ * It's used by the forceRefreshUsageData function and the debug panel
+ * to ensure data consistency between the summary metrics and detailed tables.
  */
 export const fixUsageTrackingData = (): void => {
   try {
@@ -223,13 +231,48 @@ export const forceRefreshUsageData = (): void => {
     // Fix any issues with the data
     fixUsageTrackingData();
     
-    // Dispatch event to refresh the UI
+    // Get the latest data from localStorage
     const usageDataStr = localStorage.getItem('smashingapps_usage_data');
     if (usageDataStr) {
       const usageData = JSON.parse(usageDataStr);
+      
+      // Ensure app-specific stats are properly calculated
+      if (usageData.usageHistory && usageData.usageHistory.length > 0) {
+        console.log('[DEBUG] Recalculating app-specific stats from history');
+        
+        // Reset app stats to ensure clean recalculation
+        usageData.requestsByApp = {};
+        usageData.tokensByApp = {};
+        usageData.inputTokensByApp = {};
+        usageData.outputTokensByApp = {};
+        usageData.costByApp = {};
+        
+        // Recalculate from history
+        usageData.usageHistory.forEach((entry: {
+          app: string;
+          requests: number;
+          tokens: number;
+          inputTokens?: number;
+          outputTokens?: number;
+          cost: number;
+        }) => {
+          if (!entry.app) return;
+          
+          usageData.requestsByApp[entry.app] = (usageData.requestsByApp[entry.app] || 0) + entry.requests;
+          usageData.tokensByApp[entry.app] = (usageData.tokensByApp[entry.app] || 0) + entry.tokens;
+          usageData.inputTokensByApp[entry.app] = (usageData.inputTokensByApp[entry.app] || 0) + (entry.inputTokens || 0);
+          usageData.outputTokensByApp[entry.app] = (usageData.outputTokensByApp[entry.app] || 0) + (entry.outputTokens || 0);
+          usageData.costByApp[entry.app] = (usageData.costByApp[entry.app] || 0) + entry.cost;
+        });
+        
+        // Save the recalculated data
+        localStorage.setItem('smashingapps_usage_data', JSON.stringify(usageData));
+      }
+      
+      // Dispatch events to refresh the UI
       window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
       window.dispatchEvent(new CustomEvent('refresh-usage-data'));
-      console.log('[DEBUG] Usage data refresh events dispatched');
+      console.log('[DEBUG] Usage data refresh events dispatched with recalculated app stats');
     }
   } catch (error) {
     console.error('[DEBUG] Error forcing refresh of usage data:', error);

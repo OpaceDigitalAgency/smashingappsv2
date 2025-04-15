@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   aiProvider: {
     provider: 'openai',
     apiKey: '',
-    defaultModel: 'gpt-4',
+    defaultModel: 'gpt-3.5-turbo',
     defaultSystemPrompt: '',
     defaultOptions: {
       temperature: 0.7,

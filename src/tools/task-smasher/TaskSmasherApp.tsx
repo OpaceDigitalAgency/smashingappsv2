@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './components/styles.css'; // Import consolidated styles for TaskSmasher
-import { getGlobalSettings } from '../../shared/services/globalSettingsService';
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
 import ModelDropdown from './components/ModelDropdown';
 import RateLimitPopup from './components/RateLimitPopup';
@@ -336,7 +335,26 @@ useEffect(() => {
   } : undefined;
 
   return (
-    <div className="min-h-screen w-full flex fade-in-app relative pt-0"> {/* pt-0 to work with global navbar */}
+    <div className="min-h-screen w-full flex fade-in-app relative pt-0">
+      {/* OpenAI Example Modal */}
+      {showOpenAIExample && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">OpenAI Example</h2>
+              <button
+                onClick={() => setShowOpenAIExample(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <OpenAIExample onClose={() => setShowOpenAIExample(false)} />
+          </div>
+        </div>
+      )}
       {/* Apply SEO overrides for the current use case */}
       {seoOverrides && <SEO overrides={seoOverrides} />}
       

@@ -12,23 +12,51 @@ import { getPromptTemplateForCategory, processPromptTemplate } from '../utils/pr
 export function useTasks(initialUseCase?: string): TasksContextType {
   // Removed openAIKey state as we're now using the proxy
   const [selectedModel, setSelectedModel] = useState(() => {
-    // First try to get the model from global settings
+    console.log('Initializing selectedModel in useTasks');
+    
+    // First try to get the model directly from globalSettingsService
     try {
-      const globalSettingsStr = localStorage.getItem('smashingapps_globalSettings');
+      const globalSettings = getGlobalSettings();
+      console.log('Retrieved global settings:', globalSettings);
+      
+      if (globalSettings && globalSettings.defaultModel) {
+        console.log('Using model from global settings:', globalSettings.defaultModel);
+        return globalSettings.defaultModel;
+      }
+    } catch (error) {
+      console.error('Error accessing global settings service:', error);
+    }
+    
+    // Then try to get from localStorage global settings
+    try {
+      const globalSettingsStr = localStorage.getItem('smashingapps-global-settings');
       if (globalSettingsStr) {
         const globalSettings = JSON.parse(globalSettingsStr);
         if (globalSettings.defaultModel) {
+          console.log('Using model from localStorage global settings:', globalSettings.defaultModel);
           return globalSettings.defaultModel;
         }
       }
     } catch (error) {
-      console.error('Error reading global settings:', error);
+      console.error('Error reading global settings from localStorage:', error);
+    }
+    
+    // Then check app-specific model setting
+    const appSpecificModel = localStorage.getItem('smashingapps_activeModel');
+    if (appSpecificModel) {
+      console.log('Using app-specific model setting:', appSpecificModel);
+      return appSpecificModel;
     }
     
     // Fall back to provider default if global settings aren't available
     const activeProvider = localStorage.getItem('smashingapps_activeProvider') || 'openai';
     const service = aiServiceRegistry.getService(activeProvider as any);
-    return service ? service.getDefaultModel().id : 'gpt-3.5-turbo';
+    const defaultModel = service ? service.getDefaultModel().id : 'gpt-3.5-turbo';
+    
+    console.log('Using default model:', defaultModel);
+    
+    // Use the default model from the service
+    return defaultModel;
   });
   const [totalCost, setTotalCost] = useState(() => {
     const savedCost = localStorage.getItem('totalCost');
@@ -162,15 +190,28 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     // Initial check for global settings
     const checkGlobalSettings = () => {
       try {
-        const globalSettingsStr = localStorage.getItem('smashingapps_globalSettings');
-        if (globalSettingsStr) {
-          const globalSettings = JSON.parse(globalSettingsStr);
-          if (globalSettings.defaultModel) {
-            setSelectedModel(globalSettings.defaultModel);
-          }
+        // First try to get from the global settings service
+        const globalSettings = getGlobalSettings();
+        console.log('Checking global settings on mount:', globalSettings);
+        
+        if (globalSettings && globalSettings.defaultModel) {
+          console.log('Setting model from global settings:', globalSettings.defaultModel);
+          setSelectedModel(globalSettings.defaultModel);
+          
+          // Update localStorage to ensure persistence
+          localStorage.setItem('smashingapps_activeModel', globalSettings.defaultModel);
+        } else {
+          // If no model in global settings, set to gpt-3.5-turbo
+          console.log('No model in global settings, setting to gpt-3.5-turbo');
+          setSelectedModel('gpt-3.5-turbo');
+          localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
         }
       } catch (error) {
         console.error('Error reading global settings:', error);
+        // Fallback to gpt-3.5-turbo on error
+        console.log('Error reading settings, falling back to gpt-3.5-turbo');
+        setSelectedModel('gpt-3.5-turbo');
+        localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
       }
     };
     
@@ -179,21 +220,56 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     
     // Listen for storage changes to global settings
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'smashingapps_globalSettings' && e.newValue) {
+      console.log('Storage event detected:', e.key);
+      
+      // Check for changes to global settings
+      if (e.key === 'smashingapps-global-settings' && e.newValue) {
         try {
           const globalSettings = JSON.parse(e.newValue);
+          console.log('Global settings changed:', globalSettings);
+          
           if (globalSettings.defaultModel) {
+            console.log('Setting model from updated global settings:', globalSettings.defaultModel);
             setSelectedModel(globalSettings.defaultModel);
+            localStorage.setItem('smashingapps_activeModel', globalSettings.defaultModel);
           }
         } catch (error) {
           console.error('Error updating settings from storage event:', error);
         }
       }
+      
+      // Also check for direct changes to the app-specific model setting
+      if (e.key === 'smashingapps_activeModel' && e.newValue) {
+        console.log('App-specific model changed:', e.newValue);
+        
+        console.log('App-specific model changed, updating to:', e.newValue);
+        setSelectedModel(e.newValue);
+      }
     };
     
     window.addEventListener('storage', handleStorageChange);
+    
+    // Set up an interval to periodically sync the model setting with global settings
+    const intervalId = setInterval(() => {
+      try {
+        const globalSettings = getGlobalSettings();
+        if (globalSettings && globalSettings.defaultModel) {
+          const currentModel = localStorage.getItem('smashingapps_activeModel');
+          // Only update if the model has changed
+          if (currentModel !== globalSettings.defaultModel) {
+            console.log('Periodic check: Syncing model with global settings:', globalSettings.defaultModel);
+            setSelectedModel(globalSettings.defaultModel);
+            localStorage.setItem('smashingapps_activeModel', globalSettings.defaultModel);
+          }
+        }
+      } catch (error) {
+        console.error('Error in periodic model check:', error);
+      }
+    }, 30000); // Check every 30 seconds
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
     };
   }, []);
 

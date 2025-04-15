@@ -80,15 +80,8 @@ export function getGlobalSettings(): GlobalSettings {
       
       const parsedSettings = JSON.parse(storedSettings);
       
-      // Validate that the model is set to gpt-3.5-turbo
-      if (parsedSettings.defaultModel !== 'gpt-3.5-turbo') {
-        console.warn('[GlobalSettingsService] Model is not gpt-3.5-turbo, fixing...');
-        parsedSettings.defaultModel = 'gpt-3.5-turbo';
-        
-        // Save the fixed settings back to localStorage
-        localStorage.setItem(GLOBAL_SETTINGS_KEY, JSON.stringify(parsedSettings));
-        console.log('[GlobalSettingsService] Fixed settings saved to localStorage');
-      }
+      // Log the model being used
+      console.log('[GlobalSettingsService] Using model from localStorage:', parsedSettings.defaultModel);
       
       return parsedSettings;
     }
@@ -121,10 +114,9 @@ export function updateGlobalSettings(newSettings: Partial<GlobalSettings>): Glob
       ...newSettings
     };
     
-    // Ensure the model is always gpt-3.5-turbo
-    if (newSettings.defaultModel && newSettings.defaultModel !== 'gpt-3.5-turbo') {
-      console.warn('[GlobalSettingsService] Attempted to set model to something other than gpt-3.5-turbo, overriding');
-      updatedSettings.defaultModel = 'gpt-3.5-turbo';
+    // Log the model being updated
+    if (newSettings.defaultModel) {
+      console.log('[GlobalSettingsService] Updating model to:', newSettings.defaultModel);
     }
     
     // Log the update
@@ -160,11 +152,8 @@ export function initGlobalSettingsService(): void {
   const settings = getGlobalSettings();
   console.log('[GlobalSettingsService] Current settings:', settings);
   
-  // Always ensure the model is set to gpt-3.5-turbo
-  if (settings.defaultModel !== 'gpt-3.5-turbo') {
-    console.warn('[GlobalSettingsService] Model is not gpt-3.5-turbo during initialization, fixing...');
-    updateGlobalSettings({ defaultModel: 'gpt-3.5-turbo' });
-  }
+  // Log the current model
+  console.log('[GlobalSettingsService] Current model during initialization:', settings.defaultModel);
   
   // If no settings exist, save default settings
   if (!localStorage.getItem(GLOBAL_SETTINGS_KEY)) {
@@ -173,8 +162,8 @@ export function initGlobalSettingsService(): void {
   }
   
   // Also set the app-specific model setting for direct access
-  localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
-  console.log('[GlobalSettingsService] Set app-specific model to gpt-3.5-turbo');
+  localStorage.setItem('smashingapps_activeModel', settings.defaultModel);
+  console.log('[GlobalSettingsService] Set app-specific model to', settings.defaultModel);
   
   console.log('[GlobalSettingsService] Initialization complete');
 }

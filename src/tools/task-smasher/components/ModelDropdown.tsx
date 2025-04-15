@@ -78,8 +78,8 @@ const ModelDropdown: React.FC<ModelDropdownProps> = ({
               <div className="flex items-center gap-2 text-sm">
                 <Star className="w-4 h-4 text-indigo-500" />
                 <span className="text-gray-600">
-                  Active Provider: {activeProvider.charAt(0).toUpperCase() + activeProvider.slice(1)} 
-                  {selectedModel && ` (${selectedModel.includes('/') ? selectedModel.split('/')[1] : selectedModel})`}
+                  Active Provider: {activeProvider.charAt(0).toUpperCase() + activeProvider.slice(1)}
+                  {selectedModel && ` (${selectedModel.startsWith('gpt-') ? selectedModel : selectedModel.includes('/') ? selectedModel.split('/')[1] : selectedModel})`}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">

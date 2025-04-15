@@ -23,14 +23,9 @@ export function useGlobalSettings() {
     const currentSettings = getGlobalSettings();
     console.log('useGlobalSettings: Initial settings loaded', currentSettings);
     
-    // Ensure the default model is set to gpt-3.5-turbo
-    if (currentSettings.defaultModel !== 'gpt-3.5-turbo') {
-      console.log('useGlobalSettings: Fixing model persistence - setting to gpt-3.5-turbo');
-      const updatedSettings = updateGlobalSettings({ defaultModel: 'gpt-3.5-turbo' });
-      setSettings(updatedSettings);
-    } else {
-      setSettings(currentSettings);
-    }
+    // Use the current settings
+    console.log('useGlobalSettings: Using current settings with model:', currentSettings.defaultModel);
+    setSettings(currentSettings);
   }, []);
 
   // Listen for global settings changes
@@ -58,15 +53,17 @@ export function useGlobalSettings() {
     const updatedSettings = updateGlobalSettings(newSettings);
     setSettings(updatedSettings);
     
-    // Validate that model setting is persisted if it was updated
-    if (newSettings.defaultModel === 'gpt-3.5-turbo') {
+    // Log the updated settings
+    if (newSettings.defaultModel) {
+      console.log('useGlobalSettings: Updated model to:', newSettings.defaultModel);
+      
       // Double-check localStorage directly to ensure it was saved
       const storedSettings = localStorage.getItem('smashingapps-global-settings');
       if (storedSettings) {
         const parsedSettings = JSON.parse(storedSettings);
-        if (parsedSettings.defaultModel !== 'gpt-3.5-turbo') {
+        if (parsedSettings.defaultModel !== newSettings.defaultModel) {
           console.warn('useGlobalSettings: Model setting not persisted correctly, fixing...');
-          const fixedSettings = updateGlobalSettings({ defaultModel: 'gpt-3.5-turbo' });
+          const fixedSettings = updateGlobalSettings({ defaultModel: newSettings.defaultModel });
           setSettings(fixedSettings);
           return fixedSettings;
         }

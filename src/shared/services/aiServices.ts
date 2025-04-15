@@ -36,7 +36,32 @@ export const getServiceByProvider = (provider: string) => {
 
 // Export a function to get a service for a specific model
 export const getServiceForModel = (modelId: string) => {
-  return aiServiceRegistry.getServiceForModel(modelId);
+  const service = aiServiceRegistry.getServiceForModel(modelId);
+  if (!service) return null;
+  
+  // Get the current app ID from localStorage or URL
+  let appId = 'unknown-app';
+  
+  // First check localStorage
+  if (localStorage.getItem('article_wizard_state')) {
+    appId = 'article-smasher';
+  } else if (localStorage.getItem('task_list_state')) {
+    appId = 'task-smasher';
+  } else {
+    // Then check URL path
+    const path = window.location.pathname;
+    if (path.includes('/article-smasher') || path.includes('/tools/article-smasher')) {
+      appId = 'article-smasher';
+    } else if (path.includes('/task-smasher') || path.includes('/tools/task-smasher')) {
+      appId = 'task-smasher';
+    }
+  }
+  
+  // Import wrapAIService dynamically to avoid circular dependencies
+  const { wrapAIService } = require('./aiServiceWrapper');
+  
+  // Return a wrapped service with usage tracking
+  return wrapAIService(service, appId);
 };
 
 // Export a function to get all available models
