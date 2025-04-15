@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import { 
   Server, 
@@ -16,11 +16,21 @@ import Button from '../../shared/components/Button/Button';
 import { AIProvider } from '../../shared/types/aiProviders';
 
 const ProviderManagement: React.FC = () => {
-  const { providers, updateProviderConfig, setApiKey } = useAdmin();
+  const { providers, updateProviderConfig, setApiKey, globalSettings } = useAdmin();
   const [editingProvider, setEditingProvider] = useState<AIProvider | null>(null);
   const [apiKeys, setApiKeys] = useState<Record<AIProvider, string>>({} as Record<AIProvider, string>);
   const [expandedProvider, setExpandedProvider] = useState<AIProvider | null>(null);
   const [testResults, setTestResults] = useState<Record<AIProvider, { success: boolean; message: string } | null>>({} as Record<AIProvider, { success: boolean; message: string } | null>);
+
+  // Initialize API keys from global settings
+  useEffect(() => {
+    if (globalSettings?.aiProvider?.apiKey) {
+      setApiKeys(prev => ({
+        ...prev,
+        [globalSettings.aiProvider.provider]: globalSettings.aiProvider.apiKey
+      }));
+    }
+  }, [globalSettings]);
 
   // Handle API key change
   const handleApiKeyChange = (provider: AIProvider, value: string) => {

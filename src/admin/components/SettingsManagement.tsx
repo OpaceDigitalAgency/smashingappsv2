@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import {
-  Settings, 
-  Save, 
-  RefreshCw, 
-  Check, 
-  AlertCircle, 
-  ChevronDown, 
-  ChevronUp, 
-  Globe, 
+  Settings,
+  Save,
+  RefreshCw,
+  Check,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Globe,
   Layers,
   RefreshCcw
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider } from '../../shared/types/aiProviders';
+import { aiServiceRegistry } from '../../shared/services/aiServices';
 
 const SettingsManagement: React.FC = () => {
   const {
@@ -36,12 +37,21 @@ const SettingsManagement: React.FC = () => {
   };
   
   // Handle global settings change
-  const handleGlobalSettingsChange = (field: keyof typeof globalSettings, value: any) => {
-    updateGlobalSettings({ [field]: value });
-    
-    // If provider changed, refresh the models list
-    if (field === 'aiProvider' && value.provider !== globalSettings.aiProvider.provider) {
-      refreshProviderModels();
+  const handleGlobalSettingsChange = (field: string, value: any) => {
+    if (field === 'aiProvider') {
+      updateGlobalSettings({
+        aiProvider: {
+          ...globalSettings.aiProvider,
+          ...value
+        }
+      });
+      
+      // If provider changed, refresh the models list
+      if (value.provider !== globalSettings.aiProvider.provider) {
+        refreshProviderModels();
+      }
+    } else {
+      updateGlobalSettings({ [field]: value });
     }
   };
   
@@ -55,6 +65,15 @@ const SettingsManagement: React.FC = () => {
     try {
       // Update global settings
       updateGlobalSettings(globalSettings);
+      
+      // If API key is set, also update it through the service to ensure proper synchronization
+      if (globalSettings.aiProvider.apiKey) {
+        const { provider, apiKey } = globalSettings.aiProvider;
+        const service = aiServiceRegistry.getService(provider);
+        if (service) {
+          service.setApiKey(apiKey);
+        }
+      }
       
       // Update app-specific settings
       Object.entries(appSettings).forEach(([appId, settings]) => {
@@ -150,6 +169,21 @@ const SettingsManagement: React.FC = () => {
           {expandedSection === 'global' && (
             <div className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* API Key input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={globalSettings.aiProvider.apiKey || ''}
+                    onChange={(e) => handleGlobalSettingsChange('aiProvider', {
+                      apiKey: e.target.value
+                    })}
+                    placeholder="Enter your API key"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Default Provider

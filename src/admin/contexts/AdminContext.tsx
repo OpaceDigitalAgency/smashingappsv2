@@ -456,6 +456,16 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       
       // Update the provider config
       updateProviderConfig(provider, { enabled: true });
+      
+      // Update global settings to ensure synchronization
+      if (provider === globalSettings.aiProvider.provider) {
+        updateGlobalSettingsContext({
+          aiProvider: {
+            ...globalSettings.aiProvider,
+            apiKey: apiKey
+          }
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error(`Failed to set API key for ${provider}`));
     }
