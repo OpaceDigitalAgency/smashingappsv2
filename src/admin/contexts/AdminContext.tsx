@@ -110,9 +110,11 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
 
   // Initialize providers on mount
   useEffect(() => {
+    console.log('AdminContext: Initializing providers');
     const initializeProviders = () => {
       setIsLoading(true);
       try {
+        console.log('AdminContext: Getting registered services');
         // Get all registered services
         const services = aiServiceRegistry.getAllServices();
         const providerConfigs: Record<AIProvider, ProviderConfig> = {} as Record<AIProvider, ProviderConfig>;
@@ -133,10 +135,13 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
           };
         });
         
+        console.log('AdminContext: Setting providers', Object.keys(providerConfigs));
         setProviders(providerConfigs);
       } catch (err) {
+        console.error('AdminContext: Error initializing providers', err);
         setError(err instanceof Error ? err : new Error('Failed to initialize providers'));
       } finally {
+        console.log('AdminContext: Provider initialization complete');
         setIsLoading(false);
       }
     };
@@ -146,40 +151,59 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   
   // Function to refresh provider models from APIs
   const refreshProviderModels = async (): Promise<void> => {
+    console.log('AdminContext: Starting refreshProviderModels');
     setIsLoading(true);
     try {
       // Get all registered services
+      console.log('AdminContext: Getting all services for refreshProviderModels');
       const services = aiServiceRegistry.getAllServices();
+      console.log('AdminContext: Found services:', services.map(s => s.provider));
       const updatedProviderConfigs = { ...providers };
       
       // Force refresh models for each service
       for (const service of services) {
-        if (service.isConfigured()) {
+        try {
+          // Get the provider
+          const provider = service.provider;
+          
           // For services that have implemented dynamic model fetching,
           // this will trigger a fresh API call to get the latest models
-          if (typeof (service as any).fetchModelsFromAPI === 'function') {
-            await (service as any).fetchModelsFromAPI();
+          if (service.isConfigured() && typeof (service as any).fetchModelsFromAPI === 'function') {
+            try {
+              await (service as any).fetchModelsFromAPI();
+              console.log(`Successfully fetched models for ${provider}`);
+            } catch (fetchError) {
+              console.warn(`Error fetching models for ${provider}:`, fetchError);
+              // Continue with other services even if one fails
+            }
+          } else if (!service.isConfigured()) {
+            console.log(`Service ${provider} is not configured, using default models`);
           }
           
-          // Get the updated models
+          // Get the models (will use defaults if fetch failed)
           const updatedModels = service.getModels();
-          const provider = service.provider;
           
           // Update the provider config
           updatedProviderConfigs[provider] = {
             ...updatedProviderConfigs[provider],
             models: updatedModels,
           };
+        } catch (serviceError) {
+          console.error(`Error processing service:`, serviceError);
+          // Continue with other services even if one fails
         }
       }
       
       // Update the providers state
       setProviders(updatedProviderConfigs);
       
+      console.log('AdminContext: Provider models refresh completed successfully');
       return Promise.resolve();
     } catch (err) {
+      console.error('AdminContext: Failed to refresh provider models:', err);
       setError(err instanceof Error ? err : new Error('Failed to refresh provider models'));
-      return Promise.reject(err);
+      // Don't reject the promise, as we want the admin page to load even if model fetching fails
+      return Promise.resolve();
     } finally {
       setIsLoading(false);
     }
@@ -187,9 +211,11 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
 
   // Initialize prompts and settings on mount
   useEffect(() => {
+    console.log('AdminContext: Initializing prompts and settings');
     const initializePromptsAndSettings = () => {
       setIsLoading(true);
       try {
+        console.log('AdminContext: Loading prompts and settings');
         // Load prompts and settings from Article Smasher V2
         const loadedPrompts = loadPrompts();
         const loadedSettings = loadSettings();
@@ -207,9 +233,12 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
           defaultTemperature: loadedSettings.defaultTemperature,
           defaultMaxTokens: loadedSettings.defaultMaxTokens,
         }));
+        console.log('AdminContext: Prompts and settings loaded successfully');
       } catch (err) {
+        console.error('AdminContext: Error loading prompts and settings', err);
         setError(err instanceof Error ? err : new Error('Failed to initialize prompts and settings'));
       } finally {
+        console.log('AdminContext: Prompts and settings initialization complete');
         setIsLoading(false);
       }
     };

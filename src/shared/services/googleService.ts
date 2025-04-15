@@ -76,8 +76,19 @@ class GoogleServiceImpl implements AIService {
     // Try to load cached models from localStorage
     this.loadCachedModels();
     
-    // Fetch models in the background
-    this.fetchModelsFromAPI();
+    // Fetch models in the background, but only if we have an API key
+    if (this.apiKey) {
+      this.fetchModelsFromAPI().catch(err => {
+        console.warn('Failed to fetch models during initialization:', err);
+        // Ensure we have at least the default models
+        if (!this.cachedModels) {
+          this.cachedModels = DEFAULT_GOOGLE_MODELS;
+        }
+      });
+    } else {
+      console.log('No Google API key available, using default models');
+      this.cachedModels = DEFAULT_GOOGLE_MODELS;
+    }
   }
   
   /**
@@ -361,7 +372,8 @@ class GoogleServiceImpl implements AIService {
     // Skip if no API key is available
     if (!this.apiKey) {
       console.log('No Google API key available, skipping model fetch');
-      return;
+      this.cachedModels = DEFAULT_GOOGLE_MODELS;
+      return Promise.resolve();
     }
     
     try {

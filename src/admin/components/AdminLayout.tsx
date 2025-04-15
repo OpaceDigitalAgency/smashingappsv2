@@ -17,9 +17,25 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  const [error, setError] = React.useState<Error | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeSection, setActiveSection } = useAdmin();
+  
+  // Wrap the useAdmin hook in a try-catch to prevent uncaught exceptions
+  let adminContext;
+  try {
+    adminContext = useAdmin();
+    console.log('AdminLayout: Successfully loaded admin context');
+  } catch (err) {
+    console.error('AdminLayout: Error loading admin context:', err);
+    setError(err instanceof Error ? err : new Error('Failed to load admin context'));
+    adminContext = {
+      activeSection: 'dashboard',
+      setActiveSection: () => console.log('Fallback setActiveSection called')
+    };
+  }
+  
+  const { activeSection, setActiveSection } = adminContext;
 
   // Navigation items with correct paths
   const navItems = [
@@ -49,8 +65,32 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     window.location.href = path;
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
+  // If there's an error, show a fallback UI
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Admin Interface Error</h1>
+          <p className="mb-4">There was an error loading the admin interface. This is likely due to missing API keys or configuration issues.</p>
+          <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
+            <pre className="text-sm">{error.message}</pre>
+          </div>
+          <a
+            href="/"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Wrap the entire component in a try-catch to prevent uncaught exceptions
+  try {
+    console.log('AdminLayout: Rendering layout');
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
@@ -100,8 +140,28 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+      </div>
+    );
+  } catch (err) {
+    console.error('AdminLayout: Error rendering layout:', err);
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Rendering Error</h1>
+          <p className="mb-4">There was an error rendering the admin interface.</p>
+          <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
+            <pre className="text-sm">{err instanceof Error ? err.message : 'Unknown error'}</pre>
+          </div>
+          <a
+            href="/"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default AdminLayout;

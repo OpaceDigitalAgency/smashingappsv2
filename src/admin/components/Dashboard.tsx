@@ -12,12 +12,37 @@ import {
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { 
-    providers, 
-    prompts, 
-    usageStats, 
-    globalSettings 
-  } = useAdmin();
+  const [error, setError] = React.useState<Error | null>(null);
+  
+  // Wrap the useAdmin hook in a try-catch to prevent uncaught exceptions
+  let adminData;
+  try {
+    console.log('Dashboard: Attempting to use admin context');
+    adminData = useAdmin();
+    console.log('Dashboard: Successfully loaded admin context');
+  } catch (err) {
+    console.error('Dashboard: Error loading admin context:', err);
+    setError(err instanceof Error ? err : new Error('Failed to load admin context'));
+    // Provide fallback data
+    adminData = {
+      providers: {},
+      prompts: [],
+      usageStats: { totalRequests: 0, costEstimate: 0 },
+      globalSettings: {
+        defaultProvider: 'unknown',
+        defaultModel: 'unknown',
+        defaultTemperature: 0.7,
+        defaultMaxTokens: 1000
+      }
+    };
+  }
+  
+  const {
+    providers,
+    prompts,
+    usageStats,
+    globalSettings
+  } = adminData;
 
   // Count enabled providers
   const enabledProviders = Object.values(providers).filter(p => p.enabled).length;
@@ -55,8 +80,34 @@ const Dashboard: React.FC = () => {
     },
   ];
 
-  return (
-    <div className="p-6">
+  // If there's an error, show a fallback UI
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-red-600">Dashboard Error</h1>
+          <p className="text-gray-600">
+            There was an error loading the dashboard data. This is likely due to missing API keys or configuration issues.
+          </p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
+          <pre className="text-sm">{error.message}</pre>
+        </div>
+        <a
+          href="/"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+        >
+          Return to Home
+        </a>
+      </div>
+    );
+  }
+
+  // Wrap the entire component in a try-catch to prevent uncaught exceptions
+  try {
+    console.log('Dashboard: Rendering dashboard');
+    return (
+      <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
         <p className="text-gray-600">
@@ -171,8 +222,30 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+      </div>
+    );
+  } catch (err) {
+    console.error('Dashboard: Error rendering dashboard:', err);
+    return (
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-red-600">Rendering Error</h1>
+          <p className="text-gray-600">
+            There was an error rendering the dashboard.
+          </p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
+          <pre className="text-sm">{err instanceof Error ? err.message : 'Unknown error'}</pre>
+        </div>
+        <a
+          href="/"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+        >
+          Return to Home
+        </a>
+      </div>
+    );
+  }
 };
 
 export default Dashboard;

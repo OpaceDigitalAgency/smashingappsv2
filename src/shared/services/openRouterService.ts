@@ -100,6 +100,7 @@ class OpenRouterServiceImpl implements AIService {
   constructor() {
     // Try to load API key from localStorage
     this.apiKey = localStorage.getItem(this.apiKeyStorageKey);
+    console.log(`OpenRouter service initialized, API key ${this.apiKey ? 'present' : 'not present'}`);
   }
   
   /**
