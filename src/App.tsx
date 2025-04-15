@@ -2,9 +2,7 @@ import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import SEO from './components/SEO';
-import GlobalSettingsProvider from './shared/components/GlobalSettingsProvider';
-import { useGlobalSettings } from './shared/contexts/GlobalSettingsContext';
-import { GlobalSettingsTest } from './shared/components/GlobalSettingsProvider/GlobalSettingsTest';
+import { GlobalSettingsProvider, useGlobalSettings, GlobalSettingsTest } from './shared/contexts/GlobalSettings';
 import StructuredData from './components/StructuredData';
 
 // Import main site components
