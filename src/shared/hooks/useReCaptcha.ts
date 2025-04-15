@@ -27,11 +27,10 @@ export function useReCaptcha(siteKey?: string) {
 
   // Initialize reCAPTCHA when the component mounts
   useEffect(() => {
-    // Skip if no site key is provided
+    // Skip if no site key is provided, but don't set an error
+    // This allows the application to work without reCAPTCHA
     if (!recaptchaSiteKey) {
-      const errorMsg = 'No reCAPTCHA site key provided. Please add VITE_RECAPTCHA_SITE_KEY to your .env file.';
-      console.warn(errorMsg);
-      setError(errorMsg);
+      console.log('No reCAPTCHA site key provided. Continuing without reCAPTCHA verification.');
       return;
     }
 
@@ -54,9 +53,9 @@ export function useReCaptcha(siteKey?: string) {
    * @returns A promise that resolves to the token, or null if reCAPTCHA is not available
    */
   const getReCaptchaToken = useCallback(async (action: string): Promise<string | null> => {
-    // Skip if no site key is provided
+    // Skip if no site key is provided, but don't show a warning
+    // This allows the application to work without reCAPTCHA
     if (!recaptchaSiteKey) {
-      console.warn('No reCAPTCHA site key provided');
       return null;
     }
 

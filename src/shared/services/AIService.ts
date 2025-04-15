@@ -158,11 +158,16 @@ class LegacyAIService {
     rateLimit: RateLimitInfo;
   }> {
     try {
-      // FORCE MODEL OVERRIDE: Always use gpt-3.5-turbo regardless of requested model
+      // Get the model from global settings if available, otherwise use the requested model
+      const globalSettingsModel = localStorage.getItem('smashingapps_activeModel');
       const originalModel = request.model;
-      request.model = 'gpt-3.5-turbo';
       
-      console.log(`[LEGACY SERVICE] Forcing model to ${request.model} instead of ${originalModel}`);
+      if (globalSettingsModel) {
+        request.model = globalSettingsModel;
+        console.log(`[LEGACY SERVICE] Using model from global settings: ${request.model} (original: ${originalModel})`);
+      } else {
+        console.log(`[LEGACY SERVICE] Using requested model: ${request.model}`);
+      }
       
       // Prepare headers
       const headers: Record<string, string> = {
@@ -175,7 +180,7 @@ class LegacyAIService {
       }
       
       // Add model override header to ensure proxy respects our model choice
-      headers['X-Force-Model'] = 'gpt-3.5-turbo';
+      headers['X-Force-Model'] = request.model;
       
       // Use the Netlify function proxy instead of direct API
       const response = await fetch('/.netlify/functions/openai-proxy', {
@@ -222,8 +227,12 @@ class LegacyAIService {
    * Get a simple text completion from the AI service
    */
   async getCompletion(prompt: string, model = 'gpt-3.5-turbo'): Promise<string> {
-    // Always use gpt-3.5-turbo regardless of what's passed in
-    model = 'gpt-3.5-turbo';
+    // Get the model from global settings if available, otherwise use the requested model
+    const globalSettingsModel = localStorage.getItem('smashingapps_activeModel');
+    if (globalSettingsModel) {
+      model = globalSettingsModel;
+      console.log(`[LEGACY SERVICE] Using model from global settings for getCompletion: ${model}`);
+    }
     try {
       const { data } = await this.createChatCompletion({
         model,

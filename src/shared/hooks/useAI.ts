@@ -42,9 +42,10 @@ export function useAI(): UseAIReturn {
     // Store the original requested model for tracking purposes
     const requestedModel = options.model;
     
-    // FORCE MODEL OVERRIDE: Always use gpt-3.5-turbo regardless of requested model
-    const forcedModel = 'gpt-3.5-turbo';
-    console.log(`[MODEL OVERRIDE] Forcing model to ${forcedModel} instead of ${requestedModel}`);
+    // Get the model from global settings if available, otherwise use the requested model
+    const globalSettingsModel = localStorage.getItem('smashingapps_activeModel');
+    const modelToUse = globalSettingsModel || requestedModel;
+    console.log(`[MODEL SELECTION] Using model ${modelToUse} (requested: ${requestedModel}, global: ${globalSettingsModel || 'not set'})`);
     
     try {
       // Get reCAPTCHA token
@@ -52,10 +53,10 @@ export function useAI(): UseAIReturn {
       
       // Get the appropriate service for the requested model first, then fallback to forced model
       // This ensures proper app tracking while still using the forced model
-      let service = getServiceForModel(requestedModel) || getServiceForModel(forcedModel);
+      let service = getServiceForModel(requestedModel) || getServiceForModel(modelToUse);
       
       if (!service) {
-        throw new Error(`No service found for model: ${forcedModel}`);
+        throw new Error(`No service found for model: ${modelToUse}`);
       }
       
       // Check if the service is configured
@@ -68,7 +69,7 @@ export function useAI(): UseAIReturn {
       
       // Execute the AI request using the enhanced service with forced model
       const result = await service.createChatCompletion({
-        model: forcedModel, // Force the model here
+        model: modelToUse, // Use the selected model
         messages: [
           { role: 'system', content: options.systemPrompt },
           { role: 'user', content: options.userPrompt }
@@ -94,7 +95,7 @@ export function useAI(): UseAIReturn {
         
         // Execute the AI request using the legacy service
         const result = await LegacyAIService.createChatCompletion({
-          model: forcedModel, // Force the model in fallback path too
+          model: modelToUse, // Use the selected model in fallback path too
           messages: [
             { role: 'system', content: options.systemPrompt },
             { role: 'user', content: options.userPrompt }

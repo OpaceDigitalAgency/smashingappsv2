@@ -25,7 +25,8 @@ export const debugUsageTracking = (): void => {
     console.log('[DEBUG] App identification flags:', appFlags);
     
     // Log model override status
-    console.log('[DEBUG] Model override status: ACTIVE - All requests forced to gpt-3.5-turbo');
+    const globalSettingsModel = localStorage.getItem('smashingapps_activeModel');
+    console.log('[DEBUG] Model override status: INACTIVE - Using model from global settings:', globalSettingsModel || 'default');
     
     // Check current URL and path
     console.log('[DEBUG] Current URL:', window.location.href);
@@ -265,13 +266,35 @@ export const forceRefreshUsageData = (): void => {
           usageData.costByApp[entry.app] = (usageData.costByApp[entry.app] || 0) + entry.cost;
         });
         
+        // Ensure both Article Smasher and Task Smasher exist in the app stats
+        // This is critical for ensuring both apps show up in the usage tables
+        if (!usageData.requestsByApp['article-smasher']) {
+          usageData.requestsByApp['article-smasher'] = 0;
+          usageData.tokensByApp['article-smasher'] = 0;
+          usageData.inputTokensByApp['article-smasher'] = 0;
+          usageData.outputTokensByApp['article-smasher'] = 0;
+          usageData.costByApp['article-smasher'] = 0;
+        }
+        
+        if (!usageData.requestsByApp['task-smasher']) {
+          usageData.requestsByApp['task-smasher'] = 0;
+          usageData.tokensByApp['task-smasher'] = 0;
+          usageData.inputTokensByApp['task-smasher'] = 0;
+          usageData.outputTokensByApp['task-smasher'] = 0;
+          usageData.costByApp['task-smasher'] = 0;
+        }
+        
         // Save the recalculated data
         localStorage.setItem('smashingapps_usage_data', JSON.stringify(usageData));
       }
       
       // Dispatch events to refresh the UI
+      // First dispatch usage-data-updated to update the summary metrics
       window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
+      
+      // Then dispatch refresh-usage-data to update the detailed tables
       window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+      
       console.log('[DEBUG] Usage data refresh events dispatched with recalculated app stats');
     }
   } catch (error) {
@@ -331,10 +354,15 @@ export const forceArticleSmasherIdentification = (): boolean => {
  */
 export const testModelOverride = (): void => {
   console.log('[DEBUG] Testing model override functionality...');
-  console.log('[DEBUG] Model override is ACTIVE - All requests will use gpt-3.5-turbo regardless of selected model');
-  console.log('[DEBUG] Override locations:');
-  console.log('[DEBUG] 1. useAI.ts - Forces model in execute() function');
-  console.log('[DEBUG] 2. AIService.ts - Forces model in createChatCompletion() method');
-  console.log('[DEBUG] 3. AIService.ts - Forces model in getCompletion() method');
+  
+  // Get the current model from global settings
+  const globalSettingsModel = localStorage.getItem('smashingapps_activeModel');
+  
+  console.log('[DEBUG] Model override is INACTIVE - Using model from global settings');
+  console.log('[DEBUG] Current model from global settings:', globalSettingsModel || 'default');
+  console.log('[DEBUG] Model selection locations:');
+  console.log('[DEBUG] 1. useAI.ts - Uses model from global settings or requested model');
+  console.log('[DEBUG] 2. AIService.ts - Uses model from global settings or requested model');
+  console.log('[DEBUG] 3. AIService.ts - Uses model from global settings or requested model');
   console.log('[DEBUG] Model override test complete');
 };
