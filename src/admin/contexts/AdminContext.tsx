@@ -16,8 +16,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { aiServiceRegistry } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
 import { getUsageData, getFilteredUsageData, UsageData } from '../../shared/services/usageTrackingService';
-import { useGlobalSettings } from '../../shared/contexts/GlobalSettingsContext';
-import { GlobalSettings, DEFAULT_SETTINGS } from '../../shared/types/globalSettings';
+import { useGlobalSettings } from '../../shared/contexts/GlobalSettings/context';
+import { GlobalSettings, DEFAULT_SETTINGS } from '../../shared/contexts/GlobalSettings/types';
 import { PromptTemplate } from '../../tools/article-smasher/src/types';
 import {
   TaskSmasherPromptTemplate,
@@ -79,7 +79,15 @@ const AdminContext = createContext<AdminContextType | null>(null);
 // Provider component
 export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   // Get global settings from context
-  const { settings: globalSettings, updateSettings: updateGlobalSettingsContext } = useGlobalSettings();
+  // Get global settings from context
+  const { settings: globalSettings, updateSettings: updateGlobalSettingsContext, error: globalSettingsError } = useGlobalSettings();
+
+  // Handle global settings error
+  useEffect(() => {
+    if (globalSettingsError) {
+      setError(globalSettingsError);
+    }
+  }, [globalSettingsError]);
   
   // Provider management state
   const [providers, setProviders] = useState<Record<AIProvider, ProviderConfig>>({} as Record<AIProvider, ProviderConfig>);

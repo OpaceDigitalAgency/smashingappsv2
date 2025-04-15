@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { GlobalSettingsProvider } from '../shared/contexts/GlobalSettings/context';
 import AdminLayout from './components/AdminLayout';
 import Dashboard from './components/Dashboard';
 import ProviderManagement from './components/ProviderManagement';
@@ -83,18 +84,20 @@ const AdminApp: React.FC = () => {
   
   return (
     <ErrorBoundary>
-      <AdminProvider>
-        <AdminLayout>
-          <Routes>
+      <GlobalSettingsProvider>
+        <AdminProvider>
+          <AdminLayout>
+            <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="providers" element={<ProviderManagement />} />
             <Route path="prompts" element={<PromptManagement />} />
             <Route path="settings" element={<SettingsManagement />} />
             <Route path="usage" element={<UsageMonitoring />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AdminLayout>
-      </AdminProvider>
+            </Routes>
+          </AdminLayout>
+        </AdminProvider>
+      </GlobalSettingsProvider>
     </ErrorBoundary>
   );
 };
