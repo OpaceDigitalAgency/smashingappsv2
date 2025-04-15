@@ -119,20 +119,50 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
         const services = aiServiceRegistry.getAllServices();
         const providerConfigs: Record<AIProvider, ProviderConfig> = {} as Record<AIProvider, ProviderConfig>;
         
-        // Create provider configs
+        // Create provider configs with defensive programming
         services.forEach(service => {
-          const provider = service.provider;
-          const models = service.getModels();
-          const defaultModel = service.getDefaultModel().id;
-          
-          providerConfigs[provider] = {
-            name: provider.charAt(0).toUpperCase() + provider.slice(1), // Capitalize first letter
-            enabled: service.isConfigured(),
-            apiKeyRequired: true, // Assume all providers require API keys
-            apiKeyName: `${provider}ApiKey`,
-            defaultModel,
-            models,
-          };
+          try {
+            if (!service) {
+              console.warn('AdminContext: Encountered undefined service, skipping');
+              return;
+            }
+            
+            const provider = service.provider;
+            if (!provider) {
+              console.warn('AdminContext: Service missing provider property, skipping');
+              return;
+            }
+            
+            // Safely get models with fallbacks
+            let models: AIModel[] = [];
+            try {
+              models = service.getModels() || [];
+            } catch (modelError) {
+              console.warn(`AdminContext: Error getting models for ${provider}`, modelError);
+              models = []; // Fallback to empty array
+            }
+            
+            // Safely get default model with fallback
+            let defaultModel = 'unknown';
+            try {
+              const defaultModelObj = service.getDefaultModel();
+              defaultModel = defaultModelObj && defaultModelObj.id ? defaultModelObj.id : 'unknown';
+            } catch (modelError) {
+              console.warn(`AdminContext: Error getting default model for ${provider}`, modelError);
+            }
+            
+            providerConfigs[provider] = {
+              name: provider.charAt(0).toUpperCase() + provider.slice(1), // Capitalize first letter
+              enabled: Boolean(service.isConfigured()),
+              apiKeyRequired: true, // Assume all providers require API keys
+              apiKeyName: `${provider}ApiKey`,
+              defaultModel,
+              models,
+            };
+          } catch (serviceError) {
+            console.error('AdminContext: Error processing service', serviceError);
+            // Continue with other services
+          }
         });
         
         console.log('AdminContext: Setting providers', Object.keys(providerConfigs));
@@ -140,13 +170,22 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       } catch (err) {
         console.error('AdminContext: Error initializing providers', err);
         setError(err instanceof Error ? err : new Error('Failed to initialize providers'));
+        // Set a minimal default provider config to prevent the app from crashing
+        setProviders({} as Record<AIProvider, ProviderConfig>);
       } finally {
         console.log('AdminContext: Provider initialization complete');
         setIsLoading(false);
       }
     };
     
-    initializeProviders();
+    // Wrap in try/catch to ensure the effect doesn't crash the app
+    try {
+      initializeProviders();
+    } catch (err) {
+      console.error('AdminContext: Critical error in provider initialization', err);
+      setError(err instanceof Error ? err : new Error('Critical error in provider initialization'));
+      setIsLoading(false);
+    }
   }, []);
   
   // Function to refresh provider models from APIs
@@ -548,7 +587,80 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
 export const useAdmin = () => {
   const context = useContext(AdminContext);
   if (!context) {
-    throw new Error('useAdmin must be used within an AdminProvider');
+    console.error('useAdmin called outside of AdminProvider - this is a programming error');
+    
+    // Instead of throwing an error, return a fallback context with default values
+    // This prevents the app from crashing when the context is missing
+    return {
+      // Provider management
+      providers: {} as Record<AIProvider, ProviderConfig>,
+      refreshProviderModels: async () => {},
+      updateProviderConfig: () => {},
+      setApiKey: () => {},
+      
+      // Prompt management - Article Smasher
+      prompts: [],
+      activePrompt: null,
+      setActivePrompt: () => {},
+      addPrompt: async () => {},
+      updatePrompt: async () => {},
+      deletePrompt: async () => {},
+      
+      // Prompt management - Task Smasher
+      taskSmasherPrompts: [],
+      activeTaskSmasherPrompt: null,
+      setActiveTaskSmasherPrompt: () => {},
+      addTaskSmasherPrompt: async () => {},
+      updateTaskSmasherPrompt: async () => {},
+      deleteTaskSmasherPrompt: async () => {},
+      
+      // Settings management
+      globalSettings: {
+        defaultProvider: 'openai' as AIProvider,
+        defaultModel: 'gpt-3.5-turbo',
+        defaultTemperature: 0.7,
+        defaultMaxTokens: 1000
+      },
+      appSettings: {
+        'task-smasher': {
+          defaultBoardLayout: 'kanban',
+          defaultUseCase: 'daily'
+        },
+        'article-smasher': {
+          defaultArticleType: 'blog',
+          enableImageGeneration: false
+        }
+      },
+      updateGlobalSettings: () => {},
+      updateAppSettings: () => {},
+      
+      // Usage monitoring
+      usageStats: {
+        totalRequests: 0,
+        costEstimate: 0,
+        totalTokens: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        requestsByProvider: {} as Record<AIProvider, number>,
+        tokensByProvider: {} as Record<AIProvider, number>,
+        costByProvider: {} as Record<AIProvider, number>,
+        inputTokensByProvider: {} as Record<AIProvider, number>,
+        outputTokensByProvider: {} as Record<AIProvider, number>,
+        requestsByApp: {} as Record<string, number>,
+        tokensByApp: {} as Record<string, number>,
+        costByApp: {} as Record<string, number>,
+        inputTokensByApp: {} as Record<string, number>,
+        outputTokensByApp: {} as Record<string, number>
+      } as UsageData,
+      timeRange: 'month' as 'day' | 'week' | 'month' | 'year',
+      setTimeRange: () => {},
+      
+      // UI state
+      activeSection: 'dashboard',
+      setActiveSection: () => {},
+      isLoading: false,
+      error: new Error('useAdmin called outside of AdminProvider')
+    };
   }
   return context;
 };

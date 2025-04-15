@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAdmin } from '../contexts/AdminContext';
-import { 
+import { AIProvider } from '../../shared/types/aiProviders';
+import {
   Server, 
   MessageSquare, 
   Settings, 
@@ -13,9 +14,10 @@ import {
 
 const Dashboard: React.FC = () => {
   const [error, setError] = React.useState<Error | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   
   // Wrap the useAdmin hook in a try-catch to prevent uncaught exceptions
-  let adminData;
+  let adminData: ReturnType<typeof useAdmin> | undefined;
   try {
     console.log('Dashboard: Attempting to use admin context');
     adminData = useAdmin();
@@ -23,29 +25,40 @@ const Dashboard: React.FC = () => {
   } catch (err) {
     console.error('Dashboard: Error loading admin context:', err);
     setError(err instanceof Error ? err : new Error('Failed to load admin context'));
-    // Provide fallback data
-    adminData = {
-      providers: {},
-      prompts: [],
-      usageStats: { totalRequests: 0, costEstimate: 0 },
-      globalSettings: {
-        defaultProvider: 'unknown',
-        defaultModel: 'unknown',
-        defaultTemperature: 0.7,
-        defaultMaxTokens: 1000
-      }
-    };
+    // The useAdmin hook now provides fallback data even when it fails
   }
   
-  const {
-    providers,
-    prompts,
-    usageStats,
-    globalSettings
-  } = adminData;
+  // Add an effect to handle any async loading or errors
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // Short timeout to ensure UI is responsive
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // If still loading, show a loading indicator
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+  
+  // Safely destructure adminData with fallbacks
+  const providers = adminData?.providers || {};
+  const prompts = adminData?.prompts || [];
+  const usageStats = adminData?.usageStats || { totalRequests: 0, costEstimate: 0 };
+  const globalSettings = adminData?.globalSettings || {
+    defaultProvider: 'unknown' as AIProvider,
+    defaultModel: 'unknown',
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 1000
+  };
 
-  // Count enabled providers
-  const enabledProviders = Object.values(providers).filter(p => p.enabled).length;
+  // Count enabled providers with type safety
+  const enabledProviders = Object.values(providers).filter((p: any) => p?.enabled).length;
   const totalProviders = Object.values(providers).length;
 
   // Stats cards data
@@ -106,6 +119,8 @@ const Dashboard: React.FC = () => {
   // Wrap the entire component in a try-catch to prevent uncaught exceptions
   try {
     console.log('Dashboard: Rendering dashboard');
+    // Use the already calculated values from above
+    
     return (
       <div className="p-6">
       <div className="mb-6">
@@ -208,12 +223,12 @@ const Dashboard: React.FC = () => {
             <div>
               <h3 className="font-medium text-gray-700 mb-2">Active Providers</h3>
               <ul className="space-y-2">
-                {Object.entries(providers).map(([key, provider]) => (
+                {Object.entries(providers || {}).map(([key, provider]: [string, any]) => (
                   <li key={key} className="flex items-center text-sm">
-                    <span className={`w-3 h-3 rounded-full mr-2 ${provider.enabled ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                    <span className="text-gray-800">{provider.name}</span>
+                    <span className={`w-3 h-3 rounded-full mr-2 ${provider?.enabled ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                    <span className="text-gray-800">{provider?.name || key}</span>
                     <span className="ml-2 text-xs text-gray-500">
-                      {provider.enabled ? 'Active' : 'Inactive'}
+                      {provider?.enabled ? 'Active' : 'Inactive'}
                     </span>
                   </li>
                 ))}
@@ -231,18 +246,26 @@ const Dashboard: React.FC = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-red-600">Rendering Error</h1>
           <p className="text-gray-600">
-            There was an error rendering the dashboard.
+            There was an error rendering the dashboard. The application will attempt to recover automatically.
           </p>
         </div>
         <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
           <pre className="text-sm">{err instanceof Error ? err.message : 'Unknown error'}</pre>
         </div>
-        <a
-          href="/"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
-        >
-          Return to Home
-        </a>
+        <div className="flex space-x-4">
+          <a
+            href="/"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+          >
+            Return to Home
+          </a>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 inline-block"
+          >
+            Reload Page
+          </button>
+        </div>
       </div>
     );
   }

@@ -2,6 +2,69 @@
 <html lang="en">
   <head>
     <script>
+      // Global error handler to catch all uncaught errors
+      window.addEventListener('error', function(event) {
+        console.error('Global error caught:', event.error);
+        
+        // Prevent the app from hanging by handling the error
+        event.preventDefault();
+        
+        // Check if the error is from the admin page
+        if (window.location.pathname.includes('/admin')) {
+          console.log('Admin page error detected, attempting recovery...');
+          
+          // Create an error notification if it doesn't exist
+          if (!document.getElementById('error-notification')) {
+            var errorDiv = document.createElement('div');
+            errorDiv.id = 'error-notification';
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '10px';
+            errorDiv.style.right = '10px';
+            errorDiv.style.backgroundColor = '#f8d7da';
+            errorDiv.style.color = '#721c24';
+            errorDiv.style.padding = '10px';
+            errorDiv.style.borderRadius = '5px';
+            errorDiv.style.zIndex = '9999';
+            errorDiv.style.maxWidth = '400px';
+            errorDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            
+            var errorMessage = document.createElement('p');
+            errorMessage.textContent = 'An error occurred. The application is attempting to recover.';
+            
+            var errorDetails = document.createElement('details');
+            var errorSummary = document.createElement('summary');
+            errorSummary.textContent = 'Error details';
+            var errorPre = document.createElement('pre');
+            errorPre.style.whiteSpace = 'pre-wrap';
+            errorPre.style.fontSize = '12px';
+            errorPre.textContent = event.error ? (event.error.stack || event.error.message) : 'Unknown error';
+            
+            errorDetails.appendChild(errorSummary);
+            errorDetails.appendChild(errorPre);
+            
+            var closeButton = document.createElement('button');
+            closeButton.textContent = '×';
+            closeButton.style.position = 'absolute';
+            closeButton.style.top = '5px';
+            closeButton.style.right = '5px';
+            closeButton.style.background = 'none';
+            closeButton.style.border = 'none';
+            closeButton.style.fontSize = '20px';
+            closeButton.style.cursor = 'pointer';
+            closeButton.style.color = '#721c24';
+            closeButton.onclick = function() {
+              document.body.removeChild(errorDiv);
+            };
+            
+            errorDiv.appendChild(closeButton);
+            errorDiv.appendChild(errorMessage);
+            errorDiv.appendChild(errorDetails);
+            
+            document.body.appendChild(errorDiv);
+          }
+        }
+      });
+      
       // Immediately hide the fallback content - aggressive approach
       (function() {
         // Create a style element with aggressive hiding
