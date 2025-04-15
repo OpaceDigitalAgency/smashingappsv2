@@ -13,33 +13,23 @@ import {
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const [error, setError] = React.useState<Error | null | unknown>(null);
+  // Call useAdmin at the top level, never inside try/catch or useEffect
+  const adminData = useAdmin();
+  const [error, setError] = React.useState<Error | null | unknown>(adminData?.error ?? null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
-  const [adminData, setAdminData] = React.useState<ReturnType<typeof useAdmin> | undefined>(undefined);
-  
-  // Use useEffect to safely call useAdmin and handle any errors
+
   React.useEffect(() => {
-    try {
-      console.log('Dashboard: Attempting to use admin context');
-      // Wrap in a function to avoid React Hook violations
-      const getAdminData = () => {
-        try {
-          return useAdmin();
-        } catch (err) {
-          console.error('Dashboard: Error in useAdmin hook:', err);
-          throw err; // Re-throw to be caught by the outer try-catch
-        }
-      };
-      
-      const data = getAdminData();
-      console.log('Dashboard: Successfully loaded admin context');
-      setAdminData(data);
-    } catch (err) {
-      console.error('Dashboard: Error loading admin context:', err);
-      setError(err instanceof Error ? err : new Error('Failed to load admin context'));
-      // The useAdmin hook provides fallback data even when it fails
+    if (adminData?.error) {
+      setError(adminData.error);
+      // Log the error object and stack trace
+      console.error("Dashboard: useAdmin returned error:", adminData.error, adminData);
+      if (adminData.error instanceof Error) {
+        console.error("Dashboard: useAdmin error stack:", adminData.error.stack || adminData.error.message);
+      } else {
+        console.error("Dashboard: useAdmin error value:", adminData.error);
+      }
     }
-  }, []);
+  }, [adminData]);
   
   // Add an effect to handle any async loading or errors
   React.useEffect(() => {
@@ -69,6 +59,33 @@ const Dashboard: React.FC = () => {
     defaultTemperature: 0.7,
     defaultMaxTokens: 1000
   };
+
+  // If useAdmin returned a fatal error, show it in the UI
+  if (adminData?.error) {
+    return (
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-red-600">Admin Context Error</h1>
+          <p className="text-gray-600">
+            There was a fatal error loading the admin context. This is likely due to a React hook violation, context misconfiguration, or a missing provider.
+          </p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
+          <pre className="text-sm">{adminData.error instanceof Error ? (adminData.error.stack || adminData.error.message) : String(adminData.error)}</pre>
+        </div>
+        <div className="bg-yellow-100 p-4 rounded mb-4 overflow-auto">
+          <h2 className="font-bold text-yellow-700 mb-2">Admin Context State</h2>
+          <pre className="text-xs text-yellow-900">{JSON.stringify(adminData, null, 2)}</pre>
+        </div>
+        <a
+          href="/"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+        >
+          Return to Home
+        </a>
+      </div>
+    );
+  }
 
   // Count enabled providers with type safety
   const enabledProviders = Object.values(providers).filter((p: any) => p?.enabled).length;
