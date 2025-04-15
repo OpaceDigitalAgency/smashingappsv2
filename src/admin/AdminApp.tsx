@@ -23,29 +23,54 @@ import { AdminProvider } from './contexts/AdminContext';
  */
 const AdminApp: React.FC = () => {
   const [error, setError] = useState<Error | null>(null);
-  
-  // Error boundary to catch any errors in the admin app
+  const [diagnostics, setDiagnostics] = useState<string[]>([]);
+
+  // Global error and unhandledrejection handlers for diagnostics
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error('Global error caught:', event.error);
-      setError(event.error);
-      // Prevent the error from propagating
+      const msg = event.error && event.error.stack
+        ? `Global error: ${event.error.stack}`
+        : `Global error: ${event.message}`;
+      setDiagnostics(d => [...d, msg]);
+      setError(event.error || new Error(event.message));
       event.preventDefault();
     };
-    
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      const msg = event.reason && event.reason.stack
+        ? `Unhandled rejection: ${event.reason.stack}`
+        : `Unhandled rejection: ${JSON.stringify(event.reason)}`;
+      setDiagnostics(d => [...d, msg]);
+      setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
+      event.preventDefault();
+    };
+
     window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
   }, []);
   
-  // If there's an error, show a fallback UI
+  // If there's an error, show a fallback UI with diagnostics
   if (error) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-        <p className="mb-4">There was an error loading the admin interface. This is likely due to missing API keys or configuration issues.</p>
+        <p className="mb-4">There was an error loading the admin interface. This may be due to missing API keys, configuration issues, or a runtime error.</p>
         <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
-          <pre className="text-sm">{error.message}</pre>
+          <pre className="text-sm">{error instanceof Error ? error.stack || error.message : String(error)}</pre>
         </div>
+        {diagnostics.length > 0 && (
+          <div className="bg-yellow-100 p-4 rounded mb-4 overflow-auto">
+            <h2 className="font-bold text-yellow-700 mb-2">Diagnostics</h2>
+            <ul className="text-xs text-yellow-900 list-disc pl-4">
+              {diagnostics.map((d, i) => (
+                <li key={i}>{d}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           onClick={() => window.location.href = '/'}
