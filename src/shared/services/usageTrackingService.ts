@@ -160,31 +160,58 @@ export const getUsageData = (): UsageData => {
 // Save usage data to local storage
 export const saveUsageData = (data: UsageData): void => {
   try {
-    // Validate the data structure before saving
+    // Validate and ensure both apps exist in the data structure
+    const apps = ['article-smasher', 'task-smasher'];
+    
+    // Initialize app stats if missing
     if (!data.requestsByApp) {
       console.warn('[DEBUG] Missing requestsByApp in data to save, initializing it');
-      data.requestsByApp = {};
+      data.requestsByApp = {
+        'article-smasher': 0,
+        'task-smasher': 0
+      };
     }
     
     if (!data.tokensByApp) {
       console.warn('[DEBUG] Missing tokensByApp in data to save, initializing it');
-      data.tokensByApp = {};
+      data.tokensByApp = {
+        'article-smasher': 0,
+        'task-smasher': 0
+      };
     }
     
     if (!data.inputTokensByApp) {
       console.warn('[DEBUG] Missing inputTokensByApp in data to save, initializing it');
-      data.inputTokensByApp = {};
+      data.inputTokensByApp = {
+        'article-smasher': 0,
+        'task-smasher': 0
+      };
     }
     
     if (!data.outputTokensByApp) {
       console.warn('[DEBUG] Missing outputTokensByApp in data to save, initializing it');
-      data.outputTokensByApp = {};
+      data.outputTokensByApp = {
+        'article-smasher': 0,
+        'task-smasher': 0
+      };
     }
     
     if (!data.costByApp) {
       console.warn('[DEBUG] Missing costByApp in data to save, initializing it');
-      data.costByApp = {};
+      data.costByApp = {
+        'article-smasher': 0,
+        'task-smasher': 0
+      };
     }
+    
+    // Ensure both apps exist in all app stats
+    apps.forEach(app => {
+      if (!data.requestsByApp[app]) data.requestsByApp[app] = 0;
+      if (!data.tokensByApp[app]) data.tokensByApp[app] = 0;
+      if (!data.inputTokensByApp[app]) data.inputTokensByApp[app] = 0;
+      if (!data.outputTokensByApp[app]) data.outputTokensByApp[app] = 0;
+      if (!data.costByApp[app]) data.costByApp[app] = 0;
+    });
     
     // Log the app usage data being saved
     console.log('[DEBUG] Saving usage data with app stats:', {
@@ -375,7 +402,17 @@ export const trackApiRequest = (
 export const getFilteredUsageData = (
   timeRange: 'day' | 'week' | 'month' | 'year'
 ): UsageData => {
+  // Get current usage data or create a new one with default values
   const usageData = getUsageData();
+  
+  // Ensure all required objects exist
+  if (!usageData.requestsByApp) usageData.requestsByApp = { 'article-smasher': 0, 'task-smasher': 0 };
+  if (!usageData.tokensByApp) usageData.tokensByApp = { 'article-smasher': 0, 'task-smasher': 0 };
+  if (!usageData.inputTokensByApp) usageData.inputTokensByApp = { 'article-smasher': 0, 'task-smasher': 0 };
+  if (!usageData.outputTokensByApp) usageData.outputTokensByApp = { 'article-smasher': 0, 'task-smasher': 0 };
+  if (!usageData.costByApp) usageData.costByApp = { 'article-smasher': 0, 'task-smasher': 0 };
+  if (!usageData.usageHistory) usageData.usageHistory = [];
+  
   const now = Date.now();
   let cutoffTime: number;
   
@@ -396,9 +433,9 @@ export const getFilteredUsageData = (
   }
   
   // Filter history by time range
-  const filteredHistory = usageData.usageHistory.filter(entry => entry.timestamp >= cutoffTime);
+  const filteredHistory = (usageData.usageHistory || []).filter(entry => entry?.timestamp >= cutoffTime);
   
-  // Calculate stats for filtered data
+  // Calculate stats for filtered data with both apps initialized
   const filteredData: UsageData = {
     totalRequests: 0,
     totalTokens: 0,
@@ -410,11 +447,26 @@ export const getFilteredUsageData = (
     inputTokensByProvider: {} as Record<AIProvider, number>,
     outputTokensByProvider: {} as Record<AIProvider, number>,
     costByProvider: {} as Record<AIProvider, number>,
-    requestsByApp: {},
-    tokensByApp: {},
-    inputTokensByApp: {},
-    outputTokensByApp: {},
-    costByApp: {},
+    requestsByApp: {
+      'article-smasher': 0,
+      'task-smasher': 0
+    },
+    tokensByApp: {
+      'article-smasher': 0,
+      'task-smasher': 0
+    },
+    inputTokensByApp: {
+      'article-smasher': 0,
+      'task-smasher': 0
+    },
+    outputTokensByApp: {
+      'article-smasher': 0,
+      'task-smasher': 0
+    },
+    costByApp: {
+      'article-smasher': 0,
+      'task-smasher': 0
+    },
     usageHistory: filteredHistory
   };
   
@@ -441,6 +493,16 @@ export const getFilteredUsageData = (
     filteredData.costByApp[entry.app] = (filteredData.costByApp[entry.app] || 0) + entry.cost;
   });
   
+  // Ensure both apps exist in the filtered data even if they have no usage
+  const apps = ['article-smasher', 'task-smasher'];
+  apps.forEach(app => {
+    if (!filteredData.requestsByApp[app]) filteredData.requestsByApp[app] = 0;
+    if (!filteredData.tokensByApp[app]) filteredData.tokensByApp[app] = 0;
+    if (!filteredData.inputTokensByApp[app]) filteredData.inputTokensByApp[app] = 0;
+    if (!filteredData.outputTokensByApp[app]) filteredData.outputTokensByApp[app] = 0;
+    if (!filteredData.costByApp[app]) filteredData.costByApp[app] = 0;
+  });
+
   return filteredData;
 };
 
