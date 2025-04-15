@@ -378,4 +378,3 @@ export const getTimeSeriesData = (
   });
   return { requests, tokens, inputTokens, outputTokens, costs };
 };
-};
