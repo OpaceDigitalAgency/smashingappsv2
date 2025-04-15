@@ -59,29 +59,99 @@ export const getUsageData = (): UsageData => {
   try {
     const storedData = localStorage.getItem(USAGE_DATA_KEY);
     if (storedData) {
-      return JSON.parse(storedData);
+      const parsedData = JSON.parse(storedData);
+      
+      // Validate the data structure
+      if (!parsedData.requestsByApp) {
+        console.warn('[DEBUG] Missing requestsByApp in stored usage data, initializing it');
+        parsedData.requestsByApp = {};
+      }
+      
+      if (!parsedData.tokensByApp) {
+        console.warn('[DEBUG] Missing tokensByApp in stored usage data, initializing it');
+        parsedData.tokensByApp = {};
+      }
+      
+      if (!parsedData.inputTokensByApp) {
+        console.warn('[DEBUG] Missing inputTokensByApp in stored usage data, initializing it');
+        parsedData.inputTokensByApp = {};
+      }
+      
+      if (!parsedData.outputTokensByApp) {
+        console.warn('[DEBUG] Missing outputTokensByApp in stored usage data, initializing it');
+        parsedData.outputTokensByApp = {};
+      }
+      
+      if (!parsedData.costByApp) {
+        console.warn('[DEBUG] Missing costByApp in stored usage data, initializing it');
+        parsedData.costByApp = {};
+      }
+      
+      // Log app-specific stats for debugging
+      console.log('[DEBUG] Retrieved usage data with app stats:', {
+        requestsByApp: parsedData.requestsByApp,
+        tokensByApp: parsedData.tokensByApp,
+        costByApp: parsedData.costByApp
+      });
+      
+      return parsedData;
     }
   } catch (error) {
-    console.error('Failed to load usage data from local storage:', error);
+    console.error('[DEBUG] Failed to load usage data from local storage:', error);
   }
   
+  console.log('[DEBUG] No valid usage data found, returning initial data');
   return initialUsageData;
 };
 
 // Save usage data to local storage
 export const saveUsageData = (data: UsageData): void => {
   try {
+    // Validate the data structure before saving
+    if (!data.requestsByApp) {
+      console.warn('[DEBUG] Missing requestsByApp in data to save, initializing it');
+      data.requestsByApp = {};
+    }
+    
+    if (!data.tokensByApp) {
+      console.warn('[DEBUG] Missing tokensByApp in data to save, initializing it');
+      data.tokensByApp = {};
+    }
+    
+    if (!data.inputTokensByApp) {
+      console.warn('[DEBUG] Missing inputTokensByApp in data to save, initializing it');
+      data.inputTokensByApp = {};
+    }
+    
+    if (!data.outputTokensByApp) {
+      console.warn('[DEBUG] Missing outputTokensByApp in data to save, initializing it');
+      data.outputTokensByApp = {};
+    }
+    
+    if (!data.costByApp) {
+      console.warn('[DEBUG] Missing costByApp in data to save, initializing it');
+      data.costByApp = {};
+    }
+    
     // Log the app usage data being saved
-    console.log('Saving usage data with app stats:', {
+    console.log('[DEBUG] Saving usage data with app stats:', {
       requestsByApp: data.requestsByApp,
       tokensByApp: data.tokensByApp,
-      costByApp: data.costByApp
+      costByApp: data.costByApp,
+      appIdentifiers: {
+        article_smasher_app: localStorage.getItem('article_smasher_app'),
+        article_wizard_state: localStorage.getItem('article_wizard_state'),
+        task_list_state: localStorage.getItem('task_list_state')
+      }
     });
     
     localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(data));
-    console.log('Usage data saved successfully');
+    console.log('[DEBUG] Usage data saved successfully');
+    
+    // Dispatch event for real-time updates
+    window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: data }));
   } catch (error) {
-    console.error('Failed to save usage data to local storage:', error);
+    console.error('[DEBUG] Failed to save usage data to local storage:', error);
   }
 };
 
@@ -95,7 +165,23 @@ export const trackApiRequest = (
   outputTokens?: number,
   timestamp?: Date
 ): void => {
-  console.log(`Tracking API request for provider: ${provider}, app: ${app}, tokens: ${tokens}, model: ${model}`);
+  console.log(`[DEBUG] Tracking API request for provider: ${provider}, app: ${app}, tokens: ${tokens}, model: ${model}`);
+  
+  // Validate app ID
+  if (!app || app === 'unknown-app') {
+    console.warn('[DEBUG] Attempting to track request with invalid app ID:', app);
+    
+    // Try to determine app ID from localStorage flags
+    if (localStorage.getItem('article_smasher_app') || localStorage.getItem('article_wizard_state')) {
+      console.log('[DEBUG] Found ArticleSmasher flags, overriding app ID');
+      app = 'article-smasher';
+    } else if (localStorage.getItem('task_list_state')) {
+      console.log('[DEBUG] Found TaskSmasher flags, overriding app ID');
+      app = 'task-smasher';
+    }
+    
+    console.log('[DEBUG] Final app ID for tracking:', app);
+  }
   
   const usageData = getUsageData();
   const timestampMs = timestamp ? timestamp.getTime() : Date.now();
@@ -145,12 +231,43 @@ export const trackApiRequest = (
   usageData.outputTokensByProvider[provider] = (usageData.outputTokensByProvider[provider] || 0) + actualOutputTokens;
   usageData.costByProvider[provider] = (usageData.costByProvider[provider] || 0) + cost;
   
-  // Update app stats
+  // Update app stats with validation
+  if (!usageData.requestsByApp) {
+    console.warn('[DEBUG] requestsByApp is undefined, initializing it');
+    usageData.requestsByApp = {};
+  }
+  
+  if (!usageData.tokensByApp) {
+    console.warn('[DEBUG] tokensByApp is undefined, initializing it');
+    usageData.tokensByApp = {};
+  }
+  
+  if (!usageData.inputTokensByApp) {
+    console.warn('[DEBUG] inputTokensByApp is undefined, initializing it');
+    usageData.inputTokensByApp = {};
+  }
+  
+  if (!usageData.outputTokensByApp) {
+    console.warn('[DEBUG] outputTokensByApp is undefined, initializing it');
+    usageData.outputTokensByApp = {};
+  }
+  
+  if (!usageData.costByApp) {
+    console.warn('[DEBUG] costByApp is undefined, initializing it');
+    usageData.costByApp = {};
+  }
+  
   usageData.requestsByApp[app] = (usageData.requestsByApp[app] || 0) + 1;
   usageData.tokensByApp[app] = (usageData.tokensByApp[app] || 0) + tokens;
   usageData.inputTokensByApp[app] = (usageData.inputTokensByApp[app] || 0) + actualInputTokens;
   usageData.outputTokensByApp[app] = (usageData.outputTokensByApp[app] || 0) + actualOutputTokens;
   usageData.costByApp[app] = (usageData.costByApp[app] || 0) + cost;
+  
+  console.log(`[DEBUG] Updated app stats for ${app}:`, {
+    requests: usageData.requestsByApp[app],
+    tokens: usageData.tokensByApp[app],
+    cost: usageData.costByApp[app]
+  });
   
   // Add to history
   usageData.usageHistory.push({
@@ -172,9 +289,6 @@ export const trackApiRequest = (
   
   // Save updated data
   saveUsageData(usageData);
-  
-  // Broadcast event for real-time updates
-  window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
 };
 
 // Get filtered usage data for a specific time range

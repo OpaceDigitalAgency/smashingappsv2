@@ -14,7 +14,9 @@ export function initializeAIServicesWithTracking(): void {
   
   // Get the current URL to help with debugging
   const url = window.location.href;
-  console.log('Initializing AI services with usage tracking for URL:', url);
+  console.log('[DEBUG] Initializing AI services with usage tracking for URL:', url);
+  console.log('[DEBUG] localStorage article_wizard_state:', localStorage.getItem('article_wizard_state'));
+  console.log('[DEBUG] localStorage task_list_state:', localStorage.getItem('task_list_state'));
   
   // Wrap each service with usage tracking
   services.forEach(service => {
@@ -23,7 +25,7 @@ export function initializeAIServicesWithTracking(): void {
     // determine this dynamically based on which app is using the service
     const appId = getAppIdForService(service.provider);
     
-    console.log(`Service provider: ${service.provider}, App ID: ${appId}`);
+    console.log(`[DEBUG] Service provider: ${service.provider}, App ID: ${appId}`);
     
     // Wrap the service with usage tracking
     const wrappedService = wrapAIService(service, appId);
@@ -34,24 +36,32 @@ export function initializeAIServicesWithTracking(): void {
     Object.assign(service, wrappedService);
   });
   
-  console.log('AI services initialized with usage tracking');
+  console.log('[DEBUG] AI services initialized with usage tracking');
 }
 
 /**
  * Get the app ID for a service based on its provider
  */
 function getAppIdForService(provider: AIProvider): string {
+  console.log('[DEBUG] Determining app ID for provider:', provider);
+  
   // First try to determine from localStorage
   const articleState = localStorage.getItem('article_wizard_state');
   const taskState = localStorage.getItem('task_list_state');
+  const articleSmasherFlag = localStorage.getItem('article_smasher_app');
+  
+  if (articleSmasherFlag) {
+    console.log('[DEBUG] Detected ArticleSmasher from dedicated flag');
+    return 'article-smasher';
+  }
   
   if (articleState) {
-    console.log('Detected ArticleSmasher from localStorage state');
+    console.log('[DEBUG] Detected ArticleSmasher from localStorage state');
     return 'article-smasher';
   }
   
   if (taskState) {
-    console.log('Detected TaskSmasher from localStorage state');
+    console.log('[DEBUG] Detected TaskSmasher from localStorage state');
     return 'task-smasher';
   }
   
@@ -59,24 +69,32 @@ function getAppIdForService(provider: AIProvider): string {
   const path = window.location.pathname;
   
   if (path.includes('/article-smasher') || path.includes('/tools/article-smasher')) {
-    console.log('Detected ArticleSmasher from path');
+    console.log('[DEBUG] Detected ArticleSmasher from path');
+    // Set the flag for future API calls
+    localStorage.setItem('article_smasher_app', 'true');
     return 'article-smasher';
   }
   
   if (path.includes('/task-smasher') || path.includes('/tools/task-smasher')) {
-    console.log('Detected TaskSmasher from path');
+    console.log('[DEBUG] Detected TaskSmasher from path');
+    // Set the flag for future API calls
+    localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
     return 'task-smasher';
   }
   
   // Finally check DOM, but only if document is ready
   if (document.readyState !== 'loading') {
     if (document.querySelector('.article-smasher-container')) {
-      console.log('Detected ArticleSmasher from DOM');
+      console.log('[DEBUG] Detected ArticleSmasher from DOM');
+      // Set the flag for future API calls
+      localStorage.setItem('article_smasher_app', 'true');
       return 'article-smasher';
     }
     
     if (document.querySelector('.task-smasher-container')) {
-      console.log('Detected TaskSmasher from DOM');
+      console.log('[DEBUG] Detected TaskSmasher from DOM');
+      // Set the flag for future API calls
+      localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
       return 'task-smasher';
     }
   }
@@ -88,7 +106,7 @@ function getAppIdForService(provider: AIProvider): string {
   }
   
   // Log warning and return unknown
-  console.warn(`Could not determine app ID for provider ${provider}, defaulting to unknown-app`);
+  console.warn(`[DEBUG] Could not determine app ID for provider ${provider}, defaulting to unknown-app`);
   return 'unknown-app';
 }
 

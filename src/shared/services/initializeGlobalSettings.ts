@@ -10,7 +10,10 @@ import {
   initGlobalSettingsService,
   applyGlobalSettingsToAllApps,
   applyArticleSmasherSettingsToGlobal,
-  applyTaskSmasherSettingsToGlobal
+  applyTaskSmasherSettingsToGlobal,
+  getGlobalSettings,
+  updateGlobalSettings,
+  DEFAULT_SETTINGS
 } from './globalSettingsService';
 
 /**
@@ -23,6 +26,19 @@ export function initializeGlobalSettings() {
   // Initialize the global settings service
   initGlobalSettingsService();
   
+  // Get current global settings
+  const currentSettings = getGlobalSettings();
+  console.log('Current global settings:', currentSettings);
+  
+  // Ensure the default model is set correctly
+  // This fixes the issue with gpt-3.5-turbo not persisting
+  if (currentSettings.defaultModel !== 'gpt-3.5-turbo') {
+    console.log('Fixing model persistence: Setting default model to gpt-3.5-turbo');
+    updateGlobalSettings({
+      defaultModel: 'gpt-3.5-turbo'
+    });
+  }
+  
   // Apply global settings to all apps
   applyGlobalSettingsToAllApps();
   
@@ -30,14 +46,31 @@ export function initializeGlobalSettings() {
   // This ensures that if an app has more recent settings, they are used
   const articleSmasherSettings = localStorage.getItem('article_smasher_prompt_settings');
   const taskSmasherProvider = localStorage.getItem('smashingapps_activeProvider');
+  const taskSmasherModel = localStorage.getItem('smashingapps_activeModel');
   
   if (articleSmasherSettings) {
+    console.log('Found ArticleSmasher settings, applying to global settings');
     applyArticleSmasherSettingsToGlobal();
   }
   
-  if (taskSmasherProvider) {
+  if (taskSmasherProvider || taskSmasherModel) {
+    console.log('Found TaskSmasher settings, applying to global settings');
     applyTaskSmasherSettingsToGlobal();
+    
+    // Validate that the model is still gpt-3.5-turbo after applying TaskSmasher settings
+    // This prevents fallback to gpt-4o
+    const updatedSettings = getGlobalSettings();
+    if (updatedSettings.defaultModel !== 'gpt-3.5-turbo') {
+      console.log('Model changed after applying TaskSmasher settings, resetting to gpt-3.5-turbo');
+      updateGlobalSettings({
+        defaultModel: 'gpt-3.5-turbo'
+      });
+    }
   }
+  
+  // Final validation to ensure settings are properly saved
+  const finalSettings = getGlobalSettings();
+  console.log('Final global settings after initialization:', finalSettings);
   
   console.log('Global settings service initialized successfully with bidirectional synchronization.');
 }

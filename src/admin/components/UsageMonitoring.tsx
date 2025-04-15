@@ -11,8 +11,11 @@ import {
   Zap,
   Hash,
   Clock,
-  Trash2
+  Trash2,
+  Bug,
+  RefreshCcw
 } from 'lucide-react';
+import { debugUsageTracking, fixUsageTrackingData, forceRefreshUsageData } from '../../shared/utils/usageDebugUtils';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider, ProviderConfig } from '../../shared/types/aiProviders';
 import {
@@ -28,6 +31,8 @@ const UsageMonitoring: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isClearing, setIsClearing] = React.useState(false);
   const [showClearSuccess, setShowClearSuccess] = React.useState(false);
+  const [showDebugPanel, setShowDebugPanel] = React.useState(false);
+  const [isFixingData, setIsFixingData] = React.useState(false);
   
   // Handle refresh
   const handleRefresh = () => {
@@ -61,6 +66,44 @@ const UsageMonitoring: React.FC = () => {
         setShowClearSuccess(false);
       }, 3000);
     }, 1000);
+  };
+  
+  // Handle debug actions
+  const handleDebugUsageTracking = () => {
+    debugUsageTracking();
+  };
+  
+  const handleFixUsageData = () => {
+    setIsFixingData(true);
+    
+    try {
+      fixUsageTrackingData();
+      
+      // Refresh the UI after fixing
+      setTimeout(() => {
+        forceRefreshUsageData();
+        setIsFixingData(false);
+      }, 500);
+    } catch (error) {
+      console.error('Error fixing usage data:', error);
+      setIsFixingData(false);
+    }
+  };
+  
+  const handleForceRefresh = () => {
+    setIsRefreshing(true);
+    
+    try {
+      forceRefreshUsageData();
+      
+      // Reset refreshing state after a short delay
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error forcing refresh:', error);
+      setIsRefreshing(false);
+    }
   };
   
   // Handle export
@@ -180,6 +223,15 @@ const UsageMonitoring: React.FC = () => {
           >
             <Trash2 className={`w-4 h-4 mr-1 ${isClearing ? 'animate-spin' : ''}`} />
             Clear Rate Limits
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowDebugPanel(!showDebugPanel)}
+            className="mr-2"
+          >
+            <Bug className="w-4 h-4 mr-1" />
+            Debug
           </Button>
           <div className="relative group">
             <Button
@@ -547,6 +599,104 @@ const UsageMonitoring: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Debug Panel */}
+      {showDebugPanel && (
+        <div className="mt-6 bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-800">Usage Tracking Debug</h2>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleDebugUsageTracking}
+              >
+                <Bug className="w-4 h-4 mr-1" />
+                Log Debug Info
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleFixUsageData}
+                disabled={isFixingData}
+              >
+                <RefreshCcw className={`w-4 h-4 mr-1 ${isFixingData ? 'animate-spin' : ''}`} />
+                Fix Data
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleForceRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`w-4 h-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Force Refresh
+              </Button>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">App Identification Status</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">ArticleSmasher Flags:</p>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${localStorage.getItem('article_smasher_app') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm">article_smasher_app</span>
+                </div>
+                <div className="flex items-center space-x-2 mt-1">
+                  <div className={`w-3 h-3 rounded-full ${localStorage.getItem('article_wizard_state') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm">article_wizard_state</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">TaskSmasher Flags:</p>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${localStorage.getItem('task_list_state') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm">task_list_state</span>
+                </div>
+              </div>
+            </div>
+            
+            <h3 className="text-sm font-medium text-gray-700 mt-4 mb-2">Usage Data Summary</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">ArticleSmasher Usage:</p>
+                <p className="text-sm">
+                  Requests: {usageStats.requestsByApp['article-smasher'] || 0}
+                </p>
+                <p className="text-sm">
+                  Tokens: {usageStats.tokensByApp['article-smasher'] || 0}
+                </p>
+                <p className="text-sm">
+                  Cost: ${(usageStats.costByApp['article-smasher'] || 0).toFixed(4)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">TaskSmasher Usage:</p>
+                <p className="text-sm">
+                  Requests: {usageStats.requestsByApp['task-smasher'] || 0}
+                </p>
+                <p className="text-sm">
+                  Tokens: {usageStats.tokensByApp['task-smasher'] || 0}
+                </p>
+                <p className="text-sm">
+                  Cost: ${(usageStats.costByApp['task-smasher'] || 0).toFixed(4)}
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <p className="text-xs text-gray-500 mb-1">Debug Instructions:</p>
+              <ol className="text-sm list-decimal pl-5 space-y-1">
+                <li>Click "Log Debug Info" to output detailed debugging information to the console</li>
+                <li>Click "Fix Data" to repair any corrupted usage tracking data</li>
+                <li>Click "Force Refresh" to update the UI with the latest data</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -32,6 +32,10 @@ const ArticleSmasherApp: React.FC = () => {
   useEffect(() => {
     console.log('ArticleSmasherApp: Initializing admin bridge and AI services');
     
+    // Set localStorage flags to identify the app - use multiple flags for redundancy
+    localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
+    localStorage.setItem('article_smasher_app', 'true');
+    
     // Initialize the admin bridge
     initAdminBridge();
     
@@ -40,9 +44,30 @@ const ArticleSmasherApp: React.FC = () => {
     initializeAIServicesWithTracking();
     console.log('ArticleSmasherApp: AI services initialized');
     
-    // Redirect to unified admin interface if accessing admin routes
+    // Set a periodic check to ensure the app ID flags remain set
+    const intervalId = setInterval(() => {
+      if (!localStorage.getItem('article_smasher_app')) {
+        console.log('ArticleSmasherApp: Restoring missing app ID flag');
+        localStorage.setItem('article_smasher_app', 'true');
+      }
+      if (!localStorage.getItem('article_wizard_state')) {
+        console.log('ArticleSmasherApp: Restoring missing wizard state flag');
+        localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
+      }
+    }, 10000); // Check every 10 seconds
+    
+    // Cleanup function
+    return () => {
+      clearInterval(intervalId);
+      localStorage.removeItem('article_wizard_state');
+      // Don't remove the article_smasher_app flag on unmount to ensure persistence
+      // between page refreshes and navigation
+    };
+  }, []); // Run only once on mount
+  
+  // Handle admin route redirects
+  useEffect(() => {
     if (location.pathname.includes('/admin') || location.pathname.includes('/settings')) {
-      // Redirect to the unified admin interface
       window.location.href = '/admin/prompts';
     }
   }, [location.pathname]);
