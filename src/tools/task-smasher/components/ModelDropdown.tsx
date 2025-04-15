@@ -65,23 +65,22 @@ const ModelDropdown: React.FC<ModelDropdownProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
               {/* Model dropdown removed - model selection should only happen in /admin */}
               
-              {/* API Settings Button removed as it's non-functional */}
-              
-              {/* OpenAI Example Button */}
-              {onToggleOpenAIExample && (
-                <button
-                  onClick={onToggleOpenAIExample}
-                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <MessageSquare className="w-4 h-4 text-indigo-500" />
-                  <span>OpenAI Example</span>
-                </button>
-              )}
+              {/* Settings Button */}
+              <button
+                onClick={onOpenAPISettings}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4 text-indigo-500" />
+                <span>Settings</span>
+              </button>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex items-center gap-2 text-sm">
                 <Star className="w-4 h-4 text-indigo-500" />
-                <span className="text-gray-600">Active Provider: {activeProvider} {selectedModel.includes('/') ? selectedModel.split('/')[1] : ''}</span>
+                <span className="text-gray-600">
+                  Active Provider: {activeProvider.charAt(0).toUpperCase() + activeProvider.slice(1)} 
+                  {selectedModel && ` (${selectedModel.includes('/') ? selectedModel.split('/')[1] : selectedModel})`}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Zap className="w-4 h-4 text-yellow-500" />
