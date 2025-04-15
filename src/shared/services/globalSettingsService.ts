@@ -58,7 +58,7 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
 const GLOBAL_SETTINGS_KEY = 'smashingapps-global-settings';
 
 // Event name for settings changes
-const SETTINGS_CHANGED_EVENT = 'globalSettingsChanged';
+const SETTINGS_CHANGED_EVENT = 'smashingapps-globalSettingsChanged';
 
 // Get global settings from localStorage
 export function getGlobalSettings(): GlobalSettings {
@@ -135,7 +135,14 @@ export function updateGlobalSettings(newSettings: Partial<GlobalSettings>): Glob
     // Dispatch event to notify other components
     const event = new CustomEvent(SETTINGS_CHANGED_EVENT, { detail: updatedSettings });
     window.dispatchEvent(event);
-    console.log('[GlobalSettingsService] Dispatched settings changed event');
+    console.log('[GlobalSettingsService] Dispatched settings changed event:', SETTINGS_CHANGED_EVENT);
+    
+    // Also dispatch a storage event to trigger the event listeners in useTasks.ts
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'smashingapps_activeModel',
+      newValue: updatedSettings.defaultModel
+    }));
+    console.log('[GlobalSettingsService] Dispatched storage event for model update');
     
     return updatedSettings;
   } catch (error) {
