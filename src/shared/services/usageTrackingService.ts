@@ -567,20 +567,26 @@ export const getFilteredUsageData = (
     // Update app stats
     filteredData.requestsByApp[entry.app] = (filteredData.requestsByApp[entry.app] || 0) + entry.requests;
     filteredData.tokensByApp[entry.app] = (filteredData.tokensByApp[entry.app] || 0) + entry.tokens;
-    filteredData.inputTokensByApp[entry.app] = (filteredData.inputTokensByApp[entry.app] || 0) + (entry.inputTokens || 0);
-    filteredData.outputTokensByApp[entry.app] = (filteredData.outputTokensByApp[entry.app] || 0) + (entry.outputTokens || 0);
-    filteredData.costByApp[entry.app] = (filteredData.costByApp[entry.app] || 0) + entry.cost;
+    if (entry && entry.app) {
+      filteredData.inputTokensByApp[entry.app] = (filteredData.inputTokensByApp[entry.app] || 0) + (entry.inputTokens || 0);
+      filteredData.outputTokensByApp[entry.app] = (filteredData.outputTokensByApp[entry.app] || 0) + (entry.outputTokens || 0);
+      filteredData.costByApp[entry.app] = (filteredData.costByApp[entry.app] || 0) + (entry.cost || 0);
+    }
   });
   
   // Ensure both apps exist in the filtered data even if they have no usage
-  const apps = ['article-smasher', 'task-smasher'];
-  apps.forEach(app => {
+  try {
+    const apps = ['article-smasher', 'task-smasher'];
+    apps.forEach(app => {
     if (!filteredData.requestsByApp[app]) filteredData.requestsByApp[app] = 0;
     if (!filteredData.tokensByApp[app]) filteredData.tokensByApp[app] = 0;
     if (!filteredData.inputTokensByApp[app]) filteredData.inputTokensByApp[app] = 0;
     if (!filteredData.outputTokensByApp[app]) filteredData.outputTokensByApp[app] = 0;
     if (!filteredData.costByApp[app]) filteredData.costByApp[app] = 0;
-  });
+    });
+  } catch (error) {
+    console.error('[DEBUG] Error ensuring apps exist in filtered data:', error);
+  }
 
   return filteredData;
 };
