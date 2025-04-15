@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  GlobalSettingsContextProvider,
+  GlobalSettingsProvider as GlobalSettingsContextProvider,
   GlobalSettingsErrorBoundary,
   useGlobalSettings
 } from '../../contexts/GlobalSettingsContext';

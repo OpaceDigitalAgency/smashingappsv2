@@ -13,17 +13,12 @@ declare global {
 export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { aiServiceRegistry, getModelsByProvider } from '../../shared/services/aiServices';
+import { aiServiceRegistry } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
 import { getUsageData, getFilteredUsageData, UsageData } from '../../shared/services/usageTrackingService';
-import {
-  getGlobalSettings,
-  updateGlobalSettings as updateGlobalSettingsService,
-  applyGlobalSettingsToAllApps,
-  initGlobalSettingsService,
-  GlobalSettings
-} from '../../shared/services/globalSettingsService';
-import { PromptTemplate, PromptSettings } from '../../tools/article-smasher/src/types';
+import { useGlobalSettings } from '../../shared/contexts/GlobalSettingsContext';
+import { GlobalSettings, DEFAULT_SETTINGS } from '../../shared/types/globalSettings';
+import { PromptTemplate } from '../../tools/article-smasher/src/types';
 import {
   TaskSmasherPromptTemplate,
   loadTaskSmasherPrompts,
@@ -83,6 +78,9 @@ const AdminContext = createContext<AdminContextType | null>(null);
 
 // Provider component
 export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => {
+  // Get global settings from context
+  const { settings: globalSettings, updateSettings: updateGlobalSettingsContext } = useGlobalSettings();
+  
   // Provider management state
   const [providers, setProviders] = useState<Record<AIProvider, ProviderConfig>>({} as Record<AIProvider, ProviderConfig>);
   
@@ -94,8 +92,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const [taskSmasherPrompts, setTaskSmasherPrompts] = useState<TaskSmasherPromptTemplate[]>([]);
   const [activeTaskSmasherPrompt, setActiveTaskSmasherPrompt] = useState<TaskSmasherPromptTemplate | null>(null);
   
-  // Settings management state
-  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>(() => getGlobalSettings());
+  // App settings state
   const [appSettings, setAppSettings] = useState<Record<string, any>>({});
   
   // Usage monitoring state
@@ -535,11 +532,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   // Settings management functions
   const updateGlobalSettings = (settings: Partial<GlobalSettings>) => {
     try {
-      // Update global settings using the service
-      updateGlobalSettingsService(settings);
-      
-      // Apply the updated settings to all apps
-      applyGlobalSettingsToAllApps();
+      updateGlobalSettingsContext(settings);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update global settings'));
     }
@@ -641,7 +634,7 @@ export const useAdmin = () => {
         deleteTaskSmasherPrompt: async () => {},
         
         // Settings management
-        globalSettings: getGlobalSettings(),
+        globalSettings: DEFAULT_SETTINGS,
         appSettings: {},
         updateGlobalSettings: () => {},
         updateAppSettings: () => {},
