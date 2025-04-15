@@ -104,9 +104,28 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const [appSettings, setAppSettings] = useState<Record<string, any>>({});
   
   // Usage monitoring state
-  const [usageStats, setUsageStats] = useState<UsageData>(getUsageData());
+  const [usageStats, setUsageStats] = useState<UsageData>(() => {
+    // Initialize with filtered data based on default time range
+    const initialData = getFilteredUsageData('month');
+    return initialData;
+  });
   // timeRange controls filtering of usage data for both summary metrics and detailed tables
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
+
+  // Initialize usage data on mount
+  useEffect(() => {
+    const initializeUsageData = () => {
+      try {
+        const filteredData = getFilteredUsageData(timeRange);
+        setUsageStats(filteredData);
+      } catch (error) {
+        console.error('Error initializing usage data:', error);
+        setError(error instanceof Error ? error : new Error('Failed to initialize usage data'));
+      }
+    };
+
+    initializeUsageData();
+  }, []);
   
   // UI state
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -326,15 +345,32 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     
     // Listen for usage data updates
     const handleUsageDataUpdated = (event: CustomEvent<UsageData>) => {
-      const filteredData = getFilteredUsageData(timeRange);
-      setUsageStats(filteredData);
+      try {
+        console.log('[DEBUG] Handling usage-data-updated event');
+        const filteredData = getFilteredUsageData(timeRange);
+        if (!filteredData) {
+          console.warn('[DEBUG] No filtered data returned');
+          return;
+        }
+        setUsageStats(filteredData);
+      } catch (error) {
+        console.error('[DEBUG] Error handling usage data update:', error);
+      }
     };
     
     // Listen for manual refresh requests
     const handleRefreshUsageData = () => {
-      console.log('[DEBUG] Handling refresh-usage-data event');
-      const filteredData = getFilteredUsageData(timeRange);
-      setUsageStats(filteredData);
+      try {
+        console.log('[DEBUG] Handling refresh-usage-data event');
+        const filteredData = getFilteredUsageData(timeRange);
+        if (!filteredData) {
+          console.warn('[DEBUG] No filtered data returned');
+          return;
+        }
+        setUsageStats(filteredData);
+      } catch (error) {
+        console.error('[DEBUG] Error refreshing usage data:', error);
+      }
     };
     
     window.addEventListener('usage-data-updated', handleUsageDataUpdated as EventListener);
