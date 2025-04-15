@@ -265,28 +265,47 @@ export const forceRefreshUsageData = (): void => {
           usageData.outputTokensByApp[entry.app] = (usageData.outputTokensByApp[entry.app] || 0) + (entry.outputTokens || 0);
           usageData.costByApp[entry.app] = (usageData.costByApp[entry.app] || 0) + entry.cost;
         });
-        
-        // Ensure both Article Smasher and Task Smasher exist in the app stats
-        // This is critical for ensuring both apps show up in the usage tables
-        if (!usageData.requestsByApp['article-smasher']) {
-          usageData.requestsByApp['article-smasher'] = 0;
-          usageData.tokensByApp['article-smasher'] = 0;
-          usageData.inputTokensByApp['article-smasher'] = 0;
-          usageData.outputTokensByApp['article-smasher'] = 0;
-          usageData.costByApp['article-smasher'] = 0;
-        }
-        
-        if (!usageData.requestsByApp['task-smasher']) {
-          usageData.requestsByApp['task-smasher'] = 0;
-          usageData.tokensByApp['task-smasher'] = 0;
-          usageData.inputTokensByApp['task-smasher'] = 0;
-          usageData.outputTokensByApp['task-smasher'] = 0;
-          usageData.costByApp['task-smasher'] = 0;
-        }
-        
-        // Save the recalculated data
-        localStorage.setItem('smashingapps_usage_data', JSON.stringify(usageData));
       }
+      
+      // IMPORTANT: Always ensure both Article Smasher and Task Smasher exist in the app stats
+      // This is critical for ensuring both apps show up in the usage tables even if they have no usage
+      if (!usageData.requestsByApp) {
+        usageData.requestsByApp = {};
+      }
+      if (!usageData.tokensByApp) {
+        usageData.tokensByApp = {};
+      }
+      if (!usageData.inputTokensByApp) {
+        usageData.inputTokensByApp = {};
+      }
+      if (!usageData.outputTokensByApp) {
+        usageData.outputTokensByApp = {};
+      }
+      if (!usageData.costByApp) {
+        usageData.costByApp = {};
+      }
+      
+      // Always ensure both apps exist in the stats
+      if (!usageData.requestsByApp['article-smasher']) {
+        console.log('[DEBUG] Adding article-smasher to app stats');
+        usageData.requestsByApp['article-smasher'] = 0;
+        usageData.tokensByApp['article-smasher'] = 0;
+        usageData.inputTokensByApp['article-smasher'] = 0;
+        usageData.outputTokensByApp['article-smasher'] = 0;
+        usageData.costByApp['article-smasher'] = 0;
+      }
+      
+      if (!usageData.requestsByApp['task-smasher']) {
+        console.log('[DEBUG] Adding task-smasher to app stats');
+        usageData.requestsByApp['task-smasher'] = 0;
+        usageData.tokensByApp['task-smasher'] = 0;
+        usageData.inputTokensByApp['task-smasher'] = 0;
+        usageData.outputTokensByApp['task-smasher'] = 0;
+        usageData.costByApp['task-smasher'] = 0;
+      }
+      
+      // Save the recalculated data
+      localStorage.setItem('smashingapps_usage_data', JSON.stringify(usageData));
       
       // Dispatch events to refresh the UI
       // First dispatch usage-data-updated to update the summary metrics
@@ -296,6 +315,51 @@ export const forceRefreshUsageData = (): void => {
       window.dispatchEvent(new CustomEvent('refresh-usage-data'));
       
       console.log('[DEBUG] Usage data refresh events dispatched with recalculated app stats');
+    } else {
+      // If no usage data exists, create a minimal structure to prevent errors
+      console.log('[DEBUG] No usage data found, creating minimal structure');
+      
+      const minimalUsageData = {
+        totalRequests: 0,
+        totalTokens: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        costEstimate: 0,
+        requestsByProvider: {},
+        tokensByProvider: {},
+        inputTokensByProvider: {},
+        outputTokensByProvider: {},
+        costByProvider: {},
+        requestsByApp: {
+          'article-smasher': 0,
+          'task-smasher': 0
+        },
+        tokensByApp: {
+          'article-smasher': 0,
+          'task-smasher': 0
+        },
+        inputTokensByApp: {
+          'article-smasher': 0,
+          'task-smasher': 0
+        },
+        outputTokensByApp: {
+          'article-smasher': 0,
+          'task-smasher': 0
+        },
+        costByApp: {
+          'article-smasher': 0,
+          'task-smasher': 0
+        },
+        usageHistory: []
+      };
+      
+      localStorage.setItem('smashingapps_usage_data', JSON.stringify(minimalUsageData));
+      
+      // Dispatch events to refresh the UI
+      window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: minimalUsageData }));
+      window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+      
+      console.log('[DEBUG] Created minimal usage data structure');
     }
   } catch (error) {
     console.error('[DEBUG] Error forcing refresh of usage data:', error);

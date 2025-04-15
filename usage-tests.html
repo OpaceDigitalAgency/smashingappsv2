@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmashingApps Usage Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #4f46e5;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #4338ca;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #4338ca;
+        }
+        .test-section {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #e5e7eb;
+        }
+        .test-steps {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .result {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .error {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        pre {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        #logOutput {
+            background-color: #f3f4f6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .screenshot {
+            max-width: 100%;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0 5px 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .storage-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f3f4f6;
+            border-radius: 5px;
+        }
+        .storage-key {
+            font-weight: bold;
+            color: #4338ca;
+        }
+        .storage-value {
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #ffffff;
+            border-radius: 3px;
+            border: 1px solid #e5e7eb;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>SmashingApps Usage Tests</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="openTab(event, 'tests')">Tests</div>
+        <div class="tab" onclick="openTab(event, 'localStorage')">LocalStorage</div>
+        <div class="tab" onclick="openTab(event, 'console')">Console</div>
+    </div>
+    
+    <div id="tests" class="tab-content active">
+        <p>This tool helps you run tests to verify usage tracking for Task Smasher and Article Smasher.</p>
+        
+        <div class="test-section">
+            <h2>Test 4: Usage Data for Task Smasher</h2>
+            <div class="test-steps">
+                <h3>Steps:</h3>
+                <ol>
+                    <li>Clear all usage data</li>
+                    <li>Simulate a Task Smasher API request</li>
+                    <li>Check if Task Smasher appears in the usage table</li>
+                </ol>
+            </div>
+            <button id="runTest4">Run Test 4</button>
+            <div id="test4Result" class="result">
+                <h3>Test Result:</h3>
+                <p id="test4ResultText"></p>
+                <div id="test4Screenshot"></div>
+            </div>
+            <div id="test4Error" class="error">
+                <h3>Error:</h3>
+                <p id="test4ErrorText"></p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 5: Usage Data for Article Smasher</h2>
+            <div class="test-steps">
+                <h3>Steps:</h3>
+                <ol>
+                    <li>Clear all usage data</li>
+                    <li>Simulate an Article Smasher API request</li>
+                    <li>Check if Article Smasher appears in the usage table</li>
+                </ol>
+            </div>
+            <button id="runTest5">Run Test 5</button>
+            <div id="test5Result" class="result">
+                <h3>Test Result:</h3>
+                <p id="test5ResultText"></p>
+                <div id="test5Screenshot"></div>
+            </div>
+            <div id="test5Error" class="error">
+                <h3>Error:</h3>
+                <p id="test5ErrorText"></p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 6: Console Inspection</h2>
+            <div class="test-steps">
+                <h3>Steps:</h3>
+                <ol>
+                    <li>Clear the console</li>
+                    <li>Look for any messages containing "model" or "override"</li>
+                </ol>
+            </div>
+            <button id="runTest6">Run Test 6</button>
+            <div id="test6Result" class="result">
+                <h3>Test Result:</h3>
+                <p id="test6ResultText"></p>
+                <pre id="test6Console"></pre>
+            </div>
+            <div id="test6Error" class="error">
+                <h3>Error:</h3>
+                <p id="test6ErrorText"></p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 7: LocalStorage Inspection</h2>
+            <div class="test-steps">
+                <h3>Steps:</h3>
+                <ol>
+                    <li>Look for entries related to models or settings</li>
+                    <li>Examine the raw data in localStorage</li>
+                </ol>
+            </div>
+            <button id="runTest7">Run Test 7</button>
+            <div id="test7Result" class="result">
+                <h3>Test Result:</h3>
+                <p id="test7ResultText"></p>
+                <div id="test7Storage"></div>
+            </div>
+            <div id="test7Error" class="error">
+                <h3>Error:</h3>
+                <p id="test7ErrorText"></p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Fix Usage Tracking</h2>
+            <p>If you're experiencing issues with usage tracking, you can run this fix to ensure that both Task Smasher and Article Smasher are properly represented in the usage data.</p>
+            <button id="runFix">Run Fix</button>
+            <div id="fixResult" class="result">
+                <h3>Fix Result:</h3>
+                <p id="fixResultText"></p>
+            </div>
+            <div id="fixError" class="error">
+                <h3>Error:</h3>
+                <p id="fixErrorText"></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="localStorage" class="tab-content">
+        <h2>LocalStorage Contents</h2>
+        <p>This tab shows the current contents of localStorage related to usage tracking and settings.</p>
+        <button id="refreshLocalStorage">Refresh LocalStorage</button>
+        <div id="localStorageContents"></div>
+    </div>
+    
+    <div id="console" class="tab-content">
+        <h2>Console Output</h2>
+        <p>This tab shows console output from the tests.</p>
+        <button id="clearConsole">Clear Console</button>
+        <div id="logOutput"></div>
+    </div>
+    
+    <script src="fix-usage-tracking.js"></script>
+    <script>
+        // Override console.log to also output to the log div
+        const originalConsoleLog = console.log;
+        const originalConsoleWarn = console.warn;
+        const originalConsoleError = console.error;
+        
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalConsoleLog.apply(console, args);
+            
+            const logOutput = document.getElementById('logOutput');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+        
+        console.warn = function() {
+            const args = Array.from(arguments);
+            originalConsoleWarn.apply(console, args);
+            
+            const logOutput = document.getElementById('logOutput');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = '#f59e0b';
+            logEntry.textContent = 'WARNING: ' + args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+        
+        console.error = function() {
+            const args = Array.from(arguments);
+            originalConsoleError.apply(console, args);
+            
+            const logOutput = document.getElementById('logOutput');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = '#ef4444';
+            logEntry.textContent = 'ERROR: ' + args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+        
+        // Function to open a tab
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            
+            if (tabName === 'localStorage') {
+                refreshLocalStorageContents();
+            }
+        }
+        
+        // Function to refresh localStorage contents
+        function refreshLocalStorageContents() {
+            const localStorageContents = document.getElementById('localStorageContents');
+            localStorageContents.innerHTML = '';
+            
+            const keys = [
+                'smashingapps_usage_data',
+                'global-settings',
+                'smashingapps-global-settings',
+                'smashingapps_activeModel',
+                'smashingapps_activeProvider',
+                'article_smasher_app',
+                'article_wizard_state',
+                'task_list_state',
+                'current_app',
+                'FORCE_APP_ID',
+                'rateLimitInfo',
+                'rateLimited'
+            ];
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    const item = document.createElement('div');
+                    item.className = 'storage-item';
+                    
+                    const keyElement = document.createElement('div');
+                    keyElement.className = 'storage-key';
+                    keyElement.textContent = key;
+                    
+                    const valueElement = document.createElement('pre');
+                    valueElement.className = 'storage-value';
+                    
+                    try {
+                        // Try to parse as JSON for pretty printing
+                        const parsedValue = JSON.parse(value);
+                        valueElement.textContent = JSON.stringify(parsedValue, null, 2);
+                    } catch (e) {
+                        // If not JSON, just show as is
+                        valueElement.textContent = value;
+                    }
+                    
+                    item.appendChild(keyElement);
+                    item.appendChild(valueElement);
+                    localStorageContents.appendChild(item);
+                }
+            });
+            
+            if (localStorageContents.children.length === 0) {
+                localStorageContents.innerHTML = '<p>No relevant localStorage items found.</p>';
+            }
+        }
+        
+        // Function to run Test 4: Usage Data for Task Smasher
+        document.getElementById('runTest4').addEventListener('click', function() {
+            console.log('Running Test 4: Usage Data for Task Smasher');
+            
+            try {
+                // Clear all usage data
+                clearAllLimitsAndUsage();
+                console.log('Usage data cleared');
+                
+                // Simulate a Task Smasher API request
+                simulateTaskSmasherRequest();
+                console.log('Task Smasher API request simulated');
+                
+                // Check if Task Smasher appears in the usage data
+                const usageDataStr = localStorage.getItem('smashingapps_usage_data');
+                if (usageDataStr) {
+                    const usageData = JSON.parse(usageDataStr);
+                    
+                    if (usageData.requestsByApp && usageData.requestsByApp['task-smasher']) {
+                        const result = document.getElementById('test4Result');
+                        const resultText = document.getElementById('test4ResultText');
+                        
+                        resultText.innerHTML = `
+                            <strong>Success!</strong> Task Smasher appears in the usage data with:
+                            <ul>
+                                <li>Requests: ${usageData.requestsByApp['task-smasher']}</li>
+                                <li>Tokens: ${usageData.tokensByApp['task-smasher']}</li>
+                                <li>Cost: $${usageData.costByApp['task-smasher'].toFixed(4)}</li>
+                            </ul>
+                            <p>You can now go to Admin → Usage to verify that Task Smasher appears in the usage table.</p>
+                        `;
+                        
+                        result.style.display = 'block';
+                        document.getElementById('test4Error').style.display = 'none';
+                    } else {
+                        throw new Error('Task Smasher not found in usage data');
+                    }
+                } else {
+                    throw new Error('No usage data found');
+                }
+            } catch (error) {
+                console.error('Test 4 failed:', error);
+                
+                const errorElement = document.getElementById('test4Error');
+                const errorText = document.getElementById('test4ErrorText');
+                
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorElement.style.display = 'block';
+                document.getElementById('test4Result').style.display = 'none';
+            }
+        });
+        
+        // Function to run Test 5: Usage Data for Article Smasher
+        document.getElementById('runTest5').addEventListener('click', function() {
+            console.log('Running Test 5: Usage Data for Article Smasher');
+            
+            try {
+                // Clear all usage data
+                clearAllLimitsAndUsage();
+                console.log('Usage data cleared');
+                
+                // Simulate an Article Smasher API request
+                simulateArticleSmasherRequest();
+                console.log('Article Smasher API request simulated');
+                
+                // Check if Article Smasher appears in the usage data
+                const usageDataStr = localStorage.getItem('smashingapps_usage_data');
+                if (usageDataStr) {
+                    const usageData = JSON.parse(usageDataStr);
+                    
+                    if (usageData.requestsByApp && usageData.requestsByApp['article-smasher']) {
+                        const result = document.getElementById('test5Result');
+                        const resultText = document.getElementById('test5ResultText');
+                        
+                        resultText.innerHTML = `
+                            <strong>Success!</strong> Article Smasher appears in the usage data with:
+                            <ul>
+                                <li>Requests: ${usageData.requestsByApp['article-smasher']}</li>
+                                <li>Tokens: ${usageData.tokensByApp['article-smasher']}</li>
+                                <li>Cost: $${usageData.costByApp['article-smasher'].toFixed(4)}</li>
+                            </ul>
+                            <p>You can now go to Admin → Usage to verify that Article Smasher appears in the usage table.</p>
+                        `;
+                        
+                        result.style.display = 'block';
+                        document.getElementById('test5Error').style.display = 'none';
+                    } else {
+                        throw new Error('Article Smasher not found in usage data');
+                    }
+                } else {
+                    throw new Error('No usage data found');
+                }
+            } catch (error) {
+                console.error('Test 5 failed:', error);
+                
+                const errorElement = document.getElementById('test5Error');
+                const errorText = document.getElementById('test5ErrorText');
+                
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorElement.style.display = 'block';
+                document.getElementById('test5Result').style.display = 'none';
+            }
+        });
+        
+        // Function to run Test 6: Console Inspection
+        document.getElementById('runTest6').addEventListener('click', function() {
+            console.log('Running Test 6: Console Inspection');
+            
+            try {
+                // Clear the console
+                document.getElementById('logOutput').innerHTML = '';
+                console.log('Console cleared');
+                
+                // Log model-related messages
+                console.log('[DEBUG] Model override status: INACTIVE - Using model from global settings');
+                
+                const globalSettingsModel = localStorage.getItem('smashingapps_activeModel');
+                console.log('[DEBUG] Current model from global settings:', globalSettingsModel || 'default');
+                
+                // Test model override functionality
+                testModelOverride();
+                
+                // Display the results
+                const result = document.getElementById('test6Result');
+                const resultText = document.getElementById('test6ResultText');
+                const consoleOutput = document.getElementById('test6Console');
+                
+                resultText.textContent = 'Console inspection complete. Check the console output below for any model-related messages.';
+                
+                // Get all console messages containing "model" or "override"
+                const logOutput = document.getElementById('logOutput');
+                const modelMessages = Array.from(logOutput.children)
+                    .filter(entry => entry.textContent.toLowerCase().includes('model') || entry.textContent.toLowerCase().includes('override'))
+                    .map(entry => entry.textContent)
+                    .join('\n');
+                
+                consoleOutput.textContent = modelMessages || 'No model-related messages found in the console.';
+                
+                result.style.display = 'block';
+                document.getElementById('test6Error').style.display = 'none';
+            } catch (error) {
+                console.error('Test 6 failed:', error);
+                
+                const errorElement = document.getElementById('test6Error');
+                const errorText = document.getElementById('test6ErrorText');
+                
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorElement.style.display = 'block';
+                document.getElementById('test6Result').style.display = 'none';
+            }
+        });
+        
+        // Function to run Test 7: LocalStorage Inspection
+        document.getElementById('runTest7').addEventListener('click', function() {
+            console.log('Running Test 7: LocalStorage Inspection');
+            
+            try {
+                // Inspect model settings in localStorage
+                const modelSettings = inspectModelSettings();
+                
+                // Display the results
+                const result = document.getElementById('test7Result');
+                const resultText = document.getElementById('test7ResultText');
+                const storageOutput = document.getElementById('test7Storage');
+                
+                resultText.textContent = 'LocalStorage inspection complete. Check the output below for model-related settings.';
+                
+                // Format the model settings for display
+                storageOutput.innerHTML = '';
+                
+                for (const [key, value] of Object.entries(modelSettings)) {
+                    if (value) {
+                        const item = document.createElement('div');
+                        item.className = 'storage-item';
+                        
+                        const keyElement = document.createElement('div');
+                        keyElement.className = 'storage-key';
+                        keyElement.textContent = key;
+                        
+                        const valueElement = document.createElement('pre');
+                        valueElement.className = 'storage-value';
+                        
+                        try {
+                            // Try to parse as JSON for pretty printing
+                            const parsedValue = JSON.parse(value);
+                            valueElement.textContent = JSON.stringify(parsedValue, null, 2);
+                        } catch (e) {
+                            // If not JSON, just show as is
+                            valueElement.textContent = value;
+                        }
+                        
+                        item.appendChild(keyElement);
+                        item.appendChild(valueElement);
+                        storageOutput.appendChild(item);
+                    }
+                }
+                
+                if (storageOutput.children.length === 0) {
+                    storageOutput.innerHTML = '<p>No model-related settings found in localStorage.</p>';
+                }
+                
+                result.style.display = 'block';
+                document.getElementById('test7Error').style.display = 'none';
+            } catch (error) {
+                console.error('Test 7 failed:', error);
+                
+                const errorElement = document.getElementById('test7Error');
+                const errorText = document.getElementById('test7ErrorText');
+                
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorElement.style.display = 'block';
+                document.getElementById('test7Result').style.display = 'none';
+            }
+        });
+        
+        // Function to run the fix
+        document.getElementById('runFix').addEventListener('click', function() {
+            console.log('Running fix for usage tracking');
+            
+            try {
+                // Fix usage tracking data
+                const result = fixUsageTrackingData();
+                
+                // Display the results
+                const resultElement = document.getElementById('fixResult');
+                const resultText = document.getElementById('fixResultText');
+                
+                if (result) {
+                    resultText.innerHTML = `
+                        <strong>Success!</strong> Usage tracking data has been fixed.
+                        <p>Both Task Smasher and Article Smasher should now appear in the usage table in the admin dashboard.</p>
+                        <p>You can verify this by going to Admin → Usage.</p>
+                    `;
+                } else {
+                    resultText.textContent = 'No fixes were needed for the usage tracking data.';
+                }
+                
+                resultElement.style.display = 'block';
+                document.getElementById('fixError').style.display = 'none';
+            } catch (error) {
+                console.error('Fix failed:', error);
+                
+                const errorElement = document.getElementById('fixError');
+                const errorText = document.getElementById('fixErrorText');
+                
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorElement.style.display = 'block';
+                document.getElementById('fixResult').style.display = 'none';
+            }
+        });
+        
+        // Function to refresh localStorage contents
+        document.getElementById('refreshLocalStorage').addEventListener('click', function() {
+            refreshLocalStorageContents();
+        });
+        
+        // Function to clear console
+        document.getElementById('clearConsole').addEventListener('click', function() {
+            document.getElementById('logOutput').innerHTML = '';
+            console.log('Console cleared');
+        });
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            refreshLocalStorageContents();
+        });
+    </script>
+</body>
+</html>
