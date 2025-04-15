@@ -192,35 +192,65 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const refreshProviderModels = async (): Promise<void> => {
     console.log('AdminContext: Starting refreshProviderModels');
     setIsLoading(true);
+    
+    // Create a safe wrapper for async operations
+    const safeAsyncOperation = async <T,>(
+      operation: () => Promise<T>,
+      errorMessage: string,
+      fallback: T
+    ): Promise<T> => {
+      try {
+        return await operation();
+      } catch (error) {
+        console.warn(errorMessage, error);
+        return fallback;
+      }
+    };
+    
     try {
       // Get all registered services
       console.log('AdminContext: Getting all services for refreshProviderModels');
       const services = aiServiceRegistry.getAllServices();
-      console.log('AdminContext: Found services:', services.map(s => s.provider));
+      console.log('AdminContext: Found services:', services.map(s => s?.provider || 'unknown').filter(Boolean));
       const updatedProviderConfigs = { ...providers };
       
       // Force refresh models for each service
       for (const service of services) {
+        if (!service) {
+          console.warn('AdminContext: Encountered undefined service, skipping');
+          continue;
+        }
+        
         try {
           // Get the provider
           const provider = service.provider;
+          if (!provider) {
+            console.warn('AdminContext: Service missing provider property, skipping');
+            continue;
+          }
           
           // For services that have implemented dynamic model fetching,
           // this will trigger a fresh API call to get the latest models
-          if (service.isConfigured() && typeof (service as any).fetchModelsFromAPI === 'function') {
-            try {
-              await (service as any).fetchModelsFromAPI();
+          if (service.isConfigured && service.isConfigured()) {
+            if (typeof (service as any).fetchModelsFromAPI === 'function') {
+              await safeAsyncOperation(
+                async () => await (service as any).fetchModelsFromAPI(),
+                `Error fetching models for ${provider}:`,
+                undefined
+              );
               console.log(`Successfully fetched models for ${provider}`);
-            } catch (fetchError) {
-              console.warn(`Error fetching models for ${provider}:`, fetchError);
-              // Continue with other services even if one fails
             }
-          } else if (!service.isConfigured()) {
+          } else {
             console.log(`Service ${provider} is not configured, using default models`);
           }
           
           // Get the models (will use defaults if fetch failed)
-          const updatedModels = service.getModels();
+          let updatedModels: AIModel[] = [];
+          try {
+            updatedModels = service.getModels ? service.getModels() : [];
+          } catch (modelError) {
+            console.warn(`Error getting models for ${provider}:`, modelError);
+          }
           
           // Update the provider config
           updatedProviderConfigs[provider] = {
@@ -237,15 +267,15 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       setProviders(updatedProviderConfigs);
       
       console.log('AdminContext: Provider models refresh completed successfully');
-      return Promise.resolve();
     } catch (err) {
       console.error('AdminContext: Failed to refresh provider models:', err);
       setError(err instanceof Error ? err : new Error('Failed to refresh provider models'));
-      // Don't reject the promise, as we want the admin page to load even if model fetching fails
-      return Promise.resolve();
     } finally {
       setIsLoading(false);
     }
+    
+    // Always resolve the promise to prevent uncaught promise rejections
+    return Promise.resolve();
   };
 
   // Initialize prompts and settings on mount
