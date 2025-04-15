@@ -16,34 +16,34 @@
   node_bundler = "esbuild"
 
 # SPA redirects for React Router - unified app structure
-#[[redirects]]
-#  from = "/"
-#  to = "/index.html"
-#  status = 200
-#  force = false # Don't force redirect for bots
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+  force = false # Don't force redirect for bots
 
 # Route all tool paths through the SPA, but allow bots to see the static files
-#[[redirects]]
-#  from = "/tools/*"
-#  to = "/tools/:splat/index.html"
-#  status = 200
-#  force = false # Don't force redirect for bots
+[[redirects]]
+  from = "/tools/*"
+  to = "/tools/:splat/index.html"
+  status = 200
+  force = false # Don't force redirect for bots
 
 # API redirects for serverless functions
-#[[redirects]]
-#  from = "/api/*"
-#  to = "/.netlify/functions/:splat"
-#  status = 200
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
 
 # API redirects for TaskSmasher app
-#[[redirects]]
-#  from = "/tools/task-smasher/api/*"
-#  to = "/.netlify/functions/:splat"
-#  status = 200
+[[redirects]]
+  from = "/tools/task-smasher/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
 
 # Catch-all redirect for SPA - must be at the very bottom
-#[[redirects]]
-#  from = "/*"
-#  to = "/index.html"
-#  status = 200
-#  force = false # Don't force redirect for bots
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false # Don't force redirect for bots
