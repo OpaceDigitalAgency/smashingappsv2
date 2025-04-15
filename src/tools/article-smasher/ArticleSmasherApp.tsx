@@ -36,21 +36,19 @@ const ArticleSmasherApp: React.FC = () => {
       console.log('ArticleSmasherApp: Starting initialization');
       
       try {
-        // First, clear any existing app flags to prevent incorrect identification
+        // Only clear other app flags, not our own
         localStorage.removeItem('task_list_state');
-        localStorage.removeItem('FORCE_APP_ID');
-        localStorage.removeItem('current_app');
         
-        // Set primary ArticleSmasher flag first
-        localStorage.setItem('article_smasher_app', 'true');
+        // Set high-priority flags first (matching initializeAIServices.ts priority)
+        localStorage.setItem('FORCE_APP_ID', 'article-smasher');
+        localStorage.setItem('current_app', 'article-smasher');
         
-        // Small delay to ensure primary flag is set
+        // Small delay to ensure high-priority flags are set
         await new Promise(resolve => setTimeout(resolve, 50));
         
         // Set additional ArticleSmasher flags
+        localStorage.setItem('article_smasher_app', 'true');
         localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
-        localStorage.setItem('FORCE_APP_ID', 'article-smasher');
-        localStorage.setItem('current_app', 'article-smasher');
         
         // Initialize the admin bridge
         initAdminBridge();
@@ -84,11 +82,11 @@ const ArticleSmasherApp: React.FC = () => {
     
     // Set a more aggressive periodic check to ensure the app ID flags remain set
     const intervalId = setInterval(() => {
-      // Force app ID flags with every check
-      localStorage.setItem('article_smasher_app', 'true');
-      localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
+      // Force app ID flags with every check (matching initializeAIServices.ts priority)
       localStorage.setItem('FORCE_APP_ID', 'article-smasher');
       localStorage.setItem('current_app', 'article-smasher');
+      localStorage.setItem('article_smasher_app', 'true');
+      localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
       
       console.log('ArticleSmasherApp: Forced app ID flags refreshed');
       
