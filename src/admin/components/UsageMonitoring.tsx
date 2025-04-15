@@ -476,28 +476,43 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(usageStats.requestsByApp as Record<string, number>).map(([appId, requests]) => {
-                  const tokens = (usageStats.tokensByApp as Record<string, number>)[appId] || 0;
-                  const cost = (usageStats.costByApp as Record<string, number>)[appId] || 0;
-                  
-                  // Format app name for display
-                  const appName = appId
-                    .split('-')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
+                {Object.entries(usageStats.requestsByApp as Record<string, number>)
+                  .sort((a, b) => b[1] - a[1]) // Sort by number of requests
+                  .map(([appId, requests]) => {
+                    const tokens = (usageStats.tokensByApp as Record<string, number>)[appId] || 0;
+                    const inputTokens = (usageStats.inputTokensByApp as Record<string, number>)[appId] || 0;
+                    const outputTokens = (usageStats.outputTokensByApp as Record<string, number>)[appId] || 0;
+                    const cost = (usageStats.costByApp as Record<string, number>)[appId] || 0;
+                    
+                    // Format app name for display
+                    const appName = appId === 'article-smasher' ? 'Article Smasher' :
+                                  appId === 'task-smasher' ? 'Task Smasher' :
+                                  appId.split('-')
+                                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                      .join(' ');
+                    
+                    // Calculate percentage of total requests
+                    const percentOfTotal = ((requests / usageStats.totalRequests) * 100).toFixed(1);
                   
                   return (
-                    <tr key={appId}>
+                    <tr key={appId} className={appId === 'article-smasher' ? 'bg-blue-50' : ''}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-gray-100">
-                            <span className="text-sm font-medium text-gray-700">
+                          <div className={`flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full ${
+                            appId === 'article-smasher' ? 'bg-blue-100 text-blue-700' :
+                            appId === 'task-smasher' ? 'bg-purple-100 text-purple-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            <span className="text-sm font-medium">
                               {appName.charAt(0)}
                             </span>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
                               {appName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {percentOfTotal}% of total requests
                             </div>
                           </div>
                         </div>
@@ -507,10 +522,9 @@ const UsageMonitoring: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {tokens.toLocaleString()}
-                        <span className="text-xs text-gray-400">
-                          ({((usageStats.inputTokensByApp as Record<string, number>)[appId] || 0).toLocaleString()} /
-                          {((usageStats.outputTokensByApp as Record<string, number>)[appId] || 0).toLocaleString()})
-                        </span>
+                        <div className="text-xs text-gray-400">
+                          Input: {inputTokens.toLocaleString()} / Output: {outputTokens.toLocaleString()}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${cost.toFixed(2)}

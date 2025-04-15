@@ -41,40 +41,107 @@ export function initializeAIServicesWithTracking(): void {
  * Get the app ID for a service based on its provider
  */
 function getAppIdForService(provider: AIProvider): string {
-  // This is a simplified mapping - in a real app, you might want to
-  // determine this dynamically based on which app is using the service
-  // Get the current URL to determine which app is using the service
+  // First try to determine from the current route/path
+  const path = window.location.pathname;
   const url = window.location.href;
-  // Check if the URL contains article-smasher
-  if (url.includes('article-smasher')) {
+  
+  // Check for exact path matches first
+  if (path.includes('/tools/article-smasher') || path.includes('/article-smasher')) {
+    console.log('Detected ArticleSmasher from path');
     return 'article-smasher';
   }
   
-  // Check if the URL contains task-smasher
-  if (url.includes('task-smasher')) {
+  if (path.includes('/tools/task-smasher') || path.includes('/task-smasher')) {
+    console.log('Detected TaskSmasher from path');
     return 'task-smasher';
   }
   
-  // If we can't determine from the URL, try to determine from the provider
-  // This is a fallback for when the URL doesn't contain the app name
+  // If path doesn't help, try to determine from the current context
+  const currentContext = getCurrentContext();
+  if (currentContext) {
+    console.log(`Detected app from context: ${currentContext}`);
+    return currentContext;
+  }
+  
+  // Finally, use provider as a hint, but with more specific conditions
   switch (provider) {
     case 'openai':
-      // If we're using OpenAI, check if we're in an article context
-      if (url.includes('article-smasher') || url.includes('article') || url.includes('content') || url.includes('blog') || url.includes('post')) {
+    case 'anthropic':
+    case 'google':
+    case 'openrouter':
+      // For AI providers, we need to check the actual usage context
+      if (isArticleContext()) {
+        console.log(`Provider ${provider} used in article context`);
+        return 'article-smasher';
+      }
+      if (isTaskContext()) {
+        console.log(`Provider ${provider} used in task context`);
+        return 'task-smasher';
+      }
+      break;
+      
+    case 'image':
+      // Image generation is used by both apps, determine from context
+      if (isArticleContext()) {
         return 'article-smasher';
       }
       return 'task-smasher';
-    case 'anthropic':
-      return 'article-smasher'; // Default app for Anthropic
-    case 'google':
-      return 'article-smasher'; // Default app for Google
-    case 'openrouter':
-      return 'task-smasher'; // Default app for OpenRouter
-    case 'image':
-      return 'task-smasher'; // Default app for image generation
-    default:
-      return 'unknown-app';
   }
+  
+  // If we still can't determine, log a warning and return unknown
+  console.warn(`Could not determine app ID for provider ${provider}, defaulting to unknown-app`);
+  return 'unknown-app';
+}
+
+/**
+ * Get the current app context from React components or other signals
+ */
+function getCurrentContext(): string | null {
+  try {
+    // Check for React component signals
+    const articleRoot = document.querySelector('.article-smasher-container');
+    if (articleRoot) {
+      return 'article-smasher';
+    }
+    
+    const taskRoot = document.querySelector('.task-smasher-container');
+    if (taskRoot) {
+      return 'task-smasher';
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error determining current context:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if we're in an article-related context
+ */
+function isArticleContext(): boolean {
+  return (
+    // Check for article-specific UI elements
+    !!document.querySelector('.article-smasher-container') ||
+    // Check for article-specific routes
+    window.location.pathname.includes('/article') ||
+    // Check for article-specific localStorage data
+    !!localStorage.getItem('article_wizard_state')
+  );
+}
+
+/**
+ * Check if we're in a task-related context
+ */
+function isTaskContext(): boolean {
+  return (
+    // Check for task-specific UI elements
+    !!document.querySelector('.task-smasher-container') ||
+    // Check for task-specific routes
+    window.location.pathname.includes('/task') ||
+    // Check for task-specific localStorage data
+    !!localStorage.getItem('task_list_state')
+  );
 }
 
 /**

@@ -28,11 +28,20 @@ export function wrapAIService(service: AIService, appId: string): AIService {
                       (response.data.usage?.promptTokens || 0) + (response.data.usage?.completionTokens || 0) ||
                       estimateTokens(options.prompt);
     
+    console.log(`Tracking text completion request for ${appId}:`, {
+      provider: service.provider,
+      tokens: tokensUsed,
+      model: options.model
+    });
+    
     trackApiRequest(
       service.provider,
       tokensUsed,
       appId,
-      options.model
+      options.model,
+      undefined,
+      undefined,
+      new Date()
     );
     
     return response;
@@ -47,11 +56,26 @@ export function wrapAIService(service: AIService, appId: string): AIService {
                       (response.data.usage?.promptTokens || 0) + (response.data.usage?.completionTokens || 0) ||
                       estimateTokensFromMessages(options.messages);
     
+    // Calculate input/output token split
+    const inputTokens = response.data.usage?.promptTokens || Math.floor(tokensUsed * 0.7);
+    const outputTokens = response.data.usage?.completionTokens || (tokensUsed - inputTokens);
+    
+    console.log(`Tracking chat completion request for ${appId}:`, {
+      provider: service.provider,
+      totalTokens: tokensUsed,
+      inputTokens,
+      outputTokens,
+      model: options.model
+    });
+    
     trackApiRequest(
       service.provider,
       tokensUsed,
       appId,
-      options.model
+      options.model,
+      inputTokens,
+      outputTokens,
+      new Date()
     );
     
     return response;
@@ -66,11 +90,20 @@ export function wrapAIService(service: AIService, appId: string): AIService {
       // Use a fixed token count for image generation (this is an estimate)
       const estimatedTokens = 1000;
       
+      console.log(`Tracking image generation request for ${appId}:`, {
+        provider: service.provider,
+        estimatedTokens,
+        model: options.model || 'image-generation'
+      });
+      
       trackApiRequest(
         service.provider,
         estimatedTokens,
         appId,
-        options.model || 'image-generation'
+        options.model || 'image-generation',
+        estimatedTokens,
+        0,
+        new Date()
       );
       
       return response;
@@ -102,8 +135,20 @@ function estimateTokensFromMessages(messages: Array<{ role: string; content: str
  * Initialize usage tracking for all services
  */
 export function initializeUsageTracking(): void {
-  // This function will be called during app initialization
-  console.log('Usage tracking initialized');
+  // Clear any stale usage data that's older than 30 days
+  const usageData = JSON.parse(localStorage.getItem('smashingapps_usage_data') || '{}');
+  if (usageData.usageHistory) {
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    usageData.usageHistory = usageData.usageHistory.filter((entry: any) =>
+      entry.timestamp >= thirtyDaysAgo
+    );
+    localStorage.setItem('smashingapps_usage_data', JSON.stringify(usageData));
+  }
   
-  // You could add additional initialization logic here if needed
+  console.log('Usage tracking initialized with data cleanup');
+  
+  // Add event listener for usage data updates
+  window.addEventListener('usage-data-updated', (event: any) => {
+    console.log('Usage data updated:', event.detail);
+  });
 }
