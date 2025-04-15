@@ -41,6 +41,13 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# Admin routes
+[[redirects]]
+  from = "/admin/*"
+  to = "/index.html"
+  status = 200
+  force = false # Don't force redirect for bots
+
 # Catch-all redirect for SPA - must be at the very bottom
 [[redirects]]
   from = "/*"
