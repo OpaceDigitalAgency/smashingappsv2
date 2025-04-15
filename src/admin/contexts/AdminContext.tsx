@@ -36,14 +36,6 @@ import {
   saveSettings,
 } from '../../tools/article-smasher/src/services/promptService';
 
-// Default settings
-const DEFAULT_SETTINGS: GlobalSettings = {
-  defaultProvider: 'openai',
-  defaultModel: 'gpt-4o',
-  defaultTemperature: 0.7,
-  defaultMaxTokens: 1000,
-};
-
 // Define the context type
 interface AdminContextType {
   // Provider management
@@ -103,62 +95,8 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const [activeTaskSmasherPrompt, setActiveTaskSmasherPrompt] = useState<TaskSmasherPromptTemplate | null>(null);
   
   // Settings management state
-  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>(DEFAULT_SETTINGS);
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>(() => getGlobalSettings());
   const [appSettings, setAppSettings] = useState<Record<string, any>>({});
-  const [isSettingsInitialized, setIsSettingsInitialized] = useState(false);
-  
-  // Initialize global settings
-  useEffect(() => {
-    let isMounted = true;
-    
-    const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key === 'smashingapps_globalSettings' && e.newValue && isMounted) {
-        try {
-          const newSettings = JSON.parse(e.newValue);
-          setGlobalSettings(newSettings);
-        } catch (error) {
-          console.error('Error parsing global settings from storage:', error);
-        }
-      }
-    };
-
-    const handleGlobalSettingsChanged = (e: CustomEvent) => {
-      if (isMounted) {
-        setGlobalSettings(e.detail);
-      }
-    };
-
-    const initializeSettings = async () => {
-      if (!isSettingsInitialized && isMounted) {
-        try {
-          console.log('AdminContext: Initializing global settings');
-          initGlobalSettingsService();
-          const settings = getGlobalSettings();
-          setGlobalSettings(settings);
-          setIsSettingsInitialized(true);
-          console.log('AdminContext: Global settings initialized successfully');
-        } catch (error) {
-          console.error('AdminContext: Error initializing global settings:', error);
-          setError(error instanceof Error ? error : new Error('Failed to initialize global settings'));
-          setIsSettingsInitialized(true); // Mark as initialized even on error to prevent loops
-        }
-      }
-    };
-
-    // Add event listeners
-    window.addEventListener('storage', handleStorageEvent);
-    window.addEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
-
-    // Initialize settings
-    initializeSettings();
-
-    // Cleanup function
-    return () => {
-      isMounted = false;
-      window.removeEventListener('storage', handleStorageEvent);
-      window.removeEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
-    };
-  }, [isSettingsInitialized]);
   
   // Usage monitoring state
   const [usageStats, setUsageStats] = useState<UsageData>(getUsageData());
@@ -356,13 +294,6 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
         const loadedTaskSmasherPrompts = loadTaskSmasherPrompts();
         setTaskSmasherPrompts(loadedTaskSmasherPrompts);
         
-        // Update global settings with loaded settings
-        setGlobalSettings((prevSettings: GlobalSettings) => ({
-          ...prevSettings,
-          defaultModel: loadedSettings.defaultModel,
-          defaultTemperature: loadedSettings.defaultTemperature,
-          defaultMaxTokens: loadedSettings.defaultMaxTokens,
-        }));
         console.log('AdminContext: Prompts and settings loaded successfully');
       } catch (err) {
         console.error('AdminContext: Error loading prompts and settings', err);
@@ -710,7 +641,7 @@ export const useAdmin = () => {
         deleteTaskSmasherPrompt: async () => {},
         
         // Settings management
-        globalSettings: DEFAULT_SETTINGS,
+        globalSettings: getGlobalSettings(),
         appSettings: {},
         updateGlobalSettings: () => {},
         updateAppSettings: () => {},
