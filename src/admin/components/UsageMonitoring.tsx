@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { useAdmin } from '../contexts/AdminContext';
-import { 
-  BarChart3, 
-  PieChart, 
-  LineChart, 
-  Calendar, 
+import { useAdmin, TimeRange } from '../contexts/AdminContext';
+import {
+  BarChart3,
+  PieChart,
+  LineChart,
+  Calendar,
   Download,
   RefreshCw,
   DollarSign,
@@ -14,11 +14,17 @@ import {
   Trash2
 } from 'lucide-react';
 import Button from '../../shared/components/Button/Button';
-import { AIProvider } from '../../shared/types/aiProviders';
-import { getTimeLabels, getTimeSeriesData, clearAllLimitsAndUsage } from '../../shared/services/usageTrackingService';
+import { AIProvider, ProviderConfig } from '../../shared/types/aiProviders';
+import {
+  getTimeLabels,
+  getTimeSeriesData,
+  clearAllLimitsAndUsage,
+  UsageData
+} from '../../shared/services/usageTrackingService';
 
 const UsageMonitoring: React.FC = () => {
   const { usageStats, timeRange, setTimeRange, providers } = useAdmin();
+  const currentTimeRange = timeRange as TimeRange; // Type assertion since we know it's valid
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isClearing, setIsClearing] = React.useState(false);
   const [showClearSuccess, setShowClearSuccess] = React.useState(false);
@@ -89,9 +95,9 @@ const UsageMonitoring: React.FC = () => {
         'Provider', 'Requests', 'Tokens', 'Cost'
       ].join(',');
       
-      const providerRows = Object.entries(usageStats.requestsByProvider).map(([provider, requests]) => {
-        const tokens = usageStats.tokensByProvider[provider as AIProvider] || 0;
-        const cost = usageStats.costByProvider[provider as AIProvider] || 0;
+      const providerRows = Object.entries(usageStats.requestsByProvider as Record<AIProvider, number>).map(([provider, requests]) => {
+        const tokens = (usageStats.tokensByProvider as Record<AIProvider, number>)[provider as AIProvider] || 0;
+        const cost = (usageStats.costByProvider as Record<AIProvider, number>)[provider as AIProvider] || 0;
         return [provider, requests, tokens, cost.toFixed(2)].join(',');
       });
       
@@ -99,9 +105,9 @@ const UsageMonitoring: React.FC = () => {
         'Application', 'Requests', 'Tokens', 'Cost'
       ].join(',');
       
-      const appRows = Object.entries(usageStats.requestsByApp).map(([app, requests]) => {
-        const tokens = usageStats.tokensByApp[app] || 0;
-        const cost = usageStats.costByApp[app] || 0;
+      const appRows = Object.entries(usageStats.requestsByApp as Record<string, number>).map(([app, requests]) => {
+        const tokens = (usageStats.tokensByApp as Record<string, number>)[app] || 0;
+        const cost = (usageStats.costByApp as Record<string, number>)[app] || 0;
         return [app, requests, tokens, cost.toFixed(2)].join(',');
       });
       
@@ -137,8 +143,8 @@ const UsageMonitoring: React.FC = () => {
   };
   
   // Get time labels and data for charts
-  const labels = getTimeLabels(timeRange);
-  const { requests: requestsData, tokens: tokensData, inputTokens: inputTokensData, outputTokens: outputTokensData, costs: costData } = getTimeSeriesData(timeRange);
+  const labels = getTimeLabels(currentTimeRange);
+  const { requests: requestsData, tokens: tokensData, inputTokens: inputTokensData, outputTokens: outputTokensData, costs: costData } = getTimeSeriesData(currentTimeRange);
   
   return (
     <div className="p-6">
@@ -387,11 +393,11 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(usageStats.requestsByProvider).map(([key, requests]) => {
+                {Object.entries(usageStats.requestsByProvider as Record<AIProvider, number>).map(([key, requests]) => {
                   const provider = key as AIProvider;
-                  const tokens = usageStats.tokensByProvider[provider] || 0;
-                  const cost = usageStats.costByProvider[provider] || 0;
-                  const providerConfig = providers[provider];
+                  const tokens = (usageStats.tokensByProvider as Record<AIProvider, number>)[provider] || 0;
+                  const cost = (usageStats.costByProvider as Record<AIProvider, number>)[provider] || 0;
+                  const providerConfig = (providers as Record<AIProvider, ProviderConfig>)[provider];
                   
                   return (
                     <tr key={key}>
@@ -470,9 +476,9 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(usageStats.requestsByApp).map(([appId, requests]) => {
-                  const tokens = usageStats.tokensByApp[appId] || 0;
-                  const cost = usageStats.costByApp[appId] || 0;
+                {Object.entries(usageStats.requestsByApp as Record<string, number>).map(([appId, requests]) => {
+                  const tokens = (usageStats.tokensByApp as Record<string, number>)[appId] || 0;
+                  const cost = (usageStats.costByApp as Record<string, number>)[appId] || 0;
                   
                   // Format app name for display
                   const appName = appId
@@ -502,8 +508,8 @@ const UsageMonitoring: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {tokens.toLocaleString()}
                         <span className="text-xs text-gray-400">
-                          ({(usageStats.inputTokensByApp[appId] || 0).toLocaleString()} /
-                          {(usageStats.outputTokensByApp[appId] || 0).toLocaleString()})
+                          ({((usageStats.inputTokensByApp as Record<string, number>)[appId] || 0).toLocaleString()} /
+                          {((usageStats.outputTokensByApp as Record<string, number>)[appId] || 0).toLocaleString()})
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

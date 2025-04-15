@@ -8,6 +8,10 @@ declare global {
     __ADMIN_CONTEXT_FATAL__?: any;
   }
 }
+
+// Define time range type to match usageTrackingService
+export type TimeRange = 'day' | 'week' | 'month' | 'year';
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { aiServiceRegistry, getModelsByProvider } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
@@ -73,8 +77,8 @@ interface AdminContextType {
   
   // Usage monitoring
   usageStats: UsageData;
-  timeRange: 'day' | 'week' | 'month' | 'year';
-  setTimeRange: (timeRange: 'day' | 'week' | 'month' | 'year') => void;
+  timeRange: TimeRange;
+  setTimeRange: (timeRange: TimeRange) => void;
   
   // UI state
   activeSection: string;
@@ -100,18 +104,41 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   const [activeTaskSmasherPrompt, setActiveTaskSmasherPrompt] = useState<TaskSmasherPromptTemplate | null>(null);
   
   // Settings management state
-  const [globalSettings, setGlobalSettings] = useState(() => {
-    // Initialize global settings service
-    initGlobalSettingsService();
-    
-    // Get global settings from the service
-    return getGlobalSettings();
-  });
+  const [globalSettings, setGlobalSettings] = useState(getGlobalSettings());
   const [appSettings, setAppSettings] = useState<Record<string, any>>({});
+
+  // Initialize global settings service
+  useEffect(() => {
+    console.log('AdminContext: Initializing global settings service');
+    let isInitialized = false;
+
+    try {
+      if (!isInitialized) {
+        initGlobalSettingsService();
+        isInitialized = true;
+        console.log('AdminContext: Global settings service initialized');
+      }
+    } catch (error) {
+      console.error('AdminContext: Error initializing global settings service:', error);
+      setError(error instanceof Error ? error : new Error('Failed to initialize global settings'));
+    }
+
+    // Cleanup function to remove event listeners
+    return () => {
+      console.log('AdminContext: Cleaning up global settings service');
+      window.removeEventListener('storage', () => {});
+      window.removeEventListener('globalSettingsChanged', () => {});
+      window.removeEventListener('articleSmasherSettingsChanged', () => {});
+      window.removeEventListener('taskSmasherSettingsChanged', () => {});
+    };
+  }, []); // Empty dependency array ensures this only runs once
   
   // Usage monitoring state
+  // Define time range type to match usageTrackingService
+  type TimeRange = 'day' | 'week' | 'month' | 'year';
+  
   const [usageStats, setUsageStats] = useState<UsageData>(getUsageData());
-  const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
+  const [timeRange, setTimeRange] = useState<TimeRange>('month');
   
   // UI state
   const [activeSection, setActiveSection] = useState('dashboard');
