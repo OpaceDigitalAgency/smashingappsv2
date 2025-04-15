@@ -453,11 +453,11 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(usageStats.requestsByProvider as Record<AIProvider, number>).map(([key, requests]) => {
+                {usageStats.requestsByProvider && Object.entries(usageStats.requestsByProvider as Record<AIProvider, number>).map(([key, requests]) => {
                   const provider = key as AIProvider;
-                  const tokens = (usageStats.tokensByProvider as Record<AIProvider, number>)[provider] || 0;
-                  const cost = (usageStats.costByProvider as Record<AIProvider, number>)[provider] || 0;
-                  const providerConfig = (providers as Record<AIProvider, ProviderConfig>)[provider];
+                  const tokens = (usageStats.tokensByProvider && usageStats.tokensByProvider[provider]) || 0;
+                  const cost = (usageStats.costByProvider && usageStats.costByProvider[provider]) || 0;
+                  const providerConfig = (providers && providers[provider]);
                   
                   return (
                     <tr key={key}>
@@ -494,7 +494,7 @@ const UsageMonitoring: React.FC = () => {
                     </tr>
                   );
                 })}
-                {Object.keys(usageStats.requestsByProvider).length === 0 && (
+                {(!usageStats.requestsByProvider || Object.keys(usageStats.requestsByProvider).length === 0) && (
                   <tr>
                     <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                       No provider usage data available for the selected time period.
@@ -536,13 +536,13 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(usageStats.requestsByApp as Record<string, number>)
+                {usageStats.requestsByApp && Object.entries(usageStats.requestsByApp as Record<string, number>)
                   .sort((a, b) => b[1] - a[1]) // Sort by number of requests
                   .map(([appId, requests]) => {
-                    const tokens = (usageStats.tokensByApp as Record<string, number>)[appId] || 0;
-                    const inputTokens = (usageStats.inputTokensByApp as Record<string, number>)[appId] || 0;
-                    const outputTokens = (usageStats.outputTokensByApp as Record<string, number>)[appId] || 0;
-                    const cost = (usageStats.costByApp as Record<string, number>)[appId] || 0;
+                    const tokens = (usageStats.tokensByApp && usageStats.tokensByApp[appId]) || 0;
+                    const inputTokens = (usageStats.inputTokensByApp && usageStats.inputTokensByApp[appId]) || 0;
+                    const outputTokens = (usageStats.outputTokensByApp && usageStats.outputTokensByApp[appId]) || 0;
+                    const cost = (usageStats.costByApp && usageStats.costByApp[appId]) || 0;
                     
                     // Format app name for display - use a more generic approach
                     const appName = appId.split('-')
@@ -589,7 +589,7 @@ const UsageMonitoring: React.FC = () => {
                     </tr>
                   );
                 })}
-                {Object.keys(usageStats.requestsByApp).length === 0 && (
+                {(!usageStats.requestsByApp || Object.keys(usageStats.requestsByApp).length === 0) && (
                   <tr>
                     <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                       No application usage data available for the selected time period.

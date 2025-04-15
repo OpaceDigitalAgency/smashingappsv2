@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Admin Usage Data</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #4f46e5;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #4338ca;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #4338ca;
+        }
+        .result {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .error {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        pre {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        #logOutput {
+            background-color: #f3f4f6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fix Admin Usage Data</h1>
+    
+    <p>This tool fixes issues with usage tracking data in SmashingApps. It ensures that both Task Smasher and Article Smasher are properly represented in the usage data and that the data structure is complete.</p>
+    
+    <button id="fixButton">Fix Usage Data</button>
+    
+    <div id="result" class="result">
+        <h3>Result:</h3>
+        <p id="resultText"></p>
+    </div>
+    
+    <div id="error" class="error">
+        <h3>Error:</h3>
+        <p id="errorText"></p>
+    </div>
+    
+    <h2>Console Output</h2>
+    <div id="logOutput"></div>
+    
+    <script>
+        // Override console.log to also output to the log div
+        const originalConsoleLog = console.log;
+        const originalConsoleWarn = console.warn;
+        const originalConsoleError = console.error;
+        
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalConsoleLog.apply(console, args);
+            
+            const logOutput = document.getElementById('logOutput');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+        
+        console.warn = function() {
+            const args = Array.from(arguments);
+            originalConsoleWarn.apply(console, args);
+            
+            const logOutput = document.getElementById('logOutput');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = '#f59e0b';
+            logEntry.textContent = 'WARNING: ' + args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+        
+        console.error = function() {
+            const args = Array.from(arguments);
+            originalConsoleError.apply(console, args);
+            
+            const logOutput = document.getElementById('logOutput');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = '#ef4444';
+            logEntry.textContent = 'ERROR: ' + args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+        
+        // Function to fix usage data
+        function fixUsageData() {
+            console.log('Fixing usage data...');
+            
+            try {
+                // Get current usage data
+                const usageDataKey = 'smashingapps_usage_data';
+                const usageDataStr = localStorage.getItem(usageDataKey);
+                
+                if (!usageDataStr) {
+                    console.warn('No usage data found, creating new data structure');
+                    
+                    // Create a minimal structure
+                    const minimalUsageData = {
+                        totalRequests: 0,
+                        totalTokens: 0,
+                        totalInputTokens: 0,
+                        totalOutputTokens: 0,
+                        costEstimate: 0,
+                        requestsByProvider: {},
+                        tokensByProvider: {},
+                        inputTokensByProvider: {},
+                        outputTokensByProvider: {},
+                        costByProvider: {},
+                        requestsByApp: {
+                            'article-smasher': 0,
+                            'task-smasher': 0
+                        },
+                        tokensByApp: {
+                            'article-smasher': 0,
+                            'task-smasher': 0
+                        },
+                        inputTokensByApp: {
+                            'article-smasher': 0,
+                            'task-smasher': 0
+                        },
+                        outputTokensByApp: {
+                            'article-smasher': 0,
+                            'task-smasher': 0
+                        },
+                        costByApp: {
+                            'article-smasher': 0,
+                            'task-smasher': 0
+                        },
+                        usageHistory: []
+                    };
+                    
+                    localStorage.setItem(usageDataKey, JSON.stringify(minimalUsageData));
+                    console.log('Created new usage data structure');
+                    
+                    // Dispatch events to refresh the UI
+                    window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: minimalUsageData }));
+                    window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+                    
+                    return {
+                        success: true,
+                        message: 'Created new usage data structure with both Task Smasher and Article Smasher'
+                    };
+                }
+                
+                // Parse the existing data
+                const usageData = JSON.parse(usageDataStr);
+                let modified = false;
+                
+                // Fix missing objects
+                if (!usageData.requestsByProvider) {
+                    console.log('Fixing missing requestsByProvider');
+                    usageData.requestsByProvider = {};
+                    modified = true;
+                }
+                
+                if (!usageData.tokensByProvider) {
+                    console.log('Fixing missing tokensByProvider');
+                    usageData.tokensByProvider = {};
+                    modified = true;
+                }
+                
+                if (!usageData.inputTokensByProvider) {
+                    console.log('Fixing missing inputTokensByProvider');
+                    usageData.inputTokensByProvider = {};
+                    modified = true;
+                }
+                
+                if (!usageData.outputTokensByProvider) {
+                    console.log('Fixing missing outputTokensByProvider');
+                    usageData.outputTokensByProvider = {};
+                    modified = true;
+                }
+                
+                if (!usageData.costByProvider) {
+                    console.log('Fixing missing costByProvider');
+                    usageData.costByProvider = {};
+                    modified = true;
+                }
+                
+                if (!usageData.requestsByApp) {
+                    console.log('Fixing missing requestsByApp');
+                    usageData.requestsByApp = {};
+                    modified = true;
+                }
+                
+                if (!usageData.tokensByApp) {
+                    console.log('Fixing missing tokensByApp');
+                    usageData.tokensByApp = {};
+                    modified = true;
+                }
+                
+                if (!usageData.inputTokensByApp) {
+                    console.log('Fixing missing inputTokensByApp');
+                    usageData.inputTokensByApp = {};
+                    modified = true;
+                }
+                
+                if (!usageData.outputTokensByApp) {
+                    console.log('Fixing missing outputTokensByApp');
+                    usageData.outputTokensByApp = {};
+                    modified = true;
+                }
+                
+                if (!usageData.costByApp) {
+                    console.log('Fixing missing costByApp');
+                    usageData.costByApp = {};
+                    modified = true;
+                }
+                
+                // Ensure both apps exist in the app stats
+                if (!usageData.requestsByApp['article-smasher']) {
+                    console.log('Adding article-smasher to app stats');
+                    usageData.requestsByApp['article-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.tokensByApp['article-smasher']) {
+                    usageData.tokensByApp['article-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.inputTokensByApp['article-smasher']) {
+                    usageData.inputTokensByApp['article-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.outputTokensByApp['article-smasher']) {
+                    usageData.outputTokensByApp['article-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.costByApp['article-smasher']) {
+                    usageData.costByApp['article-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.requestsByApp['task-smasher']) {
+                    console.log('Adding task-smasher to app stats');
+                    usageData.requestsByApp['task-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.tokensByApp['task-smasher']) {
+                    usageData.tokensByApp['task-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.inputTokensByApp['task-smasher']) {
+                    usageData.inputTokensByApp['task-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.outputTokensByApp['task-smasher']) {
+                    usageData.outputTokensByApp['task-smasher'] = 0;
+                    modified = true;
+                }
+                
+                if (!usageData.costByApp['task-smasher']) {
+                    usageData.costByApp['task-smasher'] = 0;
+                    modified = true;
+                }
+                
+                // Save the fixed data
+                if (modified) {
+                    localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+                    console.log('Fixed usage data saved');
+                    
+                    // Dispatch events to refresh the UI
+                    window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
+                    window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+                    
+                    return {
+                        success: true,
+                        message: 'Fixed usage data structure and ensured both Task Smasher and Article Smasher are represented'
+                    };
+                } else {
+                    console.log('No fixes needed for usage data');
+                    return {
+                        success: true,
+                        message: 'Usage data structure is already valid'
+                    };
+                }
+            } catch (error) {
+                console.error('Error fixing usage data:', error);
+                return {
+                    success: false,
+                    message: `Error: ${error.message}`
+                };
+            }
+        }
+        
+        // Add event listener to the fix button
+        document.getElementById('fixButton').addEventListener('click', function() {
+            const result = fixUsageData();
+            
+            if (result.success) {
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('resultText').textContent = result.message;
+                document.getElementById('error').style.display = 'none';
+            } else {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('errorText').textContent = result.message;
+                document.getElementById('result').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
