@@ -2,11 +2,13 @@
 
 ## Problem Identified
 
-We identified two critical issues with app identification that were causing usage tracking problems:
+We identified three critical issues with app identification that were causing usage tracking problems:
 
 1. **Article Smasher Issue**: The app was clearing all identification flags (including its own) during initialization, creating a race condition where API calls could be misidentified.
 
 2. **Task Smasher Issue**: The app wasn't setting any identification flags at all, potentially causing its usage to be attributed to Article Smasher or not tracked properly.
+
+3. **Shared Services Issue**: The shared services weren't properly recognizing the high-priority app identification flags (`FORCE_APP_ID` and `current_app`), causing them to fall back to less reliable identification methods.
 
 ## Fixes Implemented
 
@@ -78,6 +80,52 @@ useEffect(() => {
 ```
 
 This ensures Task Smasher properly identifies itself for usage tracking.
+
+### 3. Shared Services Fix (commit e214eb3)
+
+In `src/shared/services/aiServices.ts`, we updated the app identification logic to properly recognize the high-priority flags:
+
+```javascript
+// Get the current app ID from localStorage or URL
+let appId = 'unknown-app';
+
+// Check for app identification flags in priority order
+// 1. FORCE_APP_ID has highest priority
+const forcedAppId = localStorage.getItem('FORCE_APP_ID');
+if (forcedAppId) {
+  console.log(`[APP IDENTIFICATION] Using forced app ID: ${forcedAppId}`);
+  appId = forcedAppId;
+}
+// 2. current_app has second priority
+else if (localStorage.getItem('current_app')) {
+  appId = localStorage.getItem('current_app') || 'unknown-app';
+  console.log(`[APP IDENTIFICATION] Using current_app: ${appId}`);
+}
+// 3. App-specific flags have third priority
+else if (localStorage.getItem('article_smasher_app') || localStorage.getItem('article_wizard_state')) {
+  appId = 'article-smasher';
+  console.log('[APP IDENTIFICATION] Using article-smasher based on app-specific flags');
+} else if (localStorage.getItem('task_list_state')) {
+  appId = 'task-smasher';
+  console.log('[APP IDENTIFICATION] Using task-smasher based on app-specific flags');
+}
+// 4. URL path has lowest priority
+else {
+  // Check URL path as a fallback
+  const path = window.location.pathname;
+  if (path.includes('/article-smasher') || path.includes('/tools/article-smasher')) {
+    appId = 'article-smasher';
+    console.log('[APP IDENTIFICATION] Using article-smasher based on URL path');
+  } else if (path.includes('/task-smasher') || path.includes('/tools/task-smasher')) {
+    appId = 'task-smasher';
+    console.log('[APP IDENTIFICATION] Using task-smasher based on URL path');
+  } else {
+    console.log(`[APP IDENTIFICATION] Using default app ID: ${appId}`);
+  }
+}
+```
+
+We also made similar updates to `src/shared/services/aiServiceWrapper.ts` to ensure consistent app identification throughout the system.
 
 ## How App Identification Works
 
