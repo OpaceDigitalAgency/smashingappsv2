@@ -32,16 +32,27 @@ const ARTICLE_SMASHER_SETTINGS_CHANGED_EVENT = 'articleSmasherSettingsChanged';
  */
 export const getGlobalSettings = (): GlobalSettings => {
   try {
+    console.log('[globalSettingsService] getGlobalSettings: entry');
+    if (typeof localStorage === "undefined") {
+      throw new Error("localStorage is not available in this environment.");
+    }
     const settingsStr = localStorage.getItem(GLOBAL_SETTINGS_KEY);
     if (settingsStr) {
-      return JSON.parse(settingsStr);
+      const parsed = JSON.parse(settingsStr);
+      console.log('[globalSettingsService] getGlobalSettings: loaded from storage', parsed);
+      return parsed;
     }
   } catch (error) {
-    console.error('Error loading global settings:', error);
+    console.error('[globalSettingsService] Error loading global settings:', error);
+    if (typeof window !== "undefined") {
+      (window as any).__GLOBAL_SETTINGS_ERROR__ = error;
+    }
+    // Optionally, throw here to surface the error in the UI
+    // throw error;
   }
-  
   // Initialize with defaults if no stored settings
   setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
+  console.log('[globalSettingsService] getGlobalSettings: using defaults', DEFAULT_GLOBAL_SETTINGS);
   return DEFAULT_GLOBAL_SETTINGS;
 };
 
@@ -50,17 +61,23 @@ export const getGlobalSettings = (): GlobalSettings => {
  */
 export const setGlobalSettings = (settings: GlobalSettings, skipSync: boolean = false): void => {
   try {
+    console.log('[globalSettingsService] setGlobalSettings: entry', settings);
+    if (typeof localStorage === "undefined") {
+      throw new Error("localStorage is not available in this environment.");
+    }
     localStorage.setItem(GLOBAL_SETTINGS_KEY, JSON.stringify(settings));
-    
-    // Dispatch a custom event to notify all components of the change
     window.dispatchEvent(new CustomEvent(GLOBAL_SETTINGS_CHANGED_EVENT, { detail: settings }));
-    
-    // Sync with apps if not skipped
     if (!skipSync) {
       applyGlobalSettingsToAllApps();
     }
+    console.log('[globalSettingsService] setGlobalSettings: success');
   } catch (error) {
-    console.error('Error saving global settings:', error);
+    console.error('[globalSettingsService] Error saving global settings:', error);
+    if (typeof window !== "undefined") {
+      (window as any).__GLOBAL_SETTINGS_ERROR__ = error;
+    }
+    // Optionally, throw here to surface the error in the UI
+    // throw error;
   }
 };
 
@@ -227,44 +244,49 @@ export const applyGlobalSettingsToAllApps = (): void => {
  * This should be called when the application starts
  */
 export const initGlobalSettingsService = (): void => {
-  // Initialize global settings if they don't exist
-  if (!localStorage.getItem(GLOBAL_SETTINGS_KEY)) {
-    setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
-  }
-  
-  // Apply global settings to all apps on initialization
-  applyGlobalSettingsToAllApps();
-  
-  // Listen for storage events to sync settings across tabs
-  window.addEventListener('storage', (e) => {
-    if (e.key === GLOBAL_SETTINGS_KEY && e.newValue) {
-      try {
-        applyGlobalSettingsToAllApps();
-      } catch (error) {
-        console.error('Error handling global settings storage event:', error);
-      }
-    } else if (e.key === ARTICLE_SMASHER_SETTINGS_KEY && e.newValue) {
-      try {
-        applyArticleSmasherSettingsToGlobal();
-      } catch (error) {
-        console.error('Error handling ArticleSmasher settings storage event:', error);
-      }
-    } else if (e.key === TASK_SMASHER_PROVIDER_KEY && e.newValue) {
-      try {
-        applyTaskSmasherSettingsToGlobal();
-      } catch (error) {
-        console.error('Error handling TaskSmasher settings storage event:', error);
-      }
+  try {
+    console.log('[globalSettingsService] initGlobalSettingsService: entry');
+    if (typeof localStorage === "undefined") {
+      throw new Error("localStorage is not available in this environment.");
     }
-  });
-  
-  // Listen for ArticleSmasher settings changes
-  window.addEventListener(ARTICLE_SMASHER_SETTINGS_CHANGED_EVENT, () => {
-    applyArticleSmasherSettingsToGlobal();
-  });
-  
-  // Listen for TaskSmasher settings changes
-  window.addEventListener(TASK_SMASHER_SETTINGS_CHANGED_EVENT, () => {
-    applyTaskSmasherSettingsToGlobal();
-  });
+    if (!localStorage.getItem(GLOBAL_SETTINGS_KEY)) {
+      setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
+    }
+    applyGlobalSettingsToAllApps();
+    window.addEventListener('storage', (e) => {
+      if (e.key === GLOBAL_SETTINGS_KEY && e.newValue) {
+        try {
+          applyGlobalSettingsToAllApps();
+        } catch (error) {
+          console.error('[globalSettingsService] Error handling global settings storage event:', error);
+        }
+      } else if (e.key === ARTICLE_SMASHER_SETTINGS_KEY && e.newValue) {
+        try {
+          applyArticleSmasherSettingsToGlobal();
+        } catch (error) {
+          console.error('[globalSettingsService] Error handling ArticleSmasher settings storage event:', error);
+        }
+      } else if (e.key === TASK_SMASHER_PROVIDER_KEY && e.newValue) {
+        try {
+          applyTaskSmasherSettingsToGlobal();
+        } catch (error) {
+          console.error('[globalSettingsService] Error handling TaskSmasher settings storage event:', error);
+        }
+      }
+    });
+    window.addEventListener(ARTICLE_SMASHER_SETTINGS_CHANGED_EVENT, () => {
+      applyArticleSmasherSettingsToGlobal();
+    });
+    window.addEventListener(TASK_SMASHER_SETTINGS_CHANGED_EVENT, () => {
+      applyTaskSmasherSettingsToGlobal();
+    });
+    console.log('[globalSettingsService] initGlobalSettingsService: success');
+  } catch (error) {
+    console.error('[globalSettingsService] Fatal error in initGlobalSettingsService:', error);
+    if (typeof window !== "undefined") {
+      (window as any).__GLOBAL_SETTINGS_ERROR__ = error;
+    }
+    // Optionally, throw here to surface the error in the UI
+    // throw error;
+  }
 };
