@@ -14,6 +14,7 @@
 const GLOBAL_SETTINGS_KEY = 'global-settings';
 const SMASHINGAPPS_GLOBAL_SETTINGS_KEY = 'smashingapps-global-settings';
 const ACTIVE_MODEL_KEY = 'smashingapps_activeModel';
+const OPENAI_API_KEY = 'openai_api_key';
 
 /**
  * Initialize the settings synchronizer
@@ -98,11 +99,31 @@ export function synchronizeSettings() {
     }
     
     // Also update the app-specific model setting if available
-    if (parsedSettings && parsedSettings.aiProvider && parsedSettings.aiProvider.defaultModel) {
-      localStorage.setItem(ACTIVE_MODEL_KEY, parsedSettings.aiProvider.defaultModel);
-      console.log('[SettingsSynchronizer] Updated smashingapps_activeModel to:', parsedSettings.aiProvider.defaultModel);
+    if (parsedSettings && parsedSettings.aiProvider) {
+      // Sync default model
+      if (parsedSettings.aiProvider.defaultModel) {
+        localStorage.setItem(ACTIVE_MODEL_KEY, parsedSettings.aiProvider.defaultModel);
+        console.log('[SettingsSynchronizer] Updated smashingapps_activeModel to:', parsedSettings.aiProvider.defaultModel);
+      }
+
+      // Sync API key if provider is OpenAI
+      if (parsedSettings.aiProvider.provider === 'openai') {
+        if (parsedSettings.aiProvider.apiKey) {
+          localStorage.setItem(OPENAI_API_KEY, parsedSettings.aiProvider.apiKey);
+          console.log('[SettingsSynchronizer] Updated OpenAI API key');
+        } else {
+          localStorage.removeItem(OPENAI_API_KEY);
+          console.log('[SettingsSynchronizer] Removed OpenAI API key');
+        }
+      }
     }
     
+    // Dispatch event to notify services that settings have been synchronized
+    const event = new CustomEvent('settings-synchronized', {
+      detail: parsedSettings
+    });
+    window.dispatchEvent(event);
+
     console.log('[SettingsSynchronizer] Settings synchronized successfully');
   } catch (error) {
     console.error('[SettingsSynchronizer] Error synchronizing settings:', error);

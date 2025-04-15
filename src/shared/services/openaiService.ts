@@ -5,10 +5,11 @@
  * It manages API calls, rate limits, and error handling.
  */
 
-import { 
-  AIService, 
-  aiServiceRegistry 
+import {
+  AIService,
+  aiServiceRegistry
 } from './AIService';
+import { GlobalSettings } from '../contexts/GlobalSettings/types';
 
 import {
   AIProvider,
@@ -88,11 +89,49 @@ class OpenAIServiceImpl implements AIService {
     // Try to load cached models from localStorage
     this.loadCachedModels();
     
-    // Fetch models in the background, but only if we have an API key
+    // Initialize models based on API key availability
+    this.initializeModels();
+
+    // Listen for settings changes
+    window.addEventListener('storage', this.handleStorageChange.bind(this));
+    
+    // Handle both settings-synchronized and globalSettingsChanged events
+    const handleSettingsEvent = (e: Event) => {
+      try {
+        const event = e as CustomEvent<GlobalSettings>;
+        const settings = event.detail;
+        if (settings?.aiProvider?.provider === 'openai') {
+          const newApiKey = settings.aiProvider.apiKey || null;
+          if (newApiKey !== this.apiKey) {
+            this.apiKey = newApiKey;
+            if (this.apiKey) {
+              localStorage.setItem(this.apiKeyStorageKey, this.apiKey);
+            } else {
+              localStorage.removeItem(this.apiKeyStorageKey);
+            }
+            this.initializeModels();
+          }
+        }
+      } catch (error) {
+        console.error('Error handling settings event:', error);
+      }
+    };
+
+    window.addEventListener('settings-synchronized', handleSettingsEvent);
+    window.addEventListener('globalSettingsChanged', handleSettingsEvent);
+  }
+
+  private handleStorageChange(event: StorageEvent) {
+    if (event.key === this.apiKeyStorageKey) {
+      this.apiKey = event.newValue;
+      this.initializeModels();
+    }
+  }
+
+  private initializeModels() {
     if (this.apiKey) {
       this.fetchModelsFromAPI().catch(err => {
         console.warn('Failed to fetch models during initialization:', err);
-        // Ensure we have at least the default models
         if (!this.cachedModels) {
           this.cachedModels = DEFAULT_OPENAI_MODELS;
         }

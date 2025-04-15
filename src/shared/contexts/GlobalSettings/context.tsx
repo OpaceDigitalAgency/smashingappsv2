@@ -17,13 +17,18 @@ function globalSettingsReducer(
 ): GlobalSettingsContextValue {
   switch (action.type) {
     case 'UPDATE_SETTINGS':
+      const updatedSettings = {
+        ...state.settings,
+        ...action.payload,
+        aiProvider: {
+          ...state.settings.aiProvider,
+          ...(action.payload.aiProvider || {})
+        },
+        _version: DEFAULT_SETTINGS._version
+      };
       return {
         ...state,
-        settings: {
-          ...state.settings,
-          ...action.payload,
-          _version: DEFAULT_SETTINGS._version
-        },
+        settings: updatedSettings,
         error: null
       };
     case 'RESET_SETTINGS':
@@ -84,8 +89,18 @@ export function GlobalSettingsProvider({ children }: { children: React.ReactNode
   } = useLocalStorage<GlobalSettings>('global-settings', DEFAULT_SETTINGS);
 
   // Create initial state
+  // Ensure stored settings have all required fields
+  const initialSettings = {
+    ...DEFAULT_SETTINGS,
+    ...storedSettings,
+    aiProvider: {
+      ...DEFAULT_SETTINGS.aiProvider,
+      ...(storedSettings?.aiProvider || {})
+    }
+  };
+
   const initialState: GlobalSettingsContextValue = {
-    settings: storedSettings,
+    settings: initialSettings,
     updateSettings: () => {}, // Will be replaced
     resetSettings: () => {}, // Will be replaced
     isLoading: true,
@@ -109,6 +124,19 @@ export function GlobalSettingsProvider({ children }: { children: React.ReactNode
       
       // Synchronize settings across different localStorage keys
       synchronizeSettings();
+      
+      // Dispatch settings-synchronized event
+      const syncEvent = new CustomEvent('settings-synchronized', {
+        detail: updatedSettings
+      });
+      window.dispatchEvent(syncEvent);
+      
+      // Dispatch globalSettingsChanged event
+      const changeEvent = new CustomEvent('globalSettingsChanged', {
+        detail: updatedSettings
+      });
+      window.dispatchEvent(changeEvent);
+      
       console.log('[GlobalSettings] Synchronized settings across localStorage keys');
     } catch (error) {
       const settingsError = error instanceof Error ? error : new GlobalSettingsError('Unknown error updating settings');
@@ -137,8 +165,8 @@ export function GlobalSettingsProvider({ children }: { children: React.ReactNode
   // Initialize settings
   useEffect(() => {
     try {
-      validateSettings(storedSettings);
-      dispatch({ type: 'UPDATE_SETTINGS', payload: storedSettings });
+      validateSettings(initialSettings);
+      dispatch({ type: 'UPDATE_SETTINGS', payload: initialSettings });
     } catch (error) {
       console.error('[GlobalSettings] Invalid stored settings, resetting to defaults:', error);
       resetSettings();
