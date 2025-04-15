@@ -82,13 +82,29 @@ const USAGE_DATA_KEY = 'smashingapps_usage_data';
 export const getUsageData = (): UsageData => {
   try {
     const storedData = localStorage.getItem(USAGE_DATA_KEY);
-    if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      let modified = false;
-      
-      // Ensure all required objects exist
-      // Initialize provider-related objects
-      if (!parsedData.requestsByProvider) {
+    if (!storedData) {
+      console.log('[DEBUG] No usage data found in localStorage, returning initial data');
+      return initialUsageData;
+    }
+
+    let parsedData: UsageData;
+    try {
+      parsedData = JSON.parse(storedData);
+    } catch (parseError) {
+      console.error('[DEBUG] Failed to parse usage data:', parseError);
+      return initialUsageData;
+    }
+
+    if (!parsedData || typeof parsedData !== 'object') {
+      console.error('[DEBUG] Invalid usage data format:', parsedData);
+      return initialUsageData;
+    }
+
+    let modified = false;
+    
+    // Ensure all required objects exist
+    // Initialize provider-related objects
+    if (!parsedData.requestsByProvider) {
         console.warn('[DEBUG] Missing requestsByProvider in stored usage data, initializing it');
         parsedData.requestsByProvider = createInitialProviderRecord();
         modified = true;
@@ -121,31 +137,46 @@ export const getUsageData = (): UsageData => {
       // Initialize app-related objects
       if (!parsedData.requestsByApp) {
         console.warn('[DEBUG] Missing requestsByApp in stored usage data, initializing it');
-        parsedData.requestsByApp = {};
+        parsedData.requestsByApp = {
+          'article-smasher': 0,
+          'task-smasher': 0
+        };
         modified = true;
       }
       
       if (!parsedData.tokensByApp) {
         console.warn('[DEBUG] Missing tokensByApp in stored usage data, initializing it');
-        parsedData.tokensByApp = {};
+        parsedData.tokensByApp = {
+          'article-smasher': 0,
+          'task-smasher': 0
+        };
         modified = true;
       }
       
       if (!parsedData.inputTokensByApp) {
         console.warn('[DEBUG] Missing inputTokensByApp in stored usage data, initializing it');
-        parsedData.inputTokensByApp = {};
+        parsedData.inputTokensByApp = {
+          'article-smasher': 0,
+          'task-smasher': 0
+        };
         modified = true;
       }
       
       if (!parsedData.outputTokensByApp) {
         console.warn('[DEBUG] Missing outputTokensByApp in stored usage data, initializing it');
-        parsedData.outputTokensByApp = {};
+        parsedData.outputTokensByApp = {
+          'article-smasher': 0,
+          'task-smasher': 0
+        };
         modified = true;
       }
       
       if (!parsedData.costByApp) {
         console.warn('[DEBUG] Missing costByApp in stored usage data, initializing it');
-        parsedData.costByApp = {};
+        parsedData.costByApp = {
+          'article-smasher': 0,
+          'task-smasher': 0
+        };
         modified = true;
       }
       
@@ -190,15 +221,12 @@ export const getUsageData = (): UsageData => {
         tokensByProvider: parsedData.tokensByProvider,
         costByProvider: parsedData.costByProvider
       });
-      
+
       return parsedData;
-    }
   } catch (error) {
     console.error('[DEBUG] Failed to load usage data from local storage:', error);
+    return initialUsageData;
   }
-  
-  console.log('[DEBUG] No valid usage data found, returning initial data');
-  return initialUsageData;
 };
 
 // Save usage data to local storage
