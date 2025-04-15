@@ -40,22 +40,60 @@ const UsageMonitoring: React.FC = () => {
   const [showDebugPanel, setShowDebugPanel] = React.useState(false);
   const [isFixingData, setIsFixingData] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<Error | null>(null);
 
-  // Initialize usage data on mount
+  // Validate usage stats
+  if (!usageStats) {
+    console.error('Usage stats is undefined');
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700">Error: Usage data is not available</p>
+          <button
+            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+            onClick={() => window.dispatchEvent(new CustomEvent('refresh-usage-data'))}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Initialize usage data on mount and handle errors
   React.useEffect(() => {
     const initializeUsageData = async () => {
       try {
+        setError(null);
         // Force a refresh of usage data
         window.dispatchEvent(new CustomEvent('refresh-usage-data'));
-        setIsLoading(false);
       } catch (error) {
         console.error('Error initializing usage data:', error);
+        setError(error instanceof Error ? error : new Error('Failed to initialize usage data'));
+      } finally {
         setIsLoading(false);
       }
     };
 
     initializeUsageData();
   }, []);
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700">Error: {error.message}</p>
+          <button
+            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+            onClick={() => window.dispatchEvent(new CustomEvent('refresh-usage-data'))}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state while initializing
   if (isLoading) {
@@ -71,40 +109,52 @@ const UsageMonitoring: React.FC = () => {
     );
   }
   
-  // Handle refresh
+  // Handle refresh with error handling
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    
-    // Dispatch a custom event to refresh usage data
-    // This event is handled by the AdminContext component to update the usageStats state
-    // which refreshes both the summary metrics and the detailed tables
-    window.dispatchEvent(new CustomEvent('refresh-usage-data'));
-    
-    // Reset refreshing state after a short delay
-    setTimeout(() => {
+    try {
+      setIsRefreshing(true);
+      setError(null);
+      
+      // Dispatch a custom event to refresh usage data
+      window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+      
+      // Reset refreshing state after a short delay
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error refreshing usage data:', error);
+      setError(error instanceof Error ? error : new Error('Failed to refresh usage data'));
       setIsRefreshing(false);
-    }, 1000);
+    }
   };
   
   // Handle clear rate limits
   const handleClearRateLimits = () => {
-    setIsClearing(true);
-    
-    // Clear all usage data and rate limits
-    clearAllLimitsAndUsage();
-    
-    // Show success message
-    setShowClearSuccess(true);
-    
-    // Reset clearing state after a short delay
-    setTimeout(() => {
-      setIsClearing(false);
+    try {
+      setIsClearing(true);
+      setError(null);
       
-      // Hide success message after 3 seconds
+      // Clear all usage data and rate limits
+      clearAllLimitsAndUsage();
+      
+      // Show success message
+      setShowClearSuccess(true);
+      
+      // Reset clearing state after a short delay
       setTimeout(() => {
-        setShowClearSuccess(false);
-      }, 3000);
-    }, 1000);
+        setIsClearing(false);
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setShowClearSuccess(false);
+        }, 3000);
+      }, 1000);
+    } catch (error) {
+      console.error('Error clearing rate limits:', error);
+      setError(error instanceof Error ? error : new Error('Failed to clear rate limits'));
+      setIsClearing(false);
+    }
   };
   
   // Handle debug actions
@@ -177,9 +227,9 @@ const UsageMonitoring: React.FC = () => {
         'Provider', 'Requests', 'Tokens', 'Cost'
       ].join(',');
       
-      const providerRows = Object.entries(usageStats.requestsByProvider as Record<AIProvider, number>).map(([provider, requests]) => {
-        const tokens = (usageStats.tokensByProvider as Record<AIProvider, number>)[provider as AIProvider] || 0;
-        const cost = (usageStats.costByProvider as Record<AIProvider, number>)[provider as AIProvider] || 0;
+      const providerRows = Object.entries(usageStats.requestsByProvider || {} as Record<AIProvider, number>).map(([provider, requests]) => {
+        const tokens = (usageStats.tokensByProvider || {} as Record<AIProvider, number>)[provider as AIProvider] || 0;
+        const cost = (usageStats.costByProvider || {} as Record<AIProvider, number>)[provider as AIProvider] || 0;
         return [provider, requests, tokens, cost.toFixed(2)].join(',');
       });
       
@@ -187,9 +237,9 @@ const UsageMonitoring: React.FC = () => {
         'Application', 'Requests', 'Tokens', 'Cost'
       ].join(',');
       
-      const appRows = Object.entries(usageStats.requestsByApp as Record<string, number>).map(([app, requests]) => {
-        const tokens = (usageStats.tokensByApp as Record<string, number>)[app] || 0;
-        const cost = (usageStats.costByApp as Record<string, number>)[app] || 0;
+      const appRows = Object.entries(usageStats.requestsByApp || {} as Record<string, number>).map(([app, requests]) => {
+        const tokens = (usageStats.tokensByApp || {} as Record<string, number>)[app] || 0;
+        const cost = (usageStats.costByApp || {} as Record<string, number>)[app] || 0;
         return [app, requests, tokens, cost.toFixed(2)].join(',');
       });
       
@@ -484,7 +534,7 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {usageStats.requestsByProvider && Object.entries(usageStats.requestsByProvider as Record<AIProvider, number>).map(([key, requests]) => {
+                {usageStats.requestsByProvider && Object.entries(usageStats.requestsByProvider || {} as Record<AIProvider, number>).map(([key, requests]) => {
                   const provider = key as AIProvider;
                   const tokens = (usageStats.tokensByProvider && usageStats.tokensByProvider[provider]) || 0;
                   const cost = (usageStats.costByProvider && usageStats.costByProvider[provider]) || 0;
@@ -567,7 +617,7 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {usageStats.requestsByApp && Object.entries(usageStats.requestsByApp as Record<string, number>)
+                {usageStats.requestsByApp && Object.entries(usageStats.requestsByApp || {} as Record<string, number>)
                   .sort((a, b) => b[1] - a[1]) // Sort by number of requests
                   .map(([appId, requests]) => {
                     const tokens = (usageStats.tokensByApp && usageStats.tokensByApp[appId]) || 0;
