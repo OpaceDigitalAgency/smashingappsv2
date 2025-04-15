@@ -31,7 +31,7 @@ export interface UsageData {
   }[];
 }
 
-// Initialize with empty usage data
+// Initialize with empty usage data that includes both apps
 const initialUsageData: UsageData = {
   totalRequests: 0,
   totalTokens: 0,
@@ -43,11 +43,26 @@ const initialUsageData: UsageData = {
   inputTokensByProvider: {} as Record<AIProvider, number>,
   outputTokensByProvider: {} as Record<AIProvider, number>,
   costByProvider: {} as Record<AIProvider, number>,
-  requestsByApp: {},
-  tokensByApp: {},
-  inputTokensByApp: {},
-  outputTokensByApp: {},
-  costByApp: {},
+  requestsByApp: {
+    'article-smasher': 0,
+    'task-smasher': 0
+  },
+  tokensByApp: {
+    'article-smasher': 0,
+    'task-smasher': 0
+  },
+  inputTokensByApp: {
+    'article-smasher': 0,
+    'task-smasher': 0
+  },
+  outputTokensByApp: {
+    'article-smasher': 0,
+    'task-smasher': 0
+  },
+  costByApp: {
+    'article-smasher': 0,
+    'task-smasher': 0
+  },
   usageHistory: []
 };
 
@@ -60,31 +75,69 @@ export const getUsageData = (): UsageData => {
     const storedData = localStorage.getItem(USAGE_DATA_KEY);
     if (storedData) {
       const parsedData = JSON.parse(storedData);
+      let modified = false;
       
-      // Validate the data structure
+      // Ensure all required objects exist
       if (!parsedData.requestsByApp) {
         console.warn('[DEBUG] Missing requestsByApp in stored usage data, initializing it');
         parsedData.requestsByApp = {};
+        modified = true;
       }
       
       if (!parsedData.tokensByApp) {
         console.warn('[DEBUG] Missing tokensByApp in stored usage data, initializing it');
         parsedData.tokensByApp = {};
+        modified = true;
       }
       
       if (!parsedData.inputTokensByApp) {
         console.warn('[DEBUG] Missing inputTokensByApp in stored usage data, initializing it');
         parsedData.inputTokensByApp = {};
+        modified = true;
       }
       
       if (!parsedData.outputTokensByApp) {
         console.warn('[DEBUG] Missing outputTokensByApp in stored usage data, initializing it');
         parsedData.outputTokensByApp = {};
+        modified = true;
       }
       
       if (!parsedData.costByApp) {
         console.warn('[DEBUG] Missing costByApp in stored usage data, initializing it');
         parsedData.costByApp = {};
+        modified = true;
+      }
+      
+      // Ensure both apps exist in all app stats
+      const apps = ['article-smasher', 'task-smasher'];
+      apps.forEach(app => {
+        if (!parsedData.requestsByApp[app]) {
+          console.log(`[DEBUG] Adding ${app} to requestsByApp`);
+          parsedData.requestsByApp[app] = 0;
+          modified = true;
+        }
+        if (!parsedData.tokensByApp[app]) {
+          parsedData.tokensByApp[app] = 0;
+          modified = true;
+        }
+        if (!parsedData.inputTokensByApp[app]) {
+          parsedData.inputTokensByApp[app] = 0;
+          modified = true;
+        }
+        if (!parsedData.outputTokensByApp[app]) {
+          parsedData.outputTokensByApp[app] = 0;
+          modified = true;
+        }
+        if (!parsedData.costByApp[app]) {
+          parsedData.costByApp[app] = 0;
+          modified = true;
+        }
+      });
+      
+      // Save if modified
+      if (modified) {
+        localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(parsedData));
+        console.log('[DEBUG] Saved updated usage data with fixed app stats');
       }
       
       // Log app-specific stats for debugging

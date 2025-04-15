@@ -39,6 +39,37 @@ const UsageMonitoring: React.FC = () => {
   const [showClearSuccess, setShowClearSuccess] = React.useState(false);
   const [showDebugPanel, setShowDebugPanel] = React.useState(false);
   const [isFixingData, setIsFixingData] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Initialize usage data on mount
+  React.useEffect(() => {
+    const initializeUsageData = async () => {
+      try {
+        // Force a refresh of usage data
+        window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error initializing usage data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeUsageData();
+  }, []);
+
+  // Show loading state while initializing
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+            <p className="text-gray-600">Loading usage data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Handle refresh
   const handleRefresh = () => {
