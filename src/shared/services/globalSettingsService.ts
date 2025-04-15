@@ -38,15 +38,30 @@ export const getGlobalSettings = (): GlobalSettings => {
     }
     const settingsStr = localStorage.getItem(GLOBAL_SETTINGS_KEY);
     if (settingsStr) {
-      const parsed = JSON.parse(settingsStr);
-      console.log('[globalSettingsService] getGlobalSettings: loaded from storage', parsed);
-      return parsed;
-    } else {
-      // Only set defaults if settings are truly missing, and prevent sync loop
-      setGlobalSettings(DEFAULT_GLOBAL_SETTINGS, true);
-      console.log('[globalSettingsService] getGlobalSettings: using defaults', DEFAULT_GLOBAL_SETTINGS);
-      return DEFAULT_GLOBAL_SETTINGS;
+      try {
+        const parsed = JSON.parse(settingsStr);
+        // Only return if parsed is a valid object with required keys
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          "defaultProvider" in parsed &&
+          "defaultModel" in parsed &&
+          "defaultTemperature" in parsed &&
+          "defaultMaxTokens" in parsed
+        ) {
+          console.log('[globalSettingsService] getGlobalSettings: loaded from storage', parsed);
+          return parsed;
+        }
+        // If malformed, fall through to set defaults
+      } catch (parseError) {
+        console.error('[globalSettingsService] Error parsing global settings:', parseError);
+        // If parsing fails, fall through to set defaults
+      }
     }
+    // Only set defaults if settings are truly missing or malformed, and prevent sync loop
+    setGlobalSettings(DEFAULT_GLOBAL_SETTINGS, true);
+    console.log('[globalSettingsService] getGlobalSettings: using defaults', DEFAULT_GLOBAL_SETTINGS);
+    return DEFAULT_GLOBAL_SETTINGS;
   } catch (error) {
     console.error('[globalSettingsService] Error loading global settings:', error);
     if (typeof window !== "undefined") {
@@ -259,7 +274,11 @@ export const initGlobalSettingsService = (): void => {
     window.addEventListener('storage', (e) => {
       if (e.key === GLOBAL_SETTINGS_KEY && e.newValue) {
         try {
-          applyGlobalSettingsToAllApps();
+          // Only apply if the new value is different from the current value
+          const current = localStorage.getItem(GLOBAL_SETTINGS_KEY);
+          if (current !== e.newValue) {
+            applyGlobalSettingsToAllApps();
+          }
         } catch (error) {
           console.error('[globalSettingsService] Error handling global settings storage event:', error);
         }
