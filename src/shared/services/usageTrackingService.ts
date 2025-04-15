@@ -277,13 +277,19 @@ export const saveUsageData = (data: UsageData): void => {
     }
     
     // Ensure both apps exist in all app stats
-    apps.forEach(app => {
-      if (!data.requestsByApp[app]) data.requestsByApp[app] = 0;
-      if (!data.tokensByApp[app]) data.tokensByApp[app] = 0;
-      if (!data.inputTokensByApp[app]) data.inputTokensByApp[app] = 0;
-      if (!data.outputTokensByApp[app]) data.outputTokensByApp[app] = 0;
-      if (!data.costByApp[app]) data.costByApp[app] = 0;
-    });
+    try {
+      apps.forEach(app => {
+        if (!data || !app) return;
+        
+        if (!data.requestsByApp || !data.requestsByApp[app]) data.requestsByApp[app] = 0;
+        if (!data.tokensByApp || !data.tokensByApp[app]) data.tokensByApp[app] = 0;
+        if (!data.inputTokensByApp || !data.inputTokensByApp[app]) data.inputTokensByApp[app] = 0;
+        if (!data.outputTokensByApp || !data.outputTokensByApp[app]) data.outputTokensByApp[app] = 0;
+        if (!data.costByApp || !data.costByApp[app]) data.costByApp[app] = 0;
+      });
+    } catch (error) {
+      console.error('[DEBUG] Error ensuring app stats exist:', error);
+    }
     
     // Log the app usage data being saved
     console.log('[DEBUG] Saving usage data with app stats:', {
