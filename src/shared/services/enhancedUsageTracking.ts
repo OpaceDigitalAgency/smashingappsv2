@@ -21,7 +21,7 @@ import { appRegistry, AppId } from './appRegistry';
 const USAGE_DATA_KEY = 'smashingapps_enhanced_usage_data';
 
 // Event name for usage data updates
-const USAGE_DATA_UPDATED_EVENT = 'enhancedUsageDataUpdated';
+const USAGE_DATA_UPDATED_EVENT = 'usage-data-updated';
 
 // Legacy storage key for backward compatibility
 const LEGACY_USAGE_DATA_KEY = 'smashingapps_usage_data';
