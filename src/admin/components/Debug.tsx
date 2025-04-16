@@ -432,6 +432,94 @@ const Debug: React.FC = () => {
     }
   };
 
+  // Verify Article Smasher Usage
+  const verifyArticleSmasherUsage = () => {
+    setResults([]);
+    log('Starting Article Smasher usage verification test...', 'info');
+    
+    // Step 1: Run Task Smasher test
+    log('Step 1: Running Task Smasher test...', 'info');
+    
+    // Simulate Task Smasher request
+    try {
+      // Set Task Smasher flags
+      localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
+      localStorage.setItem('current_app', 'task-smasher');
+      
+      // Remove Article Smasher flags
+      localStorage.removeItem('article_smasher_app');
+      localStorage.removeItem('article_wizard_state');
+      
+      // Simulate API request
+      const taskSmasherResult = simulateArticleSmasherRequest();
+      
+      if (taskSmasherResult) {
+        log('Task Smasher test completed successfully', 'success');
+        
+        // Step 2: Run Article Smasher test
+        log('Step 2: Running Article Smasher test...', 'info');
+        
+        // Set Article Smasher flags
+        localStorage.setItem('article_smasher_app', 'true');
+        localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
+        localStorage.setItem('current_app', 'article-smasher');
+        
+        // Remove Task Smasher flags
+        localStorage.removeItem('task_list_state');
+        
+        // Simulate API request
+        const articleSmasherResult = simulateArticleSmasherRequest();
+        
+        if (articleSmasherResult) {
+          log('Article Smasher test completed successfully', 'success');
+          
+          // Step 3: Check usage data
+          log('Step 3: Checking usage data...', 'info');
+          
+          // Get current usage data
+          const usageDataKey = 'smashingapps_usage_data';
+          const usageDataStr = localStorage.getItem(usageDataKey);
+          
+          if (!usageDataStr) {
+            log('No usage data found', 'error');
+            return;
+          }
+          
+          const usageData = JSON.parse(usageDataStr);
+          
+          // Check for Task Smasher usage data
+          const taskSmasherRequests = usageData.requestsByApp && usageData.requestsByApp['task-smasher'] || 0;
+          
+          // Check for Article Smasher usage data
+          const articleSmasherRequests = usageData.requestsByApp && usageData.requestsByApp['article-smasher'] || 0;
+          
+          log(`Found usage data - Task Smasher: ${taskSmasherRequests} requests, Article Smasher: ${articleSmasherRequests} requests`, 'info');
+          
+          // Verify both apps have usage data
+          if (taskSmasherRequests > 0 && articleSmasherRequests > 0) {
+            log('Both apps have usage data recorded in the admin panel', 'success');
+            log('Article Smasher usage tracking is working correctly!', 'success');
+          } else if (taskSmasherRequests > 0 && articleSmasherRequests === 0) {
+            log('Only Task Smasher has usage data recorded', 'error');
+            log('Article Smasher usage tracking is NOT working correctly', 'error');
+          } else if (taskSmasherRequests === 0 && articleSmasherRequests > 0) {
+            log('Only Article Smasher has usage data recorded', 'error');
+            log('Unexpected result: Article Smasher has usage data, but Task Smasher does not', 'error');
+          } else {
+            log('Neither app has usage data recorded', 'error');
+            log('Usage tracking is not working for either app', 'error');
+          }
+        } else {
+          log('Article Smasher test failed', 'error');
+        }
+      } else {
+        log('Task Smasher test failed', 'error');
+      }
+    } catch (error) {
+      log(`Error during verification: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -481,26 +569,33 @@ const Debug: React.FC = () => {
             Fixes
           </h2>
           <div className="space-y-2">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={fixUsageTrackingData}
               className="w-full justify-start"
             >
               Fix Usage Tracking Data
             </Button>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={setArticleSmasherFlags}
               className="w-full justify-start"
             >
               Set Article Smasher Flags
             </Button>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={simulateArticleSmasherRequest}
               className="w-full justify-start"
             >
               Simulate Article Smasher Request
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={verifyArticleSmasherUsage}
+              className="w-full justify-start"
+            >
+              Verify Article Smasher Usage
             </Button>
             <Button 
               variant="danger" 
