@@ -3,6 +3,13 @@ import { Link } from 'react-router-dom';
 import { unifiedSettings } from '../../services';
 import { AIProvider } from '../../types/aiProviders';
 
+// Add type declaration for the globalSettingsContext property on Window
+declare global {
+  interface Window {
+    globalSettingsContext?: any;
+  }
+}
+
 interface APIKeyPopupProps {
   onClose: () => void;
 }
@@ -27,10 +34,54 @@ const APIKeyPopup: React.FC<APIKeyPopupProps> = ({ onClose }) => {
       const aiSettings = unifiedSettings.getAISettings();
       const updatedApiKeys = { ...aiSettings.apiKeys, [provider]: apiKey };
       
+      // Update using the correct structure for UnifiedSettings
       unifiedSettings.updateAISettings({
         provider,
         apiKeys: updatedApiKeys
       });
+      
+      // Also update the GlobalSettings system
+      try {
+        // First try to use the GlobalSettings context if available
+        try {
+          const { useGlobalSettings } = require('../../contexts/GlobalSettings/context');
+          const globalSettingsContext = window.globalSettingsContext;
+          
+          if (globalSettingsContext && globalSettingsContext.updateSettings) {
+            globalSettingsContext.updateSettings({
+              aiProvider: {
+                provider,
+                apiKey
+              }
+            });
+            console.log('[APIKeyPopup] Global settings updated with API key using context');
+          } else {
+            throw new Error('Global settings context not available');
+          }
+        } catch (contextError) {
+          // Fallback to direct localStorage manipulation
+          console.log('[APIKeyPopup] Falling back to localStorage for global settings:', contextError);
+          
+          const globalSettingsStr = localStorage.getItem('global-settings');
+          if (globalSettingsStr) {
+            const globalSettings = JSON.parse(globalSettingsStr);
+            
+            // Update the API key
+            if (globalSettings.aiProvider) {
+              globalSettings.aiProvider.apiKey = apiKey;
+              globalSettings.aiProvider.provider = provider;
+              
+              // Save back to localStorage
+              localStorage.setItem('global-settings', JSON.stringify(globalSettings));
+              console.log('[APIKeyPopup] Global settings updated with API key via localStorage');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[APIKeyPopup] Error updating global settings:', error);
+      }
+      
+      console.log('[APIKeyPopup] API key updated for provider:', provider);
 
       // Close the popup after saving
       setTimeout(() => {

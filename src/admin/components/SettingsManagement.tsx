@@ -39,6 +39,7 @@ const SettingsManagement: React.FC = () => {
   // Handle global settings change
   const handleGlobalSettingsChange = (field: string, value: any) => {
     if (field === 'aiProvider') {
+      // Update GlobalSettings
       updateGlobalSettings({
         aiProvider: {
           ...globalSettings.aiProvider,
@@ -49,6 +50,30 @@ const SettingsManagement: React.FC = () => {
       // If provider changed, refresh the models list
       if (value.provider !== globalSettings.aiProvider.provider) {
         refreshProviderModels();
+      }
+      
+      // Also update UnifiedSettings if apiKey is being changed
+      if ('apiKey' in value) {
+        try {
+          const { unifiedSettings } = require('../../shared/services');
+          const aiSettings = unifiedSettings.getAISettings();
+          const provider = globalSettings.aiProvider.provider;
+          
+          // Create a copy of the current API keys with the updated key
+          const updatedApiKeys = {
+            ...aiSettings.apiKeys,
+            [provider]: value.apiKey || null
+          };
+          
+          // Update unified settings
+          unifiedSettings.updateAISettings({
+            apiKeys: updatedApiKeys
+          });
+          
+          console.log(`Updated API key for provider ${provider} in UnifiedSettings`);
+        } catch (error) {
+          console.error('Error updating unified settings:', error);
+        }
       }
     } else {
       updateGlobalSettings({ [field]: value });
@@ -174,15 +199,48 @@ const SettingsManagement: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     API Key
                   </label>
-                  <input
-                    type="password"
-                    value={globalSettings.aiProvider.apiKey || ''}
-                    onChange={(e) => handleGlobalSettingsChange('aiProvider', {
-                      apiKey: e.target.value
-                    })}
-                    placeholder="Enter your API key"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                  />
+                  <div className="flex">
+                    <input
+                      type="password"
+                      value={globalSettings.aiProvider.apiKey || ''}
+                      onChange={(e) => handleGlobalSettingsChange('aiProvider', {
+                        apiKey: e.target.value
+                      })}
+                      placeholder="Enter your API key"
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-l-md"
+                    />
+                    <button
+                      onClick={() => {
+                        // Delete API key from both settings systems
+                        handleGlobalSettingsChange('aiProvider', {
+                          apiKey: ''
+                        });
+                        
+                        // Also update the unified settings system
+                        try {
+                          const { unifiedSettings } = require('../../shared/services');
+                          const aiSettings = unifiedSettings.getAISettings();
+                          const provider = globalSettings.aiProvider.provider;
+                          
+                          // Create a copy of the current API keys with the current provider's key set to null
+                          const updatedApiKeys = { ...aiSettings.apiKeys, [provider]: null };
+                          
+                          // Update unified settings
+                          unifiedSettings.updateAISettings({
+                            apiKeys: updatedApiKeys
+                          });
+                          
+                          console.log(`Deleted API key for provider ${provider} in both settings systems`);
+                        } catch (error) {
+                          console.error('Error updating unified settings:', error);
+                        }
+                      }}
+                      className="px-3 py-2 bg-red-500 text-white rounded-r-md hover:bg-red-600 transition-colors"
+                      title="Delete API key"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
