@@ -328,8 +328,8 @@ const Debug: React.FC = () => {
     logObject('Updated app identification flags', flags);
   };
 
-  // Simulate Article Smasher API request
-  const simulateArticleSmasherRequest = () => {
+  // Simulate API request for the current app
+  const simulateApiRequest = () => {
     setResults([]);
     log('Simulating Article Smasher API request...', 'info');
     
@@ -369,7 +369,8 @@ const Debug: React.FC = () => {
       const inputTokens = 200;
       const outputTokens = 600;
       const cost = 0.003;
-      const app = 'article-smasher';
+      // Get the app ID from localStorage instead of hardcoding it
+      const app = localStorage.getItem('current_app') || 'article-smasher';
       
       // Update total stats
       usageData.totalRequests += 1;
@@ -418,12 +419,12 @@ const Debug: React.FC = () => {
       window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
       window.dispatchEvent(new CustomEvent('refresh-usage-data'));
       
-      log('Article Smasher API request simulated successfully');
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} API request simulated successfully`);
       
       // Show updated stats
-      log(`Article Smasher requests: ${usageData.requestsByApp[app]}`);
-      log(`Article Smasher tokens: ${usageData.tokensByApp[app]}`);
-      log(`Article Smasher cost: ${usageData.costByApp[app]}`);
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} requests: ${usageData.requestsByApp[app]}`);
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} tokens: ${usageData.tokensByApp[app]}`);
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} cost: ${usageData.costByApp[app]}`);
       
       return true;
     } catch (error) {
@@ -451,7 +452,7 @@ const Debug: React.FC = () => {
       localStorage.removeItem('article_wizard_state');
       
       // Simulate API request
-      const taskSmasherResult = simulateArticleSmasherRequest();
+      const taskSmasherResult = simulateApiRequest();
       
       if (taskSmasherResult) {
         log('Task Smasher test completed successfully', 'success');
@@ -468,7 +469,7 @@ const Debug: React.FC = () => {
         localStorage.removeItem('task_list_state');
         
         // Simulate API request
-        const articleSmasherResult = simulateArticleSmasherRequest();
+        const articleSmasherResult = simulateApiRequest();
         
         if (articleSmasherResult) {
           log('Article Smasher test completed successfully', 'success');
@@ -585,10 +586,31 @@ const Debug: React.FC = () => {
             </Button>
             <Button
               variant="secondary"
-              onClick={simulateArticleSmasherRequest}
+              onClick={() => {
+                // Set Article Smasher flags
+                localStorage.setItem('article_smasher_app', 'true');
+                localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
+                localStorage.setItem('current_app', 'article-smasher');
+                simulateApiRequest();
+              }}
               className="w-full justify-start"
             >
               Simulate Article Smasher Request
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                // Set Task Smasher flags
+                localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
+                localStorage.setItem('current_app', 'task-smasher');
+                // Remove Article Smasher flags
+                localStorage.removeItem('article_smasher_app');
+                localStorage.removeItem('article_wizard_state');
+                simulateApiRequest();
+              }}
+              className="w-full justify-start"
+            >
+              Simulate Task Smasher Request
             </Button>
             <Button
               variant="secondary"
