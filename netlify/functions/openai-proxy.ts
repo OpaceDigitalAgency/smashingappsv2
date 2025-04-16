@@ -160,25 +160,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     // Get API key from headers or environment variable
     let apiKey = event.headers["x-api-key"] || null;
     
-    // If no API key in headers, use environment variable based on provider
-    if (!apiKey) {
-      switch (provider) {
-        case "openai":
-          apiKey = process.env.OPENAI_API_KEY || null;
-          break;
-        case "openrouter":
-          apiKey = process.env.OPENROUTER_API_KEY || null;
-          break;
-        case "anthropic":
-          apiKey = process.env.ANTHROPIC_API_KEY || null;
-          break;
-        case "google":
-          apiKey = process.env.GOOGLE_API_KEY || null;
-          break;
-        default:
-          apiKey = process.env.OPENAI_API_KEY || null;
-      }
-    }
+    // No fallback to environment variables - require API key in headers
+    // This forces users to add keys manually in the admin settings
     
     if (!apiKey) {
       return {
@@ -325,29 +308,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     // Get API key from headers or environment variable
     let apiKey = event.headers["x-api-key"] || null;
     
-    // If no API key in headers, use environment variable based on provider
-    if (!apiKey) {
-      switch (provider) {
-        case "openai":
-          apiKey = process.env.OPENAI_API_KEY || null;
-          break;
-        case "openrouter":
-          apiKey = process.env.OPENROUTER_API_KEY || null;
-          break;
-        case "anthropic":
-          apiKey = process.env.ANTHROPIC_API_KEY || null;
-          break;
-        case "google":
-          apiKey = process.env.GOOGLE_API_KEY || null;
-          break;
-        case "image":
-          // For image generation, default to OpenAI's API key
-          apiKey = process.env.OPENAI_API_KEY || null;
-          break;
-        default:
-          apiKey = process.env.OPENAI_API_KEY || null;
-      }
-    }
+    // No fallback to environment variables - require API key in headers
+    // This forces users to add keys manually in the admin settings
     
     if (!apiKey) {
       return {

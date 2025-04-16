@@ -14,7 +14,8 @@ import ModelDropdown from './components/ModelDropdown';
 import RateLimitPopup from './components/RateLimitPopup';
 import APISettingsModal from '../../shared/components/APISettingsModal/APISettingsModal';
 import SemanticSection from '../../components/SemanticSection';
-import { appRegistry, initializeAIServices } from '../../shared/services';
+import { appRegistry, initializeAIServices, unifiedSettings } from '../../shared/services';
+import APIKeyPopup from '../../shared/components/APIKeyPopup';
 import {
   DndContext,
   DragEndEvent,
@@ -56,6 +57,22 @@ interface TaskSmasherAppContentProps {
 const TaskSmasherApp: React.FC = () => {
   // Use a default use case or get it from props/context if needed later
   const initialUseCase = 'daily';
+  const [showApiKeyPopup, setShowApiKeyPopup] = useState<boolean>(false);
+  
+  // Check if API key is configured
+  const checkApiKey = () => {
+    const aiSettings = unifiedSettings.getAISettings();
+    const currentProvider = aiSettings.provider;
+    const apiKey = aiSettings.apiKeys[currentProvider];
+    
+    // Show popup if no API key is configured for the current provider
+    if (!apiKey) {
+      console.log('No API key configured for provider:', currentProvider);
+      setShowApiKeyPopup(true);
+    } else {
+      console.log('API key configured for provider:', currentProvider);
+    }
+  };
 
   // Use the centralized app registry and AI service initializer
   useEffect(() => {
@@ -79,6 +96,9 @@ const TaskSmasherApp: React.FC = () => {
         console.error('Error initializing enhanced usage tracking:', error);
       }
       
+      // Check if API key is configured
+      checkApiKey();
+      
       console.log('TaskSmasherApp: Initialization complete');
     } catch (error) {
       console.error('Error during TaskSmasher initialization:', error);
@@ -94,6 +114,15 @@ const TaskSmasherApp: React.FC = () => {
     <ReCaptchaProvider>
       <TasksProvider initialUseCase={initialUseCase}>
         <TaskSmasherAppContent initialUseCase={initialUseCase} />
+        
+        {/* API Key Popup */}
+        {showApiKeyPopup && (
+          <APIKeyPopup onClose={() => {
+            setShowApiKeyPopup(false);
+            // Re-check API key after closing the popup
+            setTimeout(checkApiKey, 500);
+          }} />
+        )}
       </TasksProvider>
     </ReCaptchaProvider>
   );

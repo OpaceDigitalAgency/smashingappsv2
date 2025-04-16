@@ -5,13 +5,14 @@
  * in the main SmashingApps.ai application.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Link, useRoutes, useNavigate, useLocation } from 'react-router-dom';
 import { ArticleWizardProvider } from './src/contexts/ArticleWizardContext';
 import { PromptProvider } from './src/contexts/PromptContext';
 import ArticleWizard from './src/components/ArticleWizard';
 import { initAdminBridge } from './src/utils/adminBridge';
-import { appRegistry, initializeAIServices } from '../../shared/services';
+import { appRegistry, initializeAIServices, unifiedSettings } from '../../shared/services';
+import APIKeyPopup from '../../shared/components/APIKeyPopup';
 import './src/components/article-smasher.css';
 
 /**
@@ -27,6 +28,22 @@ import './src/components/article-smasher.css';
 const ArticleSmasherApp: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showApiKeyPopup, setShowApiKeyPopup] = useState<boolean>(false);
+  
+  // Check if API key is configured
+  const checkApiKey = () => {
+    const aiSettings = unifiedSettings.getAISettings();
+    const currentProvider = aiSettings.provider;
+    const apiKey = aiSettings.apiKeys[currentProvider];
+    
+    // Show popup if no API key is configured for the current provider
+    if (!apiKey) {
+      console.log('No API key configured for provider:', currentProvider);
+      setShowApiKeyPopup(true);
+    } else {
+      console.log('API key configured for provider:', currentProvider);
+    }
+  };
   
   // Use the centralized app registry and AI service initializer
   useEffect(() => {
@@ -52,6 +69,9 @@ const ArticleSmasherApp: React.FC = () => {
       } catch (error) {
         console.error('Error initializing enhanced usage tracking:', error);
       }
+      
+      // Check if API key is configured
+      checkApiKey();
       
       console.log('ArticleSmasherApp: Initialization complete');
     } catch (error) {
@@ -95,6 +115,15 @@ const ArticleSmasherApp: React.FC = () => {
             <Route path="/admin/*" element={<AdminRedirect />} />
             <Route path="/settings/*" element={<AdminRedirect />} />
           </Routes>
+          
+          {/* API Key Popup */}
+          {showApiKeyPopup && (
+            <APIKeyPopup onClose={() => {
+              setShowApiKeyPopup(false);
+              // Re-check API key after closing the popup
+              setTimeout(checkApiKey, 500);
+            }} />
+          )}
         </ArticleWizardProvider>
       </PromptProvider>
     </div>
