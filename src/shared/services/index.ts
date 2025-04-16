@@ -5,10 +5,10 @@
  */
 
 // Export the app registry
-export { appRegistry, type AppId, type AppRegistrationOptions, type RegisteredApp } from './appRegistry';
+export { appRegistry, type AppId, type AppRegistrationOptions, type RegisteredApp } from './appRegistry.ts';
 
 // Export the unified settings
-export { unifiedSettings, type UnifiedSettings } from './unifiedSettings';
+export { unifiedSettings, type UnifiedSettings } from './unifiedSettings.ts';
 
 // Export the AI service initializer
 export {
@@ -19,18 +19,18 @@ export {
   getServiceByProvider,
   getServiceForModel,
   getAllModels
-} from './aiServiceInitializer';
+} from './aiServiceInitializer.ts';
 
 // Export the enhanced usage tracking
 export {
   enhancedUsageTracking,
   type UsageData,
   type UsageEntry
-} from './enhancedUsageTracking';
+} from './enhancedUsageTracking.ts';
 
 // Define TimeRange type since it's not exported from enhancedUsageTracking
 export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 // Re-export existing services for convenience
-export { aiServiceRegistry } from './AIService';
-export { wrapAIService, initializeUsageTracking } from './aiServiceWrapper';
+export { aiServiceRegistry } from './AIService.ts';
+export { wrapAIService, initializeUsageTracking } from './aiServiceWrapper.ts';
