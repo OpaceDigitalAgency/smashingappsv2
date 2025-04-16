@@ -11,8 +11,7 @@ import { ArticleWizardProvider } from './src/contexts/ArticleWizardContext';
 import { PromptProvider } from './src/contexts/PromptContext';
 import ArticleWizard from './src/components/ArticleWizard';
 import { initAdminBridge } from './src/utils/adminBridge';
-import { appRegistry } from '../../shared/services/appRegistry';
-import { initializeAIServices } from '../../shared/services/aiServiceInitializer';
+import { appRegistry, initializeAIServices } from '../../shared/services';
 import './src/components/article-smasher.css';
 
 /**

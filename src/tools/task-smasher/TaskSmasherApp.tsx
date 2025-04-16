@@ -1,3 +1,10 @@
+/**
+ * TaskSmasherApp - Main component for the Task Smasher tool
+ *
+ * This component serves as the entry point for the Task Smasher tool
+ * in the main SmashingApps.ai application.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Trash2, Clock, Undo, Mic, Filter, Download, Upload, FileSpreadsheet, File as FilePdf, Key, DollarSign, Zap, Info, Star, ChevronDown, ChevronUp, Sliders, MessageSquare, Pencil, GripVertical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -7,6 +14,7 @@ import ModelDropdown from './components/ModelDropdown';
 import RateLimitPopup from './components/RateLimitPopup';
 import APISettingsModal from '../../shared/components/APISettingsModal/APISettingsModal';
 import SemanticSection from '../../components/SemanticSection';
+import { appRegistry, initializeAIServices } from '../../shared/services';
 import {
   DndContext,
   DragEndEvent,
@@ -35,47 +43,41 @@ interface TaskSmasherAppContentProps {
   initialUseCase?: string;
 }
 
-// Define the main wrapper component
+/**
+ * TaskSmasherApp - Main component for the Task Smasher tool
+ *
+ * This component is designed to work both:
+ * 1. As a standalone app (when run directly via src/main.tsx)
+ * 2. As an integrated component within the main SmashingApps.ai application
+ *
+ * It avoids creating nested Router components by using relative paths
+ * and working with the parent Router context.
+ */
 const TaskSmasherApp: React.FC = () => {
   // Use a default use case or get it from props/context if needed later
   const initialUseCase = 'daily';
 
-  // Set app identification flags when component mounts
+  // Use the centralized app registry and AI service initializer
   useEffect(() => {
-    const initializeApp = async () => {
-      console.log('TaskSmasherApp: Starting initialization');
-      
-      try {
-        // First, clear any Article Smasher flags to prevent incorrect identification
-        localStorage.removeItem('article_smasher_app');
-        localStorage.removeItem('article_wizard_state');
-        
-        // Set high-priority flags for Task Smasher
-        localStorage.setItem('FORCE_APP_ID', 'task-smasher');
-        localStorage.setItem('current_app', 'task-smasher');
-        localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
-        
-        console.log('TaskSmasherApp: App identification flags set successfully');
-      } catch (error) {
-        console.error('Error during TaskSmasher initialization:', error);
-      }
-    };
-
-    // Run initialization
-    initializeApp();
+    console.log('TaskSmasherApp: Starting initialization');
     
-    // Set a periodic check to ensure the app ID flags remain set
-    const intervalId = setInterval(() => {
-      // Force app ID flags with every check
-      localStorage.setItem('FORCE_APP_ID', 'task-smasher');
-      localStorage.setItem('current_app', 'task-smasher');
-      localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
-    }, 5000); // Check every 5 seconds
+    try {
+      // Register the app once on mount using the centralized app registry
+      appRegistry.registerApp('task-smasher');
+      console.log('TaskSmasherApp: Registered with app registry');
+      
+      // Initialize AI services if not already initialized
+      initializeAIServices();
+      console.log('TaskSmasherApp: AI services initialized');
+      
+      console.log('TaskSmasherApp: Initialization complete');
+    } catch (error) {
+      console.error('Error during TaskSmasher initialization:', error);
+    }
     
     // Cleanup function
     return () => {
-      clearInterval(intervalId);
-      console.log('TaskSmasherApp: Component unmounting, but keeping app ID flags');
+      console.log('TaskSmasherApp: Component unmounting');
     };
   }, []); // Run only once on mount
 

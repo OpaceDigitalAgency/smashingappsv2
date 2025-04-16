@@ -13,9 +13,7 @@ declare global {
 export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { aiServiceRegistry } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
-import { UsageData } from '../../shared/services/enhancedUsageTracking';
 import { useGlobalSettings } from '../../shared/contexts/GlobalSettings/context';
 import { GlobalSettings, DEFAULT_SETTINGS } from '../../shared/contexts/GlobalSettings/types';
 import { PromptTemplate } from '../../tools/article-smasher/src/types';
@@ -30,8 +28,13 @@ import {
   loadSettings,
   saveSettings,
 } from '../../tools/article-smasher/src/services/promptService';
-import { unifiedSettings } from '../../shared/services/unifiedSettings';
-import { enhancedUsageTracking } from '../../shared/services/enhancedUsageTracking';
+import {
+  aiServiceRegistry,
+  unifiedSettings,
+  enhancedUsageTracking,
+  type UsageData,
+  type TimeRange
+} from '../../shared/services';
 
 // Helper function to create initialized provider record
 const createInitialProviderRecord = (): Record<AIProvider, number> => ({
