@@ -325,33 +325,34 @@ export const trackApiRequest = (
 ): void => {
   console.log(`[DEBUG] Tracking API request for provider: ${provider}, app: ${app}, tokens: ${tokens}, model: ${model}`);
   
-  // DIRECT APPROACH: Force app identification with multiple checks
-  
-  // First check for direct force flag
-  const forcedAppId = localStorage.getItem('FORCE_APP_ID');
-  if (forcedAppId) {
-    console.log(`[DEBUG] Using forced app ID from FORCE_APP_ID: ${forcedAppId}`);
-    app = forcedAppId;
-  }
-  // Then check for current_app
-  else if (localStorage.getItem('current_app')) {
-    console.log(`[DEBUG] Using app ID from current_app: ${localStorage.getItem('current_app')}`);
-    app = localStorage.getItem('current_app') || app;
-  }
-  // Then check app-specific flags
-  else if (!app || app === 'unknown-app') {
+  // Only override the app ID if it's missing or unknown
+  if (!app || app === 'unknown-app') {
     console.warn('[DEBUG] Attempting to track request with invalid app ID:', app);
     
-    // Try to determine app ID from localStorage flags with more aggressive checks
-    if (localStorage.getItem('article_smasher_app') ||
-        localStorage.getItem('article_wizard_state') ||
-        window.location.pathname.includes('article-smasher')) {
-      console.log('[DEBUG] Found ArticleSmasher indicators, forcing app ID');
-      app = 'article-smasher';
-    } else if (localStorage.getItem('task_list_state') ||
-               window.location.pathname.includes('task-smasher')) {
-      console.log('[DEBUG] Found TaskSmasher indicators, forcing app ID');
-      app = 'task-smasher';
+    // First check for direct force flag
+    const forcedAppId = localStorage.getItem('FORCE_APP_ID');
+    if (forcedAppId) {
+      console.log(`[DEBUG] Using forced app ID from FORCE_APP_ID: ${forcedAppId}`);
+      app = forcedAppId;
+    }
+    // Then check for current_app
+    else if (localStorage.getItem('current_app')) {
+      console.log(`[DEBUG] Using app ID from current_app: ${localStorage.getItem('current_app')}`);
+      app = localStorage.getItem('current_app') || app;
+    }
+    // Then check app-specific flags
+    else {
+      // Try to determine app ID from localStorage flags with more aggressive checks
+      if (localStorage.getItem('article_smasher_app') ||
+          localStorage.getItem('article_wizard_state') ||
+          window.location.pathname.includes('article-smasher')) {
+        console.log('[DEBUG] Found ArticleSmasher indicators, forcing app ID');
+        app = 'article-smasher';
+      } else if (localStorage.getItem('task_list_state') ||
+                window.location.pathname.includes('task-smasher')) {
+        console.log('[DEBUG] Found TaskSmasher indicators, forcing app ID');
+        app = 'task-smasher';
+      }
     }
   }
   
