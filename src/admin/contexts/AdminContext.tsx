@@ -15,7 +15,7 @@ export type TimeRange = 'day' | 'week' | 'month' | 'year';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { aiServiceRegistry } from '../../shared/services/aiServices';
 import { AIProvider, ProviderConfig, AIModel } from '../../shared/types/aiProviders';
-import { getUsageData, getFilteredUsageData, UsageData } from '../../shared/services/usageTrackingService';
+import { UsageData } from '../../shared/services/enhancedUsageTracking';
 import { useGlobalSettings } from '../../shared/contexts/GlobalSettings/context';
 import { GlobalSettings, DEFAULT_SETTINGS } from '../../shared/contexts/GlobalSettings/types';
 import { PromptTemplate } from '../../tools/article-smasher/src/types';
@@ -30,6 +30,8 @@ import {
   loadSettings,
   saveSettings,
 } from '../../tools/article-smasher/src/services/promptService';
+import { unifiedSettings } from '../../shared/services/unifiedSettings';
+import { enhancedUsageTracking } from '../../shared/services/enhancedUsageTracking';
 
 // Helper function to create initialized provider record
 const createInitialProviderRecord = (): Record<AIProvider, number> => ({
@@ -114,8 +116,8 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   
   // Usage monitoring state
   const [usageStats, setUsageStats] = useState<UsageData>(() => {
-    // Initialize with filtered data based on default time range
-    const initialData = getFilteredUsageData('month');
+    // Initialize with filtered data based on default time range using enhanced usage tracking
+    const initialData = enhancedUsageTracking.getFilteredUsageData('month');
     
     // Ensure provider-related objects are initialized
     if (!initialData.requestsByProvider) initialData.requestsByProvider = createInitialProviderRecord();
@@ -133,7 +135,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   useEffect(() => {
     const initializeUsageData = () => {
       try {
-        const filteredData = getFilteredUsageData(timeRange);
+        const filteredData = enhancedUsageTracking.getFilteredUsageData(timeRange);
         setUsageStats(filteredData);
       } catch (error) {
         console.error('Error initializing usage data:', error);
@@ -355,7 +357,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     const updateUsageStats = () => {
       try {
         console.log('[DEBUG] Updating usage stats');
-        const filteredData = getFilteredUsageData(timeRange);
+        const filteredData = enhancedUsageTracking.getFilteredUsageData(timeRange);
         if (!filteredData) {
           console.warn('[DEBUG] No filtered data returned');
           return;
@@ -381,7 +383,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     const handleUsageDataUpdated = (event: CustomEvent<UsageData>) => {
       try {
         console.log('[DEBUG] Handling usage-data-updated event');
-        const filteredData = getFilteredUsageData(timeRange);
+        const filteredData = enhancedUsageTracking.getFilteredUsageData(timeRange);
         if (!filteredData) {
           console.warn('[DEBUG] No filtered data returned');
           return;
@@ -404,7 +406,7 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
     const handleRefreshUsageData = () => {
       try {
         console.log('[DEBUG] Handling refresh-usage-data event');
-        const filteredData = getFilteredUsageData(timeRange);
+        const filteredData = enhancedUsageTracking.getFilteredUsageData(timeRange);
         if (!filteredData) {
           console.warn('[DEBUG] No filtered data returned');
           return;
@@ -646,13 +648,37 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
   // Settings management functions
   const updateGlobalSettings = (settings: Partial<GlobalSettings>) => {
     try {
+      // Update both the global settings context and the unified settings
       updateGlobalSettingsContext(settings);
+      
+      // Map GlobalSettings to UnifiedSettings format
+      const unifiedSettingsUpdate: any = {};
+      
+      if (settings.aiProvider) {
+        unifiedSettingsUpdate.ai = {
+          provider: settings.aiProvider.provider,
+          model: settings.aiProvider.defaultModel,
+          apiKeys: { [settings.aiProvider.provider]: settings.aiProvider.apiKey }
+        };
+      }
+      
+      if (settings.ui?.theme) {
+        unifiedSettingsUpdate.ui = {
+          theme: settings.ui.theme
+        };
+      }
+      
+      // Update unified settings if we have any mapped values
+      if (Object.keys(unifiedSettingsUpdate).length > 0) {
+        unifiedSettings.updateSettings(unifiedSettingsUpdate);
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update global settings'));
     }
   };
   
   const updateAppSettings = (appId: string, settings: any) => {
+    // Update local state
     setAppSettings(prevSettings => ({
       ...prevSettings,
       [appId]: {
@@ -660,6 +686,14 @@ export const AdminProvider: React.FC<{children: ReactNode}> = ({ children }) => 
         ...settings,
       },
     }));
+    
+    // Update unified settings
+    if (['task-smasher', 'article-smasher', 'admin'].includes(appId)) {
+      unifiedSettings.updateAppSettings(
+        appId as 'task-smasher' | 'article-smasher' | 'admin',
+        settings
+      );
+    }
   };
 
   // Context value
@@ -754,7 +788,7 @@ export const useAdmin = () => {
         updateAppSettings: () => {},
         
         // Usage monitoring
-        usageStats: getUsageData(),
+        usageStats: enhancedUsageTracking.getUsageData(),
         timeRange: 'month' as TimeRange,
         setTimeRange: () => {},
         

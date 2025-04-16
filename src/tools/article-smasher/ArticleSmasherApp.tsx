@@ -11,8 +11,8 @@ import { ArticleWizardProvider } from './src/contexts/ArticleWizardContext';
 import { PromptProvider } from './src/contexts/PromptContext';
 import ArticleWizard from './src/components/ArticleWizard';
 import { initAdminBridge } from './src/utils/adminBridge';
-import { initializeAIServicesWithTracking } from '../../shared/services/initializeAIServices';
-import { USAGE_DATA_KEY } from '../../shared/services/usageTrackingService';
+import { appRegistry } from '../../shared/services/appRegistry';
+import { initializeAIServices } from '../../shared/services/aiServiceInitializer';
 import './src/components/article-smasher.css';
 
 /**
@@ -29,84 +29,32 @@ const ArticleSmasherApp: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize admin bridge and AI services with usage tracking
+  // Use the centralized app registry and AI service initializer
   useEffect(() => {
-
-    const initializeApp = async () => {
-      console.log('ArticleSmasherApp: Starting initialization');
-      
-      try {
-        // Only clear other app flags, not our own
-        localStorage.removeItem('task_list_state');
-        
-        // Set high-priority flags first (matching initializeAIServices.ts priority)
-        localStorage.setItem('FORCE_APP_ID', 'article-smasher');
-        localStorage.setItem('current_app', 'article-smasher');
-        
-        // Small delay to ensure high-priority flags are set
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Set additional ArticleSmasher flags
-        localStorage.setItem('article_smasher_app', 'true');
-        localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
-        
-        // Initialize the admin bridge
-        initAdminBridge();
-        
-        // Another small delay to ensure all flags are set
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Initialize AI services with usage tracking
-        console.log('ArticleSmasherApp: Calling initializeAIServicesWithTracking');
-        initializeAIServicesWithTracking();
-        console.log('ArticleSmasherApp: AI services initialized');
-        
-        // Ensure app exists in usage data
-        const usageData = JSON.parse(localStorage.getItem(USAGE_DATA_KEY) || '{}');
-        if (!usageData.requestsByApp) usageData.requestsByApp = {};
-        if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
-        localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(usageData));
-        console.log('ArticleSmasherApp: Ensured article-smasher exists in usage data');
-        
-        console.log('ArticleSmasherApp: Initialization complete');
-      } catch (error) {
-        console.error('Error during ArticleSmasher initialization:', error);
-        throw error; // Re-throw to be caught by the outer catch
-      }
-    };
-
-    // Run initialization
-    initializeApp().catch(error => {
-      console.error('Failed to initialize ArticleSmasher:', error);
-    });
+    console.log('ArticleSmasherApp: Starting initialization');
     
-    // Set a more aggressive periodic check to ensure the app ID flags remain set
-    const intervalId = setInterval(() => {
-      // Force app ID flags with every check (matching initializeAIServices.ts priority)
-      localStorage.setItem('FORCE_APP_ID', 'article-smasher');
-      localStorage.setItem('current_app', 'article-smasher');
-      localStorage.setItem('article_smasher_app', 'true');
-      localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
+    try {
+      // Register the app once on mount using the centralized app registry
+      appRegistry.registerApp('article-smasher');
+      console.log('ArticleSmasherApp: Registered with app registry');
       
-      console.log('ArticleSmasherApp: Forced app ID flags refreshed');
+      // Initialize the admin bridge
+      initAdminBridge();
       
-      // Also directly ensure the app exists in usage tracking data
-      try {
-        const usageData = JSON.parse(localStorage.getItem(USAGE_DATA_KEY) || '{}');
-        if (!usageData.requestsByApp) usageData.requestsByApp = {};
-        if (!usageData.requestsByApp['article-smasher']) usageData.requestsByApp['article-smasher'] = 0;
-        localStorage.setItem(USAGE_DATA_KEY, JSON.stringify(usageData));
-      } catch (e) {
-        console.error('Error in interval ensuring article-smasher in usage data:', e);
-      }
-    }, 5000); // More frequent check - every 5 seconds
+      // Initialize AI services if not already initialized
+      initializeAIServices();
+      console.log('ArticleSmasherApp: AI services initialized');
+      
+      console.log('ArticleSmasherApp: Initialization complete');
+    } catch (error) {
+      console.error('Error during ArticleSmasher initialization:', error);
+    }
     
-    // Cleanup function - but don't actually clean up the app ID flags
+    // No need for periodic refreshes or clearing other app's flags
+    
+    // Cleanup function
     return () => {
-      clearInterval(intervalId);
-      // IMPORTANT: We intentionally DO NOT remove any app ID flags on unmount
-      // to ensure persistence between page refreshes and navigation
-      console.log('ArticleSmasherApp: Component unmounting, but keeping app ID flags');
+      console.log('ArticleSmasherApp: Component unmounting');
     };
   }, []); // Run only once on mount
   

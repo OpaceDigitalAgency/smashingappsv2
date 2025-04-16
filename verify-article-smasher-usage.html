@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Article Smasher Usage Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-controls {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status-panel {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .iframe-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .iframe-wrapper {
+            flex: 1;
+            min-width: 300px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .iframe-header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .step.active {
+            background-color: #e6f7ff;
+            border-left: 4px solid #1890ff;
+        }
+        .step.completed {
+            background-color: #f6ffed;
+            border-left: 4px solid #52c41a;
+        }
+        .log {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-pending {
+            background-color: #faad14;
+        }
+        .status-success {
+            background-color: #52c41a;
+        }
+        .status-error {
+            background-color: #f5222d;
+        }
+        .result-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 4px;
+            display: none;
+        }
+        .error-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Verify Article Smasher Usage Tracking</h1>
+        
+        <div class="test-controls">
+            <h2>Test Controls</h2>
+            <p>This test verifies that Article Smasher is correctly logging usage data in the admin panel.</p>
+            
+            <div class="step" id="step1">
+                <h3>Step 1: Make a Task Smasher AI Request</h3>
+                <p>First, we'll make an AI request from Task Smasher to establish a baseline.</p>
+                <button id="runTaskSmasherTest">Run Task Smasher Test</button>
+            </div>
+            
+            <div class="step" id="step2">
+                <h3>Step 2: Make an Article Smasher AI Request</h3>
+                <p>Next, we'll make an AI request from Article Smasher to test if usage tracking is working.</p>
+                <button id="runArticleSmasherTest" disabled>Run Article Smasher Test</button>
+            </div>
+            
+            <div class="step" id="step3">
+                <h3>Step 3: Check Admin Panel Usage Data</h3>
+                <p>Finally, we'll check the admin panel to verify that usage data is being logged for both apps.</p>
+                <button id="checkAdminPanel" disabled>Check Admin Panel</button>
+            </div>
+        </div>
+        
+        <div class="status-panel">
+            <h2>Test Status</h2>
+            <div>
+                <p><span class="status-indicator status-pending" id="taskSmasherStatus"></span> Task Smasher: <span id="taskSmasherResult">Pending</span></p>
+                <p><span class="status-indicator status-pending" id="articleSmasherStatus"></span> Article Smasher: <span id="articleSmasherResult">Pending</span></p>
+                <p><span class="status-indicator status-pending" id="adminPanelStatus"></span> Admin Panel: <span id="adminPanelResult">Pending</span></p>
+            </div>
+            
+            <div class="log" id="testLog">
+                <!-- Log messages will be added here -->
+            </div>
+            
+            <div class="result-panel" id="resultPanel">
+                <h3>Test Result: <span id="finalResult">Pending</span></h3>
+                <p id="resultDetails"></p>
+            </div>
+            
+            <div class="error-panel" id="errorPanel">
+                <h3>Error</h3>
+                <p id="errorDetails"></p>
+            </div>
+        </div>
+        
+        <div class="iframe-container">
+            <div class="iframe-wrapper">
+                <div class="iframe-header">Task Smasher</div>
+                <iframe id="taskSmasherFrame" src="about:blank"></iframe>
+            </div>
+            
+            <div class="iframe-wrapper">
+                <div class="iframe-header">Article Smasher</div>
+                <iframe id="articleSmasherFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+        
+        <div class="iframe-wrapper">
+            <div class="iframe-header">Admin Panel</div>
+            <iframe id="adminPanelFrame" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Log function
+        function log(message) {
+            const logElement = document.getElementById('testLog');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Update status function
+        function updateStatus(element, status, message) {
+            const statusElement = document.getElementById(element + 'Status');
+            const resultElement = document.getElementById(element + 'Result');
+            
+            statusElement.className = 'status-indicator status-' + status;
+            resultElement.textContent = message;
+            
+            // Update step status
+            if (element === 'taskSmasher') {
+                const stepElement = document.getElementById('step1');
+                if (status === 'success') {
+                    stepElement.className = 'step completed';
+                    document.getElementById('runArticleSmasherTest').disabled = false;
+                    document.getElementById('step2').className = 'step active';
+                } else if (status === 'error') {
+                    stepElement.className = 'step';
+                    showError('Task Smasher test failed: ' + message);
+                }
+            } else if (element === 'articleSmasher') {
+                const stepElement = document.getElementById('step2');
+                if (status === 'success') {
+                    stepElement.className = 'step completed';
+                    document.getElementById('checkAdminPanel').disabled = false;
+                    document.getElementById('step3').className = 'step active';
+                } else if (status === 'error') {
+                    stepElement.className = 'step';
+                    showError('Article Smasher test failed: ' + message);
+                }
+            } else if (element === 'adminPanel') {
+                const stepElement = document.getElementById('step3');
+                if (status === 'success') {
+                    stepElement.className = 'step completed';
+                    showResult(true, message);
+                } else if (status === 'error') {
+                    stepElement.className = 'step';
+                    showError('Admin panel check failed: ' + message);
+                }
+            }
+        }
+
+        // Show result function
+        function showResult(success, message) {
+            const resultPanel = document.getElementById('resultPanel');
+            const finalResult = document.getElementById('finalResult');
+            const resultDetails = document.getElementById('resultDetails');
+            
+            resultPanel.style.display = 'block';
+            finalResult.textContent = success ? 'Success' : 'Failed';
+            resultDetails.textContent = message;
+        }
+
+        // Show error function
+        function showError(message) {
+            const errorPanel = document.getElementById('errorPanel');
+            const errorDetails = document.getElementById('errorDetails');
+            
+            errorPanel.style.display = 'block';
+            errorDetails.textContent = message;
+        }
+
+        // Initialize the test
+        function initTest() {
+            log('Initializing test...');
+            
+            // Set initial step as active
+            document.getElementById('step1').className = 'step active';
+            
+            // Load Task Smasher
+            log('Loading Task Smasher...');
+            document.getElementById('taskSmasherFrame').src = '/tools/task-smasher/';
+            
+            // Load Article Smasher
+            log('Loading Article Smasher...');
+            document.getElementById('articleSmasherFrame').src = '/tools/article-smasher/';
+            
+            // Load Admin Panel
+            log('Loading Admin Panel...');
+            document.getElementById('adminPanelFrame').src = '/admin/usage';
+            
+            log('Test initialized. Ready to start.');
+        }
+
+        // Run Task Smasher test
+        document.getElementById('runTaskSmasherTest').addEventListener('click', function() {
+            log('Running Task Smasher test...');
+            updateStatus('taskSmasher', 'pending', 'Running test...');
+            
+            // Focus the Task Smasher iframe
+            const taskSmasherFrame = document.getElementById('taskSmasherFrame');
+            taskSmasherFrame.focus();
+            
+            // Execute test in the Task Smasher iframe
+            try {
+                const taskSmasherWindow = taskSmasherFrame.contentWindow;
+                
+                // Check if Task Smasher is loaded
+                if (!taskSmasherWindow.document.querySelector('.task-input')) {
+                    log('Task Smasher not fully loaded. Please wait and try again.');
+                    updateStatus('taskSmasher', 'error', 'Not fully loaded');
+                    return;
+                }
+                
+                // Find the task input field and add a task
+                const taskInput = taskSmasherWindow.document.querySelector('.task-input');
+                taskInput.value = 'Test task for usage tracking verification';
+                
+                // Find and click the generate button
+                const generateButton = taskSmasherWindow.document.querySelector('button[aria-label="Generate with AI"]');
+                if (generateButton) {
+                    generateButton.click();
+                    log('Task Smasher AI request initiated');
+                    
+                    // Check for completion after a delay
+                    setTimeout(function() {
+                        // Check if the task was generated
+                        const taskElements = taskSmasherWindow.document.querySelectorAll('.task-card');
+                        if (taskElements.length > 0) {
+                            log('Task Smasher AI request completed successfully');
+                            updateStatus('taskSmasher', 'success', 'Completed');
+                        } else {
+                            log('Task Smasher AI request failed or timed out');
+                            updateStatus('taskSmasher', 'error', 'Failed or timed out');
+                        }
+                    }, 5000); // Check after 5 seconds
+                } else {
+                    log('Generate button not found in Task Smasher');
+                    updateStatus('taskSmasher', 'error', 'Generate button not found');
+                }
+            } catch (error) {
+                log('Error running Task Smasher test: ' + error.message);
+                updateStatus('taskSmasher', 'error', error.message);
+            }
+        });
+
+        // Run Article Smasher test
+        document.getElementById('runArticleSmasherTest').addEventListener('click', function() {
+            log('Running Article Smasher test...');
+            updateStatus('articleSmasher', 'pending', 'Running test...');
+            
+            // Focus the Article Smasher iframe
+            const articleSmasherFrame = document.getElementById('articleSmasherFrame');
+            articleSmasherFrame.focus();
+            
+            // Execute test in the Article Smasher iframe
+            try {
+                const articleSmasherWindow = articleSmasherFrame.contentWindow;
+                
+                // Check if Article Smasher is loaded
+                if (!articleSmasherWindow.document.querySelector('.article-wizard-container')) {
+                    log('Article Smasher not fully loaded. Please wait and try again.');
+                    updateStatus('articleSmasher', 'error', 'Not fully loaded');
+                    return;
+                }
+                
+                // Find the topic input field and enter a topic
+                const topicInput = articleSmasherWindow.document.querySelector('input[placeholder="Enter your topic"]');
+                if (topicInput) {
+                    topicInput.value = 'Test topic for usage tracking verification';
+                    
+                    // Find and click the generate button
+                    const generateButton = articleSmasherWindow.document.querySelector('button.generate-btn');
+                    if (generateButton) {
+                        generateButton.click();
+                        log('Article Smasher AI request initiated');
+                        
+                        // Check for completion after a delay
+                        setTimeout(function() {
+                            // Check if the article was generated
+                            const articleContent = articleSmasherWindow.document.querySelector('.article-content');
+                            if (articleContent && articleContent.textContent.trim().length > 0) {
+                                log('Article Smasher AI request completed successfully');
+                                updateStatus('articleSmasher', 'success', 'Completed');
+                            } else {
+                                log('Article Smasher AI request failed or timed out');
+                                updateStatus('articleSmasher', 'error', 'Failed or timed out');
+                            }
+                        }, 10000); // Check after 10 seconds (articles take longer to generate)
+                    } else {
+                        log('Generate button not found in Article Smasher');
+                        updateStatus('articleSmasher', 'error', 'Generate button not found');
+                    }
+                } else {
+                    log('Topic input not found in Article Smasher');
+                    updateStatus('articleSmasher', 'error', 'Topic input not found');
+                }
+            } catch (error) {
+                log('Error running Article Smasher test: ' + error.message);
+                updateStatus('articleSmasher', 'error', error.message);
+            }
+        });
+
+        // Check Admin Panel
+        document.getElementById('checkAdminPanel').addEventListener('click', function() {
+            log('Checking Admin Panel usage data...');
+            updateStatus('adminPanel', 'pending', 'Checking...');
+            
+            // Focus the Admin Panel iframe
+            const adminPanelFrame = document.getElementById('adminPanelFrame');
+            adminPanelFrame.focus();
+            
+            // Execute check in the Admin Panel iframe
+            try {
+                const adminPanelWindow = adminPanelFrame.contentWindow;
+                
+                // Check if Admin Panel is loaded
+                if (!adminPanelWindow.document.querySelector('.usage-monitoring')) {
+                    log('Admin Panel not fully loaded. Please wait and try again.');
+                    updateStatus('adminPanel', 'error', 'Not fully loaded');
+                    return;
+                }
+                
+                // Wait a moment for usage data to be updated
+                setTimeout(function() {
+                    // Check for Task Smasher usage data
+                    const taskSmasherData = adminPanelWindow.document.querySelector('td[data-app="task-smasher"]');
+                    const taskSmasherRequests = taskSmasherData ? parseInt(taskSmasherData.nextElementSibling.textContent) : 0;
+                    
+                    // Check for Article Smasher usage data
+                    const articleSmasherData = adminPanelWindow.document.querySelector('td[data-app="article-smasher"]');
+                    const articleSmasherRequests = articleSmasherData ? parseInt(articleSmasherData.nextElementSibling.textContent) : 0;
+                    
+                    log(`Found usage data - Task Smasher: ${taskSmasherRequests} requests, Article Smasher: ${articleSmasherRequests} requests`);
+                    
+                    // Verify both apps have usage data
+                    if (taskSmasherRequests > 0 && articleSmasherRequests > 0) {
+                        log('Both apps have usage data recorded in the admin panel');
+                        updateStatus('adminPanel', 'success', 'Both apps have usage data');
+                        showResult(true, 'Article Smasher usage tracking is working correctly! Both Task Smasher and Article Smasher have usage data recorded in the admin panel.');
+                    } else if (taskSmasherRequests > 0 && articleSmasherRequests === 0) {
+                        log('Only Task Smasher has usage data recorded');
+                        updateStatus('adminPanel', 'error', 'Article Smasher data missing');
+                        showResult(false, 'Article Smasher usage tracking is NOT working correctly. Task Smasher has usage data, but Article Smasher does not.');
+                    } else if (taskSmasherRequests === 0 && articleSmasherRequests > 0) {
+                        log('Only Article Smasher has usage data recorded');
+                        updateStatus('adminPanel', 'error', 'Task Smasher data missing');
+                        showResult(false, 'Unexpected result: Article Smasher has usage data, but Task Smasher does not.');
+                    } else {
+                        log('Neither app has usage data recorded');
+                        updateStatus('adminPanel', 'error', 'No usage data found');
+                        showResult(false, 'Usage tracking is not working for either app. No usage data was found in the admin panel.');
+                    }
+                }, 2000); // Wait 2 seconds for data to update
+            } catch (error) {
+                log('Error checking Admin Panel: ' + error.message);
+                updateStatus('adminPanel', 'error', error.message);
+            }
+        });
+
+        // Initialize the test when the page loads
+        window.addEventListener('load', initTest);
+    </script>
+</body>
+</html>
