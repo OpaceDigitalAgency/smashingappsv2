@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAdmin, TimeRange } from '../contexts/AdminContext';
 import {
   BarChart3,
@@ -28,7 +28,8 @@ import {
   getTimeLabels,
   getTimeSeriesData,
   clearAllLimitsAndUsage,
-  UsageData
+  UsageData,
+  createInitialProviderRecord
 } from '../../shared/services/usageTrackingService';
 
 const UsageMonitoring: React.FC = () => {
@@ -227,9 +228,9 @@ const UsageMonitoring: React.FC = () => {
         'Provider', 'Requests', 'Tokens', 'Cost'
       ].join(',');
       
-      const providerRows = Object.entries(usageStats.requestsByProvider || {} as Record<AIProvider, number>).map(([provider, requests]) => {
-        const tokens = (usageStats.tokensByProvider || {} as Record<AIProvider, number>)[provider as AIProvider] || 0;
-        const cost = (usageStats.costByProvider || {} as Record<AIProvider, number>)[provider as AIProvider] || 0;
+      const providerRows = Object.entries(usageStats.requestsByProvider || createInitialProviderRecord()).map(([provider, requests]) => {
+        const tokens = (usageStats.tokensByProvider || createInitialProviderRecord())[provider as AIProvider] || 0;
+        const cost = (usageStats.costByProvider || createInitialProviderRecord())[provider as AIProvider] || 0;
         return [provider, requests, tokens, cost.toFixed(2)].join(',');
       });
       
@@ -534,7 +535,7 @@ const UsageMonitoring: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {usageStats.requestsByProvider && Object.entries(usageStats.requestsByProvider || {} as Record<AIProvider, number>).map(([key, requests]) => {
+                {usageStats.requestsByProvider && Object.entries(usageStats.requestsByProvider || createInitialProviderRecord()).map(([key, requests]) => {
                   const provider = key as AIProvider;
                   const tokens = (usageStats.tokensByProvider && usageStats.tokensByProvider[provider]) || 0;
                   const cost = (usageStats.costByProvider && usageStats.costByProvider[provider]) || 0;

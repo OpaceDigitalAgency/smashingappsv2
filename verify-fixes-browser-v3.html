@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Usage Tracking Fixes</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .success { background: #e6ffe6; color: #006600; }
+        .error { background: #ffe6e6; color: #660000; }
+        button { padding: 10px; margin: 5px; }
+        #results { margin-bottom: 20px; }
+        .test-group { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .test-title { font-weight: bold; margin-bottom: 10px; }
+        .test-step { margin: 5px 0; padding: 5px; }
+        .debug-info { font-family: monospace; white-space: pre-wrap; }
+        hr { margin: 10px 0; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <h1>Usage Tracking Verification</h1>
+    
+    <div class="test-group">
+        <div class="test-title">Test Environment</div>
+        <div id="env-info"></div>
+        <button onclick="checkEnvironment()">Check Environment</button>
+    </div>
+
+    <div class="test-group">
+        <div class="test-title">Usage Data Tests</div>
+        <div id="results"></div>
+        <button onclick="clearAllData()">Clear All Data</button>
+        <button onclick="runTests()">Run Tests</button>
+        <button onclick="openArticleSmasher()">Open ArticleSmasher</button>
+        <button onclick="openTaskSmasher()">Open TaskSmasher</button>
+    </div>
+
+    <div class="test-group">
+        <div class="test-title">Debug Info</div>
+        <div id="debug-info" class="debug-info"></div>
+    </div>
+
+    <script>
+        // Debug logging helper
+        function debugLog(message, data = null) {
+            const debugInfo = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            let logMessage = `[${timestamp}] ${message}`;
+            if (data) {
+                logMessage += '\n' + JSON.stringify(data, null, 2);
+            }
+            debugInfo.textContent = logMessage + '\n\n' + debugInfo.textContent;
+            console.log(message, data);
+        }
+
+        // Status logging helper
+        function log(message, isError = false, data = null) {
+            const div = document.createElement('div');
+            div.className = `status ${isError ? 'error' : 'success'} test-step`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+
+            // Add separator after certain steps
+            if (message.startsWith('Test ')) {
+                const separator = document.createElement('hr');
+                document.getElementById('results').appendChild(separator);
+            }
+
+            if (data) {
+                debugLog(message, data);
+            } else {
+                debugLog(message);
+            }
+        }
+
+        // Log current flags state
+        function logFlags(prefix = '') {
+            const flags = {
+                FORCE_APP_ID: localStorage.getItem('FORCE_APP_ID'),
+                current_app: localStorage.getItem('current_app'),
+                article_smasher_app: localStorage.getItem('article_smasher_app'),
+                article_wizard_state: localStorage.getItem('article_wizard_state'),
+                task_list_state: localStorage.getItem('task_list_state')
+            };
+
+            Object.entries(flags).forEach(([key, value]) => {
+                log(`${prefix}${key}: ${value}`);
+            });
+
+            debugLog('Current flags state:', flags);
+        }
+
+        // Environment check
+        function checkEnvironment() {
+            const envInfo = document.getElementById('env-info');
+            envInfo.innerHTML = '';
+
+            const info = {
+                url: window.location.href,
+                hostname: window.location.hostname,
+                pathname: window.location.pathname,
+                isLocalhost: window.location.hostname.includes('localhost'),
+                isNetlify: window.location.hostname.includes('netlify')
+            };
+
+            Object.entries(info).forEach(([key, value]) => {
+                const div = document.createElement('div');
+                div.className = 'status';
+                div.textContent = `${key}: ${value}`;
+                envInfo.appendChild(div);
+            });
+
+            debugLog('Environment check', info);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            debugLog('Clearing all data');
+            
+            // Clear localStorage
+            localStorage.clear();
+            log('Cleared all localStorage data');
+
+            // Clear any existing app flags
+            localStorage.removeItem('task_list_state');
+            localStorage.removeItem('article_wizard_state');
+            localStorage.removeItem('article_smasher_app');
+            localStorage.removeItem('FORCE_APP_ID');
+            localStorage.removeItem('current_app');
+            log('Cleared all app flags');
+
+            debugLog('All data cleared');
+        }
+
+        // Open ArticleSmasher
+        function openArticleSmasher() {
+            debugLog('Opening ArticleSmasher');
+            
+            // First clear any existing data
+            clearAllData();
+            
+            // Log initial state
+            log('Initial state after clearing:');
+            logFlags('  ');
+            
+            // Open ArticleSmasher in a new window
+            const baseUrl = window.location.hostname.includes('localhost') 
+                ? `http://localhost:${window.location.port}`
+                : 'https://smashingapps.ai';
+            const url = `${baseUrl}/tools/article-smasher`;
+            debugLog('Opening URL', url);
+            window.open(url, '_blank');
+            
+            // Wait for ArticleSmasher to load and check flags
+            setTimeout(() => {
+                log('ArticleSmasher flags after load:');
+                logFlags('  ');
+            }, 2000);
+        }
+
+        // Open TaskSmasher
+        function openTaskSmasher() {
+            debugLog('Opening TaskSmasher');
+            
+            // First clear any existing data
+            clearAllData();
+            
+            // Log initial state
+            log('Initial state after clearing:');
+            logFlags('  ');
+            
+            // Open TaskSmasher in a new window
+            const baseUrl = window.location.hostname.includes('localhost') 
+                ? `http://localhost:${window.location.port}`
+                : 'https://smashingapps.ai';
+            const url = `${baseUrl}/tools/task-smasher`;
+            debugLog('Opening URL', url);
+            window.open(url, '_blank');
+            
+            // Wait for TaskSmasher to load and check flags
+            setTimeout(() => {
+                log('TaskSmasher flags after load:');
+                logFlags('  ');
+            }, 2000);
+        }
+
+        // Run all tests
+        async function runTests() {
+            try {
+                debugLog('Starting tests');
+                document.getElementById('results').innerHTML = '';
+                log('Starting tests...');
+
+                // Test 1: Check environment
+                log('Test 1: Checking environment');
+                if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('netlify')) {
+                    log('⚠️ Warning: Tests should be run on localhost or Netlify', true);
+                    return;
+                }
+
+                // Test 2: Clear existing data
+                log('Test 2: Clearing existing data');
+                clearAllData();
+                log('Initial state:');
+                logFlags('  ');
+
+                // Small delay to ensure data is cleared
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Test 3: Check initial state
+                log('Test 3: Checking initial state');
+                const initialData = localStorage.getItem('smashingapps_usage_data');
+                if (!initialData) {
+                    log('✓ No initial usage data found');
+                } else {
+                    log('✗ Found unexpected initial data', true, initialData);
+                }
+
+                // Test 4: Initialize usage data structure
+                log('Test 4: Initializing usage data structure');
+                const initialUsageData = {
+                    totalRequests: 0,
+                    totalTokens: 0,
+                    totalInputTokens: 0,
+                    totalOutputTokens: 0,
+                    costEstimate: 0,
+                    requestsByProvider: {
+                        openai: 0,
+                        openrouter: 0,
+                        anthropic: 0,
+                        google: 0,
+                        image: 0
+                    },
+                    tokensByProvider: {
+                        openai: 0,
+                        openrouter: 0,
+                        anthropic: 0,
+                        google: 0,
+                        image: 0
+                    },
+                    inputTokensByProvider: {
+                        openai: 0,
+                        openrouter: 0,
+                        anthropic: 0,
+                        google: 0,
+                        image: 0
+                    },
+                    outputTokensByProvider: {
+                        openai: 0,
+                        openrouter: 0,
+                        anthropic: 0,
+                        google: 0,
+                        image: 0
+                    },
+                    costByProvider: {
+                        openai: 0,
+                        openrouter: 0,
+                        anthropic: 0,
+                        google: 0,
+                        image: 0
+                    },
+                    requestsByApp: {
+                        'article-smasher': 0,
+                        'task-smasher': 0
+                    },
+                    tokensByApp: {
+                        'article-smasher': 0,
+                        'task-smasher': 0
+                    },
+                    inputTokensByApp: {
+                        'article-smasher': 0,
+                        'task-smasher': 0
+                    },
+                    outputTokensByApp: {
+                        'article-smasher': 0,
+                        'task-smasher': 0
+                    },
+                    costByApp: {
+                        'article-smasher': 0,
+                        'task-smasher': 0
+                    },
+                    usageHistory: []
+                };
+                localStorage.setItem('smashingapps_usage_data', JSON.stringify(initialUsageData));
+                log('✓ Usage data structure initialized');
+
+                // Test 5: Open ArticleSmasher and verify flags
+                log('Test 5: Opening ArticleSmasher and verifying flags');
+                log('State before opening ArticleSmasher:');
+                logFlags('  ');
+                
+                openArticleSmasher();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                log('State after opening ArticleSmasher:');
+                logFlags('  ');
+
+                // Test 6: Verify no TaskSmasher flags
+                log('Test 6: Verifying no TaskSmasher flags');
+                const taskState = localStorage.getItem('task_list_state');
+                if (!taskState) {
+                    log('✓ No TaskSmasher flags found');
+                } else {
+                    log('✗ Found unexpected TaskSmasher flag', true, taskState);
+                }
+
+                // Test 7: Check usage data structure
+                log('Test 7: Checking usage data structure');
+                const usageData = JSON.parse(localStorage.getItem('smashingapps_usage_data') || '{}');
+                
+                if (!usageData.requestsByApp) {
+                    log('✗ Missing requestsByApp in usage data', true);
+                } else if (!usageData.requestsByApp['article-smasher'] && usageData.requestsByApp['article-smasher'] !== 0) {
+                    log('✗ Missing article-smasher in requestsByApp', true);
+                } else {
+                    log('✓ Usage data structure is correct');
+                }
+
+                log('Tests completed');
+                debugLog('All tests completed');
+            } catch (error) {
+                log(`Error running tests: ${error.message}`, true);
+                debugLog('Test error', error);
+            }
+        }
+
+        // Run environment check on load
+        checkEnvironment();
+    </script>
+</body>
+</html>

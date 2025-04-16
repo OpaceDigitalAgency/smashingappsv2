@@ -82,14 +82,23 @@ function getAppIdForService(provider: AIProvider): string {
   // Then check URL path
   const path = window.location.pathname;
   
-  if (path.includes('/article-smasher') || path.includes('/tools/article-smasher')) {
+  // Check for tool paths with more specific matching
+  const toolPaths = {
+    'article-smasher': ['/article-smasher', '/tools/article-smasher'],
+    'task-smasher': ['/task-smasher', '/tools/task-smasher']
+  };
+
+  console.log('[DEBUG] Checking path:', path);
+
+  if (toolPaths['article-smasher'].some(p => path.includes(p))) {
     console.log('[DEBUG] Detected ArticleSmasher from path');
     // Set the flag for future API calls
     localStorage.setItem('article_smasher_app', 'true');
+    localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true, forceTracking: true }));
     return 'article-smasher';
   }
   
-  if (path.includes('/task-smasher') || path.includes('/tools/task-smasher')) {
+  if (toolPaths['task-smasher'].some(p => path.includes(p))) {
     console.log('[DEBUG] Detected TaskSmasher from path');
     // Set the flag for future API calls
     localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));

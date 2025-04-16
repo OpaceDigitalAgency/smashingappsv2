@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 // Import the master SEO configuration
@@ -21,13 +21,24 @@ interface SEOProps {
 const SEO: React.FC<SEOProps> = ({ overrides = {} }) => {
   const location = useLocation();
   const [currentMeta, setCurrentMeta] = useState<MetaConfig>(seoMaster.defaultMeta);
+  const prevOverridesRef = useRef<Partial<MetaConfig>>(overrides);
+  const prevPathRef = useRef<string>(location.pathname);
   
   useEffect(() => {
-    // Get the current path
-    const path = location.pathname;
+    // Check if we actually need to update
+    const overridesChanged = JSON.stringify(prevOverridesRef.current) !== JSON.stringify(overrides);
+    const pathChanged = prevPathRef.current !== location.pathname;
     
-    // Get the meta data for this route from our single source of truth
-    const meta = seoMaster.getMetaForRoute(path);
+    if (!overridesChanged && !pathChanged) {
+      return;
+    }
+    
+    // Update refs
+    prevOverridesRef.current = overrides;
+    prevPathRef.current = location.pathname;
+    
+    // Get the meta data for this route
+    const meta = seoMaster.getMetaForRoute(location.pathname);
     
     // Apply any overrides
     setCurrentMeta({ ...meta, ...overrides });

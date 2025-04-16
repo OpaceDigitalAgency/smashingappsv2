@@ -38,27 +38,37 @@ const ThemeManager = () => {
   const { settings } = useGlobalSettings();
   
   useEffect(() => {
-    // Remove any existing theme classes
-    document.documentElement.classList.remove('light', 'dark');
-    
-    // Apply theme based on settings
-    if (settings.ui.theme === 'system') {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.add(isDark ? 'dark' : 'light');
+    try {
+      // Default to light theme if settings aren't loaded
+      const theme = settings?.ui?.theme || 'light';
+      
+      // Remove any existing theme classes
+      document.documentElement.classList.remove('light', 'dark');
+      
+      // Apply theme based on settings
+      if (theme === 'system') {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.add(isDark ? 'dark' : 'light');
 
-      // Listen for system theme changes
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => {
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(e.matches ? 'dark' : 'light');
-      };
+        // Listen for system theme changes
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e: MediaQueryListEvent) => {
+          document.documentElement.classList.remove('light', 'dark');
+          document.documentElement.classList.add(e.matches ? 'dark' : 'light');
+        };
 
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else {
-      document.documentElement.classList.add(settings.ui.theme);
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        document.documentElement.classList.add(theme);
+      }
+    } catch (error) {
+      // If anything fails, default to light theme
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add('light');
+      console.error('Error in ThemeManager:', error);
     }
-  }, [settings.ui.theme]);
+  }, [settings?.ui?.theme]);
 
   return null;
 };
