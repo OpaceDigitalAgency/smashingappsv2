@@ -475,6 +475,27 @@ export const trackApiRequest = (
   
   // Save updated data
   saveUsageData(usageData);
+  
+  // Also update the enhanced usage tracking service
+  try {
+    // Import dynamically to avoid circular dependencies
+    const { enhancedUsageTracking } = require('../services');
+    
+    // Add the request to the enhanced usage tracking service
+    enhancedUsageTracking.trackApiRequest(
+      provider,
+      tokens,
+      app,
+      model,
+      actualInputTokens,
+      actualOutputTokens,
+      new Date(timestampMs)
+    );
+    
+    console.log('[DEBUG] Updated both legacy and enhanced usage tracking services');
+  } catch (error) {
+    console.error('[DEBUG] Error updating enhanced usage tracking service:', error);
+  }
 };
 
 // Get filtered usage data for a specific time range

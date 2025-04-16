@@ -778,6 +778,10 @@ class EnhancedUsageTrackingService {
       // Save to legacy storage
       localStorage.setItem(LEGACY_USAGE_DATA_KEY, JSON.stringify(legacyData));
       console.log('[EnhancedUsageTracking] Data synchronized to legacy storage');
+      
+      // Dispatch legacy event for admin panel
+      window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: legacyData }));
+      console.log('[EnhancedUsageTracking] Dispatched legacy usage-data-updated event');
     } catch (error) {
       console.error('[EnhancedUsageTracking] Error synchronizing to legacy storage:', error);
     }
