@@ -412,12 +412,22 @@ const Debug: React.FC = () => {
         model
       });
       
-      // Save updated data
-      localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+      // Save updated data to both storage locations
+      localStorage.setItem('smashingapps_usage_data', JSON.stringify(usageData));
+      localStorage.setItem('smashingapps_enhanced_usage_data', JSON.stringify(usageData));
       
       // Dispatch events to refresh the UI
       window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
       window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+      
+      // Force a refresh of the admin panel
+      try {
+        // Import dynamically to avoid circular dependencies
+        const { enhancedUsageTracking } = require('../../shared/services');
+        enhancedUsageTracking.refreshData();
+      } catch (error) {
+        console.error('[DEBUG] Error refreshing enhanced usage tracking:', error);
+      }
       
       log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} API request simulated successfully`);
       
@@ -477,16 +487,24 @@ const Debug: React.FC = () => {
           // Step 3: Check usage data
           log('Step 3: Checking usage data...', 'info');
           
-          // Get current usage data
-          const usageDataKey = 'smashingapps_usage_data';
-          const usageDataStr = localStorage.getItem(usageDataKey);
+          // Get current usage data from both storage locations
+          const legacyUsageDataKey = 'smashingapps_usage_data';
+          const enhancedUsageDataKey = 'smashingapps_enhanced_usage_data';
           
-          if (!usageDataStr) {
-            log('No usage data found', 'error');
+          const legacyUsageDataStr = localStorage.getItem(legacyUsageDataKey);
+          const enhancedUsageDataStr = localStorage.getItem(enhancedUsageDataKey);
+          
+          if (!legacyUsageDataStr && !enhancedUsageDataStr) {
+            log('No usage data found in either storage location', 'error');
             return;
           }
           
-          const usageData = JSON.parse(usageDataStr);
+          // Parse the data from both storage locations
+          const legacyUsageData = legacyUsageDataStr ? JSON.parse(legacyUsageDataStr) : null;
+          const enhancedUsageData = enhancedUsageDataStr ? JSON.parse(enhancedUsageDataStr) : null;
+          
+          // Use enhanced data if available, otherwise fall back to legacy data
+          const usageData = enhancedUsageData || legacyUsageData;
           
           // Check for Task Smasher usage data
           const taskSmasherRequests = usageData.requestsByApp && usageData.requestsByApp['task-smasher'] || 0;

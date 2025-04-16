@@ -271,6 +271,20 @@ class EnhancedUsageTrackingService {
   }
   
   /**
+   * Refresh data from storage and dispatch events
+   */
+  public refreshData(): void {
+    // Reload data from storage
+    this.usageData = this.loadUsageData();
+    
+    // Dispatch events to refresh the UI
+    this.dispatchChangeEvent();
+    window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+    
+    console.log('[EnhancedUsageTracking] Data refreshed and events dispatched');
+  }
+  
+  /**
    * Get filtered usage data for a specific time range
    *
    * @param timeRange The time range to filter by
