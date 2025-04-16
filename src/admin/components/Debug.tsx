@@ -636,7 +636,17 @@ const Debug: React.FC = () => {
             >
               Verify Article Smasher Usage
             </Button>
-            <Button 
+            <Button
+              variant="secondary"
+              onClick={() => {
+                // Open the verification HTML file in a new tab
+                window.open('verify-fixes-final.html', '_blank');
+              }}
+              className="w-full justify-start"
+            >
+              Open Standalone Verification Tool
+            </Button>
+            <Button
               variant="danger" 
               onClick={clearAllData}
               className="w-full justify-start"

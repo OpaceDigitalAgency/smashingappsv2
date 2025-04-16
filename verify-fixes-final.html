@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Article Smasher Usage Tracking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: blue; }
+  </style>
+</head>
+<body>
+  <h1>Verify Article Smasher Usage Tracking</h1>
+  
+  <div>
+    <button id="clearData">Clear All Usage Data</button>
+    <button id="simulateArticleSmasher">Simulate Article Smasher Request</button>
+    <button id="simulateTaskSmasher">Simulate Task Smasher Request</button>
+    <button id="verifyUsage">Verify Usage Data</button>
+  </div>
+  
+  <h2>Results:</h2>
+  <pre id="results"></pre>
+  
+  <script>
+    const resultsEl = document.getElementById('results');
+    
+    function log(message, type = 'normal') {
+      const line = document.createElement('div');
+      line.textContent = message;
+      if (type === 'success') line.className = 'success';
+      if (type === 'error') line.className = 'error';
+      if (type === 'info') line.className = 'info';
+      resultsEl.appendChild(line);
+      console.log(message);
+    }
+    
+    // Clear all usage data
+    document.getElementById('clearData').addEventListener('click', () => {
+      resultsEl.innerHTML = '';
+      log('Clearing all usage data...', 'info');
+      
+      try {
+        // Clear legacy usage data
+        localStorage.removeItem('smashingapps_usage_data');
+        
+        // Clear enhanced usage data
+        localStorage.removeItem('smashingapps_enhanced_usage_data');
+        
+        // Clear rate limits
+        localStorage.removeItem('rateLimitInfo');
+        localStorage.removeItem('rateLimited');
+        
+        // Dispatch events to refresh the UI
+        window.dispatchEvent(new CustomEvent('usage-data-updated'));
+        window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+        window.dispatchEvent(new CustomEvent('rate-limits-cleared'));
+        
+        log('All usage data cleared successfully', 'success');
+      } catch (error) {
+        log(`Error clearing usage data: ${error.message}`, 'error');
+      }
+    });
+    
+    // Simulate Article Smasher request
+    document.getElementById('simulateArticleSmasher').addEventListener('click', () => {
+      resultsEl.innerHTML = '';
+      log('Simulating Article Smasher API request...', 'info');
+      
+      try {
+        // Set Article Smasher flags
+        localStorage.setItem('article_smasher_app', 'true');
+        localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
+        localStorage.setItem('current_app', 'article-smasher');
+        
+        // Remove Task Smasher flags
+        localStorage.removeItem('task_list_state');
+        
+        // Simulate API request
+        simulateApiRequest('article-smasher');
+        
+        log('Article Smasher API request simulated successfully', 'success');
+      } catch (error) {
+        log(`Error simulating Article Smasher API request: ${error.message}`, 'error');
+      }
+    });
+    
+    // Simulate Task Smasher request
+    document.getElementById('simulateTaskSmasher').addEventListener('click', () => {
+      resultsEl.innerHTML = '';
+      log('Simulating Task Smasher API request...', 'info');
+      
+      try {
+        // Set Task Smasher flags
+        localStorage.setItem('task_list_state', JSON.stringify({ initialized: true }));
+        localStorage.setItem('current_app', 'task-smasher');
+        
+        // Remove Article Smasher flags
+        localStorage.removeItem('article_smasher_app');
+        localStorage.removeItem('article_wizard_state');
+        
+        // Simulate API request
+        simulateApiRequest('task-smasher');
+        
+        log('Task Smasher API request simulated successfully', 'success');
+      } catch (error) {
+        log(`Error simulating Task Smasher API request: ${error.message}`, 'error');
+      }
+    });
+    
+    // Verify usage data
+    document.getElementById('verifyUsage').addEventListener('click', () => {
+      resultsEl.innerHTML = '';
+      log('Verifying usage data...', 'info');
+      
+      try {
+        // Get usage data from both storage locations
+        const legacyUsageDataKey = 'smashingapps_usage_data';
+        const enhancedUsageDataKey = 'smashingapps_enhanced_usage_data';
+        
+        const legacyUsageDataStr = localStorage.getItem(legacyUsageDataKey);
+        const enhancedUsageDataStr = localStorage.getItem(enhancedUsageDataKey);
+        
+        if (!legacyUsageDataStr && !enhancedUsageDataStr) {
+          log('No usage data found in either storage location', 'error');
+          return;
+        }
+        
+        // Parse the data from both storage locations
+        const legacyUsageData = legacyUsageDataStr ? JSON.parse(legacyUsageDataStr) : null;
+        const enhancedUsageData = enhancedUsageDataStr ? JSON.parse(enhancedUsageDataStr) : null;
+        
+        // Use enhanced data if available, otherwise fall back to legacy data
+        const usageData = enhancedUsageData || legacyUsageData;
+        
+        // Check for Task Smasher usage data
+        const taskSmasherRequests = usageData.requestsByApp && usageData.requestsByApp['task-smasher'] || 0;
+        
+        // Check for Article Smasher usage data
+        const articleSmasherRequests = usageData.requestsByApp && usageData.requestsByApp['article-smasher'] || 0;
+        
+        log(`Found usage data - Task Smasher: ${taskSmasherRequests} requests, Article Smasher: ${articleSmasherRequests} requests`, 'info');
+        
+        // Verify both apps have usage data
+        if (taskSmasherRequests > 0 && articleSmasherRequests > 0) {
+          log('Both apps have usage data recorded', 'success');
+        } else if (taskSmasherRequests > 0) {
+          log('Only Task Smasher has usage data recorded', 'info');
+        } else if (articleSmasherRequests > 0) {
+          log('Only Article Smasher has usage data recorded', 'info');
+        } else {
+          log('No usage data recorded for either app', 'error');
+        }
+        
+        // Log storage locations
+        log('\nStorage Details:', 'info');
+        log(`Legacy storage (${legacyUsageDataKey}): ${legacyUsageDataStr ? 'Data found' : 'No data'}`, legacyUsageDataStr ? 'success' : 'error');
+        log(`Enhanced storage (${enhancedUsageDataKey}): ${enhancedUsageDataStr ? 'Data found' : 'No data'}`, enhancedUsageDataStr ? 'success' : 'error');
+        
+        // Force refresh events
+        log('\nDispatching refresh events...', 'info');
+        window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
+        window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+        log('Refresh events dispatched', 'success');
+      } catch (error) {
+        log(`Error verifying usage data: ${error.message}`, 'error');
+      }
+    });
+    
+    // Simulate API request
+    function simulateApiRequest(app) {
+      // Get current usage data
+      const usageDataKey = 'smashingapps_usage_data';
+      const enhancedUsageDataKey = 'smashingapps_enhanced_usage_data';
+      
+      const usageDataStr = localStorage.getItem(usageDataKey);
+      const usageData = usageDataStr ? JSON.parse(usageDataStr) : {
+        totalRequests: 0,
+        totalTokens: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        costEstimate: 0,
+        requestsByProvider: {},
+        tokensByProvider: {},
+        inputTokensByProvider: {},
+        outputTokensByProvider: {},
+        costByProvider: {},
+        requestsByApp: {},
+        tokensByApp: {},
+        inputTokensByApp: {},
+        outputTokensByApp: {},
+        costByApp: {},
+        usageHistory: []
+      };
+      
+      // Add a new request to the history
+      const timestamp = Date.now();
+      const provider = 'openai';
+      const model = 'gpt-3.5-turbo';
+      const tokens = 800;
+      const inputTokens = 200;
+      const outputTokens = 600;
+      const cost = 0.003;
+      
+      // Update total stats
+      usageData.totalRequests += 1;
+      usageData.totalTokens += tokens;
+      usageData.totalInputTokens += inputTokens;
+      usageData.totalOutputTokens += outputTokens;
+      usageData.costEstimate += cost;
+      
+      // Update provider stats
+      usageData.requestsByProvider[provider] = (usageData.requestsByProvider[provider] || 0) + 1;
+      usageData.tokensByProvider[provider] = (usageData.tokensByProvider[provider] || 0) + tokens;
+      usageData.inputTokensByProvider[provider] = (usageData.inputTokensByProvider[provider] || 0) + inputTokens;
+      usageData.outputTokensByProvider[provider] = (usageData.outputTokensByProvider[provider] || 0) + outputTokens;
+      usageData.costByProvider[provider] = (usageData.costByProvider[provider] || 0) + cost;
+      
+      // Update app stats
+      if (!usageData.requestsByApp) usageData.requestsByApp = {};
+      if (!usageData.tokensByApp) usageData.tokensByApp = {};
+      if (!usageData.inputTokensByApp) usageData.inputTokensByApp = {};
+      if (!usageData.outputTokensByApp) usageData.outputTokensByApp = {};
+      if (!usageData.costByApp) usageData.costByApp = {};
+      
+      usageData.requestsByApp[app] = (usageData.requestsByApp[app] || 0) + 1;
+      usageData.tokensByApp[app] = (usageData.tokensByApp[app] || 0) + tokens;
+      usageData.inputTokensByApp[app] = (usageData.inputTokensByApp[app] || 0) + inputTokens;
+      usageData.outputTokensByApp[app] = (usageData.outputTokensByApp[app] || 0) + outputTokens;
+      usageData.costByApp[app] = (usageData.costByApp[app] || 0) + cost;
+      
+      // Add to history
+      usageData.usageHistory.push({
+        timestamp,
+        requests: 1,
+        tokens,
+        inputTokens,
+        outputTokens,
+        cost,
+        provider,
+        app,
+        model
+      });
+      
+      // Save updated data to both storage locations
+      localStorage.setItem(usageDataKey, JSON.stringify(usageData));
+      localStorage.setItem(enhancedUsageDataKey, JSON.stringify(usageData));
+      
+      // Dispatch events to refresh the UI
+      window.dispatchEvent(new CustomEvent('usage-data-updated', { detail: usageData }));
+      window.dispatchEvent(new CustomEvent('refresh-usage-data'));
+      
+      // Show updated stats
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} requests: ${usageData.requestsByApp[app]}`, 'success');
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} tokens: ${usageData.tokensByApp[app]}`, 'success');
+      log(`${app === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} cost: ${usageData.costByApp[app]}`, 'success');
+    }
+  </script>
+</body>
+</html>
