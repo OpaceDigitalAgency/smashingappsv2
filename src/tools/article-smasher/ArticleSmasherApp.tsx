@@ -54,6 +54,11 @@ const ArticleSmasherApp: React.FC = () => {
       appRegistry.registerApp('article-smasher');
       console.log('ArticleSmasherApp: Registered with app registry');
       
+      // Set app identification flags for usage tracking
+      localStorage.setItem('article_smasher_app', 'true');
+      localStorage.setItem('current_app', 'article-smasher');
+      console.log('ArticleSmasherApp: Set app identification flags');
+      
       // Initialize the admin bridge
       initAdminBridge();
       
@@ -83,6 +88,11 @@ const ArticleSmasherApp: React.FC = () => {
     // Cleanup function
     return () => {
       console.log('ArticleSmasherApp: Component unmounting');
+      
+      // Only clear the article_smasher_app flag, not current_app
+      // This ensures we don't interfere with other apps
+      localStorage.removeItem('article_smasher_app');
+      console.log('ArticleSmasherApp: Cleared app identification flag');
     };
   }, []); // Run only once on mount
   
