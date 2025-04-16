@@ -24,6 +24,7 @@ import {
 } from '../../shared/utils/usageDebugUtils';
 import Button from '../../shared/components/Button/Button';
 import { AIProvider, ProviderConfig } from '../../shared/types/aiProviders';
+import { AppId } from '../../shared/services/appRegistry';
 import {
   getTimeLabels,
   getTimeSeriesData,
@@ -115,6 +116,15 @@ const UsageMonitoring: React.FC = () => {
     try {
       setIsRefreshing(true);
       setError(null);
+      
+      // Explicitly refresh enhanced usage tracking
+      try {
+        const { enhancedUsageTracking } = require('../../shared/services');
+        enhancedUsageTracking.refreshData();
+        console.log('[UsageMonitoring] Enhanced usage tracking refreshed');
+      } catch (error) {
+        console.error('[UsageMonitoring] Error refreshing enhanced usage tracking:', error);
+      }
       
       // Dispatch a custom event to refresh usage data
       window.dispatchEvent(new CustomEvent('refresh-usage-data'));
@@ -239,8 +249,9 @@ const UsageMonitoring: React.FC = () => {
       ].join(',');
       
       const appRows = Object.entries(usageStats.requestsByApp || {} as Record<string, number>).map(([app, requests]) => {
-        const tokens = (usageStats.tokensByApp || {} as Record<string, number>)[app] || 0;
-        const cost = (usageStats.costByApp || {} as Record<string, number>)[app] || 0;
+        const appId = app as AppId;
+        const tokens = (usageStats.tokensByApp || {} as Record<AppId, number>)[appId] || 0;
+        const cost = (usageStats.costByApp || {} as Record<AppId, number>)[appId] || 0;
         return [app, requests, tokens, cost.toFixed(2)].join(',');
       });
       
@@ -621,10 +632,11 @@ const UsageMonitoring: React.FC = () => {
                 {usageStats.requestsByApp && Object.entries(usageStats.requestsByApp || {} as Record<string, number>)
                   .sort((a, b) => b[1] - a[1]) // Sort by number of requests
                   .map(([appId, requests]) => {
-                    const tokens = (usageStats.tokensByApp && usageStats.tokensByApp[appId]) || 0;
-                    const inputTokens = (usageStats.inputTokensByApp && usageStats.inputTokensByApp[appId]) || 0;
-                    const outputTokens = (usageStats.outputTokensByApp && usageStats.outputTokensByApp[appId]) || 0;
-                    const cost = (usageStats.costByApp && usageStats.costByApp[appId]) || 0;
+                    const appIdTyped = appId as AppId;
+                    const tokens = (usageStats.tokensByApp && usageStats.tokensByApp[appIdTyped]) || 0;
+                    const inputTokens = (usageStats.inputTokensByApp && usageStats.inputTokensByApp[appIdTyped]) || 0;
+                    const outputTokens = (usageStats.outputTokensByApp && usageStats.outputTokensByApp[appIdTyped]) || 0;
+                    const cost = (usageStats.costByApp && usageStats.costByApp[appIdTyped]) || 0;
                     
                     // Format app name for display - use a more generic approach
                     const appName = appId.split('-')
