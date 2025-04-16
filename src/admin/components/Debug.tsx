@@ -331,13 +331,12 @@ const Debug: React.FC = () => {
   // Simulate API request for the current app
   const simulateApiRequest = () => {
     setResults([]);
-    log('Simulating Article Smasher API request...', 'info');
+    // Get the current app ID from localStorage
+    const currentApp = localStorage.getItem('current_app') || 'unknown-app';
+    log(`Simulating ${currentApp === 'task-smasher' ? 'Task Smasher' : 'Article Smasher'} API request...`, 'info');
     
     try {
-      // Set app identification flags
-      localStorage.setItem('article_smasher_app', 'true');
-      localStorage.setItem('article_wizard_state', JSON.stringify({ initialized: true }));
-      localStorage.setItem('current_app', 'article-smasher');
+      // App flags should be set by the calling function
       
       // Get current usage data
       const usageDataKey = 'smashingapps_usage_data';
