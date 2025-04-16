@@ -44,6 +44,15 @@ const ArticleSmasherApp: React.FC = () => {
       initializeAIServices();
       console.log('ArticleSmasherApp: AI services initialized');
       
+      // Explicitly initialize enhanced usage tracking
+      try {
+        const { enhancedUsageTracking } = require('../../shared/services');
+        enhancedUsageTracking.refreshData();
+        console.log('ArticleSmasherApp: Enhanced usage tracking initialized');
+      } catch (error) {
+        console.error('Error initializing enhanced usage tracking:', error);
+      }
+      
       console.log('ArticleSmasherApp: Initialization complete');
     } catch (error) {
       console.error('Error during ArticleSmasher initialization:', error);

@@ -70,6 +70,15 @@ const TaskSmasherApp: React.FC = () => {
       initializeAIServices();
       console.log('TaskSmasherApp: AI services initialized');
       
+      // Explicitly initialize enhanced usage tracking
+      try {
+        const { enhancedUsageTracking } = require('../../shared/services');
+        enhancedUsageTracking.refreshData();
+        console.log('TaskSmasherApp: Enhanced usage tracking initialized');
+      } catch (error) {
+        console.error('Error initializing enhanced usage tracking:', error);
+      }
+      
       console.log('TaskSmasherApp: Initialization complete');
     } catch (error) {
       console.error('Error during TaskSmasher initialization:', error);

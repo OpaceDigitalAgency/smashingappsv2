@@ -41,6 +41,15 @@ export function initializeAIServices(): boolean {
 
   // Initialize usage tracking
   initializeUsageTracking();
+  
+  // Initialize enhanced usage tracking
+  try {
+    const { enhancedUsageTracking } = require('./index');
+    enhancedUsageTracking.refreshData();
+    console.log('[AIServiceInitializer] Enhanced usage tracking initialized');
+  } catch (error) {
+    console.error('[AIServiceInitializer] Error initializing enhanced usage tracking:', error);
+  }
 
   // Get all registered services
   const services = aiServiceRegistry.getAllServices();
