@@ -577,7 +577,7 @@ function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm">
-            <p>© {new Date().getFullYear()} AI Scribe. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} AI Scribe • Created by <a href="https://web-site.design" target="_blank" className="text-gray-400 hover:text-white underline">AI Website Design Agency</a>. Built in the UK.</p>
           </div>
         </div>
       </footer>

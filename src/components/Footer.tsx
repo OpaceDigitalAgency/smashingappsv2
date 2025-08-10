@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
         
         <div className="mt-12 pt-8 border-t border-gray-800">
           <p className="text-center text-gray-400">
-            © {new Date().getFullYear()} SmashingApps.ai • Operated by Opace Ltd
+            © {new Date().getFullYear()} SmashingApps.ai • Created by <a href="https://web-site.design" target="_blank" className="text-gray-400 hover:text-white underline">AI Website Design Agency</a>. Built in the UK.
           </p>
         </div>
       </div>
