@@ -11,15 +11,19 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [models, setModels] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [defaultModel, setDefaultModel] = useState<string>('');
   const modelRegistry = ModelRegistry.getInstance();
 
   const configuredProviders = aiCore.getConfiguredProviders();
+  const settings = aiCore.getSettings();
 
   useEffect(() => {
     if (configuredProviders.length > 0 && !selectedProvider) {
       setSelectedProvider(configuredProviders[0]);
     }
-  }, [configuredProviders, selectedProvider]);
+    // Load current default model
+    setDefaultModel(settings.model || '');
+  }, [configuredProviders, selectedProvider, settings.model]);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -32,17 +36,17 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
     try {
       // Get models from registry
       const registryModels = modelRegistry.getModelsByProvider(selectedProvider);
-      
+
       // Try to get live models from provider
       try {
         const liveModels = await aiCore.getAvailableModels(selectedProvider);
-        
+
         // Combine registry and live models
         const allModelIds = new Set([
           ...registryModels.map(m => m.id),
           ...liveModels
         ]);
-        
+
         const combinedModels = Array.from(allModelIds).map(id => {
           const registryModel = registryModels.find(m => m.id === id);
           return registryModel || {
@@ -60,7 +64,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
             }
           };
         });
-        
+
         setModels(combinedModels);
       } catch (error) {
         // If live fetch fails, use registry models
@@ -72,6 +76,14 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSetDefaultModel = (modelId: string) => {
+    aiCore.updateSettings({ model: modelId });
+    setDefaultModel(modelId);
+
+    // Dispatch event to notify other components
+    window.dispatchEvent(new CustomEvent('ai-core-settings-changed'));
   };
 
   if (configuredProviders.length === 0) {
@@ -125,11 +137,22 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
           {models.map((model) => (
             <div
               key={model.id}
-              className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className={`bg-white rounded-lg border-2 p-6 hover:shadow-md transition-all ${
+                defaultModel === model.id
+                  ? 'border-indigo-500 shadow-md'
+                  : 'border-gray-200'
+              }`}
             >
               <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-bold text-gray-900">{model.name}</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-900">{model.name}</h3>
+                    {defaultModel === model.id && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-800 rounded">
+                        Default
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">{model.description}</p>
                 </div>
                 <span className={`px-2 py-1 text-xs font-medium rounded ${
@@ -191,6 +214,25 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
                       </span>
                     )}
                   </div>
+                )}
+              </div>
+
+              {/* Set as Default Button */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                {defaultModel === model.id ? (
+                  <button
+                    disabled
+                    className="w-full px-4 py-2 bg-indigo-100 text-indigo-600 font-medium rounded-lg cursor-not-allowed"
+                  >
+                    ✓ Current Default Model
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleSetDefaultModel(model.id)}
+                    className="w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Set as Default
+                  </button>
                 )}
               </div>
             </div>

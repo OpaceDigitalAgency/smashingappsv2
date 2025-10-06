@@ -5,58 +5,18 @@ import { validateTaskLocally, validateTaskWithAI } from '../utils/taskContextVal
 import { OpenAIServiceAdapter } from '../utils/openaiServiceAdapter';
 import useReCaptcha from '../../../shared/hooks/useReCaptcha';
 import useVoiceToText from '../../../shared/hooks/useVoiceToText';
-import { aiServiceRegistry } from '../../../shared/services/aiServices';
-import { getGlobalSettings } from '../../../shared/services/globalSettingsService';
+import AICore from '../../../core/AICore';
 import { getPromptTemplateForCategory, processPromptTemplate } from '../utils/promptTemplates';
 
 export function useTasks(initialUseCase?: string): TasksContextType {
-  // Removed openAIKey state as we're now using the proxy
+  // Initialize AI-Core
+  const aiCore = AICore.getInstance();
+
+  // Get model from AI-Core settings
   const [selectedModel, setSelectedModel] = useState(() => {
-    console.log('Initializing selectedModel in useTasks');
-    
-    // First try to get the model directly from globalSettingsService
-    try {
-      const globalSettings = getGlobalSettings();
-      console.log('Retrieved global settings:', globalSettings);
-      
-      if (globalSettings && globalSettings.defaultModel) {
-        console.log('Using model from global settings:', globalSettings.defaultModel);
-        return globalSettings.defaultModel;
-      }
-    } catch (error) {
-      console.error('Error accessing global settings service:', error);
-    }
-    
-    // Then try to get from localStorage global settings
-    try {
-      const globalSettingsStr = localStorage.getItem('smashingapps-global-settings');
-      if (globalSettingsStr) {
-        const globalSettings = JSON.parse(globalSettingsStr);
-        if (globalSettings.defaultModel) {
-          console.log('Using model from localStorage global settings:', globalSettings.defaultModel);
-          return globalSettings.defaultModel;
-        }
-      }
-    } catch (error) {
-      console.error('Error reading global settings from localStorage:', error);
-    }
-    
-    // Then check app-specific model setting
-    const appSpecificModel = localStorage.getItem('smashingapps_activeModel');
-    if (appSpecificModel) {
-      console.log('Using app-specific model setting:', appSpecificModel);
-      return appSpecificModel;
-    }
-    
-    // Fall back to provider default if global settings aren't available
-    const activeProvider = localStorage.getItem('smashingapps_activeProvider') || 'openai';
-    const service = aiServiceRegistry.getService(activeProvider as any);
-    const defaultModel = service ? service.getDefaultModel().id : 'gpt-3.5-turbo';
-    
-    console.log('Using default model:', defaultModel);
-    
-    // Use the default model from the service
-    return defaultModel;
+    const settings = aiCore.getSettings();
+    console.log('Using model from AI-Core:', settings.model);
+    return settings.model || 'gpt-3.5-turbo';
   });
   const [totalCost, setTotalCost] = useState(() => {
     const savedCost = localStorage.getItem('totalCost');
@@ -163,27 +123,23 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     }
   }, [selectedUseCase]);
   
-  // Effect to update the selected model when the active provider changes
+  // Effect to update the selected model when AI-Core settings change
   useEffect(() => {
-    const handleStorageChange = () => {
-      const activeProvider = localStorage.getItem('smashingapps_activeProvider');
-      if (activeProvider) {
-        const service = aiServiceRegistry.getService(activeProvider as any);
-        if (service) {
-          // Get the default model for this provider
-          const defaultModel = service.getDefaultModel().id;
-          setSelectedModel(defaultModel);
-        }
+    const handleSettingsChange = () => {
+      const settings = aiCore.getSettings();
+      if (settings.model) {
+        console.log('AI-Core settings changed, updating model to:', settings.model);
+        setSelectedModel(settings.model);
       }
     };
-    
-    // Listen for storage changes (in case API settings are updated in another tab)
-    window.addEventListener('storage', handleStorageChange);
-    
+
+    // Listen for AI-Core settings changes
+    window.addEventListener('ai-core-settings-changed', handleSettingsChange);
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('ai-core-settings-changed', handleSettingsChange);
     };
-  }, []);
+  }, [aiCore]);
 
   // Effect to update settings when global settings change
   useEffect(() => {
@@ -858,16 +814,8 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     setGenerating(true);
     
     try {
-      // Get the appropriate service for the model
-      const service = aiServiceRegistry.getServiceForModel(selectedModel);
-      
-      if (!service) {
-        throw new Error(`No service found for model: ${selectedModel}`);
-      }
-      
-      // Use the shared service to make the request
-      const { data, rateLimit } = await service.createChatCompletion({
-        model: selectedModel,
+      // Use AI-Core to make the request
+      const response = await aiCore.chat({
         messages: [
           {
             role: 'system',
@@ -881,12 +829,9 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         temperature: 0.7,
         maxTokens: 200
       });
-      
-      // Update rate limit information
-      syncRateLimitInfo(rateLimit);
-      
-      // The shared service returns content directly
-      const improvedTask = data.content.trim();
+
+      // Extract content from response
+      const improvedTask = response.content.trim();
       
         setHistory(prev => [...prev, boards]);
         
@@ -1035,16 +980,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         );
       }
       
-      // Get the appropriate service for the model
-      const service = aiServiceRegistry.getServiceForModel(selectedModel);
-      
-      if (!service) {
-        throw new Error(`No service found for model: ${selectedModel}`);
-      }
-      
-      // Use the shared service to make the request
-      const { data, rateLimit } = await service.createChatCompletion({
-        model: selectedModel,
+      // Use AI-Core to make the request
+      const response = await aiCore.chat({
         messages: [
           {
             role: 'system',
@@ -1058,12 +995,9 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         temperature: 0.7,
         maxTokens: 1000
       });
-      
-      // Update rate limit information
-      syncRateLimitInfo(rateLimit);
-      
-      // The shared service returns content directly
-      let subtasksContent = data.content.trim();
+
+      // Extract content from response
+      let subtasksContent = response.content.trim();
       console.log('Raw AI response:', subtasksContent);
       
       // Enhanced JSON extraction and parsing
@@ -1361,17 +1295,9 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         }
       
       console.log("Sending request to AI service with model:", selectedModel);
-      
-      // Get the appropriate service for the model
-      const service = aiServiceRegistry.getServiceForModel(selectedModel);
-      
-      if (!service) {
-        throw new Error(`No service found for model: ${selectedModel}`);
-      }
-      
-      // Use the shared service to make the request
-      const { data, rateLimit } = await service.createChatCompletion({
-        model: selectedModel,
+
+      // Use AI-Core to make the request
+      const response = await aiCore.chat({
         messages: [
           {
             role: 'system',
@@ -1387,14 +1313,11 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         // Use temperature from the prompt template, or fall back to a default value
         temperature: promptTemplate?.temperature || 0.7
       });
-      
-      console.log("Received response from OpenAI:", data);
-      
-      // Update rate limit information
-      syncRateLimitInfo(rateLimit);
-      
-      // The shared service returns content directly
-      const responseText = data.content;
+
+      console.log("Received response from AI-Core:", response);
+
+      // Extract content from response
+      const responseText = response.content;
       console.log("Response text:", responseText);
       
       if (!responseText) {
