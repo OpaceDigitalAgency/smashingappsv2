@@ -1,7 +1,8 @@
 {
   "name": "smashing-apps-oop",
+  "private": true,
   "version": "1.0.0",
-  "description": "SmashingApps OOP Architecture with Independent AI-Core System",
+  "description": "SmashingApps v2 - OOP Architecture with Independent AI-Core System",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,12 +12,24 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "axios": "^1.12.2",
+    "framer-motion": "^12.23.22",
+    "html-to-text": "^9.0.5",
+    "jspdf": "^3.0.3",
     "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0"
+    "react-router-dom": "^6.20.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/html-to-text": "^9.0.4",
+    "@types/node": "^20.10.5",
     "@types/react": "^18.2.43",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
@@ -31,4 +44,3 @@
     "vite": "^5.0.8"
   }
 }
-

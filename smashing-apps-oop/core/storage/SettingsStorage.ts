@@ -283,7 +283,7 @@ class SettingsStorage {
   /**
    * Migrate settings from old version
    */
-  private migrateSettings(oldSettings: any): AISettings {
+  private migrateSettings(_oldSettings: any): AISettings {
     // For now, just return default settings
     // In the future, implement proper migration logic
     console.warn('[SettingsStorage] Migrating settings from old version');

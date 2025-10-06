@@ -5,7 +5,7 @@
  * All responses are normalised to OpenAI's format for consistency
  */
 
-import { NormalisedResponse, Message, Choice, Usage } from '../interfaces/IProvider';
+import { NormalisedResponse, Usage } from '../interfaces/IProvider';
 
 class ResponseNormaliser {
   /**
@@ -128,7 +128,7 @@ class ResponseNormaliser {
   /**
    * Create error response
    */
-  public static createErrorResponse(error: string, model: string = 'unknown'): NormalisedResponse {
+  public static createErrorResponse(_error: string, model: string = 'unknown'): NormalisedResponse {
     return {
       choices: [{
         message: {

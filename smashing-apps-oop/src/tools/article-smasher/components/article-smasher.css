@@ -1,0 +1,230 @@
+/* Custom styles for article-smasher only */
+
+/* Override the mobile-container class for article-smasher */
+.article-smasher-container .mobile-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Add a flex layout for the main content area */
+.article-smasher-container .main-content-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .article-smasher-container .main-content-flex {
+    flex-direction: row;
+  }
+}
+
+/* Hide scrollbars but keep functionality */
+.article-smasher-container * {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+  overflow: visible !important;
+}
+
+.article-smasher-container *::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Style for the article type sidebar */
+.article-type-sidebar {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+  padding: 1rem;
+  height: calc(100vh - 12rem);
+  position: sticky;
+  top: 5rem;
+}
+
+.article-type-sidebar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.article-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 16rem);
+  padding-right: 0.5rem;
+}
+
+.article-type-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.article-type-item.active {
+  background-color: #f0f9ff;
+  color: #0068b3;
+  border-left: 4px solid #0068b3;
+}
+
+.article-type-item:not(.active):not(.disabled) {
+  color: #4b5563;
+}
+
+.article-type-item:not(.active):not(.disabled):hover {
+  background-color: #f9fafb;
+}
+
+.article-type-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+  color: #9ca3af;
+}
+
+/* Generate ideas button */
+.generate-ideas-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #0068b3;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.generate-ideas-btn:hover:not(:disabled) {
+  background-color: #005291;
+}
+
+.generate-ideas-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Fixed navigation buttons at the bottom */
+.fixed-nav-buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #e5e7eb;
+  z-index: 50;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Add padding to the bottom of the content to account for fixed nav buttons */
+.article-smasher-container .main-content-flex > div:last-child {
+  padding-bottom: 5rem;
+}
+
+/* Complete article container */
+.complete-article-container {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tooltip styles */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  z-index: 100;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 125%;
+  transition: opacity 0.2s, visibility 0.2s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Add arrow to tooltip */
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+/* Ensure tooltips don't get clipped */
+.tooltip-container {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Drag and drop indicator styles */
+.drag-indicator {
+  border: 2px dashed #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: #f8fafc;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.drag-indicator:hover {
+  border-color: #94a3b8;
+  background-color: #f1f5f9;
+}
+
+.drag-indicator-icon {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: #94a3b8;
+}
+
+/* Info icon hover effect */
+.info-icon {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.info-icon:hover {
+  color: #3b82f6 !important;
+}
