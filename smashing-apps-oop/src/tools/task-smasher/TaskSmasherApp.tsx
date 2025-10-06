@@ -15,7 +15,6 @@ import RateLimitPopup from './components/RateLimitPopup';
 import APISettingsModal from '../../shared/components/APISettingsModal/APISettingsModal';
 import SemanticSection from '../../components/SemanticSection';
 import { appRegistry, initializeAIServices, unifiedSettings } from '../../shared/services';
-import APIKeyPopup from '../../shared/components/APIKeyPopup';
 import {
   DndContext,
   DragEndEvent,
@@ -57,18 +56,19 @@ interface TaskSmasherAppContentProps {
 const TaskSmasherApp: React.FC = () => {
   // Use a default use case or get it from props/context if needed later
   const initialUseCase = 'daily';
-  const [showApiKeyPopup, setShowApiKeyPopup] = useState<boolean>(false);
-  
-  // Check if API key is configured
+  const navigate = useNavigate();
+
+  // Check if API key is configured and redirect to admin if not
   const checkApiKey = () => {
     const aiSettings = unifiedSettings.getAISettings();
     const currentProvider = aiSettings.provider;
     const apiKey = aiSettings.apiKeys[currentProvider];
-    
-    // Show popup if no API key is configured for the current provider
+
+    // Redirect to admin page if no API key is configured for the current provider
     if (!apiKey) {
       console.log('No API key configured for provider:', currentProvider);
-      setShowApiKeyPopup(true);
+      // Don't redirect immediately - let the user see the warning banner
+      // They can click "Configure Now" to go to admin
     } else {
       console.log('API key configured for provider:', currentProvider);
     }
@@ -114,15 +114,6 @@ const TaskSmasherApp: React.FC = () => {
     <ReCaptchaProvider>
       <TasksProvider initialUseCase={initialUseCase}>
         <TaskSmasherAppContent initialUseCase={initialUseCase} />
-        
-        {/* API Key Popup */}
-        {showApiKeyPopup && (
-          <APIKeyPopup onClose={() => {
-            setShowApiKeyPopup(false);
-            // Re-check API key after closing the popup
-            setTimeout(checkApiKey, 500);
-          }} />
-        )}
       </TasksProvider>
     </ReCaptchaProvider>
   );

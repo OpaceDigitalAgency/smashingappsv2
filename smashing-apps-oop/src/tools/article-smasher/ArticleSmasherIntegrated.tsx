@@ -1,6 +1,6 @@
 /**
  * Article Smasher - Integrated Version
- * 
+ *
  * This component wraps the Article Smasher with necessary providers
  * for integration into the main SmashingApps application.
  */
@@ -10,6 +10,8 @@ import { Routes, Route } from 'react-router-dom';
 import { PromptProvider } from './contexts/PromptContext';
 import { ArticleWizardProvider } from './contexts/ArticleWizardContext';
 import ArticleWizard from './components/ArticleWizard';
+import './styles/article-smasher-v2.css';
+import './index.css';
 
 // Import the landing page component from the original App
 // For now, we'll create a simple landing page that goes straight to the wizard
