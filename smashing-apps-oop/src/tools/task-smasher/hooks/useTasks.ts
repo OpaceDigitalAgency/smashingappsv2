@@ -5,7 +5,7 @@ import { validateTaskLocally, validateTaskWithAI } from '../utils/taskContextVal
 import { OpenAIServiceAdapter } from '../utils/openaiServiceAdapter';
 import useReCaptcha from '../../../shared/hooks/useReCaptcha';
 import useVoiceToText from '../../../shared/hooks/useVoiceToText';
-import AICore from '../../../core/AICore';
+import AICore from '../../../../core/AICore';
 import { getPromptTemplateForCategory, processPromptTemplate } from '../utils/promptTemplates';
 
 export function useTasks(initialUseCase?: string): TasksContextType {
