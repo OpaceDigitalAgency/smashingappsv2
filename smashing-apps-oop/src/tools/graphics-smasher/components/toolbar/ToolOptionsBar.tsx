@@ -7,6 +7,14 @@ const ToolOptionsBar: React.FC = () => {
   const [brushSize, setBrushSize] = useState(25);
   const [brushOpacity, setBrushOpacity] = useState(100);
   const [brushColor, setBrushColor] = useState('#000000');
+  const [textFont, setTextFont] = useState('Arial');
+  const [textSize, setTextSize] = useState(16);
+  const [textColor, setTextColor] = useState('#000000');
+  const [feather, setFeather] = useState(0);
+  const [fillColor, setFillColor] = useState('#4f46e5');
+  const [strokeColor, setStrokeColor] = useState('#000000');
+  const [strokeWidth, setStrokeWidth] = useState(2);
+  const [tolerance, setTolerance] = useState(32);
 
   const renderBrushOptions = () => (
     <div className="flex items-center gap-6">
@@ -58,7 +66,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Feather:</label>
         <input
           type="number"
-          defaultValue="0"
+          value={feather}
+          onChange={(e) => setFeather(Number(e.target.value))}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">px</span>
@@ -85,7 +94,11 @@ const ToolOptionsBar: React.FC = () => {
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Font:</label>
-        <select className="rounded border border-slate-300 px-2 py-1 text-xs">
+        <select
+          value={textFont}
+          onChange={(e) => setTextFont(e.target.value)}
+          className="rounded border border-slate-300 px-2 py-1 text-xs"
+        >
           <option>Arial</option>
           <option>Helvetica</option>
           <option>Times New Roman</option>
@@ -97,7 +110,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Size:</label>
         <input
           type="number"
-          defaultValue="16"
+          value={textSize}
+          onChange={(e) => setTextSize(Number(e.target.value))}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">pt</span>
@@ -115,7 +129,12 @@ const ToolOptionsBar: React.FC = () => {
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Colour:</label>
-        <input type="color" defaultValue="#000000" className="h-6 w-12 cursor-pointer rounded border" />
+        <input
+          type="color"
+          value={textColor}
+          onChange={(e) => setTextColor(e.target.value)}
+          className="h-6 w-12 cursor-pointer rounded border"
+        />
       </div>
     </div>
   );
@@ -124,17 +143,28 @@ const ToolOptionsBar: React.FC = () => {
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Fill:</label>
-        <input type="color" defaultValue="#4f46e5" className="h-6 w-12 cursor-pointer rounded border" />
+        <input
+          type="color"
+          value={fillColor}
+          onChange={(e) => setFillColor(e.target.value)}
+          className="h-6 w-12 cursor-pointer rounded border"
+        />
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Stroke:</label>
-        <input type="color" defaultValue="#000000" className="h-6 w-12 cursor-pointer rounded border" />
+        <input
+          type="color"
+          value={strokeColor}
+          onChange={(e) => setStrokeColor(e.target.value)}
+          className="h-6 w-12 cursor-pointer rounded border"
+        />
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Stroke Width:</label>
         <input
           type="number"
-          defaultValue="2"
+          value={strokeWidth}
+          onChange={(e) => setStrokeWidth(Number(e.target.value))}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">px</span>
@@ -201,10 +231,11 @@ const ToolOptionsBar: React.FC = () => {
           type="range"
           min="0"
           max="255"
-          defaultValue="32"
+          value={tolerance}
+          onChange={(e) => setTolerance(Number(e.target.value))}
           className="h-1 w-24 cursor-pointer appearance-none rounded-lg bg-slate-200"
         />
-        <span className="text-xs text-slate-500">32</span>
+        <span className="text-xs text-slate-500">{tolerance}</span>
       </div>
       <div className="flex items-center gap-2">
         <input type="checkbox" id="contiguous" defaultChecked className="rounded" />

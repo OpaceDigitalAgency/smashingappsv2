@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line, Image as KonvaImage } from 'react-konva';
+import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line, Image as KonvaImage, Ellipse } from 'react-konva';
 import { useActiveDocument } from '../../hooks/useGraphicsStore';
 import { useGraphicsStore } from '../../state/graphicsStore';
-import { useCanvasInteraction, type BrushStroke } from '../../hooks/useCanvasInteraction';
+import { useCanvasInteraction, type BrushStroke, type Shape } from '../../hooks/useCanvasInteraction';
 import useImage from 'use-image';
 import ContextMenu from '../overlays/ContextMenu';
 
@@ -50,6 +50,7 @@ const CanvasViewport: React.FC = () => {
   const {
     isDrawing,
     currentStroke,
+    currentShape,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

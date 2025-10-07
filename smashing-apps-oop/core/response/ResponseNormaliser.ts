@@ -9,6 +9,47 @@ import { NormalisedResponse, Usage } from '../interfaces/IProvider';
 
 class ResponseNormaliser {
   /**
+   * Flatten nested content structures returned by the Responses API into plain text.
+   */
+  private static flattenContent(content: any): string {
+    if (!content) {
+      return '';
+    }
+
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    if (Array.isArray(content)) {
+      return content
+        .map((part: any) => {
+          if (typeof part === 'string') {
+            return part;
+          }
+          if (part && typeof part.text === 'string') {
+            return part.text;
+          }
+          if (part && Array.isArray(part.content)) {
+            return ResponseNormaliser.flattenContent(part.content);
+          }
+          return '';
+        })
+        .join('');
+    }
+
+    if (typeof content === 'object') {
+      if (typeof content.text === 'string') {
+        return content.text;
+      }
+      if (Array.isArray(content.content)) {
+        return ResponseNormaliser.flattenContent(content.content);
+      }
+    }
+
+    return '';
+  }
+
+  /**
    * Normalise OpenAI response
    * Handles both /v1/chat/completions and /v1/responses formats
    */
@@ -24,29 +65,21 @@ class ResponseNormaliser {
         // Find the message node in the output array
         const msgNode = response.output.find((o: any) => o.type === 'message');
         if (msgNode?.content) {
-          // Extract text from content array
-          if (Array.isArray(msgNode.content)) {
-            content = msgNode.content
-              .filter((c: any) => c.type === 'text')
-              .map((c: any) => c.text)
-              .join('');
-          } else if (typeof msgNode.content === 'string') {
-            content = msgNode.content;
-          }
+          content = ResponseNormaliser.flattenContent(msgNode.content);
         }
 
-        // Fallback: Look for text type output
+        // Fallback: Look for standalone text/output nodes
         if (!content) {
-          const textNode = response.output.find((o: any) => o.type === 'text');
-          if (textNode?.text) {
-            content = textNode.text;
+          const textNode = response.output.find((o: any) => o.type === 'text' || o.type === 'output_text');
+          if (textNode) {
+            content = ResponseNormaliser.flattenContent(textNode.text ?? textNode.content);
           }
         }
       }
 
       // Method 2: Check for output_text field (alternative format)
       if (!content && response.output_text) {
-        content = response.output_text;
+        content = ResponseNormaliser.flattenContent(response.output_text);
       }
 
       // Method 3: Check for reasoning with summary (fallback)

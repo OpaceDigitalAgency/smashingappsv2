@@ -53,29 +53,57 @@ export const extractResponseText = (response: any): string => {
     return '';
   }
 
+  // Method 1: Standard chat completions format (GPT-3.5, GPT-4, etc.)
   const choiceContent = response?.choices?.[0]?.message?.content;
   if (typeof choiceContent === 'string' && choiceContent.trim().length > 0) {
     return choiceContent;
   }
 
+  // Method 2: Direct content property
   if (typeof response?.content === 'string') {
     return response.content;
   }
 
+  // Method 3: GPT-5 /v1/responses format
   const output = response?.output;
   if (Array.isArray(output)) {
+    console.log('[extractResponseText] Processing GPT-5 output array:', output);
+
+    // Look for message node with content array
     const messageNode = output.find((node: any) => node?.type === 'message');
-    const messageText = flattenContent(messageNode?.content);
-    if (messageText) {
-      return messageText;
+    if (messageNode?.content && Array.isArray(messageNode.content)) {
+      console.log('[extractResponseText] Found message node with content array:', messageNode.content);
+
+      // Extract text from content array which contains objects like {type: "output_text", text: "..."}
+      for (const contentItem of messageNode.content) {
+        if (contentItem?.type === 'output_text' && typeof contentItem?.text === 'string') {
+          console.log('[extractResponseText] Extracted text from output_text:', contentItem.text);
+          return contentItem.text;
+        }
+        // Also handle direct text property
+        if (typeof contentItem?.text === 'string') {
+          console.log('[extractResponseText] Extracted text from direct text property:', contentItem.text);
+          return contentItem.text;
+        }
+      }
+      // Fallback: try to flatten the content array
+      const messageText = flattenContent(messageNode.content);
+      if (messageText) {
+        console.log('[extractResponseText] Extracted text via flattenContent:', messageText);
+        return messageText;
+      }
     }
 
+    // Look for direct text or output_text node
     const textNode = output.find((node: any) => node?.type === 'text' || node?.type === 'output_text');
-    const textValue = flattenContent(textNode?.text ?? textNode?.content);
-    if (textValue) {
-      return textValue;
+    if (textNode) {
+      const textValue = flattenContent(textNode?.text ?? textNode?.content);
+      if (textValue) {
+        return textValue;
+      }
     }
 
+    // Look for reasoning node with summary
     const reasoningNode = output.find((node: any) => node?.type === 'reasoning');
     if (reasoningNode?.summary) {
       if (Array.isArray(reasoningNode.summary)) {
@@ -89,6 +117,7 @@ export const extractResponseText = (response: any): string => {
     }
   }
 
+  // Method 4: Direct output_text property
   if (typeof response?.output_text === 'string') {
     return response.output_text;
   }
@@ -97,6 +126,7 @@ export const extractResponseText = (response: any): string => {
     return response.output_text.filter((item: unknown) => typeof item === 'string').join('');
   }
 
+  // Method 5: Direct message content
   const messageContent = response?.message?.content;
   if (typeof messageContent === 'string') {
     return messageContent;

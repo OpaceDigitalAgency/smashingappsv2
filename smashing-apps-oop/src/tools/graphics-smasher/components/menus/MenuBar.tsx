@@ -133,14 +133,15 @@ const MenuBar: React.FC = () => {
             // Store the image URL in the document's background layer metadata
             const doc = useGraphicsStore.getState().documents.find(d => d.id === docId);
             if (doc) {
-              useGraphicsStore.getState().updateLayer(docId, doc.layers[0].id, {
+              useGraphicsStore.getState().updateLayer(docId, doc.layers[0].id, (layer) => ({
+                ...layer,
                 metadata: {
-                  ...doc.layers[0].metadata,
+                  ...layer.metadata,
                   imageUrl: img.src,
                   imageWidth: img.width,
                   imageHeight: img.height
                 }
-              });
+              }));
             }
           };
           img.src = event.target?.result as string;

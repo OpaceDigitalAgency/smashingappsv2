@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { DOCUMENT_PRESETS } from '../../utils/files/documentPresets';
@@ -22,7 +22,26 @@ const GraphicsLanding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-120px)] bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+    <div className="fixed inset-0 flex flex-col bg-slate-50 overflow-hidden">
+      {/* Main Navigation */}
+      <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2 flex-shrink-0">
+        <Link to="/" className="flex items-center">
+          <img
+            src="/smashingapps-ai-small.png"
+            alt="SmashingApps.ai"
+            className="h-12 w-auto"
+          />
+        </Link>
+        <div className="flex items-center gap-4 text-sm">
+          <Link to="/" className="hover:text-indigo-600">Home</Link>
+          <Link to="/tools/article-smasher" className="hover:text-indigo-600">Article Smasher</Link>
+          <Link to="/tools/task-smasher" className="hover:text-indigo-600">Task Smasher</Link>
+          <Link to="/tools/graphics-smasher" className="font-semibold text-indigo-600">Graphics Smasher</Link>
+        </div>
+      </nav>
+
+      {/* Landing Content */}
+      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-indigo-50 via-white to-blue-50">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-16">
         <section className="rounded-3xl bg-white/80 p-10 shadow-lg ring-1 ring-black/5 backdrop-blur">
           <div className="grid gap-8 md:grid-cols-2 md:items-center">
@@ -83,6 +102,7 @@ const GraphicsLanding: React.FC = () => {
             ))}
           </div>
         </section>
+      </div>
       </div>
     </div>
   );
