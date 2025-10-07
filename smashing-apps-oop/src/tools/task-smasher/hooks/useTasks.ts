@@ -908,7 +908,6 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         });
         
         // Update cost
-        const usageInfo = extractUsageInfo(response);
         setTotalCost(prev => prev + usageInfo.totalTokens * 0.000002);
 
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
@@ -1203,7 +1202,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             if (textBasedSubtasks.length > 0) {
               console.log('Successfully converted text to subtasks:', textBasedSubtasks);
               updateBoardsWithSubtasks(taskId, textBasedSubtasks);
-              setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+              setTotalCost(prev => prev + usageInfo.totalTokens * 0.000002);
             } else {
               console.error('Could not extract valid subtasks from text response');
             }
@@ -1398,11 +1397,14 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
 
       console.log("Received response from AI-Core:", response);
 
-      // Extract content from normalized response
-      const responseText = response.choices[0]?.message?.content || '';
-      console.log("Response text:", responseText);
+      const usageInfo = extractUsageInfo(response);
 
-      if (!responseText) {
+      // Extract content from normalized response
+      const responseText = extractResponseText(response);
+      const trimmedResponseText = responseText.trim();
+      console.log("Response text:", trimmedResponseText);
+
+      if (!trimmedResponseText) {
         console.error("No content in AI response");
         alert("Failed to generate ideas. Please try again.");
         setGenerating(false);
@@ -1410,7 +1412,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       }
       
       // Parse the response into an array of ideas
-      const ideas = responseText
+      const ideas = trimmedResponseText
         .split('\n')
         .filter(line => line.trim().length > 0)
         .map(line => line.replace(/^\d+\.\s*|-\s*|\*\s*/, '').trim());
@@ -1453,7 +1455,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         });
 
         // Update cost
-        setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+        setTotalCost(prev => prev + usageInfo.totalTokens * 0.000002);
 
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
       
