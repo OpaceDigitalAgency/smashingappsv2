@@ -14,50 +14,73 @@ class ResponseNormaliser {
    */
   public static normaliseOpenAI(response: any): NormalisedResponse {
     // Check if this is a /v1/responses format (GPT-5, O-series)
-    if (response.object === 'response') {
+    if (response.object === 'response' || response.status === 'completed' || response.status === 'incomplete') {
       // The /v1/responses API returns output in a different format
-      // According to OpenAI docs, we need to look for the actual response text
+      // Extract text from the response following the Responses API structure
       let content = '';
 
-      // Check for output array with message type
+      // Method 1: Check for output array with message type (most common for GPT-5)
       if (Array.isArray(response.output)) {
-        for (const item of response.output) {
-          // Look for message type output
-          if (item.type === 'message' && item.content) {
-            // Extract text from message content
-            if (Array.isArray(item.content)) {
-              const textPart = item.content.find((part: any) => part.type === 'text');
-              if (textPart?.text) {
-                content = textPart.text;
-                break;
-              }
-            } else if (typeof item.content === 'string') {
-              content = item.content;
-              break;
-            }
+        // Find the message node in the output array
+        const msgNode = response.output.find((o: any) => o.type === 'message');
+        if (msgNode?.content) {
+          // Extract text from content array
+          if (Array.isArray(msgNode.content)) {
+            content = msgNode.content
+              .filter((c: any) => c.type === 'text')
+              .map((c: any) => c.text)
+              .join('');
+          } else if (typeof msgNode.content === 'string') {
+            content = msgNode.content;
           }
-          // Look for text type output
-          else if (item.type === 'text' && item.text) {
-            content = item.text;
-            break;
-          }
-          // Look for reasoning type with summary
-          else if (item.type === 'reasoning' && item.summary) {
-            if (Array.isArray(item.summary)) {
-              content = item.summary.join('\n');
-            } else if (typeof item.summary === 'string') {
-              content = item.summary;
-            }
+        }
+
+        // Fallback: Look for text type output
+        if (!content) {
+          const textNode = response.output.find((o: any) => o.type === 'text');
+          if (textNode?.text) {
+            content = textNode.text;
           }
         }
       }
 
+      // Method 2: Check for output_text field (alternative format)
+      if (!content && response.output_text) {
+        content = response.output_text;
+      }
+
+      // Method 3: Check for reasoning with summary (fallback)
+      if (!content && Array.isArray(response.output)) {
+        const reasoningNode = response.output.find((o: any) => o.type === 'reasoning');
+        if (reasoningNode?.summary) {
+          if (Array.isArray(reasoningNode.summary)) {
+            content = reasoningNode.summary.join('\n');
+          } else if (typeof reasoningNode.summary === 'string') {
+            content = reasoningNode.summary;
+          }
+        }
+      }
+
+      // Log the response structure for debugging
+      console.log('[ResponseNormaliser] GPT-5/Responses API response:', {
+        status: response.status,
+        hasOutput: !!response.output,
+        outputLength: response.output?.length,
+        contentExtracted: !!content,
+        contentLength: content.length,
+        reasoningTokens: response.usage?.output_tokens_details?.reasoning_tokens
+      });
+
       // IMPORTANT: For GPT-5/O-series, if status is incomplete and no content found,
       // this means the model only produced reasoning tokens without final output
-      // We need to make another request or increase max_output_tokens
       if (!content && response.status === 'incomplete') {
         console.warn('[ResponseNormaliser] GPT-5/O-series response incomplete - only reasoning tokens generated. Consider increasing max_output_tokens.');
         content = '[Response incomplete: The model generated reasoning but did not produce final output. Please increase max_output_tokens or simplify the request.]';
+      }
+
+      // If still no content but status is completed, log error
+      if (!content && response.status === 'completed') {
+        console.error('[ResponseNormaliser] GPT-5 response completed but no content extracted. Full response:', response);
       }
 
       return {
@@ -66,7 +89,7 @@ class ResponseNormaliser {
             role: 'assistant',
             content: content
           },
-          finishReason: response.status === 'complete' ? 'stop' : (response.incomplete_details?.reason || 'length'),
+          finishReason: response.status === 'completed' ? 'stop' : (response.incomplete_details?.reason || 'length'),
           index: 0
         }],
         usage: {
