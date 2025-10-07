@@ -3,6 +3,7 @@ import { Board, EditingState, FeedbackState, Task, TaskMismatchData, TasksContex
 import { filterTasksByPriority, filterTasksByRating } from '../utils/taskUtils';
 import { validateTaskLocally, validateTaskWithAI } from '../utils/taskContextValidator';
 import { OpenAIServiceAdapter } from '../utils/openaiServiceAdapter';
+import { extractResponseText, extractUsageInfo } from '../utils/aiResponseUtils';
 import useReCaptcha from '../../../shared/hooks/useReCaptcha';
 import useVoiceToText from '../../../shared/hooks/useVoiceToText';
 import { aiServiceRegistry } from '../../../shared/services/aiServices';

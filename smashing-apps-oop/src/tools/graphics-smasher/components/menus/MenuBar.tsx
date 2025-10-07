@@ -75,79 +75,14 @@ const MenuBar: React.FC = () => {
       }
     }
 
-    // Apply theme to entire page (header, navigation, etc.)
+    // Apply theme to body for full-screen workspace
     const body = document.body;
-    const header = document.querySelector('header');
-    const footer = document.querySelector('footer');
-    const nav = document.querySelector('nav');
-
     if (isDarkMode) {
       body.style.backgroundColor = '#1a1a1a';
       body.style.color = '#e0e0e0';
-
-      if (header) {
-        header.style.backgroundColor = '#2a2a2a';
-        header.style.borderColor = '#3a3a3a';
-        header.style.color = '#e0e0e0';
-      }
-
-      if (footer) {
-        footer.style.backgroundColor = '#2a2a2a';
-        footer.style.borderColor = '#3a3a3a';
-        footer.style.color = '#e0e0e0';
-      }
-
-      // Apply dark mode to main navbar
-      if (nav) {
-        nav.style.backgroundColor = '#2a2a2a';
-        nav.style.borderColor = '#3a3a3a';
-
-        // Style logo and links
-        const logo = nav.querySelector('img');
-        if (logo) {
-          logo.style.filter = 'brightness(0) invert(1)';
-        }
-
-        const links = nav.querySelectorAll('a, button');
-        links.forEach((link) => {
-          if (link instanceof HTMLElement) {
-            link.style.color = '#e0e0e0';
-          }
-        });
-      }
     } else {
       body.style.backgroundColor = '';
       body.style.color = '';
-
-      if (header) {
-        header.style.backgroundColor = '';
-        header.style.borderColor = '';
-        header.style.color = '';
-      }
-
-      if (footer) {
-        footer.style.backgroundColor = '';
-        footer.style.borderColor = '';
-        footer.style.color = '';
-      }
-
-      // Remove dark mode from main navbar
-      if (nav) {
-        nav.style.backgroundColor = '';
-        nav.style.borderColor = '';
-
-        const logo = nav.querySelector('img');
-        if (logo) {
-          logo.style.filter = '';
-        }
-
-        const links = nav.querySelectorAll('a, button');
-        links.forEach((link) => {
-          if (link instanceof HTMLElement) {
-            link.style.color = '';
-          }
-        });
-      }
     }
   }, [isDarkMode]);
 

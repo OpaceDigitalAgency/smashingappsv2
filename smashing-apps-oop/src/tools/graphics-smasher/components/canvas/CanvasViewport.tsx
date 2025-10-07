@@ -136,6 +136,8 @@ const CanvasViewport: React.FC = () => {
 
       // Get saved strokes from layer metadata
       const savedStrokes = (layer.metadata?.strokes as BrushStroke[]) || [];
+      const layerFill = layer.metadata?.fill as string | undefined;
+      const hasContent = savedStrokes.length > 0 || layerFill;
 
       return (
         <Group
@@ -149,6 +151,15 @@ const CanvasViewport: React.FC = () => {
           scaleY={layer.transform.scaleY}
           listening={!layer.locked}
         >
+          {/* Layer fill if present */}
+          {layerFill && (
+            <Rect
+              width={activeDocument.width}
+              height={activeDocument.height}
+              fill={layerFill}
+            />
+          )}
+
           {/* Render saved strokes */}
           {savedStrokes.map((stroke, strokeIndex) => (
             <Line
@@ -164,21 +175,25 @@ const CanvasViewport: React.FC = () => {
             />
           ))}
 
-          {/* Layer placeholder visual */}
-          <Rect
-            width={activeDocument.width * 0.4}
-            height={activeDocument.height * 0.4}
-            fill="rgba(99,102,241,0.12)"
-            stroke="rgba(79,70,229,0.8)"
-            dash={[6, 6]}
-            cornerRadius={12}
-          />
-          <Text
-            text={layer.name}
-            fontSize={16}
-            fill="#1f2937"
-            padding={12}
-          />
+          {/* Layer placeholder visual - only show if no content */}
+          {!hasContent && (
+            <>
+              <Rect
+                width={activeDocument.width * 0.4}
+                height={activeDocument.height * 0.4}
+                fill="rgba(99,102,241,0.12)"
+                stroke="rgba(79,70,229,0.8)"
+                dash={[6, 6]}
+                cornerRadius={12}
+              />
+              <Text
+                text={layer.name}
+                fontSize={16}
+                fill="#1f2937"
+                padding={12}
+              />
+            </>
+          )}
         </Group>
       );
     });

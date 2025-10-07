@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useGraphicsStore } from '../state/graphicsStore';
 import type { GraphicsStore } from '../types';
 
@@ -18,10 +17,7 @@ export function useGraphicsDispatch() {
 
 export function useActiveDocument() {
   return useGraphicsStore(
-    useCallback(
-      (state) => state.documents.find((doc) => doc.id === state.activeDocumentId) ?? null,
-      []
-    )
+    (state) => state.documents.find((doc) => doc.id === state.activeDocumentId) ?? null
   );
 }
 

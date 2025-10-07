@@ -59,6 +59,24 @@ export function useCanvasInteraction() {
           opacity: 1
         });
         break;
+      case 'paint-bucket':
+        // Fill the active layer with the current colour
+        if (activeDocument.activeLayerId) {
+          const activeLayer = activeDocument.layers.find(l => l.id === activeDocument.activeLayerId);
+          updateLayer(activeDocument.id, activeDocument.activeLayerId, {
+            metadata: {
+              ...activeLayer?.metadata,
+              fill: brushColor
+            }
+          });
+        }
+        setIsDrawing(false);
+        break;
+      case 'eyedropper':
+        // TODO: Implement colour picking from canvas
+        console.log('Eyedropper tool - pick colour at', pos);
+        setIsDrawing(false);
+        break;
       case 'marquee-rect':
       case 'marquee-ellipse':
         // Start selection
@@ -71,7 +89,7 @@ export function useCanvasInteraction() {
       default:
         break;
     }
-  }, [activeDocument, activeTool, getPointerPosition, brushColor, brushSize]);
+  }, [activeDocument, activeTool, getPointerPosition, brushColor, brushSize, updateLayer]);
 
   const handleMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
     if (!isDrawing || !activeDocument) return;

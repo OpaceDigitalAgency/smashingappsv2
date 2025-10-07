@@ -10,6 +10,7 @@ export type GraphicsToolId =
   | 'object-select'
   | 'magic-wand'
   | 'crop'
+  | 'eyedropper'
   | 'brush'
   | 'eraser'
   | 'clone-stamp'

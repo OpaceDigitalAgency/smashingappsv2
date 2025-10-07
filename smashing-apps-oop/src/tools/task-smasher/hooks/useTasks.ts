@@ -881,8 +881,11 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         'task-smasher' // App ID for tracking
       );
 
+      const usageInfo = extractUsageInfo(response);
+
       // Extract content from response
-      const improvedTask = response.choices[0]?.message?.content?.trim() || task.title;
+      const improvedTaskText = extractResponseText(response).trim();
+      const improvedTask = improvedTaskText || task.title;
       
         setHistory(prev => [...prev, boards]);
         
@@ -905,7 +908,8 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         });
         
         // Update cost
-        setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+        const usageInfo = extractUsageInfo(response);
+        setTotalCost(prev => prev + usageInfo.totalTokens * 0.000002);
 
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
     } catch (error) {
@@ -1051,8 +1055,10 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         'task-smasher' // App ID for tracking
       );
 
+      const usageInfo = extractUsageInfo(response);
+
       // Extract content from response
-      const content = response.choices[0]?.message?.content || '';
+      const content = extractResponseText(response);
       let subtasksContent = content.trim();
       console.log('Raw AI response:', subtasksContent);
       
@@ -1115,7 +1121,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             });
             
             // Update cost
-            setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+            setTotalCost(prev => prev + usageInfo.totalTokens * 0.000002);
 
             // No need to update executionCount here as it's already updated in syncRateLimitInfo
           }
@@ -1133,7 +1139,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
 
               if (Array.isArray(subtasks)) {
                 updateBoardsWithSubtasks(taskId, subtasks);
-                setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+                setTotalCost(prev => prev + usageInfo.totalTokens * 0.000002);
                 return; // Successfully extracted JSON
               }
             }

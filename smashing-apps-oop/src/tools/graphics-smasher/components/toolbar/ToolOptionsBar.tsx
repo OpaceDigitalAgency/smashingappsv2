@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { Slider } from '../../../shared/components/Slider';
 
 const ToolOptionsBar: React.FC = () => {
   const activeTool = useGraphicsStore((state) => state.activeTool);
+  const [brushSize, setBrushSize] = useState(25);
+  const [brushOpacity, setBrushOpacity] = useState(100);
+  const [brushColor, setBrushColor] = useState('#000000');
 
   const renderBrushOptions = () => (
     <div className="flex items-center gap-6">
@@ -13,26 +16,26 @@ const ToolOptionsBar: React.FC = () => {
           type="range"
           min="1"
           max="500"
-          defaultValue="25"
+          value={brushSize}
+          onChange={(e) => setBrushSize(Number(e.target.value))}
           className="h-1 w-32 cursor-pointer appearance-none rounded-lg bg-slate-200"
         />
         <input
           type="number"
-          defaultValue="25"
+          value={brushSize}
+          onChange={(e) => setBrushSize(Number(e.target.value))}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">px</span>
       </div>
       <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600">Hardness:</label>
+        <label className="text-xs font-medium text-slate-600">Colour:</label>
         <input
-          type="range"
-          min="0"
-          max="100"
-          defaultValue="100"
-          className="h-1 w-24 cursor-pointer appearance-none rounded-lg bg-slate-200"
+          type="color"
+          value={brushColor}
+          onChange={(e) => setBrushColor(e.target.value)}
+          className="h-6 w-12 cursor-pointer rounded border"
         />
-        <span className="text-xs text-slate-500">100%</span>
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Opacity:</label>
@@ -40,21 +43,11 @@ const ToolOptionsBar: React.FC = () => {
           type="range"
           min="0"
           max="100"
-          defaultValue="100"
+          value={brushOpacity}
+          onChange={(e) => setBrushOpacity(Number(e.target.value))}
           className="h-1 w-24 cursor-pointer appearance-none rounded-lg bg-slate-200"
         />
-        <span className="text-xs text-slate-500">100%</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600">Flow:</label>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          defaultValue="100"
-          className="h-1 w-24 cursor-pointer appearance-none rounded-lg bg-slate-200"
-        />
-        <span className="text-xs text-slate-500">100%</span>
+        <span className="text-xs text-slate-500">{brushOpacity}%</span>
       </div>
     </div>
   );
@@ -191,6 +184,37 @@ const ToolOptionsBar: React.FC = () => {
     </div>
   );
 
+  const renderPaintBucketOptions = () => (
+    <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2">
+        <label className="text-xs font-medium text-slate-600">Fill Colour:</label>
+        <input
+          type="color"
+          value={brushColor}
+          onChange={(e) => setBrushColor(e.target.value)}
+          className="h-6 w-12 cursor-pointer rounded border"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-xs font-medium text-slate-600">Tolerance:</label>
+        <input
+          type="range"
+          min="0"
+          max="255"
+          defaultValue="32"
+          className="h-1 w-24 cursor-pointer appearance-none rounded-lg bg-slate-200"
+        />
+        <span className="text-xs text-slate-500">32</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <input type="checkbox" id="contiguous" defaultChecked className="rounded" />
+        <label htmlFor="contiguous" className="text-xs font-medium text-slate-600">
+          Contiguous
+        </label>
+      </div>
+    </div>
+  );
+
   const getToolOptions = () => {
     switch (activeTool) {
       case 'brush':
@@ -198,6 +222,9 @@ const ToolOptionsBar: React.FC = () => {
       case 'clone-stamp':
       case 'healing-brush':
         return renderBrushOptions();
+      case 'paint-bucket':
+      case 'eyedropper':
+        return renderPaintBucketOptions();
       case 'marquee-rect':
       case 'marquee-ellipse':
       case 'lasso-free':

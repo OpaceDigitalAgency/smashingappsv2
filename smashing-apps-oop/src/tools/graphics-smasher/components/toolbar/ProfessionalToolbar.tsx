@@ -62,6 +62,9 @@ const TOOL_GROUPS: ToolGroup[] = [
     primary: { id: 'crop', icon: Crop, label: 'Crop Tool', shortcut: 'C' }
   },
   {
+    primary: { id: 'eyedropper', icon: Pipette, label: 'Eyedropper Tool', shortcut: 'I' }
+  },
+  {
     primary: { id: 'brush', icon: Paintbrush, label: 'Brush Tool', shortcut: 'B' }
   },
   {
