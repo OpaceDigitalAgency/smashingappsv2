@@ -26,9 +26,15 @@ class ResponseNormaliser {
           if (typeof part === 'string') {
             return part;
           }
+          // Handle GPT-5 output_text format: {type: "output_text", text: "..."}
+          if (part && part.type === 'output_text' && typeof part.text === 'string') {
+            return part.text;
+          }
+          // Handle general text property
           if (part && typeof part.text === 'string') {
             return part.text;
           }
+          // Handle nested content arrays
           if (part && Array.isArray(part.content)) {
             return ResponseNormaliser.flattenContent(part.content);
           }
@@ -38,6 +44,10 @@ class ResponseNormaliser {
     }
 
     if (typeof content === 'object') {
+      // Handle GPT-5 output_text format at object level
+      if (content.type === 'output_text' && typeof content.text === 'string') {
+        return content.text;
+      }
       if (typeof content.text === 'string') {
         return content.text;
       }
@@ -62,16 +72,21 @@ class ResponseNormaliser {
 
       // Method 1: Check for output array with message type (most common for GPT-5)
       if (Array.isArray(response.output)) {
+        console.log('[ResponseNormaliser] Processing output array:', JSON.stringify(response.output, null, 2));
+
         // Find the message node in the output array
         const msgNode = response.output.find((o: any) => o.type === 'message');
         if (msgNode?.content) {
+          console.log('[ResponseNormaliser] Found message node with content:', JSON.stringify(msgNode.content, null, 2));
           content = ResponseNormaliser.flattenContent(msgNode.content);
+          console.log('[ResponseNormaliser] Flattened content:', content);
         }
 
         // Fallback: Look for standalone text/output nodes
         if (!content) {
           const textNode = response.output.find((o: any) => o.type === 'text' || o.type === 'output_text');
           if (textNode) {
+            console.log('[ResponseNormaliser] Found text node:', textNode);
             content = ResponseNormaliser.flattenContent(textNode.text ?? textNode.content);
           }
         }
