@@ -5,6 +5,7 @@ import GraphicsWorkspace from './components/workspace/GraphicsWorkspace';
 import GraphicsLanding from './components/layout/GraphicsLanding';
 import { appRegistry, initializeAIServices } from '../../shared/services';
 import { useGraphicsStore } from './state/graphicsStore';
+import './styles/graphics-smasher.css';
 
 const GraphicsSmasherApp: React.FC = () => {
   const navigate = useNavigate();

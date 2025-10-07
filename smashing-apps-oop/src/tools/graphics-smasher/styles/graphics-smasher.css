@@ -1,0 +1,16 @@
+:root[data-graphics-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root[data-graphics-theme='dark'] body {
+  background-color: #0f172a;
+}
+
+:root[data-graphics-contrast='high'] *:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 3px;
+}
+
+[data-graphics-dir='rtl'] .graphics-rtl-aware {
+  direction: rtl;
+}
