@@ -396,30 +396,30 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   const checkTaskContext = useCallback(async (taskText: string) => {
     if (!selectedUseCase || !taskText.trim()) return true;
 
+    // Run fast local validation first so obvious mismatches (like food in Daily) respond instantly.
+    const localResult = validateTaskLocally(taskText, selectedUseCase);
+    const localShouldTriggerMismatch =
+      !localResult.isValid &&
+      (localResult.confidence >= 0.5 || !!localResult.suggestedUseCase);
+
+    if (localShouldTriggerMismatch) {
+      console.log('Local validation triggered mismatch modal before calling AI.');
+      setTaskMismatch({
+        showing: true,
+        reason: localResult.reason || `This task doesn't seem to fit in the current category.`,
+        suggestedUseCase: localResult.suggestedUseCase,
+        taskText
+      });
+      return false;
+    }
+
+    // If no AI provider/model is configured, the local validation result stands.
+    if (!selectedModel || selectedModel.trim() === '') {
+      console.log('No AI model configured, using local validation result.');
+      return localResult.isValid;
+    }
+
     try {
-      // Run fast local validation first so obvious mismatches (like food in Daily) respond instantly.
-      const localResult = validateTaskLocally(taskText, selectedUseCase);
-      const localShouldTriggerMismatch =
-        !localResult.isValid &&
-        (localResult.confidence >= 0.5 || !!localResult.suggestedUseCase);
-
-      if (localShouldTriggerMismatch) {
-        console.log('Local validation triggered mismatch modal before calling AI.');
-        setTaskMismatch({
-          showing: true,
-          reason: localResult.reason || `This task doesn't seem to fit in the current category.`,
-          suggestedUseCase: localResult.suggestedUseCase,
-          taskText
-        });
-        return false;
-      }
-
-      // If no AI provider/model is configured, the local validation result stands.
-      if (!selectedModel || selectedModel.trim() === '') {
-        console.log('No AI model configured, using local validation result.');
-        return true;
-      }
-
       // Get reCAPTCHA token only when we're about to make an AI call
       const recaptchaToken = await getReCaptchaToken('validate_task');
 
@@ -468,7 +468,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       }
 
       console.error('Error validating task context:', error);
-      return true;
+      return localResult.isValid;
     }
   }, [selectedUseCase, selectedModel, getReCaptchaToken, syncRateLimitInfo]);
 
