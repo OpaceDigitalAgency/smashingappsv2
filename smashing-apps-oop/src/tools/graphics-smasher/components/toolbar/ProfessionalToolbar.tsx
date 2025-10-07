@@ -137,7 +137,7 @@ const ProfessionalToolbar: React.FC = () => {
   };
 
   return (
-    <nav ref={toolbarRef} className="relative flex h-full w-14 flex-col bg-[#2d2d2d] shadow-lg">
+    <nav ref={toolbarRef} className="relative flex h-full w-28 flex-wrap content-start bg-[#2d2d2d] shadow-lg overflow-y-auto">
       {TOOL_GROUPS.map((group, groupIndex) => {
         const currentTool = getActiveTool(group);
         const Icon = currentTool.icon;
@@ -159,7 +159,7 @@ const ProfessionalToolbar: React.FC = () => {
               }`}
               title={`${currentTool.label} (${currentTool.shortcut})`}
             >
-              <Icon size={20} className={isActive ? 'text-white' : 'text-[#b0b0b0]'} strokeWidth={isActive ? 2.5 : 2} />
+              <Icon size={18} className={isActive ? 'text-white' : 'text-[#b0b0b0]'} strokeWidth={isActive ? 2.5 : 2} />
               
               {hasAlternatives && (
                 <div className="absolute bottom-1 right-1">
@@ -180,7 +180,7 @@ const ProfessionalToolbar: React.FC = () => {
 
             {/* Flyout menu for alternatives */}
             {hasAlternatives && isExpanded && (
-              <div className="absolute left-full top-0 z-[10000] ml-1 flex flex-col bg-[#2d2d2d] shadow-xl">
+              <div className="absolute left-full top-0 z-[10000] ml-1 flex flex-col bg-[#2d2d2d] shadow-xl border border-[#1a1a1a]">
                 <button
                   onClick={() => handleToolClick(group.primary, groupIndex)}
                   className={`group flex h-14 w-14 items-center justify-center transition-all ${
@@ -188,9 +188,9 @@ const ProfessionalToolbar: React.FC = () => {
                   }`}
                   title={`${group.primary.label} (${group.primary.shortcut})`}
                 >
-                  <group.primary.icon 
-                    size={20} 
-                    className={group.primary.id === activeTool ? 'text-white' : 'text-[#b0b0b0]'} 
+                  <group.primary.icon
+                    size={18}
+                    className={group.primary.id === activeTool ? 'text-white' : 'text-[#b0b0b0]'}
                     strokeWidth={group.primary.id === activeTool ? 2.5 : 2}
                   />
                   
@@ -214,9 +214,9 @@ const ProfessionalToolbar: React.FC = () => {
                       }`}
                       title={`${alt.label} (${alt.shortcut})`}
                     >
-                      <AltIcon 
-                        size={20} 
-                        className={alt.id === activeTool ? 'text-white' : 'text-[#b0b0b0]'} 
+                      <AltIcon
+                        size={18}
+                        className={alt.id === activeTool ? 'text-white' : 'text-[#b0b0b0]'}
                         strokeWidth={alt.id === activeTool ? 2.5 : 2}
                       />
                       

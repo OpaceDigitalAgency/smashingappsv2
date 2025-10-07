@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import MenuBar from '../menus/MenuBar';
 import DocumentTabs from './DocumentTabs';
 import ProfessionalToolbar from '../toolbar/ProfessionalToolbar';
@@ -45,8 +46,13 @@ const GraphicsWorkspace: React.FC = () => {
     }
   }, [activePanel]);
 
+  const isDarkMode = useGraphicsStore((state) => {
+    const saved = localStorage.getItem('graphics-smasher-theme');
+    return saved ? saved === 'dark' : true;
+  });
+
   return (
-    <div className="graphics-smasher-container fixed inset-0 flex flex-col bg-slate-50 dark-theme overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-slate-50 overflow-hidden">
       <style>{`
         .graphics-smasher-container.dark-theme {
           background: #1a1a1a;
@@ -103,46 +109,78 @@ const GraphicsWorkspace: React.FC = () => {
           background: #f8fafc;
           color: #1e293b;
         }
+        .main-nav-dark {
+          background: #2a2a2a !important;
+          border-color: #3a3a3a !important;
+        }
+        .main-nav-dark a,
+        .main-nav-dark button {
+          color: #e0e0e0 !important;
+        }
+        .main-nav-dark img {
+          filter: brightness(0) invert(1);
+        }
       `}</style>
-      <MenuBar />
-      <ToolOptionsBar />
-      <DocumentTabs />
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        <ProfessionalToolbar />
-        <div className="flex flex-1 flex-col min-w-0">
-          <div className="flex flex-1 overflow-hidden min-h-0">
-            <div className="relative flex flex-1 bg-slate-200 min-w-0">
-              <CanvasViewport />
-            </div>
-            <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white shadow-lg overflow-hidden">
-              <PanelTabs />
-              <div className="flex-1 overflow-y-auto">{panelContent}</div>
-            </aside>
-          </div>
-          <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-2 text-xs text-slate-500 shadow-inner flex-shrink-0">
-            {activeDocument ? (
-              <>
-                <span className="font-medium">
-                  {activeDocument.name} • {activeDocument.width}×{activeDocument.height}px •{' '}
-                  {activeDocument.layers.length} layers
-                </span>
-                <span>
-                  GPU:{' '}
-                  {engineStatus.webgpuAvailable
-                    ? 'WebGPU ready'
-                    : engineStatus.webglAvailable
-                      ? 'WebGL ready'
-                      : 'Canvas 2D'}{' '}
-                  • Tool: {activeTool.toUpperCase()}
-                </span>
-              </>
-            ) : (
-              <span>Create a document to begin editing.</span>
-            )}
-          </footer>
+
+      {/* Main Navigation */}
+      <nav className={`flex items-center justify-between border-b px-4 py-2 flex-shrink-0 ${isDarkMode ? 'main-nav-dark' : 'bg-white border-slate-200'}`}>
+        <Link to="/" className="flex items-center">
+          <img
+            src="/smashingapps-ai-small.png"
+            alt="SmashingApps.ai"
+            className="h-12 w-auto"
+          />
+        </Link>
+        <div className="flex items-center gap-4 text-sm">
+          <Link to="/" className="hover:text-indigo-600">Home</Link>
+          <Link to="/tools/article-smasher" className="hover:text-indigo-600">Article Smasher</Link>
+          <Link to="/tools/task-smasher" className="hover:text-indigo-600">Task Smasher</Link>
+          <Link to="/tools/graphics-smasher" className="font-semibold text-indigo-600">Graphics Smasher</Link>
         </div>
+      </nav>
+
+      {/* Graphics Smasher Workspace */}
+      <div className={`graphics-smasher-container flex flex-col flex-1 overflow-hidden ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
+        <MenuBar />
+        <ToolOptionsBar />
+        <DocumentTabs />
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          <ProfessionalToolbar />
+          <div className="flex flex-1 flex-col min-w-0">
+            <div className="flex flex-1 overflow-hidden min-h-0">
+              <div className="relative flex flex-1 bg-slate-200 min-w-0">
+                <CanvasViewport key={activeDocumentId || 'no-doc'} />
+              </div>
+              <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white shadow-lg overflow-hidden">
+                <PanelTabs />
+                <div className="flex-1 overflow-y-auto min-h-0">{panelContent}</div>
+              </aside>
+            </div>
+            <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-1.5 text-xs text-slate-500 shadow-inner flex-shrink-0">
+              {activeDocument ? (
+                <>
+                  <span className="font-medium">
+                    {activeDocument.name} • {activeDocument.width}×{activeDocument.height}px •{' '}
+                    {activeDocument.layers.length} layers
+                  </span>
+                  <span>
+                    GPU:{' '}
+                    {engineStatus.webgpuAvailable
+                      ? 'WebGPU ready'
+                      : engineStatus.webglAvailable
+                        ? 'WebGL ready'
+                        : 'Canvas 2D'}{' '}
+                    • Tool: {activeTool.toUpperCase()}
+                  </span>
+                </>
+              ) : (
+                <span>Create a document to begin editing.</span>
+              )}
+            </footer>
+          </div>
+        </div>
+        <CommandPaletteOverlay />
       </div>
-      <CommandPaletteOverlay />
     </div>
   );
 };

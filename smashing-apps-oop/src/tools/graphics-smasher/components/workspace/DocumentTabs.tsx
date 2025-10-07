@@ -12,10 +12,10 @@ const DocumentTabs: React.FC = () => {
   const createDocument = useGraphicsStore((state) => state.createDocument);
 
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-4 py-2 shadow-sm">
+    <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-4 py-1.5 shadow-sm flex-shrink-0">
       <div className="flex flex-1 items-center gap-1.5 overflow-x-auto">
         {documents.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-500">
+          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
             {t('landing.ctaSecondary')}
           </div>
         ) : (
@@ -25,13 +25,13 @@ const DocumentTabs: React.FC = () => {
               <div
                 key={document.id}
                 onClick={() => setActiveDocument(document.id)}
-                className={`group relative flex items-center gap-2 rounded-t-lg border-t-2 px-4 py-2 text-sm font-medium transition-all cursor-pointer ${
+                className={`group relative flex items-center gap-2 rounded-t-lg border-t-2 px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
                   isActive
                     ? 'border-t-indigo-500 bg-white text-indigo-700 shadow-md'
                     : 'border-t-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
                 }`}
               >
-                <span className="font-semibold">{document.name}</span>
+                <span className="font-semibold text-xs">{document.name}</span>
                 <span className="text-xs font-medium text-slate-400">
                   {document.width}×{document.height}
                 </span>
@@ -47,7 +47,7 @@ const DocumentTabs: React.FC = () => {
                   }`}
                   title="Close document"
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </button>
               </div>
             );

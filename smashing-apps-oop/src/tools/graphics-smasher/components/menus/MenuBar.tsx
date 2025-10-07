@@ -75,6 +75,16 @@ const MenuBar: React.FC = () => {
       }
     }
 
+    // Apply theme to main navigation
+    const mainNav = document.querySelector('nav.main-nav-dark, nav:not(.main-nav-dark)');
+    if (mainNav) {
+      if (isDarkMode) {
+        mainNav.classList.add('main-nav-dark');
+      } else {
+        mainNav.classList.remove('main-nav-dark');
+      }
+    }
+
     // Apply theme to body for full-screen workspace
     const body = document.body;
     if (isDarkMode) {
@@ -508,13 +518,13 @@ const MenuBar: React.FC = () => {
   );
 
   return (
-    <div ref={menuRef} className="relative z-[9999] flex items-center border-b border-slate-200 bg-white px-4 py-2 shadow-sm flex-shrink-0">
+    <div ref={menuRef} className="relative z-[9999] flex items-center border-b border-slate-200 bg-white px-4 py-1 shadow-sm flex-shrink-0">
       <div className="flex items-center gap-1">
         {menus.map((menu) => (
           <div key={menu.title} className="relative">
             <button
               onClick={() => setActiveMenu(activeMenu === menu.title ? null : menu.title)}
-              className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+              className={`rounded px-2.5 py-1 text-xs font-medium transition ${
                 activeMenu === menu.title
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -530,14 +540,14 @@ const MenuBar: React.FC = () => {
       <div className="ml-auto flex items-center gap-2">
         <button
           onClick={toggleTheme}
-          className="rounded-md border border-slate-300 bg-white p-2 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+          className="rounded-md border border-slate-300 bg-white p-1.5 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
           title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+          {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
         </button>
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+          className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
           title="Command Palette (⌘K)"
         >
           ⌘K

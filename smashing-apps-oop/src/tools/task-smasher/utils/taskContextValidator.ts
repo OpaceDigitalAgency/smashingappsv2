@@ -1,5 +1,6 @@
 import { useCaseDefinitions } from './useCaseDefinitions';
 import AICore from '../../../../core/AICore';
+import { extractResponseText } from './aiResponseUtils';
 
 type ValidationResult = {
   isValid: boolean;
@@ -135,7 +136,7 @@ Response format (JSON):
 
       try {
         // Extract content from AI-Core response
-        const responseContent = response.choices[0]?.message?.content || '';
+        const responseContent = extractResponseText(response).trim();
         const parsedResponse = JSON.parse(responseContent);
 
         // Convert suggested category name to useCase id
