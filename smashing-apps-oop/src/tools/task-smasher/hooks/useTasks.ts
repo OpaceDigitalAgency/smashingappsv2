@@ -14,9 +14,15 @@ export function useTasks(initialUseCase?: string): TasksContextType {
 
   // Get model from AI-Core settings
   const [selectedModel, setSelectedModel] = useState(() => {
-    const settings = aiCore.getSettings();
-    console.log('Using model from AI-Core:', settings.model);
-    return settings.model || 'gpt-3.5-turbo';
+    const settings = aiCore.getSettings() as any;
+    // Check if any providers are actually enabled
+    const hasEnabledProvider = settings.providers && Object.values(settings.providers).some((provider: any) => provider.enabled && provider.apiKey);
+    if (hasEnabledProvider && settings.model) {
+      console.log('Using model from AI-Core:', settings.model);
+      return settings.model;
+    }
+    console.log('No enabled providers, model set to empty string');
+    return '';
   });
   const [totalCost, setTotalCost] = useState(() => {
     const savedCost = localStorage.getItem('totalCost');
@@ -126,10 +132,15 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   // Effect to update the selected model when AI-Core settings change
   useEffect(() => {
     const handleSettingsChange = () => {
-      const settings = aiCore.getSettings();
-      if (settings.model) {
+      const settings = aiCore.getSettings() as any;
+      // Check if any providers are actually enabled
+      const hasEnabledProvider = settings.providers && Object.values(settings.providers).some((provider: any) => provider.enabled && provider.apiKey);
+      if (hasEnabledProvider && settings.model) {
         console.log('AI-Core settings changed, updating model to:', settings.model);
         setSelectedModel(settings.model);
+      } else {
+        console.log('No enabled providers, clearing model');
+        setSelectedModel('');
       }
     };
 
@@ -147,26 +158,29 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     const checkAICoreSettings = () => {
       try {
         // Get from AI-Core
-        const settings = aiCore.getSettings();
+        const settings = aiCore.getSettings() as any;
         console.log('Checking AI-Core settings on mount:', settings);
 
-        if (settings && settings.model) {
+        // Check if any providers are actually enabled
+        const hasEnabledProvider = settings.providers && Object.values(settings.providers).some((provider: any) => provider.enabled && provider.apiKey);
+
+        if (hasEnabledProvider && settings.model) {
           console.log('Setting model from AI-Core settings:', settings.model);
           setSelectedModel(settings.model);
 
           // Update localStorage to ensure persistence
           localStorage.setItem('smashingapps_activeModel', settings.model);
         } else {
-          // If no model in settings, set to gpt-3.5-turbo
-          console.log('No model in AI-Core settings, setting to gpt-3.5-turbo');
-          setSelectedModel('gpt-3.5-turbo');
-          localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
+          // If no enabled providers, clear the model
+          console.log('No enabled providers, clearing model');
+          setSelectedModel('');
+          localStorage.removeItem('smashingapps_activeModel');
         }
       } catch (error) {
         console.error('Error reading AI-Core settings:', error);
-        // Fallback to gpt-3.5-turbo on error
-        console.log('Error reading settings, falling back to gpt-3.5-turbo');
-        setSelectedModel('gpt-3.5-turbo');
+        // Clear model on error
+        console.log('Error reading settings, clearing model');
+        setSelectedModel('');
         localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
       }
     };
@@ -206,14 +220,25 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     // Set up an interval to periodically sync the model setting with AI-Core
     const intervalId = setInterval(() => {
       try {
-        const settings = aiCore.getSettings();
-        if (settings && settings.model) {
+        const settings = aiCore.getSettings() as any;
+        // Check if any providers are actually enabled
+        const hasEnabledProvider = settings.providers && Object.values(settings.providers).some((provider: any) => provider.enabled && provider.apiKey);
+
+        if (hasEnabledProvider && settings.model) {
           const currentModel = localStorage.getItem('smashingapps_activeModel');
           // Only update if the model has changed
           if (currentModel !== settings.model) {
             console.log('Periodic check: Syncing model with AI-Core settings:', settings.model);
             setSelectedModel(settings.model);
             localStorage.setItem('smashingapps_activeModel', settings.model);
+          }
+        } else {
+          // If no enabled providers, clear the model
+          const currentModel = localStorage.getItem('smashingapps_activeModel');
+          if (currentModel) {
+            console.log('Periodic check: No enabled providers, clearing model');
+            setSelectedModel('');
+            localStorage.removeItem('smashingapps_activeModel');
           }
         }
       } catch (error) {
@@ -378,18 +403,22 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       // Use the updated validateTaskWithAI function that uses the proxy
       // Pass the selectedModel to ensure it uses the correct model
       const result = await validateTaskWithAI(taskText, selectedUseCase, recaptchaToken, selectedModel);
-      // The validateTaskWithAI function doesn't return the rate limit info directly,
-      // so we need to sync with the server to get the latest rate limit info
-      const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
-      syncRateLimitInfo(serverRateLimit);
-      
-      
+
+      // Only sync rate limit info if we actually made an AI call (i.e., model is configured)
+      if (selectedModel && selectedModel.trim() !== '') {
+        // The validateTaskWithAI function doesn't return the rate limit info directly,
+        // so we need to sync with the server to get the latest rate limit info
+        const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
+        syncRateLimitInfo(serverRateLimit);
+      }
+
+
       // Lowered confidence threshold from 0.6 to 0.5 to catch more mismatches
       // Also checking for specific keywords in the task that don't match the current use case
       const taskLower = taskText.toLowerCase();
       const isSeoInRecipe = selectedUseCase === 'recipe' && taskLower.includes('seo');
       const isMarketingInHome = selectedUseCase === 'home' && taskLower.includes('marketing');
-      
+
       if (!result.isValid && (result.confidence > 0.5 || isSeoInRecipe || isMarketingInHome)) {
         setTaskMismatch({
           showing: true,
@@ -399,7 +428,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         });
         return false;
       }
-      
+
       return true;
     } catch (error) {
       // Check if the error is due to rate limiting
@@ -408,7 +437,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         setShowRateLimitPopup(true);
         return false; // Prevent task creation when rate limited
       }
-      
+
       console.error('Error validating task context:', error);
       return true;
     }
@@ -416,25 +445,29 @@ export function useTasks(initialUseCase?: string): TasksContextType {
 
   const handleAddTask = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     if (newTask.trim()) {
-      // Set generating state to true to show loading indicator during validation
-      setGenerating(true);
-      
+      // Only show loading indicator if we have an AI model configured
+      // (which means we'll be making an AI API call for validation)
+      const willUseAI = selectedModel && selectedModel.trim() !== '';
+      if (willUseAI) {
+        setGenerating(true);
+      }
+
       try {
         // Check if task matches selected use case
         const isContextValid = await checkTaskContext(newTask);
-        
+
         // Only continue with task creation if context is valid
         if (isContextValid) {
           // Save current state to history for undo functionality
           setHistory(prev => [...prev, boards]);
-          
+
           // Add the new task to the todo board
           setBoards(prev => {
             const todoBoard = prev.find(board => board.id === 'todo');
             if (!todoBoard) return prev;
-            
+
             return prev.map(board => {
               if (board.id === 'todo') {
                 return {
@@ -457,7 +490,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
               return board;
             });
           });
-          
+
           // Clear the input field after successful task addition
           setNewTask('');
         } else {
@@ -470,10 +503,12 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         }
       } finally {
         // Always set generating to false when done, regardless of success or failure
-        setGenerating(false);
+        if (willUseAI) {
+          setGenerating(false);
+        }
       }
     }
-  }, [newTask, boards, checkTaskContext, taskMismatch.showing]);
+  }, [newTask, boards, checkTaskContext, taskMismatch.showing, selectedModel]);
   
   const startEditing = useCallback((
     taskId: string, 

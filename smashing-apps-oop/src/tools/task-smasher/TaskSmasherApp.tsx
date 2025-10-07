@@ -10,9 +10,7 @@ import { Brain, CheckCircle2, Plus, Settings, Sparkles, ArrowRight, Target, Tras
 import { useNavigate, useLocation } from 'react-router-dom';
 import './components/styles.css'; // Import consolidated styles for TaskSmasher
 import StructuredData, { createSoftwareAppData, createBreadcrumbData } from '../../components/StructuredData';
-import ModelDropdown from './components/ModelDropdown';
 import RateLimitPopup from './components/RateLimitPopup';
-import APISettingsModal from '../../shared/components/APISettingsModal/APISettingsModal';
 import SemanticSection from '../../components/SemanticSection';
 import { appRegistry, initializeAIServices, unifiedSettings } from '../../shared/services';
 import {
@@ -35,7 +33,6 @@ import Board from './components/Board';
 import Task from './components/Task';
 import Sidebar from './components/Sidebar';
 import TaskMismatchPopup from './components/TaskMismatchPopup';
-import OpenAIExample from './components/OpenAIExample';
 import ReCaptchaProvider from './components/ReCaptchaProvider'; // Import ReCaptchaProvider
 
 // Define props for the content component
@@ -215,8 +212,6 @@ function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
 
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [sliderExpanded, setSliderExpanded] = useState(false);
-  const [showOpenAIExample, setShowOpenAIExample] = useState(false);
-  const [showAPISettings, setShowAPISettings] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -434,25 +429,6 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen w-full flex fade-in-app relative pt-0">
-      {/* OpenAI Example Modal */}
-      {showOpenAIExample && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">OpenAI Example</h2>
-              <button
-                onClick={() => setShowOpenAIExample(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <OpenAIExample onClose={() => setShowOpenAIExample(false)} />
-          </div>
-        </div>
-      )}
       {/* Apply SEO overrides for the current use case */}
       {seoOverrides && <SEO overrides={seoOverrides} />}
       
@@ -496,22 +472,6 @@ useEffect(() => {
              background: `linear-gradient(135deg, var(--primary-light) 0%, white 50%, var(--secondary-light) 100%)`
            }}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <ModelDropdown
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            totalCost={totalCost}
-            executionCount={executionCount}
-            rateLimited={rateLimited}
-            rateLimitInfo={rateLimitInfo}
-            onToggleOpenAIExample={() => setShowOpenAIExample(!showOpenAIExample)}
-            onOpenAPISettings={() => setShowAPISettings(true)}
-          />
-
-          {/* API Settings Modal */}
-          <APISettingsModal
-            show={showAPISettings}
-            onClose={() => setShowAPISettings(false)}
-          />
 
           <SemanticSection
             as="header"
@@ -907,24 +867,6 @@ useEffect(() => {
                   Cancel
                 </button>
               </div>
-              
-              {/* OpenAI Example Modal */}
-              {showOpenAIExample && (
-                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-                  <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mx-auto">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">OpenAI API Proxy</h3>
-                      <button
-                        onClick={() => setShowOpenAIExample(false)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                    <OpenAIExample onClose={() => setShowOpenAIExample(false)} />
-                  </div>
-                </div>
-              )}
             </div>
           )}
           

@@ -93,23 +93,23 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
   // Determine the current use case from the URL path
   useEffect(() => {
     const fullPath = location.pathname.substring(1); // Remove leading slash
-    
+
     // Check if the path starts with 'tools/task-smasher/'
     if (fullPath.startsWith('tools/task-smasher/')) {
       // Extract the use case part from the path (trim trailing slash if present)
       let path = fullPath.substring('tools/task-smasher/'.length);
-      
+
       // Remove trailing slash if present
       if (path.endsWith('/')) {
         path = path.slice(0, -1);
       }
-      
+
       if (path) {
         const matchedUseCase = useCases.find(useCase =>
           useCase.label.toLowerCase().replace(/\s+/g, '-') === path.toLowerCase()
         );
-        if (matchedUseCase) {
-          // Always update the selected use case when the URL changes
+        if (matchedUseCase && matchedUseCase.id !== selectedUseCase) {
+          // Only update if the use case is different to prevent infinite loops
           // This ensures the sidebar selection stays in sync with the URL
           onSelectUseCase(matchedUseCase.id);
         }
@@ -118,7 +118,8 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
       // Default to daily if no path and no selected use case
       onSelectUseCase('daily');
     }
-  }, [location, selectedUseCase, onSelectUseCase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, selectedUseCase]);
   
   const handleUseCaseClick = (useCaseId: string, e: React.MouseEvent) => {
     // Only trigger animation if the use case is changing

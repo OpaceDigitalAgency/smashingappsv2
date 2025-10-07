@@ -2,10 +2,10 @@
  * OpenAI Service Adapter
  *
  * This file provides backward compatibility with the existing code that uses the old OpenAI service.
- * It adapts the shared AIService interface to the old OpenAI service interface.
+ * It adapts AI-Core to the old OpenAI service interface.
  */
 
-import { aiServiceRegistry } from '../../../shared/services/aiServices';
+import AICore from '../../../../core/AICore';
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 /**
@@ -59,65 +59,66 @@ interface RateLimitInfo {
  */
 export const OpenAIServiceAdapter = {
   /**
-   * Send a chat completion request to OpenAI through our proxy
+   * Send a chat completion request using AI-Core
    */
   async createChatCompletion(request: ChatCompletionRequest, recaptchaToken?: string | null): Promise<{
     data: ChatCompletionResponse;
     rateLimit: RateLimitInfo;
   }> {
     try {
-      // Convert the request to the new format
-      const options = {
-        model: request.model,
-        messages: request.messages,
-        temperature: request.temperature,
-        maxTokens: request.max_tokens
-      };
-      
-      // Get the appropriate service for the model
-      const service = aiServiceRegistry.getServiceForModel(request.model);
-      
-      if (!service) {
-        throw new Error(`No service found for model: ${request.model}`);
-      }
-      
-      // Call the shared service
-      // Cast the messages to the expected type to handle compatibility
-      const response = await service.createChatCompletion({
-        ...options,
-        messages: options.messages as any
-      });
-      
+      // Get AI-Core instance
+      const aiCore = AICore.getInstance();
+
+      // Convert messages to AI-Core format
+      const messages = request.messages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Call AI-Core
+      const response = await aiCore.sendTextRequest(
+        request.model,
+        messages,
+        {
+          temperature: request.temperature,
+          maxTokens: request.max_tokens,
+          topP: request.top_p,
+          frequencyPenalty: request.frequency_penalty,
+          presencePenalty: request.presence_penalty
+        },
+        'task-smasher'
+      );
+
       // Convert the response back to the old format
       const oldFormatResponse: ChatCompletionResponse = {
-        id: response.data.id,
+        id: response.id || `chatcmpl-${Date.now()}`,
         object: 'chat.completion',
-        created: Date.now(),
-        model: response.data.model,
-        choices: [
-          {
-            index: 0,
-            message: {
-              role: 'assistant',
-              content: response.data.content
-            },
-            finish_reason: 'stop'
-          }
-        ],
-        usage: response.data.usage ? {
-          prompt_tokens: response.data.usage.promptTokens,
-          completion_tokens: response.data.usage.completionTokens,
-          total_tokens: response.data.usage.totalTokens
-        } : {
-          prompt_tokens: 0,
-          completion_tokens: 0,
-          total_tokens: 0
+        created: response.created || Date.now(),
+        model: response.model,
+        choices: response.choices.map(choice => ({
+          index: choice.index,
+          message: {
+            role: choice.message.role,
+            content: choice.message.content
+          },
+          finish_reason: choice.finishReason
+        })),
+        usage: {
+          prompt_tokens: response.usage.promptTokens,
+          completion_tokens: response.usage.completionTokens,
+          total_tokens: response.usage.totalTokens
         }
       };
-      
+
+      // Return with mock rate limit info (AI-Core doesn't track rate limits the same way)
       return {
         data: oldFormatResponse,
-        rateLimit: response.rateLimit
+        rateLimit: {
+          limit: 10,
+          remaining: 10,
+          reset: new Date(Date.now() + 86400000),
+          used: 0
+        }
       };
     } catch (error) {
       console.error("Error in createChatCompletion adapter:", error);
@@ -129,23 +130,22 @@ export const OpenAIServiceAdapter = {
   },
 
   /**
-   * Get a simple text completion from OpenAI
+   * Get a simple text completion using AI-Core
    */
   async getCompletion(prompt: string, model = 'gpt-3.5-turbo'): Promise<string> {
     try {
-      // Get the appropriate service for the model
-      const service = aiServiceRegistry.getServiceForModel(model);
-      
-      if (!service) {
-        throw new Error(`No service found for model: ${model}`);
-      }
-      
-      const response = await service.createTextCompletion({
+      // Get AI-Core instance
+      const aiCore = AICore.getInstance();
+
+      // Call AI-Core with a simple user message
+      const response = await aiCore.sendTextRequest(
         model,
-        prompt
-      });
-      
-      return response.data.text;
+        [{ role: 'user', content: prompt }],
+        {},
+        'task-smasher'
+      );
+
+      return response.choices[0]?.message?.content || '';
     } catch (error) {
       console.error('Error getting completion:', error);
       throw error;
@@ -153,17 +153,16 @@ export const OpenAIServiceAdapter = {
   },
 
   /**
-   * Get the current rate limit status
+   * Get the current rate limit status (mock implementation for AI-Core)
    */
   async getRateLimitStatus(): Promise<RateLimitInfo> {
-    // Get the default service (usually OpenAI)
-    const service = aiServiceRegistry.getDefaultService();
-    
-    if (!service) {
-      throw new Error('No default service available');
-    }
-    
-    return service.getRateLimitStatus();
+    // AI-Core doesn't track rate limits the same way, return mock data
+    return {
+      limit: 10,
+      remaining: 10,
+      reset: new Date(Date.now() + 86400000),
+      used: 0
+    };
   }
 };
 

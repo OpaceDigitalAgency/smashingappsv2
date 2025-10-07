@@ -49,8 +49,8 @@ export const validateTaskLocally = (task: string, useCase: string): ValidationRe
   ));
   
   // If confidence is low and we found a better match
-  // Increased threshold from 0.3 to 0.4 to be more strict
-  if (confidence < 0.4 && bestMatchUseCase !== useCase && bestMatchScore > 1) {
+  // Allow single keyword matches to trigger mismatch (changed from > 1 to > 0)
+  if (confidence < 0.4 && bestMatchUseCase !== useCase && bestMatchScore > 0) {
     return {
       isValid: false,
       confidence: 1 - confidence,
@@ -91,6 +91,12 @@ export const validateTaskWithAI = async (
   model: string = 'gpt-3.5-turbo' // Add model parameter with default
 ): Promise<ValidationResult> => {
   try {
+    // If no model is provided or model is empty, use local validation immediately
+    if (!model || model.trim() === '') {
+      console.log('No AI model configured, using local validation');
+      return validateTaskLocally(task, useCase);
+    }
+
     const prompt = `
 Task: "${task}"
 Current Category: "${useCaseDefinitions[useCase]?.label || useCase}"
@@ -135,7 +141,7 @@ Response format (JSON):
         // Extract content from AI-Core response
         const responseContent = response.choices[0]?.message?.content || '';
         const parsedResponse = JSON.parse(responseContent);
-        
+
         // Convert suggested category name to useCase id
         let suggestedUseCase = undefined;
         if (!parsedResponse.isValid && parsedResponse.suggestedCategory) {
@@ -146,7 +152,7 @@ Response format (JSON):
             }
           }
         }
-          
+
           return {
             isValid: parsedResponse.isValid,
             confidence: parsedResponse.confidence,
@@ -165,7 +171,7 @@ Response format (JSON):
         console.error('Error calling OpenAI API:', error);
       }
     }
-    
+
     // Fall back to local validation
     return validateTaskLocally(task, useCase);
   } catch (error) {
