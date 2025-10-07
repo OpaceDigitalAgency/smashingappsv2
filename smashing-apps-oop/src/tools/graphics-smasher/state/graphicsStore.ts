@@ -83,6 +83,11 @@ function createDocumentState(input: Partial<Pick<DocumentState, 'name' | 'width'
 }
 
 function pushSnapshot(document: DocumentState, description: string) {
+  // Temporarily disable snapshots to fix drawing tools
+  // TODO: Fix structuredClone issues and re-enable
+  console.log('Snapshot disabled:', description);
+  return;
+  
   const snapshot: LayerSnapshot = {
     id: createId('hist'),
     payload: cloneLayers(document.layers),

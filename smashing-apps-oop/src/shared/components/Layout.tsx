@@ -9,6 +9,16 @@ const Layout: React.FC = () => {
   const isConfigured = aiCore.isConfigured();
   const configuredProviders = aiCore.getConfiguredProviders();
 
+  // Check if we're on Graphics Smasher workspace page
+  const isGraphicsWorkspace = location.pathname.includes('/tools/graphics-smasher/workspace');
+
+  // Check if dark mode is enabled for Graphics Smasher
+  const isGraphicsDarkMode = isGraphicsWorkspace && localStorage.getItem('graphics-smasher-theme') === 'dark';
+
+  // Get active provider and model from settings
+  const settings = aiCore.getSettings();
+  const activeModel = settings.model || 'Not set';
+
   const navigation = [
     { name: 'Home', path: '/' },
     { name: 'Article Smasher', path: '/tools/article-smasher' },
@@ -27,15 +37,15 @@ const Layout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <nav className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
+      <header className={`shadow-sm sticky top-0 z-50 ${isGraphicsDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <nav className="w-full px-4">
+          <div className="flex justify-between items-center h-16 max-w-7xl mx-auto">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">SmashingApps v2</span>
+              <span className={`text-xl font-bold ${isGraphicsDarkMode ? 'text-white' : 'text-gray-900'}`}>SmashingApps v2</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -46,8 +56,12 @@ const Layout: React.FC = () => {
                   to={item.path}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? isGraphicsDarkMode
+                        ? 'bg-indigo-900 text-indigo-300'
+                        : 'bg-indigo-50 text-indigo-600'
+                      : isGraphicsDarkMode
+                        ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   {item.name}
@@ -58,16 +72,27 @@ const Layout: React.FC = () => {
             {/* Status Indicator */}
             <div className="hidden md:flex items-center space-x-3">
               {isConfigured ? (
-                <div className="flex items-center space-x-2 text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-gray-600">
-                    {configuredProviders.length} provider{configuredProviders.length !== 1 ? 's' : ''} active
-                  </span>
+                <div className="flex flex-col items-end text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className={isGraphicsDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                      {configuredProviders.length} provider{configuredProviders.length !== 1 ? 's' : ''} active
+                    </span>
+                  </div>
+                  {configuredProviders.length > 0 && (
+                    <span className={`text-xs mt-1 ${isGraphicsDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {activeModel}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <Link
                   to="/admin"
-                  className="flex items-center space-x-2 text-sm text-amber-600 hover:text-amber-700"
+                  className={`flex items-center space-x-2 text-sm ${
+                    isGraphicsDarkMode
+                      ? 'text-amber-400 hover:text-amber-300'
+                      : 'text-amber-600 hover:text-amber-700'
+                  }`}
                 >
                   <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                   <span>Configure AI</span>
@@ -78,7 +103,11 @@ const Layout: React.FC = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50"
+              className={`md:hidden p-2 rounded-lg ${
+                isGraphicsDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
             >
               <svg
                 className="w-6 h-6"
@@ -107,7 +136,7 @@ const Layout: React.FC = () => {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t">
+            <div className={`md:hidden py-4 border-t ${isGraphicsDarkMode ? 'border-gray-700' : ''}`}>
               {navigation.map((item) => (
                 <Link
                   key={item.path}
@@ -115,21 +144,32 @@ const Layout: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? isGraphicsDarkMode
+                        ? 'bg-indigo-900 text-indigo-300'
+                        : 'bg-indigo-50 text-indigo-600'
+                      : isGraphicsDarkMode
+                        ? 'text-gray-300 hover:bg-gray-700'
+                        : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   {item.name}
                 </Link>
               ))}
-              <div className="mt-4 px-4 py-2 text-sm text-gray-600">
+              <div className={`mt-4 px-4 py-2 text-sm ${isGraphicsDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 {isConfigured ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>{configuredProviders.length} provider{configuredProviders.length !== 1 ? 's' : ''} active</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>{configuredProviders.length} provider{configuredProviders.length !== 1 ? 's' : ''} active</span>
+                    </div>
+                    {configuredProviders.length > 0 && (
+                      <div className={`text-xs ${isGraphicsDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Model: {activeModel}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 text-amber-600">
+                  <div className={`flex items-center space-x-2 ${isGraphicsDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>
                     <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                     <span>Configure AI in Admin</span>
                   </div>

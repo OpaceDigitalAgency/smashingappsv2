@@ -140,6 +140,14 @@ const CanvasViewport: React.FC = () => {
       const savedShapes = (layer.metadata?.shapes as Shape[]) || [];
       const layerFill = layer.metadata?.fill as string | undefined;
       const hasContent = savedStrokes.length > 0 || savedShapes.length > 0 || layerFill;
+      
+      // Debug logging
+      if (savedStrokes.length > 0) {
+        console.log(`Rendering ${savedStrokes.length} saved strokes for layer ${layer.name}:`, savedStrokes);
+      }
+      if (savedShapes.length > 0) {
+        console.log(`Rendering ${savedShapes.length} saved shapes for layer ${layer.name}:`, savedShapes);
+      }
 
       return (
         <Group

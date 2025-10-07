@@ -1465,10 +1465,25 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       // Parse the response into an array of ideas
       const ideas = trimmedResponseText
         .split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => line.replace(/^\d+\.\s*|-\s*|\*\s*/, '').trim());
-      
+        .filter(line => {
+          const trimmed = line.trim();
+          // Filter out empty lines
+          if (trimmed.length === 0) return false;
+          // Filter out lines that look like prompts or instructions
+          if (trimmed.toLowerCase().includes('create a to-do list') ||
+              trimmed.toLowerCase().includes('generate') ||
+              trimmed.toLowerCase().includes('including specific action steps') ||
+              trimmed.toLowerCase().includes('priority tasks for the day') ||
+              trimmed.length > 150) { // Filter out very long lines that are likely prompts
+            return false;
+          }
+          return true;
+        })
+        .map(line => line.replace(/^\d+\.\s*|-\s*|\*\s*/, '').trim())
+        .slice(0, breakdownLevel); // Limit to the breakdown level (default 3)
+
       console.log("Parsed ideas:", ideas);
+      console.log("Breakdown level:", breakdownLevel);
       
       if (ideas.length === 0) {
         console.error("No ideas were parsed from the response");
