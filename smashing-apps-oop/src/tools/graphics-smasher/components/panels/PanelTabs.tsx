@@ -11,18 +11,23 @@ const PanelTabs: React.FC = () => {
   const setActivePanel = useGraphicsStore((state) => state.setActivePanel);
 
   return (
-    <div className="flex border-b border-slate-200">
+    <div className="flex border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
       {PANEL_ORDER.map((panel) => {
         const isActive = panel === activePanel;
         return (
           <button
             key={panel}
             onClick={() => setActivePanel(panel)}
-            className={`flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
-              isActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+            className={`relative flex-1 px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+              isActive
+                ? 'text-indigo-600'
+                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
             }`}
           >
             {t(`panels.${panel}`)}
+            {isActive && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
+            )}
           </button>
         );
       })}

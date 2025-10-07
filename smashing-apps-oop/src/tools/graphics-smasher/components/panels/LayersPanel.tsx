@@ -40,15 +40,15 @@ const LayersPanel: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Layer Stack</h4>
+    <div className="flex h-full flex-col bg-white">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2.5">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">Layer Stack</h4>
         <button
-          className="inline-flex items-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+          className="inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700"
           onClick={() => addLayer(document.id, { name: `Layer ${document.layers.length}` })}
         >
           <Plus size={14} className="mr-1" />
-          Layer
+          New Layer
         </button>
       </div>
       <ul className="flex-1 divide-y divide-slate-100 overflow-y-auto">
@@ -59,20 +59,30 @@ const LayersPanel: React.FC = () => {
           return (
             <li
               key={layer.id}
-              className={`group flex items-center justify-between gap-2 px-3 py-2 text-sm ${
-                isActive ? 'bg-indigo-50' : 'hover:bg-slate-100'
+              className={`group flex items-center justify-between gap-2 border-l-2 px-3 py-3 text-sm transition ${
+                isActive
+                  ? 'border-l-indigo-500 bg-gradient-to-r from-indigo-50 to-transparent'
+                  : 'border-l-transparent hover:border-l-slate-300 hover:bg-slate-50'
               }`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <button
-                  className="text-slate-400 hover:text-slate-600"
+                  className={`rounded p-1 transition ${
+                    layer.visible
+                      ? 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                      : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'
+                  }`}
                   onClick={() => toggleLayerVisibility(document.id, layer.id)}
                   aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
                 >
                   {layer.visible ? <Eye size={16} /> : <EyeOff size={16} />}
                 </button>
                 <button
-                  className="text-slate-400 hover:text-slate-600"
+                  className={`rounded p-1 transition ${
+                    layer.locked
+                      ? 'text-amber-600 hover:bg-amber-100'
+                      : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'
+                  }`}
                   onClick={() => toggleLayerLock(document.id, layer.id)}
                   aria-label={layer.locked ? 'Unlock layer' : 'Lock layer'}
                 >
@@ -80,24 +90,30 @@ const LayersPanel: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setActiveLayer(document.id, layer.id)}
-                  className="text-left"
+                  className="flex-1 text-left"
                 >
-                  <p className="font-medium text-slate-700">{layer.name}</p>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">{layer.kind}</p>
+                  <p className={`font-semibold ${isActive ? 'text-indigo-700' : 'text-slate-800'}`}>
+                    {layer.name}
+                  </p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                    {layer.kind}
+                  </p>
                 </button>
               </div>
               <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
                 {!isBackground && (
                   <>
                     <button
-                      className="rounded bg-white p-1 text-slate-400 hover:text-slate-700"
+                      className="rounded border border-slate-200 bg-white p-1 text-slate-500 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
                       onClick={() => handleReorder(layer.id, 1)}
+                      title="Move up"
                     >
                       <ChevronUp size={14} />
                     </button>
                     <button
-                      className="rounded bg-white p-1 text-slate-400 hover:text-slate-700"
+                      className="rounded border border-slate-200 bg-white p-1 text-slate-500 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
                       onClick={() => handleReorder(layer.id, -1)}
+                      title="Move down"
                     >
                       <ChevronDown size={14} />
                     </button>

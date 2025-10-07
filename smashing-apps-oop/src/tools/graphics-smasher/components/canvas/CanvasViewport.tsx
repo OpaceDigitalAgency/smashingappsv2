@@ -125,10 +125,28 @@ const CanvasViewport: React.FC = () => {
   }
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-200">
-      <div className="absolute left-8 top-8 z-10 rounded-md bg-white/70 px-3 py-1 text-xs font-medium text-slate-600 shadow">
-        {Math.round(activeDocument.viewport.zoom * 100)}%
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+      {/* Zoom indicator */}
+      <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-lg border border-slate-300 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-lg backdrop-blur-sm">
+        <span>{Math.round(activeDocument.viewport.zoom * 100)}%</span>
+        <div className="h-3 w-px bg-slate-300" />
+        <button
+          onClick={() => setViewport(activeDocument.id, { zoom: Math.max(0.2, activeDocument.viewport.zoom - 0.1) })}
+          className="text-slate-500 hover:text-slate-700"
+          title="Zoom out"
+        >
+          −
+        </button>
+        <button
+          onClick={() => setViewport(activeDocument.id, { zoom: Math.min(8, activeDocument.viewport.zoom + 0.1) })}
+          className="text-slate-500 hover:text-slate-700"
+          title="Zoom in"
+        >
+          +
+        </button>
       </div>
+
+      {/* Canvas stage */}
       <Stage
         width={size.width}
         height={size.height}
@@ -145,25 +163,50 @@ const CanvasViewport: React.FC = () => {
             width={8000}
             height={8000}
             fillPatternImage={undefined}
-            fill="#f8fafc"
+            fill="#f1f5f9"
           />
         </KonvaLayer>
         <KonvaLayer>
+          {/* Document boundary with shadow */}
+          <Rect
+            x={-5}
+            y={-5}
+            width={activeDocument.width + 10}
+            height={activeDocument.height + 10}
+            fill="rgba(0,0,0,0.1)"
+            shadowBlur={20}
+            shadowColor="rgba(0,0,0,0.3)"
+            shadowOffsetX={0}
+            shadowOffsetY={4}
+          />
           {renderLayers}
         </KonvaLayer>
       </Stage>
-      {settings.snapToGrid && (
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)]"
+
+      {/* Grid overlay */}
+      {settings.snapToGrid && activeDocument.viewport.showGrid && (
+        <div
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.08)_1px,transparent_1px)]"
           style={{
             backgroundSize: `${(activeDocument.viewport.gridSize ?? 32) * activeDocument.viewport.zoom}px ${(activeDocument.viewport.gridSize ?? 32) * activeDocument.viewport.zoom}px`
           }}
         />
       )}
-      {settings.snapToGuides && (
+
+      {/* Guides overlay */}
+      {settings.snapToGuides && activeDocument.viewport.showGuides && (
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-16 top-0 h-full w-px bg-blue-400/40"></div>
-          <div className="absolute left-0 top-16 w-full border-t border-blue-400/40"></div>
+          <div className="absolute left-1/2 top-0 h-full w-px bg-indigo-400/50 shadow-sm"></div>
+          <div className="absolute left-0 top-1/2 w-full border-t border-indigo-400/50 shadow-sm"></div>
         </div>
+      )}
+
+      {/* Rulers (placeholder) */}
+      {activeDocument.viewport.showRulers && (
+        <>
+          <div className="pointer-events-none absolute left-0 top-0 h-6 w-full border-b border-slate-300 bg-white/80 backdrop-blur-sm" />
+          <div className="pointer-events-none absolute left-0 top-0 h-full w-6 border-r border-slate-300 bg-white/80 backdrop-blur-sm" />
+        </>
       )}
     </div>
   );

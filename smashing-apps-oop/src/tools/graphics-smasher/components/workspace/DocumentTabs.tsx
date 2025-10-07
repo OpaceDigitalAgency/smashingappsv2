@@ -12,10 +12,10 @@ const DocumentTabs: React.FC = () => {
   const createDocument = useGraphicsStore((state) => state.createDocument);
 
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5">
-      <div className="flex flex-1 items-center gap-2 overflow-x-auto">
+    <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-4 py-2 shadow-sm">
+      <div className="flex flex-1 items-center gap-1.5 overflow-x-auto">
         {documents.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-500">
+          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-500">
             {t('landing.ctaSecondary')}
           </div>
         ) : (
@@ -25,20 +25,30 @@ const DocumentTabs: React.FC = () => {
               <button
                 key={document.id}
                 onClick={() => setActiveDocument(document.id)}
-                className={`group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                  isActive ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'
+                className={`group relative flex items-center gap-2 rounded-t-lg border-t-2 px-4 py-2 text-sm font-medium transition-all ${
+                  isActive
+                    ? 'border-t-indigo-500 bg-white text-indigo-700 shadow-md'
+                    : 'border-t-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
                 }`}
               >
-                <span className="font-medium">{document.name}</span>
-                <span className="text-xs text-slate-400">{document.width}×{document.height}</span>
-                <X
-                  size={14}
-                  className="ml-2 text-slate-400 opacity-0 transition group-hover:opacity-100"
+                <span className="font-semibold">{document.name}</span>
+                <span className="text-xs font-medium text-slate-400">
+                  {document.width}×{document.height}
+                </span>
+                <button
                   onClick={(event) => {
                     event.stopPropagation();
                     closeDocument(document.id);
                   }}
-                />
+                  className={`ml-1 rounded p-0.5 transition ${
+                    isActive
+                      ? 'text-slate-400 hover:bg-red-100 hover:text-red-600'
+                      : 'text-slate-400 opacity-0 hover:bg-red-100 hover:text-red-600 group-hover:opacity-100'
+                  }`}
+                  title="Close document"
+                >
+                  <X size={14} />
+                </button>
               </button>
             );
           })
@@ -49,10 +59,10 @@ const DocumentTabs: React.FC = () => {
           const id = createDocument({ name: 'Untitled' });
           setActiveDocument(id);
         }}
-        className="ml-4 inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:border-indigo-300 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        className="ml-4 inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
       >
-        <Plus size={16} className="mr-1" />
-        New
+        <Plus size={16} className="mr-1.5" />
+        New Document
       </button>
     </div>
   );

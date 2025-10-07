@@ -64,9 +64,9 @@ const PrimaryToolbar: React.FC = () => {
   const setActiveTool = useGraphicsStore((state) => state.setActiveTool);
 
   return (
-    <nav className="flex h-full flex-col gap-4 border-r border-slate-200 bg-white/90 p-3 shadow-sm">
+    <nav className="flex h-full w-16 flex-col gap-3 border-r border-slate-200 bg-gradient-to-b from-slate-50 to-white p-2 shadow-md">
       {TOOL_GROUPS.map((group, groupIndex) => (
-        <div key={groupIndex} className="space-y-2">
+        <div key={groupIndex} className="space-y-1">
           {group.map((tool) => {
             const Icon = tool.icon;
             const isActive = tool.id === activeTool;
@@ -74,19 +74,26 @@ const PrimaryToolbar: React.FC = () => {
               <button
                 key={tool.id}
                 onClick={() => setActiveTool(tool.id)}
-                className={`flex h-12 w-12 items-center justify-center rounded-md border text-slate-600 transition ${
+                className={`group relative flex h-11 w-11 items-center justify-center rounded-lg border transition-all duration-200 ${
                   isActive
-                    ? 'border-indigo-400 bg-indigo-100 text-indigo-700 shadow-inner'
-                    : 'border-transparent hover:border-slate-300 hover:bg-slate-100'
+                    ? 'border-indigo-500 bg-indigo-600 text-white shadow-lg shadow-indigo-500/50'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
                 }`}
                 title={t(tool.labelKey)}
                 aria-pressed={isActive}
               >
-                <Icon size={18} />
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                {tool.shortcut && (
+                  <span className="pointer-events-none absolute -right-1 -top-1 rounded bg-slate-800 px-1 text-[9px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    {tool.shortcut}
+                  </span>
+                )}
               </button>
             );
           })}
-          {groupIndex < TOOL_GROUPS.length - 1 && <div className="h-px bg-slate-200"></div>}
+          {groupIndex < TOOL_GROUPS.length - 1 && (
+            <div className="my-2 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+          )}
         </div>
       ))}
     </nav>

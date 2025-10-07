@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import MenuBar from '../menus/MenuBar';
 import DocumentTabs from './DocumentTabs';
 import PrimaryToolbar from '../toolbar/PrimaryToolbar';
+import ToolOptionsBar from '../toolbar/ToolOptionsBar';
 import CanvasViewport from '../canvas/CanvasViewport';
 import PanelTabs from '../panels/PanelTabs';
 import LayersPanel from '../panels/LayersPanel';
@@ -47,6 +48,7 @@ const GraphicsWorkspace: React.FC = () => {
   return (
     <div className="graphics-smasher-container flex h-screen flex-col bg-slate-50">
       <MenuBar />
+      <ToolOptionsBar />
       <DocumentTabs />
       <div className="flex flex-1 overflow-hidden">
         <PrimaryToolbar />
