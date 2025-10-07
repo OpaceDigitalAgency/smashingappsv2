@@ -87,7 +87,8 @@ export const validateTaskLocally = (task: string, useCase: string): ValidationRe
 export const validateTaskWithAI = async (
   task: string,
   useCase: string,
-  recaptchaToken?: string | null
+  recaptchaToken?: string | null,
+  model: string = 'gpt-3.5-turbo' // Add model parameter with default
 ): Promise<ValidationResult> => {
   try {
     const prompt = `
@@ -110,9 +111,9 @@ Response format (JSON):
       // Get AI-Core instance
       const aiCore = AICore.getInstance();
 
-      // Use AI-Core to make the request
+      // Use AI-Core to make the request with the provided model
       const response = await aiCore.sendTextRequest(
-        'gpt-3.5-turbo',
+        model, // Use the model parameter instead of hardcoded gpt-3.5-turbo
         [
           {
             role: 'system',

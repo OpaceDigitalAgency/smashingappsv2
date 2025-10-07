@@ -370,13 +370,14 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   
   const checkTaskContext = useCallback(async (taskText: string) => {
     if (!selectedUseCase || !taskText.trim()) return true;
-    
+
     try {
       // Get reCAPTCHA token
       const recaptchaToken = await getReCaptchaToken('validate_task');
-      
+
       // Use the updated validateTaskWithAI function that uses the proxy
-      const result = await validateTaskWithAI(taskText, selectedUseCase, recaptchaToken);
+      // Pass the selectedModel to ensure it uses the correct model
+      const result = await validateTaskWithAI(taskText, selectedUseCase, recaptchaToken, selectedModel);
       // The validateTaskWithAI function doesn't return the rate limit info directly,
       // so we need to sync with the server to get the latest rate limit info
       const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
@@ -411,7 +412,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       console.error('Error validating task context:', error);
       return true;
     }
-  }, [selectedUseCase, getReCaptchaToken, syncRateLimitInfo]);
+  }, [selectedUseCase, selectedModel, getReCaptchaToken, syncRateLimitInfo]);
 
   const handleAddTask = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
