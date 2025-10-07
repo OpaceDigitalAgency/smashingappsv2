@@ -878,26 +878,36 @@ useEffect(() => {
             onClose={() => setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' })}
             onSwitchUseCase={(useCase) => {
               try {
+                console.log('onSwitchUseCase called with useCase:', useCase);
+                console.log('Current taskMismatch state:', taskMismatch);
+
                 // Get the task text to preserve
                 const taskTextToPreserve = taskMismatch.taskText || '';
                 console.log('Task to preserve:', taskTextToPreserve);
-                
+
                 // Get the use case label for navigation
                 const useCaseLabel = useCaseDefinitions[useCase]?.label;
+                console.log('Use case label:', useCaseLabel);
+
                 if (useCaseLabel && taskTextToPreserve) {
                   // Format the URL path
                   const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
-                  
+                  console.log('Navigating to path:', path);
+
                   // Update the URL without reloading the page
                   window.history.pushState({}, '', path);
-                  
-                  // Directly call handleSelectUseCase instead of reloading the page
+
+                  // IMPORTANT: Call handleSelectUseCase BEFORE clearing taskMismatch
+                  // so that handleSelectUseCase can check taskMismatch.showing to preserve the task
+                  console.log('Calling handleSelectUseCase with:', useCase);
                   handleSelectUseCase(useCase);
-                  
-                  // Clear the task mismatch state
+
+                  // Clear the task mismatch state AFTER switching
                   setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
-                  
+
                   console.log('Switched to use case:', useCase);
+                } else {
+                  console.log('NOT switching - useCaseLabel:', useCaseLabel, 'taskTextToPreserve:', taskTextToPreserve);
                 }
               } catch (error) {
                 console.error('Error in onSwitchUseCase:', error);

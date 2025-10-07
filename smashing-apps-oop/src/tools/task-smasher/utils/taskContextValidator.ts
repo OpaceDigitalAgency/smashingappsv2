@@ -51,9 +51,17 @@ export const validateTaskLocally = (task: string, useCase: string): ValidationRe
   // If confidence is low and we found a better match
   // Allow single keyword matches to trigger mismatch (changed from > 1 to > 0)
   if (confidence < 0.4 && bestMatchUseCase !== useCase && bestMatchScore > 0) {
+    const resultConfidence = 1 - confidence;
+    console.log('Local validation: Mismatch detected!');
+    console.log('  - Task:', task);
+    console.log('  - Current use case:', useCase);
+    console.log('  - Suggested use case:', bestMatchUseCase);
+    console.log('  - Confidence:', confidence);
+    console.log('  - Result confidence:', resultConfidence);
+    console.log('  - Best match score:', bestMatchScore);
     return {
       isValid: false,
-      confidence: 1 - confidence,
+      confidence: resultConfidence,
       reason: `This task seems more like a ${useCaseDefinitions[bestMatchUseCase].label} task.`,
       suggestedUseCase: bestMatchUseCase
     };

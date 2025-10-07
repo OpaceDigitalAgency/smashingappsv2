@@ -419,7 +419,17 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       const isSeoInRecipe = selectedUseCase === 'recipe' && taskLower.includes('seo');
       const isMarketingInHome = selectedUseCase === 'home' && taskLower.includes('marketing');
 
+      console.log('checkTaskContext result:', result);
+      console.log('  - isValid:', result.isValid);
+      console.log('  - confidence:', result.confidence);
+      console.log('  - reason:', result.reason);
+      console.log('  - suggestedUseCase:', result.suggestedUseCase);
+      console.log('  - isSeoInRecipe:', isSeoInRecipe);
+      console.log('  - isMarketingInHome:', isMarketingInHome);
+      console.log('  - Will show mismatch modal:', !result.isValid && (result.confidence > 0.5 || isSeoInRecipe || isMarketingInHome));
+
       if (!result.isValid && (result.confidence > 0.5 || isSeoInRecipe || isMarketingInHome)) {
+        console.log('Setting task mismatch state...');
         setTaskMismatch({
           showing: true,
           reason: result.reason || `This task doesn't seem to fit in the current category.`,
@@ -429,6 +439,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         return false;
       }
 
+      console.log('Task validation passed, adding task...');
       return true;
     } catch (error) {
       // Check if the error is due to rate limiting
@@ -1241,22 +1252,29 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
   };
   
   const handleSelectUseCase = useCallback((useCase: string) => {
+    console.log('handleSelectUseCase called with useCase:', useCase);
+    console.log('Current taskMismatch state:', taskMismatch);
+
     // Save current state to history before resetting
     setHistory(prev => [...prev, boards]);
-    
+
     // Check if we're switching due to a task mismatch
     const switchingDueToMismatch = taskMismatch.showing && taskMismatch.suggestedUseCase === useCase;
     const taskToPreserve = switchingDueToMismatch && taskMismatch.taskText ? taskMismatch.taskText : '';
-    
+
+    console.log('switchingDueToMismatch:', switchingDueToMismatch);
+    console.log('taskToPreserve:', taskToPreserve);
+
     // Create empty boards
     const emptyBoards: Board[] = [
       { id: 'todo', title: 'To Do', tasks: [] },
       { id: 'inprogress', title: 'Progress', tasks: [] },
       { id: 'done', title: 'Done', tasks: [] }
     ];
-    
+
     // If we're switching due to a task mismatch, add the task to the new use case's todo board
     if (switchingDueToMismatch && taskToPreserve) {
+      console.log('Adding task to new use case:', taskToPreserve);
       emptyBoards[0].tasks.push({
         id: `task-${Date.now()}`,
         title: taskToPreserve,
@@ -1267,6 +1285,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         expanded: false,
         boardId: 'todo'
       });
+    } else {
+      console.log('NOT adding task - switchingDueToMismatch:', switchingDueToMismatch, 'taskToPreserve:', taskToPreserve);
     }
     
     // Set the new boards
