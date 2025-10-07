@@ -48,11 +48,20 @@ export function useReCaptcha(siteKey?: string) {
 
   /**
    * Get a reCAPTCHA token for the specified action
-   * 
+   *
    * @param action The action to get a token for
    * @returns A promise that resolves to the token, or null if reCAPTCHA is not available
    */
   const getReCaptchaToken = useCallback(async (action: string): Promise<string | null> => {
+    // Check if we're on localhost - if so, skip reCAPTCHA silently
+    const isLocalhost = window.location.hostname === 'localhost' ||
+                        window.location.hostname === '127.0.0.1';
+
+    if (isLocalhost) {
+      // On localhost, return null without warnings
+      return null;
+    }
+
     // Skip if no site key is provided, but don't show a warning
     // This allows the application to work without reCAPTCHA
     if (!recaptchaSiteKey) {

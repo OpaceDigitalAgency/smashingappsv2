@@ -1,5 +1,5 @@
 import { useCaseDefinitions } from './useCaseDefinitions';
-import { aiServiceRegistry } from '../../../shared/services/aiServices';
+import AICore from '../../../../core/AICore';
 
 type ValidationResult = {
   isValid: boolean;
@@ -107,17 +107,13 @@ Response format (JSON):
 `;
 
     try {
-      // Get the default service (usually OpenAI)
-      const service = aiServiceRegistry.getDefaultService();
-      
-      if (!service) {
-        throw new Error('No default service available');
-      }
-      
-      // Use the shared service to make the request
-      const { data, rateLimit } = await service.createChatCompletion({
-        model: 'gpt-3.5-turbo',
-        messages: [
+      // Get AI-Core instance
+      const aiCore = AICore.getInstance();
+
+      // Use AI-Core to make the request
+      const response = await aiCore.sendTextRequest(
+        'gpt-3.5-turbo',
+        [
           {
             role: 'system',
             content: 'You are a strict task categorization assistant with deep knowledge of various domains. Analyze if tasks fit their assigned categories using semantic understanding rather than simple keyword matching. Be particularly vigilant about tasks that contain terms from other categories. For example, "SEO" tasks should be in Marketing, not Recipe Steps, even if they mention food. Similarly, "web design" belongs in Marketing, not Home Chores. Be strict about maintaining category boundaries to ensure tasks are properly organized. If a task contains terms that are clearly from another category, mark it as invalid with high confidence.'
@@ -127,13 +123,16 @@ Response format (JSON):
             content: prompt
           }
         ],
-        temperature: 0.3,
-        maxTokens: 500
-      });
-      
+        {
+          temperature: 0.3,
+          maxTokens: 500
+        },
+        'task-smasher'
+      );
+
       try {
-        // The shared service returns content directly instead of through choices array
-        const responseContent = data.content;
+        // Extract content from AI-Core response
+        const responseContent = response.choices[0]?.message?.content || '';
         const parsedResponse = JSON.parse(responseContent);
         
         // Convert suggested category name to useCase id

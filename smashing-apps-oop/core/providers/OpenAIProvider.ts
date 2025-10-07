@@ -35,31 +35,48 @@ class OpenAIProvider implements IProvider {
     if (!this.isConfigured()) {
       throw new Error('OpenAI API key not configured');
     }
-    
+
     try {
+      // Determine which token parameter to use based on model
+      // GPT-5, O3, and O1 models use max_completion_tokens
+      // Older models use max_tokens
+      const usesCompletionTokens = options.model.startsWith('gpt-5') ||
+                                    options.model.startsWith('o3') ||
+                                    options.model.startsWith('o1');
+
+      const requestBody: any = {
+        model: options.model,
+        messages: messages,
+        temperature: options.temperature,
+        top_p: options.topP,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop
+      };
+
+      // Add the appropriate token parameter
+      if (options.maxTokens) {
+        if (usesCompletionTokens) {
+          requestBody.max_completion_tokens = options.maxTokens;
+        } else {
+          requestBody.max_tokens = options.maxTokens;
+        }
+      }
+
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`
         },
-        body: JSON.stringify({
-          model: options.model,
-          messages: messages,
-          max_tokens: options.maxTokens,
-          temperature: options.temperature,
-          top_p: options.topP,
-          frequency_penalty: options.frequencyPenalty,
-          presence_penalty: options.presencePenalty,
-          stop: options.stop
-        })
+        body: JSON.stringify(requestBody)
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error?.message || 'OpenAI API request failed');
       }
-      
+
       const data = await response.json();
       return ResponseNormaliser.normaliseOpenAI(data);
     } catch (error) {
