@@ -54,9 +54,46 @@ interface TaskSmasherAppContentProps {
  * and working with the parent Router context.
  */
 const TaskSmasherApp: React.FC = () => {
-  // Use a default use case or get it from props/context if needed later
-  const initialUseCase = 'daily';
+  const location = useLocation();
   const navigate = useNavigate();
+
+  // Extract use case from URL path
+  const getUseCaseFromPath = (): string => {
+    const path = location.pathname;
+
+    // Check if the path contains a use case route
+    // e.g., /tools/task-smasher/recipe-steps/ -> recipe
+    if (path.includes('/tools/task-smasher/')) {
+      const pathParts = path.split('/tools/task-smasher/')[1];
+      if (pathParts) {
+        // Remove trailing slash and get the route part
+        const routePart = pathParts.replace(/\/$/, '');
+
+        // Map route to use case ID
+        // e.g., "recipe-steps" -> "recipe", "daily-organizer" -> "daily"
+        const useCaseMap: Record<string, string> = {
+          'daily-organizer': 'daily',
+          'goal-planner': 'goals',
+          'marketing-tasks': 'marketing',
+          'recipe-steps': 'recipe',
+          'home-chores': 'home',
+          'trip-planner': 'travel',
+          'study-plan': 'study',
+          'event-planning': 'events',
+          'freelancer-projects': 'freelance',
+          'shopping-tasks': 'shopping',
+          'diy-projects': 'diy',
+          'creative-projects': 'creative'
+        };
+
+        return useCaseMap[routePart] || 'daily';
+      }
+    }
+
+    return 'daily'; // Default to daily if no specific route
+  };
+
+  const initialUseCase = getUseCaseFromPath();
 
   // Check if API key is configured and redirect to admin if not
   const checkApiKey = () => {

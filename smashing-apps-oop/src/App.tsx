@@ -16,7 +16,7 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="admin" element={<AdminPage />} />
             <Route path="tools/article-smasher/*" element={<ArticleSmasherIntegrated />} />
-            <Route path="tools/task-smasher" element={<TaskSmasherApp />} />
+            <Route path="tools/task-smasher/*" element={<TaskSmasherApp />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

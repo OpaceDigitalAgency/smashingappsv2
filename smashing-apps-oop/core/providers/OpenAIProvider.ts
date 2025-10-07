@@ -58,10 +58,19 @@ class OpenAIProvider implements IProvider {
         // IMPORTANT: Responses API uses max_output_tokens, NOT max_completion_tokens
         if (options.maxTokens) {
           requestBody.max_output_tokens = options.maxTokens;
+        } else {
+          // Set a reasonable default for output tokens
+          requestBody.max_output_tokens = 2000;
+        }
+
+        // Add reasoning effort parameter for GPT-5 and reasoning models
+        // Use "low" effort for faster responses on simple prompts
+        if (options.model.startsWith('gpt-5')) {
+          requestBody.reasoning = { effort: "low" };
         }
 
         // Note: temperature is not supported for these models (only default 1.0)
-        console.log('[OpenAIProvider] Using /v1/responses endpoint for', options.model);
+        console.log('[OpenAIProvider] Using /v1/responses endpoint for', options.model, 'with reasoning effort:', requestBody.reasoning?.effort || 'default');
 
         const response = await fetch(`${this.baseUrl}/responses`, {
           method: 'POST',
@@ -137,32 +146,15 @@ class OpenAIProvider implements IProvider {
 
   /**
    * Convert messages array to input format for /v1/responses endpoint
+   * The Responses API expects an array of message objects with role and content
    */
-  private convertMessagesToInput(messages: Message[]): string | any[] {
-    // For simple cases, concatenate messages into a single string
-    // For complex cases with images, return array of content parts
-    const hasComplexContent = messages.some(m =>
-      typeof m.content !== 'string'
-    );
-
-    if (hasComplexContent) {
-      // Return array of content parts
-      return messages.map(m => ({
-        role: m.role,
-        content: m.content
-      }));
-    } else {
-      // Concatenate into a single string
-      return messages.map(m => {
-        if (m.role === 'system') {
-          return `System: ${m.content}`;
-        } else if (m.role === 'user') {
-          return `User: ${m.content}`;
-        } else {
-          return `Assistant: ${m.content}`;
-        }
-      }).join('\n\n');
-    }
+  private convertMessagesToInput(messages: Message[]): any[] {
+    // Return array of message objects with role and content
+    // This is the correct format for the Responses API
+    return messages.map(m => ({
+      role: m.role,
+      content: m.content
+    }));
   }
   
   public async testApiKey(): Promise<boolean> {
