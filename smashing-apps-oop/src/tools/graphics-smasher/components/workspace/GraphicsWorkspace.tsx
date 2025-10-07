@@ -46,7 +46,7 @@ const GraphicsWorkspace: React.FC = () => {
   }, [activePanel]);
 
   return (
-    <div className="graphics-smasher-container flex h-screen flex-col bg-slate-50 dark-theme">
+    <div className="graphics-smasher-container fixed inset-0 flex flex-col bg-slate-50 dark-theme overflow-hidden">
       <style>{`
         .graphics-smasher-container.dark-theme {
           background: #1a1a1a;
@@ -107,19 +107,19 @@ const GraphicsWorkspace: React.FC = () => {
       <MenuBar />
       <ToolOptionsBar />
       <DocumentTabs />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         <ProfessionalToolbar />
-        <div className="flex flex-1 flex-col">
-          <div className="flex flex-1 overflow-hidden">
-            <div className="relative flex flex-1 bg-slate-200">
+        <div className="flex flex-1 flex-col min-w-0">
+          <div className="flex flex-1 overflow-hidden min-h-0">
+            <div className="relative flex flex-1 bg-slate-200 min-w-0">
               <CanvasViewport />
             </div>
-            <aside className="flex w-80 flex-col border-l border-slate-200 bg-white shadow-lg">
+            <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white shadow-lg overflow-hidden">
               <PanelTabs />
               <div className="flex-1 overflow-y-auto">{panelContent}</div>
             </aside>
           </div>
-          <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-2 text-xs text-slate-500 shadow-inner">
+          <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-2 text-xs text-slate-500 shadow-inner flex-shrink-0">
             {activeDocument ? (
               <>
                 <span className="font-medium">

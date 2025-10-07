@@ -8,7 +8,7 @@ interface Point {
   y: number;
 }
 
-interface BrushStroke {
+export interface BrushStroke {
   tool: string;
   points: number[];
   color: string;
@@ -19,6 +19,7 @@ interface BrushStroke {
 export function useCanvasInteraction() {
   const activeTool = useGraphicsStore((state) => state.activeTool);
   const activeDocument = useActiveDocument();
+  const updateLayer = useGraphicsStore((state) => state.updateLayer);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<BrushStroke | null>(null);
   const [brushSize, setBrushSize] = useState(5);
@@ -70,7 +71,7 @@ export function useCanvasInteraction() {
       default:
         break;
     }
-  }, [activeDocument, activeTool, getPointerPosition]);
+  }, [activeDocument, activeTool, getPointerPosition, brushColor, brushSize]);
 
   const handleMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
     if (!isDrawing || !activeDocument) return;
@@ -113,14 +114,29 @@ export function useCanvasInteraction() {
     setIsDrawing(false);
     lastPointRef.current = null;
 
-    // Commit the stroke to the layer
-    if (currentStroke && activeDocument) {
-      console.log('Commit stroke:', currentStroke);
-      // TODO: Add stroke to active layer
-      // This would involve updating the layer's image data
+    // Commit the stroke to the active layer
+    if (currentStroke && activeDocument && currentStroke.points.length > 2) {
+      const activeLayerId = activeDocument.activeLayerId;
+      if (activeLayerId) {
+        // Get existing strokes from layer metadata
+        const activeLayer = activeDocument.layers.find(l => l.id === activeLayerId);
+        const existingStrokes = (activeLayer?.metadata?.strokes as BrushStroke[]) || [];
+
+        // Add the new stroke
+        updateLayer(activeDocument.id, activeLayerId, {
+          metadata: {
+            ...activeLayer?.metadata,
+            strokes: [...existingStrokes, currentStroke]
+          }
+        });
+
+        console.log('Stroke saved to layer:', currentStroke);
+      }
+      setCurrentStroke(null);
+    } else {
       setCurrentStroke(null);
     }
-  }, [isDrawing, currentStroke, activeDocument]);
+  }, [isDrawing, currentStroke, activeDocument, updateLayer]);
 
   const handleMouseLeave = useCallback(() => {
     if (isDrawing) {

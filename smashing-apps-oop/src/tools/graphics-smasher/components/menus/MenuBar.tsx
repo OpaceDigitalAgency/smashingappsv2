@@ -469,7 +469,7 @@ const MenuBar: React.FC = () => {
   ];
 
   const renderSubmenu = (items: MenuItem[], parentKey: string) => (
-    <div className="absolute left-full top-0 z-[9999] ml-1 min-w-[200px] rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+    <div className="absolute left-full top-0 z-[10001] ml-1 min-w-[200px] rounded-md border border-slate-200 bg-white py-1 shadow-xl">
       {items.map((item, index) => {
         if (item.divider) {
           return <div key={`${parentKey}-divider-${index}`} className="my-1 h-px bg-slate-200" />;
@@ -494,14 +494,14 @@ const MenuBar: React.FC = () => {
   );
 
   const renderMenuItems = (items: MenuItem[], menuKey: string) => (
-    <div className="absolute left-0 top-full z-[9999] mt-1 min-w-[240px] rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+    <div className="absolute left-0 top-full z-[10000] mt-1 min-w-[240px] rounded-md border border-slate-200 bg-white py-1 shadow-xl">
       {items.map((item, index) => {
         if (item.divider) {
           return <div key={`${menuKey}-divider-${index}`} className="my-1 h-px bg-slate-200" />;
         }
-        
+
         const hasSubmenu = item.submenu && item.submenu.length > 0;
-        
+
         return (
           <div key={`${menuKey}-${index}`} className="relative group">
             <button
@@ -531,7 +531,7 @@ const MenuBar: React.FC = () => {
   );
 
   return (
-    <div ref={menuRef} className="relative z-[9998] flex items-center border-b border-slate-200 bg-white px-4 py-2 shadow-sm">
+    <div ref={menuRef} className="relative z-[9999] flex items-center border-b border-slate-200 bg-white px-4 py-2 shadow-sm flex-shrink-0">
       <div className="flex items-center gap-1">
         {menus.map((menu) => (
           <div key={menu.title} className="relative">
@@ -549,7 +549,7 @@ const MenuBar: React.FC = () => {
           </div>
         ))}
       </div>
-      
+
       <div className="ml-auto flex items-center gap-2">
         <button
           onClick={toggleTheme}

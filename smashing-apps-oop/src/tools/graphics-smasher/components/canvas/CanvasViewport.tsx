@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line, Image as KonvaImage } from 'react-konva';
 import { useActiveDocument } from '../../hooks/useGraphicsStore';
 import { useGraphicsStore } from '../../state/graphicsStore';
-import { useCanvasInteraction } from '../../hooks/useCanvasInteraction';
+import { useCanvasInteraction, type BrushStroke } from '../../hooks/useCanvasInteraction';
 import useImage from 'use-image';
 import ContextMenu from '../overlays/ContextMenu';
 
@@ -128,6 +128,9 @@ const CanvasViewport: React.FC = () => {
         );
       }
 
+      // Get saved strokes from layer metadata
+      const savedStrokes = (layer.metadata?.strokes as BrushStroke[]) || [];
+
       return (
         <Group
           key={layer.id}
@@ -140,6 +143,22 @@ const CanvasViewport: React.FC = () => {
           scaleY={layer.transform.scaleY}
           listening={!layer.locked}
         >
+          {/* Render saved strokes */}
+          {savedStrokes.map((stroke, strokeIndex) => (
+            <Line
+              key={`stroke-${strokeIndex}`}
+              points={stroke.points}
+              stroke={stroke.color}
+              strokeWidth={stroke.size}
+              opacity={stroke.opacity}
+              tension={0.5}
+              lineCap="round"
+              lineJoin="round"
+              globalCompositeOperation={stroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
+            />
+          ))}
+
+          {/* Layer placeholder visual */}
           <Rect
             width={activeDocument.width * 0.4}
             height={activeDocument.height * 0.4}

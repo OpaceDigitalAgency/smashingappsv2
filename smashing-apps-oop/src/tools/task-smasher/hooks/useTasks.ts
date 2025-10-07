@@ -94,7 +94,7 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     suggestedUseCase: undefined,
     taskText: ''
   });
-  
+
   // History for undo functionality
   const [history, setHistory] = useState<Board[][]>([]);
   
@@ -397,21 +397,39 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     if (!selectedUseCase || !taskText.trim()) return true;
 
     try {
-      // Get reCAPTCHA token
+      // Run fast local validation first so obvious mismatches (like food in Daily) respond instantly.
+      const localResult = validateTaskLocally(taskText, selectedUseCase);
+      const localShouldTriggerMismatch =
+        !localResult.isValid &&
+        (localResult.confidence >= 0.5 || !!localResult.suggestedUseCase);
+
+      if (localShouldTriggerMismatch) {
+        console.log('Local validation triggered mismatch modal before calling AI.');
+        setTaskMismatch({
+          showing: true,
+          reason: localResult.reason || `This task doesn't seem to fit in the current category.`,
+          suggestedUseCase: localResult.suggestedUseCase,
+          taskText
+        });
+        return false;
+      }
+
+      // If no AI provider/model is configured, the local validation result stands.
+      if (!selectedModel || selectedModel.trim() === '') {
+        console.log('No AI model configured, using local validation result.');
+        return true;
+      }
+
+      // Get reCAPTCHA token only when we're about to make an AI call
       const recaptchaToken = await getReCaptchaToken('validate_task');
 
       // Use the updated validateTaskWithAI function that uses the proxy
       // Pass the selectedModel to ensure it uses the correct model
       const result = await validateTaskWithAI(taskText, selectedUseCase, recaptchaToken, selectedModel);
 
-      // Only sync rate limit info if we actually made an AI call (i.e., model is configured)
-      if (selectedModel && selectedModel.trim() !== '') {
-        // The validateTaskWithAI function doesn't return the rate limit info directly,
-        // so we need to sync with the server to get the latest rate limit info
-        const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
-        syncRateLimitInfo(serverRateLimit);
-      }
-
+      // Sync rate limit info after a successful AI call
+      const serverRateLimit = await OpenAIServiceAdapter.getRateLimitStatus();
+      syncRateLimitInfo(serverRateLimit);
 
       // Lowered confidence threshold from 0.6 to 0.5 to catch more mismatches
       // Also checking for specific keywords in the task that don't match the current use case
@@ -429,12 +447,12 @@ export function useTasks(initialUseCase?: string): TasksContextType {
       console.log('  - Will show mismatch modal:', !result.isValid && (result.confidence > 0.5 || isSeoInRecipe || isMarketingInHome));
 
       if (!result.isValid && (result.confidence > 0.5 || isSeoInRecipe || isMarketingInHome)) {
-        console.log('Setting task mismatch state...');
+        console.log('Setting task mismatch state from AI validation...');
         setTaskMismatch({
           showing: true,
           reason: result.reason || `This task doesn't seem to fit in the current category.`,
           suggestedUseCase: result.suggestedUseCase,
-          taskText: taskText // Store the task text for later use
+          taskText
         });
         return false;
       }
@@ -457,69 +475,53 @@ export function useTasks(initialUseCase?: string): TasksContextType {
   const handleAddTask = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (newTask.trim()) {
-      // Only show loading indicator if we have an AI model configured
-      // (which means we'll be making an AI API call for validation)
-      const willUseAI = selectedModel && selectedModel.trim() !== '';
-      if (willUseAI) {
-        setGenerating(true);
-      }
+    if (!newTask.trim()) return;
 
-      try {
-        // Check if task matches selected use case
-        const isContextValid = await checkTaskContext(newTask);
+    // Check if task matches selected use case
+    const isContextValid = await checkTaskContext(newTask);
 
-        // Only continue with task creation if context is valid
-        if (isContextValid) {
-          // Save current state to history for undo functionality
-          setHistory(prev => [...prev, boards]);
+    // Only continue with task creation if context is valid
+    if (isContextValid) {
+      // Save current state to history for undo functionality
+      setHistory(prev => [...prev, boards]);
 
-          // Add the new task to the todo board
-          setBoards(prev => {
-            const todoBoard = prev.find(board => board.id === 'todo');
-            if (!todoBoard) return prev;
+      // Add the new task to the todo board
+      setBoards(prev => {
+        const todoBoard = prev.find(board => board.id === 'todo');
+        if (!todoBoard) return prev;
 
-            return prev.map(board => {
-              if (board.id === 'todo') {
-                return {
-                  ...board,
-                  tasks: [
-                    ...board.tasks,
-                    {
-                      id: `task-${Date.now()}`,
-                      title: newTask.trim(),
-                      subtasks: [],
-                      completed: false,
-                      priority: 'medium',
-                      estimatedTime: 1,
-                      expanded: false,
-                      boardId: 'todo'
-                    }
-                  ]
-                };
-              }
-              return board;
-            });
-          });
-
-          // Clear the input field after successful task addition
-          setNewTask('');
-        } else {
-          // If validation failed but no mismatch popup is showing,
-          // it might be due to rate limiting or other errors
-          if (!taskMismatch.showing) {
-            console.warn('Task validation failed but no mismatch popup is showing');
+        return prev.map(board => {
+          if (board.id === 'todo') {
+            return {
+              ...board,
+              tasks: [
+                ...board.tasks,
+                {
+                  id: `task-${Date.now()}`,
+                  title: newTask.trim(),
+                  subtasks: [],
+                  completed: false,
+                  priority: 'medium',
+                  estimatedTime: 1,
+                  expanded: false,
+                  boardId: 'todo'
+                }
+              ]
+            };
           }
-          // We don't clear the input in this case so the user can modify their task
-        }
-      } finally {
-        // Always set generating to false when done, regardless of success or failure
-        if (willUseAI) {
-          setGenerating(false);
-        }
-      }
+          return board;
+        });
+      });
+
+      // Clear the input field after successful task addition
+      setNewTask('');
+    } else if (!taskMismatch.showing) {
+      // If validation failed but no mismatch popup is showing,
+      // it might be due to rate limiting or other errors
+      console.warn('Task validation failed but no mismatch popup is showing');
+      // We don't clear the input in this case so the user can modify their task
     }
-  }, [newTask, boards, checkTaskContext, taskMismatch.showing, selectedModel]);
+  }, [newTask, boards, checkTaskContext, taskMismatch.showing]);
   
   const startEditing = useCallback((
     taskId: string, 
@@ -1255,11 +1257,18 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
     console.log('handleSelectUseCase called with useCase:', useCase);
     console.log('Current taskMismatch state:', taskMismatch);
 
+    // Check if we're switching due to a task mismatch
+    const switchingDueToMismatch = taskMismatch.showing && taskMismatch.suggestedUseCase === useCase;
+
+    // Avoid resetting the boards if the requested use case is already active
+    if (selectedUseCase === useCase && !switchingDueToMismatch) {
+      console.log('Use case is already active, skipping reinitialization.');
+      return;
+    }
+
     // Save current state to history before resetting
     setHistory(prev => [...prev, boards]);
 
-    // Check if we're switching due to a task mismatch
-    const switchingDueToMismatch = taskMismatch.showing && taskMismatch.suggestedUseCase === useCase;
     const taskToPreserve = switchingDueToMismatch && taskMismatch.taskText ? taskMismatch.taskText : '';
 
     console.log('switchingDueToMismatch:', switchingDueToMismatch);
@@ -1311,7 +1320,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       suggestedUseCase: undefined,
       taskText: ''
     });
-  }, [boards, taskMismatch]);
+  }, [boards, taskMismatch, selectedUseCase]);
   
   const handleGenerateIdeas = async () => {
     // Set generating state to true to show loading indicator
