@@ -2,8 +2,8 @@ import React from 'react';
 import {
   Move,
   Crop,
-  SquareDashed,
-  CircleDashed,
+  Square,
+  Circle,
   Lasso,
   MousePointer2,
   Wand2,
@@ -32,8 +32,8 @@ interface ToolConfig {
 const TOOL_GROUPS: ToolConfig[][] = [
   [
     { id: 'move', icon: Move, labelKey: 'toolbar.move', shortcut: 'V' },
-    { id: 'marquee-rect', icon: SquareDashed, labelKey: 'toolbar.marquee-rect', shortcut: 'M' },
-    { id: 'marquee-ellipse', icon: CircleDashed, labelKey: 'toolbar.marquee-ellipse' },
+    { id: 'marquee-rect', icon: Square, labelKey: 'toolbar.marquee-rect', shortcut: 'M' },
+    { id: 'marquee-ellipse', icon: Circle, labelKey: 'toolbar.marquee-ellipse' },
     { id: 'lasso-free', icon: Lasso, labelKey: 'toolbar.lasso-free', shortcut: 'L' },
     { id: 'lasso-poly', icon: MousePointer2, labelKey: 'toolbar.lasso-poly' },
     { id: 'lasso-magnetic', icon: Sparkles, labelKey: 'toolbar.lasso-magnetic' },

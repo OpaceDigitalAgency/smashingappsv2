@@ -33,7 +33,8 @@ smashing-apps-oop/
 │   └── services/           # Admin services
 ├── tools/                   # Individual tools/apps
 │   ├── article-smasher/    # Article Smasher tool
-│   └── task-smasher/       # Task Smasher tool
+│   ├── task-smasher/       # Task Smasher tool
+│   └── graphics-smasher/   # Graphics Smasher tool
 └── shared/                  # Shared utilities
     ├── components/         # Reusable UI components
     └── utils/              # Helper functions
@@ -125,5 +126,4 @@ The new OOP architecture maintains all existing functionality while providing:
 - Improved type safety
 - Consistent error handling
 
-All existing tools (Article Smasher, Task Smasher) will be migrated to use the new AI-Core system.
-
+All existing tools (Article Smasher, Task Smasher, Graphics Smasher) will be migrated to use the new AI-Core system.

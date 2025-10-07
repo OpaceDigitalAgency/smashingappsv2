@@ -40,6 +40,19 @@ const Tools: React.FC = () => {
       comingSoon: false
     },
     {
+      id: 'graphics-smasher',
+      name: 'GraphicsSmasher',
+      description: 'Non-destructive browser image editor with GPU acceleration and AI-assisted tools.',
+      useCases: [
+        { name: 'Open Workspace', path: '/tools/graphics-smasher/workspace' },
+        { name: 'New Document', path: '/tools/graphics-smasher' },
+        { name: 'AI Fill (stub)', path: '/tools/graphics-smasher/workspace' }
+      ],
+      icon: BrainCircuit,
+      color: 'from-orange-500 to-red-500',
+      comingSoon: false
+    },
+    {
       id: 'recipe-smasher',
       name: 'RecipeSmasher',
       description: 'Get AI-generated recipe steps from any ingredients.',
@@ -103,10 +116,10 @@ const Tools: React.FC = () => {
                 ) : (
                   <>
                     <a
-                      href={['task-smasher', 'article-smasher'].includes(tool.id) ? `/tools/${tool.id}/` : `#${tool.id}`}
+                      href={['task-smasher', 'article-smasher', 'graphics-smasher'].includes(tool.id) ? `/tools/${tool.id}/` : `#${tool.id}`}
                       className="inline-flex items-center text-primary hover:text-primary-dark font-medium"
                       onClick={(e) => {
-                        if (['task-smasher', 'article-smasher'].includes(tool.id)) {
+                        if (['task-smasher', 'article-smasher', 'graphics-smasher'].includes(tool.id)) {
                           // Direct navigation without transition
                           window.location.href = `/tools/${tool.id}/`;
                         }

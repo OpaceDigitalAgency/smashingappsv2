@@ -44,8 +44,16 @@ After careful review, the implementation is **NOT 100% complete** as requested. 
    - ❌ Missing: Subtasks
    - ❌ Missing: Voice input
 
+5. **Graphics Smasher** - New image editor workspace scaffold (MVP foundations)
+   - ✅ Non-destructive Zustand store with history snapshots
+   - ✅ Multi-document tabs, command palette, GPU/WebGPU detection, worker bootstrapping
+   - ✅ Panels for layers/adjustments/history/properties/assets with accessibility focus
+   - ❌ Rendering pipeline beyond canvas placeholders
+   - ❌ AI-assisted tools wired to providers (stubs only)
+   - ❌ IndexedDB autosave, export codecs, collaboration features
+
 ### ❌ Not Included
-5. **Original Design Elements**
+6. **Original Design Elements**
    - ❌ Full landing page (hero, features, testimonials)
    - ❌ Complete branding (logos partially copied)
    - ❌ Original UI/UX polish
@@ -277,4 +285,3 @@ npm run type-check
 **For Questions**: Review original files in `src/tools/` for implementation details  
 **For Migration**: Start with Option 1 or Option 2 above  
 **For Testing**: Use checklist above to verify features
-

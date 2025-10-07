@@ -3,7 +3,7 @@ import { AIProvider } from '../types/aiProviders';
 /**
  * App types supported by the registry
  */
-export type AppId = 'task-smasher' | 'article-smasher' | 'admin' | 'unknown-app';
+export type AppId = 'task-smasher' | 'article-smasher' | 'graphics-smasher' | 'admin' | 'unknown-app';
 
 /**
  * Interface for app registration options
@@ -326,13 +326,13 @@ class AppRegistry {
   private checkLegacyFlags(): AppId | null {
     // Check for forced app ID first (highest priority in legacy system)
     const forcedAppId = localStorage.getItem(this.LEGACY_KEYS.FORCE_APP_ID);
-    if (forcedAppId === 'task-smasher' || forcedAppId === 'article-smasher') {
+    if (forcedAppId === 'task-smasher' || forcedAppId === 'article-smasher' || forcedAppId === 'graphics-smasher') {
       return forcedAppId;
     }
     
     // Check current_app next
     const currentApp = localStorage.getItem(this.LEGACY_KEYS.CURRENT_APP);
-    if (currentApp === 'task-smasher' || currentApp === 'article-smasher') {
+    if (currentApp === 'task-smasher' || currentApp === 'article-smasher' || currentApp === 'graphics-smasher') {
       return currentApp as AppId;
     }
     
@@ -368,6 +368,10 @@ class AppRegistry {
     if (path.includes('/task-smasher') || path.includes('/tools/task-smasher')) {
       return 'task-smasher';
     }
+
+    if (path.includes('/graphics-smasher') || path.includes('/tools/graphics-smasher')) {
+      return 'graphics-smasher';
+    }
     
     if (path.includes('/admin')) {
       return 'admin';
@@ -394,6 +398,10 @@ class AppRegistry {
     if (document.querySelector('.task-smasher-container')) {
       return 'task-smasher';
     }
+
+    if (document.querySelector('.graphics-smasher-container')) {
+      return 'graphics-smasher';
+    }
     
     if (document.querySelector('.admin-container')) {
       return 'admin';
@@ -418,6 +426,9 @@ class AppRegistry {
       localStorage.setItem(this.LEGACY_KEYS.CURRENT_APP, 'article-smasher');
       localStorage.setItem(this.LEGACY_KEYS.ARTICLE_SMASHER_APP, 'true');
       localStorage.setItem(this.LEGACY_KEYS.ARTICLE_WIZARD_STATE, JSON.stringify({ initialized: true, forceTracking: true }));
+    } else if (appId === 'graphics-smasher') {
+      localStorage.setItem(this.LEGACY_KEYS.FORCE_APP_ID, 'graphics-smasher');
+      localStorage.setItem(this.LEGACY_KEYS.CURRENT_APP, 'graphics-smasher');
     }
   }
 

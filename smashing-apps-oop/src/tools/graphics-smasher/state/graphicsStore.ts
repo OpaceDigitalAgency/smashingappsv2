@@ -449,3 +449,46 @@ export const graphicsStoreApi = {
   subscribe: useGraphicsStore.subscribe,
   setState: useGraphicsStore.setState
 };
+
+export function resetGraphicsStore() {
+  useGraphicsStore.setState(() => ({
+    ready: false,
+    settings: { ...defaultSettings },
+    documents: [],
+    activeDocumentId: null,
+    activeTool: 'move',
+    activePanel: 'layers',
+    commandPaletteOpen: false,
+    workerStatus: {
+      imageProcessing: 'idle',
+      ai: 'idle'
+    },
+    canvasEngine: { ...defaultCanvasEngine },
+    setReady: useGraphicsStore.getState().setReady,
+    setLocale: useGraphicsStore.getState().setLocale,
+    setTheme: useGraphicsStore.getState().setTheme,
+    toggleHighContrast: useGraphicsStore.getState().toggleHighContrast,
+    setSetting: useGraphicsStore.getState().setSetting,
+    createDocument: useGraphicsStore.getState().createDocument,
+    closeDocument: useGraphicsStore.getState().closeDocument,
+    setActiveDocument: useGraphicsStore.getState().setActiveDocument,
+    duplicateDocument: useGraphicsStore.getState().duplicateDocument,
+    updateDocumentMeta: useGraphicsStore.getState().updateDocumentMeta,
+    addLayer: useGraphicsStore.getState().addLayer,
+    removeLayer: useGraphicsStore.getState().removeLayer,
+    reorderLayer: useGraphicsStore.getState().reorderLayer,
+    setActiveLayer: useGraphicsStore.getState().setActiveLayer,
+    updateLayer: useGraphicsStore.getState().updateLayer,
+    toggleLayerVisibility: useGraphicsStore.getState().toggleLayerVisibility,
+    toggleLayerLock: useGraphicsStore.getState().toggleLayerLock,
+    pushHistory: useGraphicsStore.getState().pushHistory,
+    undo: useGraphicsStore.getState().undo,
+    redo: useGraphicsStore.getState().redo,
+    setViewport: useGraphicsStore.getState().setViewport,
+    setActiveTool: useGraphicsStore.getState().setActiveTool,
+    setActivePanel: useGraphicsStore.getState().setActivePanel,
+    setCommandPaletteOpen: useGraphicsStore.getState().setCommandPaletteOpen,
+    setWorkerStatus: useGraphicsStore.getState().setWorkerStatus,
+    setCanvasEngineStatus: useGraphicsStore.getState().setCanvasEngineStatus
+  }));
+}

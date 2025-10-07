@@ -16,7 +16,6 @@ const CommandPaletteOverlay: React.FC = () => {
     createDocument,
     duplicateDocument,
     closeDocument,
-    setCommandPaletteOpen,
     setActivePanel,
     settings,
     setSetting
@@ -24,7 +23,6 @@ const CommandPaletteOverlay: React.FC = () => {
     createDocument: state.createDocument,
     duplicateDocument: state.duplicateDocument,
     closeDocument: state.closeDocument,
-    setCommandPaletteOpen: state.setCommandPaletteOpen,
     setActivePanel: state.setActivePanel,
     settings: state.settings,
     setSetting: state.setSetting

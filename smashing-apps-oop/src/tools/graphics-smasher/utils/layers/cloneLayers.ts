@@ -2,7 +2,13 @@ import type { Layer } from '../../types';
 
 export function cloneLayers(layers: Layer[]): Layer[] {
   if (typeof structuredClone === 'function') {
-    return structuredClone(layers);
+    try {
+      return structuredClone(layers);
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('structuredClone failed for layer snapshot, falling back to manual clone', error);
+      }
+    }
   }
 
   return layers.map((layer) => ({

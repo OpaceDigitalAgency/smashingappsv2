@@ -22,6 +22,13 @@ const HomePage: React.FC = () => {
       icon: '✅',
       color: 'from-purple-500 to-pink-500',
     },
+    {
+      name: 'Graphics Smasher',
+      description: 'Professional-grade, non-destructive image editing with GPU acceleration',
+      path: '/tools/graphics-smasher',
+      icon: '🎨',
+      color: 'from-orange-500 to-rose-500',
+    },
   ];
 
   const features = [
@@ -181,10 +188,10 @@ const HomePage: React.FC = () => {
               : 'Configure your AI providers and start using powerful AI tools.'}
           </p>
           <Link
-            to={isConfigured ? '/tools/article-smasher' : '/admin'}
+            to={isConfigured ? '/tools/graphics-smasher' : '/admin'}
             className="inline-flex items-center px-8 py-4 bg-white text-indigo-600 font-bold rounded-lg hover:bg-gray-50 transition-colors"
           >
-            {isConfigured ? 'Launch Article Smasher' : 'Configure AI Now'}
+            {isConfigured ? 'Launch Graphics Smasher' : 'Configure AI Now'}
             <svg
               className="w-5 h-5 ml-2"
               fill="none"
@@ -206,4 +213,3 @@ const HomePage: React.FC = () => {
 };
 
 export default HomePage;
-

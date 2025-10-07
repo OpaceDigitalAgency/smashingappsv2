@@ -895,13 +895,15 @@ useEffect(() => {
                   const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
                   console.log('Navigating to path:', path);
 
-                  // Update the URL without reloading the page
-                  window.history.pushState({}, '', path);
-
-                  // CRITICAL: Call handleSelectUseCase while taskMismatch.showing is still true
-                  // handleSelectUseCase will check taskMismatch.showing and preserve the task
+                  // CRITICAL: Call handleSelectUseCase BEFORE navigating
+                  // This ensures taskMismatch.showing is still true when handleSelectUseCase checks it
                   console.log('Calling handleSelectUseCase...');
                   handleSelectUseCase(useCase);
+
+                  // Navigate to the new use case page using React Router
+                  // This will trigger a proper re-render with the new use case
+                  console.log('Navigating with React Router...');
+                  navigate(path);
 
                   console.log('=== onSwitchUseCase END ===');
                 } else {

@@ -62,6 +62,14 @@ The complete migration of Article Smasher and Task Smasher to the new AI-Core ar
 - [x] Updated App.tsx routing
 - [x] Copied branding assets
 
+### Phase 5: Graphics Smasher MVP 🚧
+- [x] Scaffolding for Graphics Smasher tool with dedicated workspace routing
+- [x] Implemented Zustand-powered non-destructive document store and history pipeline
+- [x] Added GPU/WebGPU feature detection and web worker bootstrap hooks
+- [x] Built command palette, multi-doc tabs, toolbars, and layered side panels
+- [ ] Wire AI-assisted tools to providers and WASM workers
+- [ ] Integrate full rendering/export pipeline and IndexedDB autosave
+
 ---
 
 ## 🔧 Technical Implementation
@@ -301,4 +309,3 @@ smashing-apps-oop/
 ---
 
 **Next Action**: Begin Phase 5 testing to verify all features work correctly with the new AI-Core architecture.
-

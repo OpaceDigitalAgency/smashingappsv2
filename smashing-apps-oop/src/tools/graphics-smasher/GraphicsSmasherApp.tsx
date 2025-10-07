@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import GraphicsAppProvider from './providers/GraphicsAppProvider';
 import GraphicsWorkspace from './components/workspace/GraphicsWorkspace';
 import GraphicsLanding from './components/layout/GraphicsLanding';
@@ -8,7 +8,6 @@ import { useGraphicsStore } from './state/graphicsStore';
 import './styles/graphics-smasher.css';
 
 const GraphicsSmasherApp: React.FC = () => {
-  const navigate = useNavigate();
   const setReady = useGraphicsStore((state) => state.setReady);
 
   useEffect(() => {
@@ -19,7 +18,7 @@ const GraphicsSmasherApp: React.FC = () => {
     } catch (error) {
       console.error('Graphics Smasher initialization failed', error);
     }
-  }, [navigate, setReady]);
+  }, [setReady]);
 
   return (
     <GraphicsAppProvider>

@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import AdminPage from './admin/AdminPage';
 import ArticleSmasherIntegrated from './tools/article-smasher/ArticleSmasherIntegrated';
 import TaskSmasherApp from './tools/task-smasher/TaskSmasherApp';
+import GraphicsSmasherApp from './tools/graphics-smasher/GraphicsSmasherApp';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="admin" element={<AdminPage />} />
             <Route path="tools/article-smasher/*" element={<ArticleSmasherIntegrated />} />
             <Route path="tools/task-smasher/*" element={<TaskSmasherApp />} />
+            <Route path="tools/graphics-smasher/*" element={<GraphicsSmasherApp />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
@@ -26,4 +28,3 @@ function App() {
 }
 
 export default App;
-

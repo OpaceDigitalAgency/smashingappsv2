@@ -13,6 +13,7 @@ const Layout: React.FC = () => {
     { name: 'Home', path: '/' },
     { name: 'Article Smasher', path: '/tools/article-smasher' },
     { name: 'Task Smasher', path: '/tools/task-smasher' },
+    { name: 'Graphics Smasher', path: '/tools/graphics-smasher' },
     { name: 'Admin', path: '/admin' },
   ];
 
@@ -200,4 +201,3 @@ const Layout: React.FC = () => {
 };
 
 export default Layout;
-

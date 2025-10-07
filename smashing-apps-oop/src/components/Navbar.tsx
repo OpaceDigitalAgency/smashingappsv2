@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, X, ListChecks, ChefHat, Lightbulb, Calendar, MessageSquare } from 'lucide-react';
+import { Menu, X, ListChecks, Lightbulb, Calendar, MessageSquare, Palette } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -113,18 +113,18 @@ const Navbar: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* RecipeSmasher */}
+                {/* GraphicsSmasher */}
                 <div className="p-3 rounded-lg border border-gray-100 hover:shadow-md transition-shadow">
                   <div className="flex items-start">
-                    <div className="bg-blue-100 p-2 rounded-lg mr-3 flex-shrink-0">
-                      <ChefHat className="h-5 w-5 text-blue-600" />
+                    <div className="bg-rose-100 p-2 rounded-lg mr-3 flex-shrink-0">
+                      <Palette className="h-5 w-5 text-rose-600" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 mb-1 text-sm">RecipeSmasher</h3>
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">Get AI-generated recipe steps from any ingredients.</p>
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
-                        Coming soon
-                      </span>
+                      <h3 className="font-semibold text-gray-900 mb-1 text-sm">GraphicsSmasher</h3>
+                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">Non-destructive, GPU-accelerated browser image editing.</p>
+                      <a href="/tools/graphics-smasher/" className="text-rose-600 hover:text-rose-800 text-xs font-medium">
+                        Launch workspace →
+                      </a>
                     </div>
                   </div>
                 </div>
