@@ -85,38 +85,93 @@ class OpenAIProvider implements IProvider {
     if (!this.isConfigured()) {
       return [];
     }
-    
+
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch models');
       }
-      
+
       const data = await response.json();
-      
+
       // Filter for chat models
       return data.data
-        .filter((model: any) => 
-          model.id.includes('gpt') || 
-          model.id.includes('o1') || 
-          model.id.includes('o3')
+        .filter((model: any) =>
+          model.id.includes('gpt') ||
+          model.id.includes('o1') ||
+          model.id.includes('o3') ||
+          model.id.includes('chatgpt')
         )
         .map((model: any) => model.id)
-        .sort();
+        .sort((a: string, b: string) => {
+          // Sort by model generation (newest first)
+          const getModelPriority = (id: string): number => {
+            if (id.includes('gpt-5')) return 1;
+            if (id.includes('o3')) return 2;
+            if (id.includes('gpt-4.1')) return 3;
+            if (id.includes('gpt-4o')) return 4;
+            if (id.includes('o1')) return 5;
+            if (id.includes('gpt-4')) return 6;
+            if (id.includes('gpt-3.5')) return 7;
+            return 8;
+          };
+
+          const priorityA = getModelPriority(a);
+          const priorityB = getModelPriority(b);
+
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+
+          // Within same generation, sort alphabetically
+          return a.localeCompare(b);
+        });
     } catch (error) {
       console.error('[OpenAIProvider] Failed to fetch models:', error);
       return [
+        'gpt-5',
+        'gpt-5-pro',
+        'gpt-5-mini',
+        'o3',
+        'o3-mini',
+        'gpt-4.1',
         'gpt-4o',
         'gpt-4o-mini',
-        'gpt-3.5-turbo',
-        'o1-preview',
-        'o1-mini'
+        'o1',
+        'o1-mini',
+        'gpt-3.5-turbo'
       ];
+    }
+  }
+
+  /**
+   * Get model metadata from OpenAI API
+   */
+  public async getModelMetadata(modelId: string): Promise<any> {
+    if (!this.isConfigured()) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/models/${modelId}`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[OpenAIProvider] Failed to fetch model metadata:', error);
+      return null;
     }
   }
 }

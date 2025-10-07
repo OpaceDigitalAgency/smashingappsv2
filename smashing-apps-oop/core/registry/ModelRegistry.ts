@@ -50,7 +50,136 @@ class ModelRegistry {
    * Initialize the model registry with known models
    */
   private initializeModels(): void {
-    // OpenAI Models
+    // OpenAI GPT-5 Models (Newest)
+    this.registerModel({
+      id: 'gpt-5',
+      provider: 'openai',
+      name: 'GPT-5',
+      description: 'Latest GPT-5 model with advanced reasoning',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 16384,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 256000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.01,
+        outputCostPer1kTokens: 0.03,
+        currency: 'USD'
+      },
+      releaseDate: '2025-08-07'
+    });
+
+    this.registerModel({
+      id: 'gpt-5-pro',
+      provider: 'openai',
+      name: 'GPT-5 Pro',
+      description: 'Most capable GPT-5 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 32768,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 512000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.02,
+        outputCostPer1kTokens: 0.06,
+        currency: 'USD'
+      },
+      releaseDate: '2025-10-06'
+    });
+
+    this.registerModel({
+      id: 'gpt-5-mini',
+      provider: 'openai',
+      name: 'GPT-5 Mini',
+      description: 'Efficient GPT-5 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 16384,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 256000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.002,
+        outputCostPer1kTokens: 0.008,
+        currency: 'USD'
+      },
+      releaseDate: '2025-08-07'
+    });
+
+    // OpenAI O3 Models
+    this.registerModel({
+      id: 'o3',
+      provider: 'openai',
+      name: 'O3',
+      description: 'Advanced reasoning model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 100000,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.015,
+        outputCostPer1kTokens: 0.06,
+        currency: 'USD'
+      },
+      releaseDate: '2025-04-16'
+    });
+
+    this.registerModel({
+      id: 'o3-mini',
+      provider: 'openai',
+      name: 'O3 Mini',
+      description: 'Efficient reasoning model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 65536,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.003,
+        outputCostPer1kTokens: 0.012,
+        currency: 'USD'
+      },
+      releaseDate: '2025-01-31'
+    });
+
+    // OpenAI GPT-4.1 Models
+    this.registerModel({
+      id: 'gpt-4.1',
+      provider: 'openai',
+      name: 'GPT-4.1',
+      description: 'Enhanced GPT-4 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 16384,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 256000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.008,
+        outputCostPer1kTokens: 0.024,
+        currency: 'USD'
+      },
+      releaseDate: '2025-04-14'
+    });
+
+    // OpenAI GPT-4o Models
     this.registerModel({
       id: 'gpt-4o',
       provider: 'openai',
@@ -58,7 +187,7 @@ class ModelRegistry {
       description: 'Most capable GPT-4 model with vision',
       type: 'chat',
       capabilities: {
-        maxTokens: 4096,
+        maxTokens: 16384,
         supportsImages: true,
         supportsFunctions: true,
         supportsStreaming: true,
@@ -68,9 +197,10 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.005,
         outputCostPer1kTokens: 0.015,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2024-05-13'
     });
-    
+
     this.registerModel({
       id: 'gpt-4o-mini',
       provider: 'openai',
@@ -88,9 +218,53 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.00015,
         outputCostPer1kTokens: 0.0006,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2024-07-18'
     });
-    
+
+    // OpenAI O1 Models
+    this.registerModel({
+      id: 'o1',
+      provider: 'openai',
+      name: 'O1',
+      description: 'Reasoning model with extended thinking',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 100000,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.015,
+        outputCostPer1kTokens: 0.06,
+        currency: 'USD'
+      },
+      releaseDate: '2024-12-17'
+    });
+
+    this.registerModel({
+      id: 'o1-mini',
+      provider: 'openai',
+      name: 'O1 Mini',
+      description: 'Efficient reasoning model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 65536,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 128000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.003,
+        outputCostPer1kTokens: 0.012,
+        currency: 'USD'
+      },
+      releaseDate: '2024-09-12'
+    });
+
     this.registerModel({
       id: 'gpt-3.5-turbo',
       provider: 'openai',
@@ -108,20 +282,21 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.0005,
         outputCostPer1kTokens: 0.0015,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2023-03-01'
     });
-    
-    // Anthropic Models
+
+    // Anthropic Claude 4.5 Models (Newest)
     this.registerModel({
-      id: 'claude-sonnet-4-20250514',
+      id: 'claude-sonnet-4.5-20250514',
       provider: 'anthropic',
-      name: 'Claude Sonnet 4',
+      name: 'Claude Sonnet 4.5',
       description: 'Latest Claude model with enhanced capabilities',
       type: 'chat',
       capabilities: {
         maxTokens: 8192,
         supportsImages: true,
-        supportsFunctions: false,
+        supportsFunctions: true,
         supportsStreaming: true,
         contextWindow: 200000
       },
@@ -129,19 +304,20 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.003,
         outputCostPer1kTokens: 0.015,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2025-05-14'
     });
-    
+
     this.registerModel({
-      id: 'claude-opus-4-20250514',
+      id: 'claude-opus-4.5-20250514',
       provider: 'anthropic',
-      name: 'Claude Opus 4',
+      name: 'Claude Opus 4.5',
       description: 'Most capable Claude model',
       type: 'chat',
       capabilities: {
         maxTokens: 8192,
         supportsImages: true,
-        supportsFunctions: false,
+        supportsFunctions: true,
         supportsStreaming: true,
         contextWindow: 200000
       },
@@ -149,10 +325,54 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.015,
         outputCostPer1kTokens: 0.075,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2025-05-14'
     });
-    
-    // Google Gemini Models
+
+    // Anthropic Claude 4 Models
+    this.registerModel({
+      id: 'claude-sonnet-4-20250514',
+      provider: 'anthropic',
+      name: 'Claude Sonnet 4',
+      description: 'Advanced Claude model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.003,
+        outputCostPer1kTokens: 0.015,
+        currency: 'USD'
+      },
+      releaseDate: '2024-10-22'
+    });
+
+    this.registerModel({
+      id: 'claude-opus-4-20250514',
+      provider: 'anthropic',
+      name: 'Claude Opus 4',
+      description: 'Powerful Claude model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.015,
+        outputCostPer1kTokens: 0.075,
+        currency: 'USD'
+      },
+      releaseDate: '2024-10-22'
+    });
+
+    // Google Gemini 2.0 Models (Newest)
     this.registerModel({
       id: 'gemini-2.0-flash-exp',
       provider: 'gemini',
@@ -170,14 +390,15 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.0,
         outputCostPer1kTokens: 0.0,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2024-12-11'
     });
-    
+
     this.registerModel({
       id: 'gemini-1.5-pro',
       provider: 'gemini',
       name: 'Gemini 1.5 Pro',
-      description: 'Advanced Gemini model',
+      description: 'Advanced Gemini model with 2M context',
       type: 'chat',
       capabilities: {
         maxTokens: 8192,
@@ -190,7 +411,29 @@ class ModelRegistry {
         inputCostPer1kTokens: 0.00125,
         outputCostPer1kTokens: 0.005,
         currency: 'USD'
-      }
+      },
+      releaseDate: '2024-05-14'
+    });
+
+    this.registerModel({
+      id: 'gemini-1.5-flash',
+      provider: 'gemini',
+      name: 'Gemini 1.5 Flash',
+      description: 'Fast and efficient Gemini model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 1000000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.000075,
+        outputCostPer1kTokens: 0.0003,
+        currency: 'USD'
+      },
+      releaseDate: '2024-05-14'
     });
   }
   
@@ -223,11 +466,21 @@ class ModelRegistry {
   }
   
   /**
-   * Get models by provider
+   * Get models by provider, sorted by release date (newest first)
    */
   public getModelsByProvider(provider: string): ModelInfo[] {
     return Array.from(this.models.values())
-      .filter(model => model.provider === provider);
+      .filter(model => model.provider === provider)
+      .sort((a, b) => {
+        // Models with release dates come first, sorted newest to oldest
+        if (a.releaseDate && b.releaseDate) {
+          return b.releaseDate.localeCompare(a.releaseDate);
+        }
+        if (a.releaseDate) return -1;
+        if (b.releaseDate) return 1;
+        // If no release dates, sort alphabetically by name
+        return a.name.localeCompare(b.name);
+      });
   }
   
   /**

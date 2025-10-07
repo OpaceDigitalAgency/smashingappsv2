@@ -49,19 +49,75 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
 
         const combinedModels = Array.from(allModelIds).map(id => {
           const registryModel = registryModels.find(m => m.id === id);
-          return registryModel || {
+          if (registryModel) {
+            return registryModel;
+          }
+
+          // For unknown models, infer capabilities from model ID
+          const inferCapabilities = (modelId: string) => {
+            // GPT-5 models
+            if (modelId.includes('gpt-5-pro')) {
+              return { maxTokens: 32768, contextWindow: 512000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
+            }
+            if (modelId.includes('gpt-5')) {
+              return { maxTokens: 16384, contextWindow: 256000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
+            }
+
+            // O3 models
+            if (modelId.includes('o3-pro')) {
+              return { maxTokens: 100000, contextWindow: 200000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
+            }
+            if (modelId.includes('o3')) {
+              return { maxTokens: 65536, contextWindow: 200000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
+            }
+
+            // GPT-4.1 models
+            if (modelId.includes('gpt-4.1')) {
+              return { maxTokens: 16384, contextWindow: 256000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
+            }
+
+            // GPT-4o models
+            if (modelId.includes('gpt-4o')) {
+              return { maxTokens: 16384, contextWindow: 128000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
+            }
+
+            // O1 models
+            if (modelId.includes('o1-pro')) {
+              return { maxTokens: 100000, contextWindow: 200000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
+            }
+            if (modelId.includes('o1')) {
+              return { maxTokens: 65536, contextWindow: 128000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
+            }
+
+            // GPT-4 models
+            if (modelId.includes('gpt-4-turbo')) {
+              return { maxTokens: 4096, contextWindow: 128000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
+            }
+            if (modelId.includes('gpt-4')) {
+              return { maxTokens: 8192, contextWindow: 8192, supportsImages: false, supportsFunctions: true, supportsStreaming: true };
+            }
+
+            // GPT-3.5 models
+            if (modelId.includes('gpt-3.5-turbo-16k')) {
+              return { maxTokens: 4096, contextWindow: 16384, supportsImages: false, supportsFunctions: true, supportsStreaming: true };
+            }
+            if (modelId.includes('gpt-3.5')) {
+              return { maxTokens: 4096, contextWindow: 16385, supportsImages: false, supportsFunctions: true, supportsStreaming: true };
+            }
+
+            // Default fallback
+            return { maxTokens: 4096, contextWindow: 8192, supportsImages: false, supportsFunctions: false, supportsStreaming: false };
+          };
+
+          const capabilities = inferCapabilities(id);
+
+          return {
             id,
             provider: selectedProvider,
             name: id,
             description: 'Model from provider API',
             type: 'chat' as const,
-            capabilities: {
-              maxTokens: 4096,
-              supportsImages: false,
-              supportsFunctions: false,
-              supportsStreaming: false,
-              contextWindow: 4096
-            }
+            capabilities
           };
         });
 
