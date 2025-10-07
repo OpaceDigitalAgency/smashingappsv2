@@ -7,6 +7,7 @@ import useReCaptcha from '../../../shared/hooks/useReCaptcha';
 import useVoiceToText from '../../../shared/hooks/useVoiceToText';
 import AICore from '../../../../core/AICore';
 import { getPromptTemplateForCategory, processPromptTemplate } from '../utils/promptTemplates';
+import { extractResponseText, extractUsageInfo } from '../utils/aiResponseUtils';
 
 export function useTasks(initialUseCase?: string): TasksContextType {
   // Initialize AI-Core
@@ -1396,17 +1397,20 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       );
 
       console.log("Received response from AI-Core:", response);
+      console.log("Full response structure:", JSON.stringify(response, null, 2));
 
       const usageInfo = extractUsageInfo(response);
 
       // Extract content from normalized response
       const responseText = extractResponseText(response);
       const trimmedResponseText = responseText.trim();
-      console.log("Response text:", trimmedResponseText);
+      console.log("Response text extracted:", trimmedResponseText);
+      console.log("Response text length:", trimmedResponseText.length);
 
       if (!trimmedResponseText) {
         console.error("No content in AI response");
-        alert("Failed to generate ideas. Please try again.");
+        console.error("Full response for debugging:", JSON.stringify(response, null, 2));
+        alert("Failed to generate ideas. No content was extracted from the AI response. Check console for details.");
         setGenerating(false);
         return;
       }
