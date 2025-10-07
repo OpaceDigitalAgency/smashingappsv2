@@ -1298,8 +1298,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       console.log("Sending request to AI service with model:", selectedModel);
 
       // Use AI-Core to make the request
-      const response = await aiCore.chat({
-        messages: [
+      const response = await aiCore.chat(
+        [
           {
             role: 'system',
             content: systemPrompt
@@ -1309,11 +1309,13 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             content: userPrompt
           }
         ],
-        // Use maxTokens from the prompt template, or fall back to a default value
-        maxTokens: promptTemplate?.maxTokens || 1000,
-        // Use temperature from the prompt template, or fall back to a default value
-        temperature: promptTemplate?.temperature || 0.7
-      });
+        {
+          // Use maxTokens from the prompt template, or fall back to a default value
+          maxTokens: promptTemplate?.maxTokens || 1000,
+          // Use temperature from the prompt template, or fall back to a default value
+          temperature: promptTemplate?.temperature || 0.7
+        }
+      );
 
       console.log("Received response from AI-Core:", response);
 
