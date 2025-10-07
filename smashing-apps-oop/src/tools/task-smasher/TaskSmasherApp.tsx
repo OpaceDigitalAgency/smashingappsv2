@@ -884,19 +884,17 @@ useEffect(() => {
                 console.log('taskMismatch.suggestedUseCase:', taskMismatch.suggestedUseCase);
                 console.log('taskMismatch.taskText:', taskMismatch.taskText);
 
-                // Get the task text to preserve BEFORE calling handleSelectUseCase
-                const taskTextToPreserve = taskMismatch.taskText || '';
-
                 // Get the use case label for navigation
                 const useCaseLabel = useCaseDefinitions[useCase]?.label;
 
-                if (useCaseLabel && taskTextToPreserve) {
+                if (useCaseLabel) {
                   // Format the URL path
                   const path = `/tools/task-smasher/${useCaseLabel.toLowerCase().replace(/\s+/g, '-')}/`;
                   console.log('Navigating to path:', path);
 
                   // CRITICAL: Call handleSelectUseCase BEFORE navigating
                   // This ensures taskMismatch.showing is still true when handleSelectUseCase checks it
+                  // handleSelectUseCase will preserve the task if taskMismatch.showing is true
                   console.log('Calling handleSelectUseCase...');
                   handleSelectUseCase(useCase);
 
@@ -907,8 +905,8 @@ useEffect(() => {
 
                   console.log('=== onSwitchUseCase END ===');
                 } else {
-                  console.log('NOT switching - useCaseLabel:', useCaseLabel, 'taskTextToPreserve:', taskTextToPreserve);
-                  // Close the modal if we're not switching
+                  console.log('NOT switching - useCaseLabel not found for:', useCase);
+                  // Close the modal if we can't find the use case
                   setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
                 }
               } catch (error) {
