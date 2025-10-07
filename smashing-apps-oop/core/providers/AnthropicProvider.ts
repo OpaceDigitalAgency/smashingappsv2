@@ -95,13 +95,14 @@ class AnthropicProvider implements IProvider {
   }
   
   public async getAvailableModels(): Promise<string[]> {
-    // Anthropic doesn't have a models endpoint, return known models
+    // Return known Claude models from documentation
     return [
+      'claude-sonnet-4-5-20250929',
       'claude-sonnet-4-20250514',
+      'claude-opus-4-1-20250805',
       'claude-opus-4-20250514',
-      'claude-3-5-sonnet-20241022',
-      'claude-3-opus-20240229',
-      'claude-3-sonnet-20240229',
+      'claude-3-7-sonnet-20250219',
+      'claude-3-5-haiku-20241022',
       'claude-3-haiku-20240307'
     ];
   }

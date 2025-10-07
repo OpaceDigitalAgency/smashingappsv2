@@ -169,10 +169,14 @@ class GeminiProvider implements IProvider {
     } catch (error) {
       console.error('[GeminiProvider] Failed to fetch models:', error);
       return [
+        'gemini-2.5-flash',
+        'gemini-2.5-pro',
+        'gemini-2.5-flash-lite',
+        'gemini-2.5-flash-image',
+        'gemini-2.5-flash-image-preview',
         'gemini-2.0-flash-exp',
         'gemini-1.5-pro',
-        'gemini-1.5-flash',
-        'gemini-1.0-pro'
+        'gemini-1.5-flash'
       ];
     }
   }
