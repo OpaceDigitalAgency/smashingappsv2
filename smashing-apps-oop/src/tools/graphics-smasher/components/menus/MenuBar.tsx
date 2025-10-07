@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { useActiveDocument, useActiveDocumentId } from '../../hooks/useGraphicsStore';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sun, Moon } from 'lucide-react';
 
 interface MenuItem {
   label: string;
@@ -19,6 +19,10 @@ interface MenuSection {
 
 const MenuBar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('graphics-smasher-theme');
+    return saved ? saved === 'dark' : true;
+  });
   const menuRef = useRef<HTMLDivElement>(null);
   const activeDocumentId = useActiveDocumentId();
   const activeDocument = useActiveDocument();
@@ -56,6 +60,24 @@ const MenuBar: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('graphics-smasher-theme', isDarkMode ? 'dark' : 'light');
+    const container = document.querySelector('.graphics-smasher-container');
+    if (container) {
+      if (isDarkMode) {
+        container.classList.add('dark-theme');
+        container.classList.remove('light-theme');
+      } else {
+        container.classList.add('light-theme');
+        container.classList.remove('dark-theme');
+      }
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   const handleNewDocument = () => {
     const id = createDocument({ name: 'Untitled', width: 1920, height: 1080 });
     setActiveDocument(id);
@@ -63,27 +85,91 @@ const MenuBar: React.FC = () => {
   };
 
   const handleOpenFile = () => {
-    // TODO: Implement file opening
-    console.log('Open file');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const img = new Image();
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+          img.onload = () => {
+            // Create a new document with the image dimensions
+            const docId = createDocument({
+              name: file.name.replace(/\.[^/.]+$/, ''),
+              width: img.width,
+              height: img.height
+            });
+
+            // Set as active document
+            setActiveDocument(docId);
+
+            // TODO: Load the image data into the background layer
+            // This would involve creating a canvas, drawing the image, and storing the data
+            console.log('Image loaded:', img.width, 'x', img.height);
+          };
+          img.src = event.target?.result as string;
+        };
+
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Failed to open file:', error);
+      }
+    };
+    input.click();
     setActiveMenu(null);
   };
 
   const handleSave = () => {
-    // TODO: Implement save
-    console.log('Save');
-    setActiveMenu(null);
+    if (!activeDocument) return;
+    // For now, just export as PNG
+    handleExportAs('png');
   };
 
   const handleSaveAs = () => {
-    // TODO: Implement save as
-    console.log('Save as');
+    if (!activeDocument) return;
+    handleExportAs('png');
+  };
+
+  const handleExportAs = (format: 'png' | 'jpeg' | 'webp' | 'svg') => {
+    if (!activeDocument) return;
+
+    // Create a temporary canvas to render the document
+    const canvas = document.createElement('canvas');
+    canvas.width = activeDocument.width;
+    canvas.height = activeDocument.height;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    // Fill with background colour
+    ctx.fillStyle = activeDocument.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // TODO: Render all layers to the canvas
+    // For now, just export the background
+
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${activeDocument.name}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, `image/${format}`, format === 'jpeg' ? 0.95 : undefined);
+
     setActiveMenu(null);
   };
 
   const handleExport = () => {
-    // TODO: Implement export
-    console.log('Export');
-    setActiveMenu(null);
+    handleExportAs('png');
   };
 
   const handleUndo = () => {
@@ -135,10 +221,10 @@ const MenuBar: React.FC = () => {
         { label: 'Save As...', shortcut: '⇧⌘S', action: handleSaveAs, disabled: !activeDocumentId },
         { divider: true },
         { label: 'Export', submenu: [
-          { label: 'Export As PNG...', action: handleExport },
-          { label: 'Export As JPEG...', action: handleExport },
-          { label: 'Export As WebP...', action: handleExport },
-          { label: 'Export As SVG...', action: handleExport },
+          { label: 'Export As PNG...', action: () => handleExportAs('png') },
+          { label: 'Export As JPEG...', action: () => handleExportAs('jpeg') },
+          { label: 'Export As WebP...', action: () => handleExportAs('webp') },
+          { label: 'Export As SVG...', action: () => handleExportAs('svg') },
         ]},
         { divider: true },
         { label: 'Place...', action: () => console.log('Place') },
@@ -421,6 +507,13 @@ const MenuBar: React.FC = () => {
       </div>
       
       <div className="ml-auto flex items-center gap-2">
+        <button
+          onClick={toggleTheme}
+          className="rounded-md border border-slate-300 bg-white p-2 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
         <button
           onClick={() => setCommandPaletteOpen(true)}
           className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs text-slate-600 hover:border-indigo-300 hover:text-indigo-600"

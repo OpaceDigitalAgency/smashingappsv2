@@ -46,7 +46,64 @@ const GraphicsWorkspace: React.FC = () => {
   }, [activePanel]);
 
   return (
-    <div className="graphics-smasher-container flex h-screen flex-col bg-slate-50">
+    <div className="graphics-smasher-container flex h-screen flex-col bg-slate-50 dark-theme">
+      <style>{`
+        .graphics-smasher-container.dark-theme {
+          background: #1a1a1a;
+          color: #e0e0e0;
+        }
+        .graphics-smasher-container.dark-theme .bg-white {
+          background: #2a2a2a !important;
+        }
+        .graphics-smasher-container.dark-theme .bg-slate-50 {
+          background: #1e1e1e !important;
+        }
+        .graphics-smasher-container.dark-theme .bg-slate-100 {
+          background: #252525 !important;
+        }
+        .graphics-smasher-container.dark-theme .bg-slate-200 {
+          background: #2d2d2d !important;
+        }
+        .graphics-smasher-container.dark-theme .text-slate-700 {
+          color: #d0d0d0 !important;
+        }
+        .graphics-smasher-container.dark-theme .text-slate-600 {
+          color: #b0b0b0 !important;
+        }
+        .graphics-smasher-container.dark-theme .text-slate-500 {
+          color: #909090 !important;
+        }
+        .graphics-smasher-container.dark-theme .border-slate-200 {
+          border-color: #3a3a3a !important;
+        }
+        .graphics-smasher-container.dark-theme .border-slate-300 {
+          border-color: #4a4a4a !important;
+        }
+        .graphics-smasher-container.dark-theme .shadow-sm,
+        .graphics-smasher-container.dark-theme .shadow-md,
+        .graphics-smasher-container.dark-theme .shadow-lg {
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.05) !important;
+        }
+        .graphics-smasher-container.dark-theme .hover\\:bg-slate-100:hover {
+          background: #303030 !important;
+        }
+        .graphics-smasher-container.dark-theme .hover\\:bg-slate-50:hover {
+          background: #282828 !important;
+        }
+        .graphics-smasher-container.dark-theme .bg-gradient-to-b {
+          background: linear-gradient(to bottom, #2a2a2a, #222222) !important;
+        }
+        .graphics-smasher-container.dark-theme .bg-gradient-to-r {
+          background: linear-gradient(to right, #2a2a2a, #222222) !important;
+        }
+        .graphics-smasher-container.dark-theme .bg-gradient-to-br {
+          background: linear-gradient(to bottom right, #2d2d2d, #252525, #2d2d2d) !important;
+        }
+        .graphics-smasher-container.light-theme {
+          background: #f8fafc;
+          color: #1e293b;
+        }
+      `}</style>
       <MenuBar />
       <ToolOptionsBar />
       <DocumentTabs />

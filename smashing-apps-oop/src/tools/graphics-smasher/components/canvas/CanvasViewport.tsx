@@ -1,14 +1,25 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Stage, Layer as KonvaLayer, Rect, Group, Text } from 'react-konva';
+import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line } from 'react-konva';
 import { useActiveDocument } from '../../hooks/useGraphicsStore';
 import { useGraphicsStore } from '../../state/graphicsStore';
+import { useCanvasInteraction } from '../../hooks/useCanvasInteraction';
 
 const CanvasViewport: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const activeDocument = useActiveDocument();
   const setViewport = useGraphicsStore((state) => state.setViewport);
   const settings = useGraphicsStore((state) => state.settings);
+  const activeTool = useGraphicsStore((state) => state.activeTool);
   const [size, setSize] = useState({ width: 0, height: 0 });
+
+  const {
+    isDrawing,
+    currentStroke,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseLeave
+  } = useCanvasInteraction();
 
   useEffect(() => {
     const node = containerRef.current;
@@ -155,6 +166,11 @@ const CanvasViewport: React.FC = () => {
         x={activeDocument.viewport.panX}
         y={activeDocument.viewport.panY}
         onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        style={{ cursor: activeTool === 'hand' ? 'grab' : activeTool === 'zoom' ? 'zoom-in' : 'crosshair' }}
       >
         <KonvaLayer listening={false}>
           <Rect
@@ -180,6 +196,20 @@ const CanvasViewport: React.FC = () => {
             shadowOffsetY={4}
           />
           {renderLayers}
+
+          {/* Current brush stroke */}
+          {currentStroke && (
+            <Line
+              points={currentStroke.points}
+              stroke={currentStroke.color}
+              strokeWidth={currentStroke.size}
+              opacity={currentStroke.opacity}
+              tension={0.5}
+              lineCap="round"
+              lineJoin="round"
+              globalCompositeOperation={currentStroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
+            />
+          )}
         </KonvaLayer>
       </Stage>
 
