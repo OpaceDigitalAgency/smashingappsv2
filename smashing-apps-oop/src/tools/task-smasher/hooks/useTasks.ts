@@ -1319,10 +1319,10 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
 
       console.log("Received response from AI-Core:", response);
 
-      // Extract content from response
-      const responseText = response.content;
+      // Extract content from normalized response
+      const responseText = response.choices[0]?.message?.content || '';
       console.log("Response text:", responseText);
-      
+
       if (!responseText) {
         console.error("No content in AI response");
         alert("Failed to generate ideas. Please try again.");
@@ -1374,8 +1374,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         });
 
         // Update cost
-        setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
-        
+        setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
       
         // Success! Break out of the retry loop

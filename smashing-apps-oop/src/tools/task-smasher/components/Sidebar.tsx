@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Calendar, Target, MessageSquare, ChefHat, Home, Briefcase, Plane, ShoppingCart, GraduationCap, PartyPopper, Wrench, Palette, ChevronLeft, ChevronRight, Menu, PanelLeft, PanelRight, SidebarClose, SidebarOpen, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useCaseDefinitions } from '../utils/useCaseDefinitions';
 import { Link, useLocation } from 'react-router-dom';
+import taskSmasherConfig from '../config';
 
 interface SidebarProps {
   selectedUseCase: string | null;
@@ -22,6 +23,11 @@ const useCases = [
   { id: 'diy', icon: Wrench, label: 'DIY Projects' },
   { id: 'creative', icon: Palette, label: 'Creative Projects' }
 ];
+
+// Helper function to get route for a use case
+const getUseCaseRoute = (useCaseId: string): string => {
+  return taskSmasherConfig.routes.subRoutes[useCaseId as keyof typeof taskSmasherConfig.routes.subRoutes] || taskSmasherConfig.routes.base;
+};
 
 function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
   const [smashPosition, setSmashPosition] = useState({ top: 0, left: 0 });
@@ -253,7 +259,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
           return (
             <Link
               key={useCase.id}
-              to={`/tools/task-smasher/${useCase.label.toLowerCase().replace(/\s+/g, '-')}/`}
+              to={getUseCaseRoute(useCase.id)}
               onClick={(e) => handleUseCaseClick(useCase.id, e)}
               className={`flex flex-col items-${isCollapsed ? 'center' : 'start'} gap-1 px-3 py-3 rounded-xl text-left transition-all duration-300 relative no-underline
                 ${isSelected
@@ -300,7 +306,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
                   return (
                     <Link
                       key={useCase.id}
-                      to={`/tools/task-smasher/${useCase.label.toLowerCase().replace(/\s+/g, '-')}/`}
+                      to={getUseCaseRoute(useCase.id)}
                       onClick={(e) => handleUseCaseClick(useCase.id, e)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200 relative no-underline
                         ${isSelected
@@ -333,7 +339,7 @@ function Sidebar({ selectedUseCase, onSelectUseCase }: SidebarProps) {
           return (
             <Link
               key={useCase.id}
-              to={`/tools/task-smasher/${useCase.label.toLowerCase().replace(/\s+/g, '-')}/`}
+              to={getUseCaseRoute(useCase.id)}
               onClick={(e) => handleUseCaseClick(useCase.id, e)}
               className={`flex items-center justify-center p-2 rounded-lg transition-all duration-200
                 ${isSelected
