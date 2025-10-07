@@ -21,13 +21,15 @@ const GraphicsSmasherApp: React.FC = () => {
   }, [setReady]);
 
   return (
-    <GraphicsAppProvider>
-      <Routes>
-        <Route index element={<GraphicsLanding />} />
-        <Route path="workspace" element={<GraphicsWorkspace />} />
-        <Route path="*" element={<Navigate to="workspace" replace />} />
-      </Routes>
-    </GraphicsAppProvider>
+    <div className="fixed inset-0 overflow-hidden">
+      <GraphicsAppProvider>
+        <Routes>
+          <Route index element={<GraphicsLanding />} />
+          <Route path="workspace" element={<GraphicsWorkspace />} />
+          <Route path="*" element={<Navigate to="workspace" replace />} />
+        </Routes>
+      </GraphicsAppProvider>
+    </div>
   );
 };
 

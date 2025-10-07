@@ -52,7 +52,6 @@ interface TaskSmasherAppContentProps {
  */
 const TaskSmasherApp: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Extract use case from URL path
   const getUseCaseFromPath = (): string => {
@@ -148,6 +147,7 @@ const TaskSmasherApp: React.FC = () => {
 // Separate component to use the TasksContext
 function TaskSmasherAppContent({ initialUseCase }: TaskSmasherAppContentProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     selectedModel,
     setSelectedModel,

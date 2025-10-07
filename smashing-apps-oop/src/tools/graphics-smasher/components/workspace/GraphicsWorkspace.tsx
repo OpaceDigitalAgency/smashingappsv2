@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import MenuBar from '../menus/MenuBar';
 import DocumentTabs from './DocumentTabs';
-import PrimaryToolbar from '../toolbar/PrimaryToolbar';
+import ProfessionalToolbar from '../toolbar/ProfessionalToolbar';
 import ToolOptionsBar from '../toolbar/ToolOptionsBar';
 import CanvasViewport from '../canvas/CanvasViewport';
 import PanelTabs from '../panels/PanelTabs';
@@ -108,7 +108,7 @@ const GraphicsWorkspace: React.FC = () => {
       <ToolOptionsBar />
       <DocumentTabs />
       <div className="flex flex-1 overflow-hidden">
-        <PrimaryToolbar />
+        <ProfessionalToolbar />
         <div className="flex flex-1 flex-col">
           <div className="flex flex-1 overflow-hidden">
             <div className="relative flex flex-1 bg-slate-200">

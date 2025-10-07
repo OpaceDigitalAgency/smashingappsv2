@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line } from 'react-konva';
+import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line, Image as KonvaImage } from 'react-konva';
 import { useActiveDocument } from '../../hooks/useGraphicsStore';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { useCanvasInteraction } from '../../hooks/useCanvasInteraction';
+import useImage from 'use-image';
+import ContextMenu from '../overlays/ContextMenu';
 
 const CanvasViewport: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -11,6 +13,7 @@ const CanvasViewport: React.FC = () => {
   const settings = useGraphicsStore((state) => state.settings);
   const activeTool = useGraphicsStore((state) => state.activeTool);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const {
     isDrawing,
@@ -75,6 +78,37 @@ const CanvasViewport: React.FC = () => {
     [activeDocument, setViewport]
   );
 
+  const BackgroundLayer: React.FC<{ layer: any; docWidth: number; docHeight: number; docBg: string }> = ({ layer, docWidth, docHeight, docBg }) => {
+    const imageUrl = layer.metadata?.imageUrl as string | undefined;
+    const [image] = useImage(imageUrl || '');
+
+    if (imageUrl && image) {
+      return (
+        <KonvaImage
+          key={layer.id}
+          x={0}
+          y={0}
+          width={docWidth}
+          height={docHeight}
+          image={image}
+          listening={false}
+        />
+      );
+    }
+
+    return (
+      <Rect
+        key={layer.id}
+        x={0}
+        y={0}
+        width={docWidth}
+        height={docHeight}
+        fill={(layer.metadata?.fill as string) ?? docBg}
+        listening={false}
+      />
+    );
+  };
+
   const renderLayers = useMemo(() => {
     if (!activeDocument) {
       return null;
@@ -84,14 +118,12 @@ const CanvasViewport: React.FC = () => {
       const isBackground = index === 0;
       if (isBackground) {
         return (
-          <Rect
+          <BackgroundLayer
             key={layer.id}
-            x={0}
-            y={0}
-            width={activeDocument.width}
-            height={activeDocument.height}
-            fill={(layer.metadata?.fill as string) ?? activeDocument.background}
-            listening={false}
+            layer={layer}
+            docWidth={activeDocument.width}
+            docHeight={activeDocument.height}
+            docBg={activeDocument.background}
           />
         );
       }
@@ -135,8 +167,17 @@ const CanvasViewport: React.FC = () => {
     );
   }
 
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+    <div
+      ref={containerRef}
+      className="relative h-full w-full overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200"
+      onContextMenu={handleContextMenu}
+    >
       {/* Zoom indicator */}
       <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-lg border border-slate-300 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-lg backdrop-blur-sm">
         <span>{Math.round(activeDocument.viewport.zoom * 100)}%</span>
@@ -237,6 +278,15 @@ const CanvasViewport: React.FC = () => {
           <div className="pointer-events-none absolute left-0 top-0 h-6 w-full border-b border-slate-300 bg-white/80 backdrop-blur-sm" />
           <div className="pointer-events-none absolute left-0 top-0 h-full w-6 border-r border-slate-300 bg-white/80 backdrop-blur-sm" />
         </>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+        />
       )}
     </div>
   );

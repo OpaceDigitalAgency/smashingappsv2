@@ -21,6 +21,8 @@ export function useCanvasInteraction() {
   const activeDocument = useActiveDocument();
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<BrushStroke | null>(null);
+  const [brushSize, setBrushSize] = useState(5);
+  const [brushColor, setBrushColor] = useState('#000000');
   const lastPointRef = useRef<Point | null>(null);
 
   const getPointerPosition = useCallback((stage: Konva.Stage): Point | null => {
@@ -51,8 +53,8 @@ export function useCanvasInteraction() {
         setCurrentStroke({
           tool: activeTool,
           points: [pos.x, pos.y],
-          color: activeTool === 'brush' ? '#000000' : '#ffffff',
-          size: 5,
+          color: activeTool === 'brush' ? brushColor : '#ffffff',
+          size: brushSize,
           opacity: 1
         });
         break;
@@ -129,6 +131,10 @@ export function useCanvasInteraction() {
   return {
     isDrawing,
     currentStroke,
+    brushSize,
+    brushColor,
+    setBrushSize,
+    setBrushColor,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

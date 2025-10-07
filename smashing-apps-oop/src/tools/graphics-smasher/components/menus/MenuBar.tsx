@@ -62,6 +62,8 @@ const MenuBar: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem('graphics-smasher-theme', isDarkMode ? 'dark' : 'light');
+
+    // Apply theme to graphics smasher container
     const container = document.querySelector('.graphics-smasher-container');
     if (container) {
       if (isDarkMode) {
@@ -70,6 +72,39 @@ const MenuBar: React.FC = () => {
       } else {
         container.classList.add('light-theme');
         container.classList.remove('dark-theme');
+      }
+    }
+
+    // Apply theme to entire page (header, navigation, etc.)
+    const body = document.body;
+    const header = document.querySelector('header');
+    const footer = document.querySelector('footer');
+
+    if (isDarkMode) {
+      body.style.backgroundColor = '#1a1a1a';
+      body.style.color = '#e0e0e0';
+      if (header) {
+        header.style.backgroundColor = '#2a2a2a';
+        header.style.borderColor = '#3a3a3a';
+        header.style.color = '#e0e0e0';
+      }
+      if (footer) {
+        footer.style.backgroundColor = '#2a2a2a';
+        footer.style.borderColor = '#3a3a3a';
+        footer.style.color = '#e0e0e0';
+      }
+    } else {
+      body.style.backgroundColor = '';
+      body.style.color = '';
+      if (header) {
+        header.style.backgroundColor = '';
+        header.style.borderColor = '';
+        header.style.color = '';
+      }
+      if (footer) {
+        footer.style.backgroundColor = '';
+        footer.style.borderColor = '';
+        footer.style.color = '';
       }
     }
   }, [isDarkMode]);
@@ -108,9 +143,18 @@ const MenuBar: React.FC = () => {
             // Set as active document
             setActiveDocument(docId);
 
-            // TODO: Load the image data into the background layer
-            // This would involve creating a canvas, drawing the image, and storing the data
-            console.log('Image loaded:', img.width, 'x', img.height);
+            // Store the image URL in the document's background layer metadata
+            const doc = useGraphicsStore.getState().documents.find(d => d.id === docId);
+            if (doc) {
+              useGraphicsStore.getState().updateLayer(docId, doc.layers[0].id, {
+                metadata: {
+                  ...doc.layers[0].metadata,
+                  imageUrl: img.src,
+                  imageWidth: img.width,
+                  imageHeight: img.height
+                }
+              });
+            }
           };
           img.src = event.target?.result as string;
         };
@@ -425,7 +469,7 @@ const MenuBar: React.FC = () => {
   ];
 
   const renderSubmenu = (items: MenuItem[], parentKey: string) => (
-    <div className="absolute left-full top-0 ml-1 min-w-[200px] rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+    <div className="absolute left-full top-0 z-[9999] ml-1 min-w-[200px] rounded-md border border-slate-200 bg-white py-1 shadow-lg">
       {items.map((item, index) => {
         if (item.divider) {
           return <div key={`${parentKey}-divider-${index}`} className="my-1 h-px bg-slate-200" />;
@@ -450,7 +494,7 @@ const MenuBar: React.FC = () => {
   );
 
   const renderMenuItems = (items: MenuItem[], menuKey: string) => (
-    <div className="absolute left-0 top-full mt-1 min-w-[240px] rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+    <div className="absolute left-0 top-full z-[9999] mt-1 min-w-[240px] rounded-md border border-slate-200 bg-white py-1 shadow-lg">
       {items.map((item, index) => {
         if (item.divider) {
           return <div key={`${menuKey}-divider-${index}`} className="my-1 h-px bg-slate-200" />;
@@ -487,7 +531,7 @@ const MenuBar: React.FC = () => {
   );
 
   return (
-    <div ref={menuRef} className="flex items-center border-b border-slate-200 bg-white px-4 py-2 shadow-sm">
+    <div ref={menuRef} className="relative z-[9998] flex items-center border-b border-slate-200 bg-white px-4 py-2 shadow-sm">
       <div className="flex items-center gap-1">
         {menus.map((menu) => (
           <div key={menu.title} className="relative">
