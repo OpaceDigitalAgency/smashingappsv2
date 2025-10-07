@@ -37,51 +37,131 @@ class OpenAIProvider implements IProvider {
     }
 
     try {
-      // Determine which token parameter to use based on model
-      // GPT-5, O3, and O1 models use max_completion_tokens
-      // Older models use max_tokens
-      const usesCompletionTokens = options.model.startsWith('gpt-5') ||
-                                    options.model.startsWith('o3') ||
-                                    options.model.startsWith('o1');
+      // Determine which endpoint and parameters to use based on model
+      // GPT-5, O3, O4, and O1 models use /v1/responses endpoint (or have restrictions)
+      // Older models (gpt-4.1, gpt-4o, gpt-3.5-turbo) use /v1/chat/completions
+      const usesResponsesAPI = options.model.startsWith('gpt-5') ||
+                               options.model.startsWith('o3') ||
+                               options.model.startsWith('o4') ||
+                               options.model.startsWith('o1');
 
-      const requestBody: any = {
-        model: options.model,
-        messages: messages,
-        temperature: options.temperature,
-        top_p: options.topP,
-        frequency_penalty: options.frequencyPenalty,
-        presence_penalty: options.presencePenalty,
-        stop: options.stop
-      };
+      // GPT-5 and O-series models only support default temperature (1.0)
+      const supportsCustomTemperature = !usesResponsesAPI;
 
-      // Add the appropriate token parameter
-      if (options.maxTokens) {
-        if (usesCompletionTokens) {
+      if (usesResponsesAPI) {
+        // Use /v1/responses endpoint for GPT-5, O3, O4
+        const requestBody: any = {
+          model: options.model,
+          input: this.convertMessagesToInput(messages)
+        };
+
+        // Add max_completion_tokens if specified
+        if (options.maxTokens) {
           requestBody.max_completion_tokens = options.maxTokens;
-        } else {
+        }
+
+        // Note: temperature is not supported for these models (only default 1.0)
+        console.log('[OpenAIProvider] Using /v1/responses endpoint for', options.model);
+
+        const response = await fetch(`${this.baseUrl}/responses`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'OpenAI API request failed');
+        }
+
+        const data = await response.json();
+        return ResponseNormaliser.normaliseOpenAI(data);
+      } else {
+        // Use /v1/chat/completions endpoint for older models
+        const requestBody: any = {
+          model: options.model,
+          messages: messages
+        };
+
+        // Add temperature only if supported
+        if (supportsCustomTemperature && options.temperature !== undefined) {
+          requestBody.temperature = options.temperature;
+        }
+
+        // Add other parameters
+        if (options.topP !== undefined) {
+          requestBody.top_p = options.topP;
+        }
+        if (options.frequencyPenalty !== undefined) {
+          requestBody.frequency_penalty = options.frequencyPenalty;
+        }
+        if (options.presencePenalty !== undefined) {
+          requestBody.presence_penalty = options.presencePenalty;
+        }
+        if (options.stop) {
+          requestBody.stop = options.stop;
+        }
+
+        // Add max_tokens for older models
+        if (options.maxTokens) {
           requestBody.max_tokens = options.maxTokens;
         }
+
+        console.log('[OpenAIProvider] Using /v1/chat/completions endpoint for', options.model);
+
+        const response = await fetch(`${this.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'OpenAI API request failed');
+        }
+
+        const data = await response.json();
+        return ResponseNormaliser.normaliseOpenAI(data);
       }
-
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'OpenAI API request failed');
-      }
-
-      const data = await response.json();
-      return ResponseNormaliser.normaliseOpenAI(data);
     } catch (error) {
       console.error('[OpenAIProvider] Request failed:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Convert messages array to input format for /v1/responses endpoint
+   */
+  private convertMessagesToInput(messages: Message[]): string | any[] {
+    // For simple cases, concatenate messages into a single string
+    // For complex cases with images, return array of content parts
+    const hasComplexContent = messages.some(m =>
+      typeof m.content !== 'string'
+    );
+
+    if (hasComplexContent) {
+      // Return array of content parts
+      return messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+    } else {
+      // Concatenate into a single string
+      return messages.map(m => {
+        if (m.role === 'system') {
+          return `System: ${m.content}`;
+        } else if (m.role === 'user') {
+          return `User: ${m.content}`;
+        } else {
+          return `Assistant: ${m.content}`;
+        }
+      }).join('\n\n');
     }
   }
   
