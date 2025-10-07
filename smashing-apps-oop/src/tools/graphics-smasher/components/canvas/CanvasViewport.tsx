@@ -287,6 +287,30 @@ const CanvasViewport: React.FC = () => {
               globalCompositeOperation={currentStroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
             />
           )}
+
+          {/* Current shape being drawn */}
+          {currentShape && currentShape.type === 'rectangle' && (
+            <Rect
+              x={currentShape.x}
+              y={currentShape.y}
+              width={currentShape.width || 0}
+              height={currentShape.height || 0}
+              fill={currentShape.fill}
+              stroke={currentShape.stroke}
+              strokeWidth={currentShape.strokeWidth}
+            />
+          )}
+          {currentShape && currentShape.type === 'ellipse' && (
+            <Ellipse
+              x={currentShape.x + (currentShape.width || 0) / 2}
+              y={currentShape.y + (currentShape.height || 0) / 2}
+              radiusX={Math.abs((currentShape.width || 0) / 2)}
+              radiusY={Math.abs((currentShape.height || 0) / 2)}
+              fill={currentShape.fill}
+              stroke={currentShape.stroke}
+              strokeWidth={currentShape.strokeWidth}
+            />
+          )}
         </KonvaLayer>
       </Stage>
 
