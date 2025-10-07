@@ -1,0 +1,34 @@
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import GraphicsAppProvider from './providers/GraphicsAppProvider';
+import GraphicsWorkspace from './components/workspace/GraphicsWorkspace';
+import GraphicsLanding from './components/layout/GraphicsLanding';
+import { appRegistry, initializeAIServices } from '../../shared/services';
+import { useGraphicsStore } from './state/graphicsStore';
+
+const GraphicsSmasherApp: React.FC = () => {
+  const navigate = useNavigate();
+  const setReady = useGraphicsStore((state) => state.setReady);
+
+  useEffect(() => {
+    try {
+      appRegistry.registerApp('graphics-smasher');
+      initializeAIServices();
+      setReady(true);
+    } catch (error) {
+      console.error('Graphics Smasher initialization failed', error);
+    }
+  }, [navigate, setReady]);
+
+  return (
+    <GraphicsAppProvider>
+      <Routes>
+        <Route index element={<GraphicsLanding />} />
+        <Route path="workspace" element={<GraphicsWorkspace />} />
+        <Route path="*" element={<Navigate to="workspace" replace />} />
+      </Routes>
+    </GraphicsAppProvider>
+  );
+};
+
+export default GraphicsSmasherApp;

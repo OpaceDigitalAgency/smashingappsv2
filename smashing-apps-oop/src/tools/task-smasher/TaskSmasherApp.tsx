@@ -897,13 +897,10 @@ useEffect(() => {
                   // Update the URL without reloading the page
                   window.history.pushState({}, '', path);
 
-                  // IMPORTANT: Call handleSelectUseCase BEFORE clearing taskMismatch
-                  // so that handleSelectUseCase can check taskMismatch.showing to preserve the task
+                  // Call handleSelectUseCase - it will check taskMismatch.showing and preserve the task
+                  // It will also clear the taskMismatch state at the end
                   console.log('Calling handleSelectUseCase with:', useCase);
                   handleSelectUseCase(useCase);
-
-                  // Clear the task mismatch state AFTER switching
-                  setTaskMismatch({ showing: false, reason: '', suggestedUseCase: undefined, taskText: '' });
 
                   console.log('Switched to use case:', useCase);
                 } else {

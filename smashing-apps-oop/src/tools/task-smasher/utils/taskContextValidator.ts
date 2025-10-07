@@ -11,6 +11,12 @@ type ValidationResult = {
 /**
  * Validates if the task matches the current use case using simple heuristic rules.
  * This is a fallback when OpenAI integration isn't available or enabled.
+ *
+ * SIMPLIFIED LOGIC:
+ * - Count keyword matches for current use case
+ * - Count keyword matches for all other use cases
+ * - If another use case has MORE matches, suggest switching to it
+ * - No negative keywords needed - if "food" matches Recipe Steps but not Daily Organizer, that's enough!
  */
 export const validateTaskLocally = (task: string, useCase: string): ValidationResult => {
   const definition = useCaseDefinitions[useCase];
@@ -19,64 +25,46 @@ export const validateTaskLocally = (task: string, useCase: string): ValidationRe
   }
 
   const taskLower = task.toLowerCase();
-  
-  // Check for keywords that match the use case
-  const matchCount = definition.keywords.filter(word => taskLower.includes(word.toLowerCase())).length;
-  const mismatchCount = definition.negativeKeywords.filter(word => taskLower.includes(word.toLowerCase())).length;
-  
-  // Check other use cases for better matches
+
+  // Count keyword matches for the current use case
+  const currentMatchCount = definition.keywords.filter(word => taskLower.includes(word.toLowerCase())).length;
+
+  // Check all other use cases to find the best match
   let bestMatchUseCase = useCase;
-  let bestMatchScore = matchCount;
-  
+  let bestMatchScore = currentMatchCount;
+
   for (const [otherUseCase, otherDef] of Object.entries(useCaseDefinitions)) {
     if (otherUseCase === useCase) continue;
-    
-    const otherMatchCount = otherDef.keywords.filter(word => 
+
+    const otherMatchCount = otherDef.keywords.filter(word =>
       taskLower.includes(word.toLowerCase())
     ).length;
-    
+
+    // If this use case has MORE matches than the current one, it's a better fit
     if (otherMatchCount > bestMatchScore) {
       bestMatchUseCase = otherUseCase;
       bestMatchScore = otherMatchCount;
     }
   }
-  
-  // Calculate confidence based on match and mismatch counts
-  // Increased weight for negative keywords to make validation more strict
-  const confidence = Math.min(1, Math.max(0,
-    (matchCount / (definition.keywords.length || 1)) -
-    (mismatchCount * 1.5 / (definition.negativeKeywords.length || 1))
-  ));
-  
-  // If confidence is low and we found a better match
-  // Allow single keyword matches to trigger mismatch (changed from > 1 to > 0)
-  if (confidence < 0.4 && bestMatchUseCase !== useCase && bestMatchScore > 0) {
-    const resultConfidence = 1 - confidence;
+
+  // If we found a better match (another use case has more keyword matches), suggest switching
+  if (bestMatchUseCase !== useCase && bestMatchScore > 0) {
     console.log('Local validation: Mismatch detected!');
     console.log('  - Task:', task);
-    console.log('  - Current use case:', useCase);
-    console.log('  - Suggested use case:', bestMatchUseCase);
-    console.log('  - Confidence:', confidence);
-    console.log('  - Result confidence:', resultConfidence);
-    console.log('  - Best match score:', bestMatchScore);
+    console.log('  - Current use case:', useCase, '(matches:', currentMatchCount, ')');
+    console.log('  - Suggested use case:', bestMatchUseCase, '(matches:', bestMatchScore, ')');
+
+    // Confidence is based on how much better the other use case is
+    const confidence = Math.min(0.9, 0.5 + (bestMatchScore - currentMatchCount) * 0.1);
+
     return {
       isValid: false,
-      confidence: resultConfidence,
+      confidence: confidence,
       reason: `This task seems more like a ${useCaseDefinitions[bestMatchUseCase].label} task.`,
       suggestedUseCase: bestMatchUseCase
     };
   }
-  
-  // Check specifically for negative keywords - if any are found, that's a strong signal
-  if (mismatchCount > 0) {
-    return {
-      isValid: false,
-      confidence: 0.8,
-      reason: `This task contains terms that don't fit in the current category.`,
-      suggestedUseCase: bestMatchUseCase !== useCase ? bestMatchUseCase : undefined
-    };
-  }
-  
+
   // Task is valid for the current use case
   // Increased threshold from 0.3 to 0.4 to be more strict
   return {

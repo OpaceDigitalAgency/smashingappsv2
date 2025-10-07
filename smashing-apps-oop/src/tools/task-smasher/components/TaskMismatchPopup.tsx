@@ -40,10 +40,12 @@ const TaskMismatchPopup: React.FC<TaskMismatchPopupProps> = ({
   
   const handleSwitch = () => {
     if (suggestedUseCase) {
+      // Call the switch handler immediately without animation delay
+      // This ensures taskMismatch.showing is still true when handleSelectUseCase checks it
       onSwitchUseCase(suggestedUseCase);
+      // Close immediately - the parent will handle clearing the state
+      onClose();
     }
-    setAnimation('animate-out');
-    setTimeout(onClose, 500);
   };
   
   const handleIgnore = () => {
