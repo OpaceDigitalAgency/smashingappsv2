@@ -852,8 +852,8 @@ export function useTasks(initialUseCase?: string): TasksContextType {
         });
         
         // Update cost
-        setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
-        
+        setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+
         // No need to update executionCount here as it's already updated in syncRateLimitInfo
     } catch (error) {
       console.error('Error regenerating task:', error);
@@ -1060,32 +1060,32 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             });
             
             // Update cost
-            setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
-            
+            setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
+
             // No need to update executionCount here as it's already updated in syncRateLimitInfo
           }
         } catch (error) {
           console.error('Error parsing JSON:', error);
-          
+
           // Advanced fallback: Convert formatted text to JSON if possible
           try {
             // First try more aggressive JSON extraction
-            const possibleJsonMatch = data.content.match(/\[\s*\{[\s\S]*\}\s*\]/);
+            const possibleJsonMatch = subtasksContent.match(/\[\s*\{[\s\S]*\}\s*\]/);
             if (possibleJsonMatch) {
               const extractedJson = possibleJsonMatch[0];
               console.log('Attempting to parse extracted JSON:', extractedJson);
               const subtasks = JSON.parse(extractedJson);
-              
+
               if (Array.isArray(subtasks)) {
                 updateBoardsWithSubtasks(taskId, subtasks);
-                setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
+                setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
                 return; // Successfully extracted JSON
               }
             }
-            
+
             // If no JSON array found, try to parse formatted text into JSON
             console.log('Attempting to convert formatted text to JSON');
-            const lines = data.content.split('\n').filter(line => line.trim());
+            const lines = subtasksContent.split('\n').filter(line => line.trim());
             const textBasedSubtasks = [];
             
             // Look for patterns like "1. Task name - 2h - high priority"
@@ -1142,7 +1142,7 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             if (textBasedSubtasks.length > 0) {
               console.log('Successfully converted text to subtasks:', textBasedSubtasks);
               updateBoardsWithSubtasks(taskId, textBasedSubtasks);
-              setTotalCost(prev => prev + (data.usage?.totalTokens || 0) * 0.000002);
+              setTotalCost(prev => prev + (response.usage?.totalTokens || 0) * 0.000002);
             } else {
               console.error('Could not extract valid subtasks from text response');
             }

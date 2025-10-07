@@ -37,8 +37,11 @@ export const DEFAULT_PROMPT_TEMPLATES: TaskSmasherPromptTemplate[] = [
     category: 'daily',
     label: 'Daily Organizer',
     description: 'Prompts for generating daily tasks and organizing daily schedules',
-    subtaskSystemPrompt: 'You are a productivity expert specializing in daily planning. Break down tasks into specific, actionable subtasks. Provide clear, concise steps that can be completed in a single day.',
-    subtaskUserPromptTemplate: 'Break down this daily task into {{breakdownLevel}} specific, actionable subtasks: "{{taskTitle}}"{{taskContext}}. For each subtask, include a clear action, estimated time (in hours), and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a productivity expert specializing in daily planning. Break down tasks into specific, actionable subtasks.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Task name", "estimatedTime": 0.5, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this daily task into {{breakdownLevel}} specific, actionable subtasks: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each subtask.',
     ideaSystemPrompt: 'You are a productivity coach specializing in daily planning and organization. Generate practical daily task ideas that help people organize their day effectively.',
     ideaUserPromptTemplate: 'Generate 5 practical daily task ideas for organizing and planning a productive day. Each task should be specific, actionable, and take less than a day to complete. Provide one task per line.',
     temperature: 0.7,
@@ -53,8 +56,11 @@ export const DEFAULT_PROMPT_TEMPLATES: TaskSmasherPromptTemplate[] = [
     category: 'goals',
     label: 'Goal Planner',
     description: 'Prompts for breaking down goals into achievable steps',
-    subtaskSystemPrompt: 'You are a goal-setting and personal development expert. Break down goals into actionable steps with measurable outcomes. Focus on creating a clear path to achievement with specific milestones.',
-    subtaskUserPromptTemplate: 'Break down this goal into {{breakdownLevel}} actionable steps: "{{taskTitle}}"{{taskContext}}. Include specific milestones, tracking methods, and success criteria for each step. For each step, provide an estimated time (in days) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a goal-setting and personal development expert. Break down goals into actionable steps with measurable outcomes.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 1, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this goal into {{breakdownLevel}} actionable steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in days), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a goal-setting coach specializing in personal and professional development. Generate inspiring yet achievable goal ideas.',
     ideaUserPromptTemplate: 'Generate 5 meaningful goal ideas that are specific, measurable, achievable, relevant, and time-bound (SMART). Include a mix of personal and professional goals. Provide one goal per line.',
     temperature: 0.7,
@@ -62,15 +68,18 @@ export const DEFAULT_PROMPT_TEMPLATES: TaskSmasherPromptTemplate[] = [
     createdAt: new Date(),
     updatedAt: new Date()
   },
-  
+
   // Marketing Tasks
   {
     id: `prompt-marketing-tasks`,
     category: 'marketing',
     label: 'Marketing Tasks',
     description: 'Prompts for planning and executing marketing campaigns',
-    subtaskSystemPrompt: 'You are a marketing strategist. Break down marketing tasks into actionable project steps with clear deliverables. Focus on measurable outcomes and specific marketing tactics.',
-    subtaskUserPromptTemplate: 'Break down this marketing task into {{breakdownLevel}} actionable project steps: "{{taskTitle}}"{{taskContext}}. Include specific deliverables, timeline, and success metrics for each step. For each step, provide an estimated time (in hours) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a marketing strategist. Break down marketing tasks into actionable project steps with clear deliverables.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 2, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this marketing task into {{breakdownLevel}} actionable project steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a marketing expert specializing in digital and traditional marketing strategies. Generate effective marketing task ideas for businesses.',
     ideaUserPromptTemplate: 'Generate 5 effective marketing task ideas that can help businesses increase their visibility and engagement. Include a mix of digital and traditional marketing approaches. Provide one task per line.',
     temperature: 0.7,
@@ -85,8 +94,11 @@ export const DEFAULT_PROMPT_TEMPLATES: TaskSmasherPromptTemplate[] = [
     category: 'recipe',
     label: 'Recipe Steps',
     description: 'Prompts for breaking down recipes into detailed steps',
-    subtaskSystemPrompt: 'You are a culinary expert. Break down recipes into clear steps with a DETAILED INGREDIENTS LIST first, followed by preparation steps. Be precise with measurements and cooking techniques.',
-    subtaskUserPromptTemplate: 'Break down this recipe into {{breakdownLevel}} steps: "{{taskTitle}}"{{taskContext}}. The first 1-3 subtasks MUST be a detailed ingredients list with exact measurements (e.g., "Ingredients: 2 eggs, 1 cup flour, 1/2 cup sugar"). Then include detailed preparation and cooking instructions as separate steps. For each step, provide an estimated time (in minutes) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a culinary expert. Break down recipes into clear steps with ingredients first, then preparation steps.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this recipe into {{breakdownLevel}} steps: "{{taskTitle}}"{{taskContext}}. First 1-2 steps should be ingredients lists with measurements. Then preparation/cooking steps. Return ONLY a JSON array with title, estimatedTime (in minutes), and priority for each step.',
     ideaSystemPrompt: 'You are a culinary expert specializing in recipe development. Generate creative and delicious recipe ideas for home cooks.',
     ideaUserPromptTemplate: 'Generate 5 delicious recipe ideas that are suitable for home cooking. Include a variety of cuisines and meal types (breakfast, lunch, dinner, dessert). Provide one recipe title per line.',
     temperature: 0.8,
