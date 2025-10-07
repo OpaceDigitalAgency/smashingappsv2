@@ -49,15 +49,15 @@ class OpenAIProvider implements IProvider {
       const supportsCustomTemperature = !usesResponsesAPI;
 
       if (usesResponsesAPI) {
-        // Use /v1/responses endpoint for GPT-5, O3, O4
+        // Use /v1/responses endpoint for GPT-5, O3, O4, O1
         const requestBody: any = {
           model: options.model,
           input: this.convertMessagesToInput(messages)
         };
 
-        // Add max_completion_tokens if specified
+        // IMPORTANT: Responses API uses max_output_tokens, NOT max_completion_tokens
         if (options.maxTokens) {
-          requestBody.max_completion_tokens = options.maxTokens;
+          requestBody.max_output_tokens = options.maxTokens;
         }
 
         // Note: temperature is not supported for these models (only default 1.0)
