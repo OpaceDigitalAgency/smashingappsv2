@@ -26,6 +26,9 @@ export interface TaskSmasherPromptTemplate {
 
 // Local storage key for TaskSmasher prompts
 export const TASKSMASHER_PROMPTS_STORAGE_KEY = 'tasksmasher_prompts';
+export const TASKSMASHER_PROMPTS_VERSION_KEY = 'tasksmasher_prompts_version';
+// Increment this version number whenever you update the default prompts
+export const CURRENT_PROMPTS_VERSION = 2;
 
 /**
  * Default prompt templates for each task category
@@ -265,6 +268,18 @@ Format: [{"title": "Phase name", "estimatedTime": 3, "priority": "low|medium|hig
  */
 export const loadTaskSmasherPrompts = (): TaskSmasherPromptTemplate[] => {
   try {
+    // Check version first
+    const storedVersion = localStorage.getItem(TASKSMASHER_PROMPTS_VERSION_KEY);
+    const currentVersion = CURRENT_PROMPTS_VERSION;
+
+    // If version doesn't match, clear old prompts and use defaults
+    if (storedVersion !== String(currentVersion)) {
+      console.log(`TaskSmasher prompts version mismatch (stored: ${storedVersion}, current: ${currentVersion}). Loading defaults.`);
+      localStorage.setItem(TASKSMASHER_PROMPTS_VERSION_KEY, String(currentVersion));
+      saveTaskSmasherPrompts(DEFAULT_PROMPT_TEMPLATES);
+      return DEFAULT_PROMPT_TEMPLATES;
+    }
+
     const storedPrompts = localStorage.getItem(TASKSMASHER_PROMPTS_STORAGE_KEY);
     if (storedPrompts) {
       const parsedPrompts = JSON.parse(storedPrompts);
@@ -276,6 +291,7 @@ export const loadTaskSmasherPrompts = (): TaskSmasherPromptTemplate[] => {
       }));
     }
     // Initialize with defaults if no stored prompts
+    localStorage.setItem(TASKSMASHER_PROMPTS_VERSION_KEY, String(currentVersion));
     saveTaskSmasherPrompts(DEFAULT_PROMPT_TEMPLATES);
     return DEFAULT_PROMPT_TEMPLATES;
   } catch (error) {
