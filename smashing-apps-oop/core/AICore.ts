@@ -139,7 +139,7 @@ class AICore {
     appId: string = 'unknown'
   ): Promise<NormalisedResponse> {
     const provider = this.getProviderForModel(model);
-    
+
     const fullOptions: RequestOptions = {
       model,
       maxTokens: options.maxTokens || 2000,
@@ -149,10 +149,10 @@ class AICore {
       presencePenalty: options.presencePenalty,
       stop: options.stop
     };
-    
+
     try {
       const response = await provider.sendRequest(messages, fullOptions);
-      
+
       // Track usage if enabled
       if (this.settings.enableStats) {
         const cost = this.modelRegistry.calculateCost(
@@ -160,7 +160,7 @@ class AICore {
           response.usage.promptTokens,
           response.usage.completionTokens
         );
-        
+
         this.storage.updateStats(
           provider.provider,
           model,
@@ -169,12 +169,24 @@ class AICore {
           cost
         );
       }
-      
+
       return response;
     } catch (error) {
       console.error('[AICore] Request failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Simple chat method - uses current settings model
+   * This is a convenience method for quick chat interactions
+   */
+  public async chat(
+    messages: Message[],
+    options: Partial<RequestOptions> = {}
+  ): Promise<NormalisedResponse> {
+    const model = this.settings.model || 'gpt-3.5-turbo';
+    return this.sendTextRequest(model, messages, options);
   }
   
   /**

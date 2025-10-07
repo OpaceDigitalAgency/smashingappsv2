@@ -86,16 +86,7 @@ const TaskSmasherApp: React.FC = () => {
       // Initialize AI services if not already initialized
       initializeAIServices();
       console.log('TaskSmasherApp: AI services initialized');
-      
-      // Explicitly initialize enhanced usage tracking
-      try {
-        const { enhancedUsageTracking } = require('../../shared/services');
-        enhancedUsageTracking.refreshData();
-        console.log('TaskSmasherApp: Enhanced usage tracking initialized');
-      } catch (error) {
-        console.error('Error initializing enhanced usage tracking:', error);
-      }
-      
+
       // Check if API key is configured
       checkApiKey();
       

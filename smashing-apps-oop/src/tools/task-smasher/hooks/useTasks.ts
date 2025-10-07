@@ -143,91 +143,89 @@ export function useTasks(initialUseCase?: string): TasksContextType {
 
   // Effect to update settings when global settings change
   useEffect(() => {
-    // Initial check for global settings
-    const checkGlobalSettings = () => {
+    // Initial check for AI-Core settings
+    const checkAICoreSettings = () => {
       try {
-        // First try to get from the global settings service
-        const globalSettings = getGlobalSettings();
-        console.log('Checking global settings on mount:', globalSettings);
-        
-        if (globalSettings && globalSettings.defaultModel) {
-          console.log('Setting model from global settings:', globalSettings.defaultModel);
-          setSelectedModel(globalSettings.defaultModel);
-          
+        // Get from AI-Core
+        const settings = aiCore.getSettings();
+        console.log('Checking AI-Core settings on mount:', settings);
+
+        if (settings && settings.model) {
+          console.log('Setting model from AI-Core settings:', settings.model);
+          setSelectedModel(settings.model);
+
           // Update localStorage to ensure persistence
-          localStorage.setItem('smashingapps_activeModel', globalSettings.defaultModel);
+          localStorage.setItem('smashingapps_activeModel', settings.model);
         } else {
-          // If no model in global settings, set to gpt-3.5-turbo
-          console.log('No model in global settings, setting to gpt-3.5-turbo');
+          // If no model in settings, set to gpt-3.5-turbo
+          console.log('No model in AI-Core settings, setting to gpt-3.5-turbo');
           setSelectedModel('gpt-3.5-turbo');
           localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
         }
       } catch (error) {
-        console.error('Error reading global settings:', error);
+        console.error('Error reading AI-Core settings:', error);
         // Fallback to gpt-3.5-turbo on error
         console.log('Error reading settings, falling back to gpt-3.5-turbo');
         setSelectedModel('gpt-3.5-turbo');
         localStorage.setItem('smashingapps_activeModel', 'gpt-3.5-turbo');
       }
     };
-    
+
     // Check on mount
-    checkGlobalSettings();
-    
-    // Listen for storage changes to global settings
+    checkAICoreSettings();
+
+    // Listen for storage changes to AI-Core settings
     const handleStorageChange = (e: StorageEvent) => {
       console.log('Storage event detected:', e.key);
-      
-      // Check for changes to global settings
-      if (e.key === 'smashingapps-global-settings' && e.newValue) {
+
+      // Check for changes to AI-Core settings
+      if (e.key === 'ai-core-settings' && e.newValue) {
         try {
-          const globalSettings = JSON.parse(e.newValue);
-          console.log('Global settings changed:', globalSettings);
-          
-          if (globalSettings.defaultModel) {
-            console.log('Setting model from updated global settings:', globalSettings.defaultModel);
-            setSelectedModel(globalSettings.defaultModel);
-            localStorage.setItem('smashingapps_activeModel', globalSettings.defaultModel);
+          const settings = JSON.parse(e.newValue);
+          console.log('AI-Core settings changed:', settings);
+
+          if (settings.model) {
+            console.log('Setting model from updated AI-Core settings:', settings.model);
+            setSelectedModel(settings.model);
+            localStorage.setItem('smashingapps_activeModel', settings.model);
           }
         } catch (error) {
           console.error('Error updating settings from storage event:', error);
         }
       }
-      
+
       // Also check for direct changes to the app-specific model setting
       if (e.key === 'smashingapps_activeModel' && e.newValue) {
         console.log('App-specific model changed:', e.newValue);
-        
-        console.log('App-specific model changed, updating to:', e.newValue);
         setSelectedModel(e.newValue);
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
-    // Set up an interval to periodically sync the model setting with global settings
+
+    // Set up an interval to periodically sync the model setting with AI-Core
     const intervalId = setInterval(() => {
       try {
-        const globalSettings = getGlobalSettings();
-        if (globalSettings && globalSettings.defaultModel) {
+        const settings = aiCore.getSettings();
+        if (settings && settings.model) {
           const currentModel = localStorage.getItem('smashingapps_activeModel');
           // Only update if the model has changed
-          if (currentModel !== globalSettings.defaultModel) {
-            console.log('Periodic check: Syncing model with global settings:', globalSettings.defaultModel);
-            setSelectedModel(globalSettings.defaultModel);
-            localStorage.setItem('smashingapps_activeModel', globalSettings.defaultModel);
+          if (currentModel !== settings.model) {
+            console.log('Periodic check: Syncing model with AI-Core settings:', settings.model);
+            setSelectedModel(settings.model);
+            localStorage.setItem('smashingapps_activeModel', settings.model);
           }
         }
       } catch (error) {
         console.error('Error in periodic model check:', error);
       }
     }, 30000); // Check every 30 seconds
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [aiCore]);
 
   // Initialize with provided use case or default to daily organizer
   useEffect(() => {
@@ -981,8 +979,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       }
       
       // Use AI-Core to make the request
-      const response = await aiCore.chat({
-        messages: [
+      const response = await aiCore.chat(
+        [
           {
             role: 'system',
             content: systemPrompt
@@ -992,12 +990,15 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             content: userPrompt
           }
         ],
-        temperature: 0.7,
-        maxTokens: 1000
-      });
+        {
+          temperature: 0.7,
+          maxTokens: 1000
+        }
+      );
 
       // Extract content from response
-      let subtasksContent = response.content.trim();
+      const content = response.choices[0]?.message?.content || '';
+      let subtasksContent = content.trim();
       console.log('Raw AI response:', subtasksContent);
       
       // Enhanced JSON extraction and parsing
