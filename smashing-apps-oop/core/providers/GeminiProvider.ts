@@ -35,23 +35,44 @@ class GeminiProvider implements IProvider {
     if (!this.isConfigured()) {
       throw new Error('Gemini API key not configured');
     }
-    
+
     // Convert messages to Gemini format
     const contents = this.convertMessagesToGeminiFormat(messages);
-    
+
     // Extract model name (remove 'models/' prefix if present)
     const modelName = options.model.replace('models/', '');
-    
+
     try {
+      // Build generationConfig with only supported parameters
+      const generationConfig: any = {};
+
+      // Only add maxOutputTokens if specified
+      if (options.maxTokens) {
+        generationConfig.maxOutputTokens = options.maxTokens;
+      }
+
+      // Only add temperature if it's not the default value (1.0)
+      // Gemini only supports temperature = 1.0 for some models
+      if (options.temperature !== undefined && options.temperature !== 1.0) {
+        // For Gemini, we'll skip temperature if it's not 1.0 to avoid errors
+        // This is because some Gemini models only support the default temperature
+        console.log('[GeminiProvider] Skipping temperature parameter (not supported by this model)');
+      }
+
+      // Only add topP if specified and not default
+      if (options.topP !== undefined && options.topP !== 1.0) {
+        generationConfig.topP = options.topP;
+      }
+
       const requestBody: any = {
-        contents: contents,
-        generationConfig: {
-          maxOutputTokens: options.maxTokens,
-          temperature: options.temperature,
-          topP: options.topP
-        }
+        contents: contents
       };
-      
+
+      // Only add generationConfig if it has properties
+      if (Object.keys(generationConfig).length > 0) {
+        requestBody.generationConfig = generationConfig;
+      }
+
       const response = await fetch(
         `${this.baseUrl}/models/${modelName}:generateContent?key=${this.apiKey}`,
         {
@@ -62,12 +83,12 @@ class GeminiProvider implements IProvider {
           body: JSON.stringify(requestBody)
         }
       );
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error?.message || 'Gemini API request failed');
       }
-      
+
       const data = await response.json();
       return ResponseNormaliser.normaliseGemini(data);
     } catch (error) {
