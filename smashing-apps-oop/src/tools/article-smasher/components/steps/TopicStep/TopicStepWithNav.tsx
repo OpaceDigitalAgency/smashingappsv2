@@ -83,6 +83,7 @@ const TopicStep: React.FC = () => {
           Article Title or Topic
         </label>
         <div className="relative">
+          <Pencil className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
           <input
             type="text"
             id="title"
@@ -91,7 +92,6 @@ const TopicStep: React.FC = () => {
             placeholder="E.g., Best WordPress Plugins for SEO"
             className="input pl-10"
           />
-          <Pencil className="absolute left-3 top-3 text-gray-400" size={18} />
         </div>
         <p className="text-xs text-gray-500 mt-2">
           Tip: Be specific about your topic for better results

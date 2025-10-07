@@ -55,13 +55,13 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       setShowComplete(true);
     }
   };
-  
+
   const goToPreviousStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
-  
+
   const handleStepClick = (step: number) => {
     // Allow navigation to any step
     setCurrentStep(step);
@@ -70,6 +70,13 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       setShowComplete(false);
     }
   };
+
+  // Auto-generate keywords when moving to step 2
+  useEffect(() => {
+    if (currentStep === 2 && title && keywords.length === 0 && !isLoadingKeywords) {
+      generateKeywords(title);
+    }
+  }, [currentStep, title]);
   
   // Generate topic ideas based on the selected article type
   const generateTopicIdeas = async () => {

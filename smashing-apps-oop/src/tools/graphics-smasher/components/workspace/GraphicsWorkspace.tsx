@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
 import MenuBar from '../menus/MenuBar';
 import DocumentTabs from './DocumentTabs';
 import ProfessionalToolbar from '../toolbar/ProfessionalToolbar';
@@ -24,6 +23,7 @@ const GraphicsWorkspace: React.FC = () => {
   const activeDocumentId = useActiveDocumentId();
   const engineStatus = useGraphicsStore((state) => state.canvasEngine);
   const activeTool = useGraphicsStore((state) => state.activeTool);
+  const [topOffset, setTopOffset] = useState(0);
 
   useGraphicsShortcuts(activeDocumentId);
   useCanvasEngineBootstrap();
@@ -51,8 +51,41 @@ const GraphicsWorkspace: React.FC = () => {
     return saved ? saved === 'dark' : true;
   });
 
+  useEffect(() => {
+    const updateOffset = () => {
+      const main = document.querySelector('[data-layout-main]');
+      if (!main) {
+        setTopOffset(0);
+        return;
+      }
+      const rect = (main as HTMLElement).getBoundingClientRect();
+      setTopOffset(rect.top);
+    };
+
+    updateOffset();
+
+    const main = document.querySelector('[data-layout-main]');
+    if (main) {
+      const observer = new ResizeObserver(updateOffset);
+      observer.observe(main);
+      window.addEventListener('resize', updateOffset);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('resize', updateOffset);
+      };
+    }
+
+    window.addEventListener('resize', updateOffset);
+    return () => {
+      window.removeEventListener('resize', updateOffset);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 flex flex-col bg-slate-50 overflow-hidden">
+    <div
+      className="fixed inset-x-0 bottom-0 flex flex-col bg-slate-50 overflow-hidden"
+      style={{ top: topOffset }}
+    >
       <style>{`
         .graphics-smasher-container.dark-theme {
           background: #1a1a1a;

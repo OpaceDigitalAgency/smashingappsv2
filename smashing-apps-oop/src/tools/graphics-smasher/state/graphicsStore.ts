@@ -57,9 +57,17 @@ function createDocumentState(input: Partial<Pick<DocumentState, 'name' | 'width'
   const height = Math.max(8, input.height ?? 1080);
   const background = input.background ?? '#ffffff';
   const backgroundLayer = createBaseLayer('Background');
+  backgroundLayer.locked = true;
   backgroundLayer.metadata = {
     ...backgroundLayer.metadata,
+    editable: false,
     fill: background
+  };
+
+  const drawingLayer = createBaseLayer('Layer 1');
+  drawingLayer.metadata = {
+    ...drawingLayer.metadata,
+    editable: true
   };
   const documentId = createId('doc');
 
@@ -71,12 +79,12 @@ function createDocumentState(input: Partial<Pick<DocumentState, 'name' | 'width'
     background,
     createdAt: now,
     updatedAt: now,
-    layers: [backgroundLayer],
+    layers: [backgroundLayer, drawingLayer],
     history: {
       past: [],
       future: []
     },
-    activeLayerId: backgroundLayer.id,
+    activeLayerId: drawingLayer.id,
     viewport: { ...defaultViewport },
     metadata: {}
   };
@@ -213,8 +221,9 @@ export const useGraphicsStore = create<GraphicsStore>()(
         })
       ),
     addLayer: (documentId, input) => {
+      const baseLayer = createBaseLayer(input.name ?? 'Layer');
       const layer: Layer = {
-        ...createBaseLayer(input.name ?? 'Layer'),
+        ...baseLayer,
         ...input,
         id: createId('layer'),
         opacity: input.opacity ?? 1,
@@ -230,6 +239,11 @@ export const useGraphicsStore = create<GraphicsStore>()(
           rotation: 0,
           skewX: 0,
           skewY: 0
+        },
+        metadata: {
+          ...baseLayer.metadata,
+          editable: true,
+          ...input.metadata
         }
       };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import AICore from '../../../core/AICore';
 
@@ -9,11 +9,17 @@ const Layout: React.FC = () => {
   const isConfigured = aiCore.isConfigured();
   const configuredProviders = aiCore.getConfiguredProviders();
 
-  // Check if we're on Graphics Smasher workspace page
-  const isGraphicsWorkspace = location.pathname.includes('/tools/graphics-smasher/workspace');
+  // Check if we're specifically on the Graphics Smasher workspace page (not just any graphics-smasher page)
+  const isGraphicsWorkspace = location.pathname === '/tools/graphics-smasher/workspace';
 
-  // Check if dark mode is enabled for Graphics Smasher
+  // Check if dark mode is enabled for Graphics Smasher - only on workspace page
   const isGraphicsDarkMode = isGraphicsWorkspace && localStorage.getItem('graphics-smasher-theme') === 'dark';
+
+  // Force re-render when location changes to ensure dark mode is properly cleared
+  useEffect(() => {
+    // This effect runs whenever the location changes, ensuring proper re-evaluation
+    console.log('Location changed to:', location.pathname, 'Dark mode:', isGraphicsDarkMode);
+  }, [location.pathname, isGraphicsDarkMode]);
 
   // Get active provider and model from settings
   const settings = aiCore.getSettings();
@@ -37,7 +43,10 @@ const Layout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className={`shadow-sm sticky top-0 z-50 ${isGraphicsDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <header
+        data-layout-header
+        className={`shadow-sm sticky top-0 z-50 ${isGraphicsDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+      >
         <nav className="w-full px-4">
           <div className="flex justify-between items-center h-16 max-w-7xl mx-auto">
             {/* Logo */}
@@ -182,7 +191,7 @@ const Layout: React.FC = () => {
 
       {/* Configuration Alert */}
       {!isConfigured && location.pathname !== '/admin' && (
-        <div className="bg-amber-50 border-b border-amber-200">
+        <div className={`border-b ${isGraphicsDarkMode ? 'bg-amber-900 border-amber-700' : 'bg-amber-50 border-amber-200'}`}>
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -199,13 +208,13 @@ const Layout: React.FC = () => {
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
-                <span className="text-sm text-amber-800">
+                <span className={`text-sm ${isGraphicsDarkMode ? 'text-amber-200' : 'text-amber-800'}`}>
                   AI providers not configured. Please configure at least one provider to use the tools.
                 </span>
               </div>
               <Link
                 to="/admin"
-                className="text-sm font-medium text-amber-600 hover:text-amber-700"
+                className={`text-sm font-medium ${isGraphicsDarkMode ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'}`}
               >
                 Configure Now →
               </Link>
@@ -215,21 +224,21 @@ const Layout: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main data-layout-main className={`flex-1 min-h-0 ${isGraphicsDarkMode ? 'bg-gray-900' : ''}`}>
         <Outlet />
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-auto">
+      <footer className={`border-t mt-auto ${isGraphicsDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-gray-600">
+            <div className={`text-sm ${isGraphicsDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               © 2025 SmashingApps v2. Powered by AI-Core.
             </div>
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <a href="#" className="hover:text-gray-900">Documentation</a>
-              <a href="#" className="hover:text-gray-900">Support</a>
-              <a href="https://opace.agency" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900">
+            <div className={`flex items-center space-x-6 text-sm ${isGraphicsDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <a href="#" className={isGraphicsDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}>Documentation</a>
+              <a href="#" className={isGraphicsDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}>Support</a>
+              <a href="https://opace.agency" target="_blank" rel="noopener noreferrer" className={isGraphicsDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}>
                 Opace Digital Agency
               </a>
             </div>

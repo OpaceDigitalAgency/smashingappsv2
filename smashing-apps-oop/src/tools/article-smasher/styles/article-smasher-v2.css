@@ -1,7 +1,7 @@
-/* Custom styles for article-smasherv2 only */
+/* Custom styles for article-smasher only */
 
-/* Override the mobile-container class for article-smasherv2 */
-.article-smasherv2-container .mobile-container {
+/* Override the mobile-container class for article-smasher */
+.article-smasher-container .mobile-container {
   width: 100% !important;
   max-width: 100% !important;
   margin-left: 0 !important;
@@ -11,15 +11,26 @@
 }
 
 /* Add a flex layout for the main content area */
-.article-smasherv2-container .main-content-flex {
+.article-smasher-container .main-content-flex {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
 @media (min-width: 768px) {
-  .article-smasherv2-container .main-content-flex {
+  .article-smasher-container .main-content-flex {
     flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .article-smasher-container .main-content-flex > .flex-shrink-0 {
+    width: 280px;
+    min-width: 280px;
+  }
+
+  .article-smasher-container .main-content-flex > .flex-grow {
+    flex: 1;
+    min-width: 0;
   }
 }
 
@@ -127,7 +138,7 @@
 }
 
 /* Add padding to the bottom of the content to account for fixed nav buttons */
-.article-smasherv2-container .main-content-flex > div:last-child {
+.article-smasher-container .main-content-flex > div:last-child {
   padding-bottom: 5rem;
 }
 
@@ -247,7 +258,7 @@ button:empty {
 }
 
 /* Fix for the complete article view to ensure it has the sidebar */
-.article-smasherv2-container .complete-article-container {
+.article-smasher-container .complete-article-container {
   max-width: none;
   width: 100%;
 }

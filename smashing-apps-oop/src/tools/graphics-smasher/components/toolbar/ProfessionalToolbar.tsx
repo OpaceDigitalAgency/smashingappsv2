@@ -137,7 +137,10 @@ const ProfessionalToolbar: React.FC = () => {
   };
 
   return (
-    <nav ref={toolbarRef} className="relative flex h-full w-28 flex-wrap content-start bg-[#2d2d2d] shadow-lg overflow-y-auto">
+    <nav
+      ref={toolbarRef}
+      className="relative grid h-full w-28 min-w-[7rem] flex-shrink-0 grid-cols-2 content-start bg-[#2d2d2d] shadow-lg overflow-y-auto"
+    >
       {TOOL_GROUPS.map((group, groupIndex) => {
         const currentTool = getActiveTool(group);
         const Icon = currentTool.icon;
@@ -255,4 +258,3 @@ const ProfessionalToolbar: React.FC = () => {
 };
 
 export default ProfessionalToolbar;
-
