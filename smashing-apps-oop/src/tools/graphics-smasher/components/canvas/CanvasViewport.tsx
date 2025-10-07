@@ -6,6 +6,38 @@ import { useCanvasInteraction, type BrushStroke } from '../../hooks/useCanvasInt
 import useImage from 'use-image';
 import ContextMenu from '../overlays/ContextMenu';
 
+// Move BackgroundLayer outside to avoid hooks issues
+const BackgroundLayer: React.FC<{ layer: any; docWidth: number; docHeight: number; docBg: string }> = ({ layer, docWidth, docHeight, docBg }) => {
+  const imageUrl = layer.metadata?.imageUrl as string | undefined;
+  const [image] = useImage(imageUrl || '');
+
+  if (imageUrl && image) {
+    return (
+      <KonvaImage
+        key={layer.id}
+        x={0}
+        y={0}
+        width={docWidth}
+        height={docHeight}
+        image={image}
+        listening={false}
+      />
+    );
+  }
+
+  return (
+    <Rect
+      key={layer.id}
+      x={0}
+      y={0}
+      width={docWidth}
+      height={docHeight}
+      fill={(layer.metadata?.fill as string) ?? docBg}
+      listening={false}
+    />
+  );
+};
+
 const CanvasViewport: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const activeDocument = useActiveDocument();
@@ -78,36 +110,10 @@ const CanvasViewport: React.FC = () => {
     [activeDocument, setViewport]
   );
 
-  const BackgroundLayer: React.FC<{ layer: any; docWidth: number; docHeight: number; docBg: string }> = ({ layer, docWidth, docHeight, docBg }) => {
-    const imageUrl = layer.metadata?.imageUrl as string | undefined;
-    const [image] = useImage(imageUrl || '');
-
-    if (imageUrl && image) {
-      return (
-        <KonvaImage
-          key={layer.id}
-          x={0}
-          y={0}
-          width={docWidth}
-          height={docHeight}
-          image={image}
-          listening={false}
-        />
-      );
-    }
-
-    return (
-      <Rect
-        key={layer.id}
-        x={0}
-        y={0}
-        width={docWidth}
-        height={docHeight}
-        fill={(layer.metadata?.fill as string) ?? docBg}
-        listening={false}
-      />
-    );
-  };
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, []);
 
   const renderLayers = useMemo(() => {
     if (!activeDocument) {
@@ -185,11 +191,6 @@ const CanvasViewport: React.FC = () => {
       </div>
     );
   }
-
-  const handleContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY });
-  }, []);
 
   return (
     <div

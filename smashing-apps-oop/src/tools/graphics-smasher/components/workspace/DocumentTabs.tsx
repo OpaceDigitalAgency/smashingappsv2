@@ -22,10 +22,10 @@ const DocumentTabs: React.FC = () => {
           documents.map((document) => {
             const isActive = document.id === activeDocumentId;
             return (
-              <button
+              <div
                 key={document.id}
                 onClick={() => setActiveDocument(document.id)}
-                className={`group relative flex items-center gap-2 rounded-t-lg border-t-2 px-4 py-2 text-sm font-medium transition-all ${
+                className={`group relative flex items-center gap-2 rounded-t-lg border-t-2 px-4 py-2 text-sm font-medium transition-all cursor-pointer ${
                   isActive
                     ? 'border-t-indigo-500 bg-white text-indigo-700 shadow-md'
                     : 'border-t-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
@@ -49,7 +49,7 @@ const DocumentTabs: React.FC = () => {
                 >
                   <X size={14} />
                 </button>
-              </button>
+              </div>
             );
           })
         )}
