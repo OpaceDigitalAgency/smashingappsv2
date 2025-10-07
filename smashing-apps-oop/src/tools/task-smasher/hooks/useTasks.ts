@@ -812,9 +812,10 @@ export function useTasks(initialUseCase?: string): TasksContextType {
     setGenerating(true);
     
     try {
-      // Use AI-Core to make the request
-      const response = await aiCore.chat({
-        messages: [
+      // Use AI-Core to make the request with explicit model
+      const response = await aiCore.sendTextRequest(
+        selectedModel, // Explicitly pass the selected model
+        [
           {
             role: 'system',
             content: 'You are a task management AI assistant. Rewrite this task to make it clearer and more actionable.'
@@ -824,12 +825,15 @@ export function useTasks(initialUseCase?: string): TasksContextType {
             content: `Rewrite this task to make it more clear and actionable: "${task.title}"`
           }
         ],
-        temperature: 0.7,
-        maxTokens: 200
-      });
+        {
+          temperature: 0.7,
+          maxTokens: 200
+        },
+        'task-smasher' // App ID for tracking
+      );
 
       // Extract content from response
-      const improvedTask = response.content.trim();
+      const improvedTask = response.choices[0]?.message?.content?.trim() || task.title;
       
         setHistory(prev => [...prev, boards]);
         
@@ -978,8 +982,9 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         );
       }
       
-      // Use AI-Core to make the request
-      const response = await aiCore.chat(
+      // Use AI-Core to make the request with explicit model
+      const response = await aiCore.sendTextRequest(
+        selectedModel, // Explicitly pass the selected model
         [
           {
             role: 'system',
@@ -993,7 +998,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
         {
           temperature: 0.7,
           maxTokens: 1000
-        }
+        },
+        'task-smasher' // App ID for tracking
       );
 
       // Extract content from response
@@ -1297,8 +1303,9 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
       
       console.log("Sending request to AI service with model:", selectedModel);
 
-      // Use AI-Core to make the request
-      const response = await aiCore.chat(
+      // Use AI-Core to make the request with explicit model
+      const response = await aiCore.sendTextRequest(
+        selectedModel, // Explicitly pass the selected model
         [
           {
             role: 'system',
@@ -1314,7 +1321,8 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
           maxTokens: promptTemplate?.maxTokens || 1000,
           // Use temperature from the prompt template, or fall back to a default value
           temperature: promptTemplate?.temperature || 0.7
-        }
+        },
+        'task-smasher' // App ID for tracking
       );
 
       console.log("Received response from AI-Core:", response);
