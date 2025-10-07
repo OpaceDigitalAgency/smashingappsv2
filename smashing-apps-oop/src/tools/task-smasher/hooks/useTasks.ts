@@ -1148,56 +1148,103 @@ Any response that is not a valid JSON array will be rejected and cause errors.`;
             console.log('Attempting to convert formatted text to JSON');
             const lines = subtasksContent.split('\n').filter(line => line.trim());
             const textBasedSubtasks = [];
-            
-            // Look for patterns like "1. Task name - 2h - high priority"
+
+            // Group lines that belong together (e.g., a heading followed by details)
+            let currentSubtask: any = null;
+
             for (const line of lines) {
-              // Remove any numbering or bullet points
-              let cleanLine = line.replace(/^(\d+\.|\*|-)\s+/, '').trim();
-              
-              if (!cleanLine) continue;
-              
-              // Extract title, time and priority if possible
-              let title = cleanLine;
-              let estimatedTime = 0.5; // default
-              let priority = 'medium'; // default
-              
-              // Try to extract time (look for patterns like "2h", "30m", "1.5 hours")
-              const timeMatch = cleanLine.match(/(\d+\.?\d*)\s*(h|hr|hour|hours|m|min|minute|minutes)/i);
-              if (timeMatch) {
-                const value = parseFloat(timeMatch[1]);
-                const unit = timeMatch[2].toLowerCase();
-                
-                // Convert to hours
-                if (unit.startsWith('h')) {
-                  estimatedTime = value;
-                } else if (unit.startsWith('m')) {
-                  estimatedTime = value / 60;
+              const trimmedLine = line.trim();
+
+              // Skip empty lines
+              if (!trimmedLine) continue;
+
+              // Check if this is a main heading (starts with ** or is numbered without sub-bullets)
+              const isHeading = trimmedLine.startsWith('**') ||
+                               (trimmedLine.match(/^\d+\./) && !trimmedLine.includes('Action:') && !trimmedLine.includes('Time:') && !trimmedLine.includes('Priority:'));
+
+              // Check if this is a detail line (starts with - or contains Action:/Time:/Priority:)
+              const isDetail = trimmedLine.startsWith('-') ||
+                              trimmedLine.includes('Action:') ||
+                              trimmedLine.includes('Time:') ||
+                              trimmedLine.includes('Estimated Time:') ||
+                              trimmedLine.includes('Priority:');
+
+              if (isHeading) {
+                // Save previous subtask if exists
+                if (currentSubtask && currentSubtask.title) {
+                  textBasedSubtasks.push(currentSubtask);
                 }
-                
-                // Remove the time part from the title
-                title = title.replace(timeMatch[0], '').trim();
+
+                // Start new subtask
+                let title = trimmedLine.replace(/^\d+\.\s*/, '').replace(/^\*\*|\*\*$/g, '').trim();
+                currentSubtask = {
+                  title,
+                  estimatedTime: 0.5,
+                  priority: 'medium'
+                };
+              } else if (isDetail && currentSubtask) {
+                // This is a detail line - extract info and append to current subtask
+                let cleanLine = trimmedLine.replace(/^-\s*/, '').trim();
+
+                // Extract time
+                const timeMatch = cleanLine.match(/(?:Estimated\s+)?Time:\s*(\d+\.?\d*)\s*(h|hr|hour|hours|m|min|minute|minutes)/i);
+                if (timeMatch) {
+                  const value = parseFloat(timeMatch[1]);
+                  const unit = timeMatch[2].toLowerCase();
+                  currentSubtask.estimatedTime = unit.startsWith('h') ? value : value / 60;
+                }
+
+                // Extract priority
+                const priorityMatch = cleanLine.match(/Priority:\s*(low|medium|high)/i);
+                if (priorityMatch) {
+                  currentSubtask.priority = priorityMatch[1].toLowerCase();
+                }
+
+                // If it's an Action line, append to title
+                if (cleanLine.startsWith('Action:')) {
+                  const action = cleanLine.replace(/^Action:\s*/i, '').trim();
+                  if (action && !currentSubtask.title.includes(action)) {
+                    currentSubtask.title += ': ' + action;
+                  }
+                }
+              } else if (!isDetail && !isHeading) {
+                // This might be a simple list item
+                if (currentSubtask && currentSubtask.title) {
+                  textBasedSubtasks.push(currentSubtask);
+                }
+
+                let cleanLine = trimmedLine.replace(/^(\d+\.|\*|-)\s+/, '').trim();
+
+                // Extract time and priority from the line
+                let estimatedTime = 0.5;
+                let priority = 'medium';
+                let title = cleanLine;
+
+                const timeMatch = cleanLine.match(/(\d+\.?\d*)\s*(h|hr|hour|hours|m|min|minute|minutes)/i);
+                if (timeMatch) {
+                  const value = parseFloat(timeMatch[1]);
+                  const unit = timeMatch[2].toLowerCase();
+                  estimatedTime = unit.startsWith('h') ? value : value / 60;
+                  title = title.replace(timeMatch[0], '').trim();
+                }
+
+                if (cleanLine.match(/high\s+priority|priority:\s*high/i)) {
+                  priority = 'high';
+                  title = title.replace(/high\s+priority|priority:\s*high/i, '').trim();
+                } else if (cleanLine.match(/low\s+priority|priority:\s*low/i)) {
+                  priority = 'low';
+                  title = title.replace(/low\s+priority|priority:\s*low/i, '').trim();
+                }
+
+                title = title.replace(/[:-]\s*$/, '').trim();
+
+                currentSubtask = { title, estimatedTime, priority };
               }
-              
-              // Try to extract priority
-              if (cleanLine.includes('high priority') || cleanLine.includes('priority: high')) {
-                priority = 'high';
-                title = title.replace(/(high priority|priority:\s*high)/i, '').trim();
-              } else if (cleanLine.includes('low priority') || cleanLine.includes('priority: low')) {
-                priority = 'low';
-                title = title.replace(/(low priority|priority:\s*low)/i, '').trim();
-              } else if (cleanLine.includes('medium priority') || cleanLine.includes('priority: medium')) {
-                priority = 'medium';
-                title = title.replace(/(medium priority|priority:\s*medium)/i, '').trim();
-              }
-              
-              // Clean up any remaining punctuation
-              title = title.replace(/[:-]\s*$/, '').trim();
-              
-              textBasedSubtasks.push({
-                title,
-                estimatedTime,
-                priority
-              });
+            }
+
+            // Don't forget the last subtask
+            if (currentSubtask && currentSubtask.title) {
+              textBasedSubtasks.push(currentSubtask);
             }
             
             if (textBasedSubtasks.length > 0) {

@@ -122,23 +122,6 @@ const GraphicsWorkspace: React.FC = () => {
         }
       `}</style>
 
-      {/* Main Navigation */}
-      <nav className={`flex items-center justify-between border-b px-4 py-2 flex-shrink-0 ${isDarkMode ? 'main-nav-dark' : 'bg-white border-slate-200'}`}>
-        <Link to="/" className="flex items-center">
-          <img
-            src="/smashingapps-ai-small.png"
-            alt="SmashingApps.ai"
-            className="h-12 w-auto"
-          />
-        </Link>
-        <div className="flex items-center gap-4 text-sm">
-          <Link to="/" className="hover:text-indigo-600">Home</Link>
-          <Link to="/tools/article-smasher" className="hover:text-indigo-600">Article Smasher</Link>
-          <Link to="/tools/task-smasher" className="hover:text-indigo-600">Task Smasher</Link>
-          <Link to="/tools/graphics-smasher" className="font-semibold text-indigo-600">Graphics Smasher</Link>
-        </div>
-      </nav>
-
       {/* Graphics Smasher Workspace */}
       <div className={`graphics-smasher-container flex flex-col flex-1 overflow-hidden ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
         <MenuBar />

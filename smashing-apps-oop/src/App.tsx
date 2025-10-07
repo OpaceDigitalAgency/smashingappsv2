@@ -13,15 +13,13 @@ function App() {
     <HelmetProvider>
       <Router>
         <Routes>
-          {/* Graphics Smasher - Full screen without layout */}
-          <Route path="/tools/graphics-smasher/*" element={<GraphicsSmasherApp />} />
-
-          {/* All other routes with layout */}
+          {/* All routes with layout */}
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="admin" element={<AdminPage />} />
             <Route path="tools/article-smasher/*" element={<ArticleSmasherIntegrated />} />
             <Route path="tools/task-smasher/*" element={<TaskSmasherApp />} />
+            <Route path="tools/graphics-smasher/*" element={<GraphicsSmasherApp />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
