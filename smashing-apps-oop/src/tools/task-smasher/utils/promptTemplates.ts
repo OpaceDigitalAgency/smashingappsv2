@@ -113,8 +113,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'home',
     label: 'Home Chores',
     description: 'Prompts for organizing home maintenance and cleaning tasks',
-    subtaskSystemPrompt: 'You are a home organization and maintenance expert. Break down home tasks into detailed steps with required materials. Focus on efficiency and thoroughness.',
-    subtaskUserPromptTemplate: 'Break down this home task into {{breakdownLevel}} detailed steps: "{{taskTitle}}"{{taskContext}}. Include required materials, tools, and specific instructions for each step. For each step, provide an estimated time (in minutes) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a home organization and maintenance expert. Break down home tasks into detailed steps with required materials.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 30, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this home task into {{breakdownLevel}} detailed steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in minutes), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a home organization expert specializing in efficient home maintenance and cleaning. Generate practical home chore ideas.',
     ideaUserPromptTemplate: 'Generate 5 practical home chore ideas that help maintain a clean and organized living space. Include a mix of daily, weekly, and monthly tasks. Provide one chore per line.',
     temperature: 0.6,
@@ -129,8 +132,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'freelance',
     label: 'Freelancer Projects',
     description: 'Prompts for managing freelance projects and client work',
-    subtaskSystemPrompt: 'You are a freelance project management expert. Break down freelance projects into clear milestones and deliverables. Focus on client communication, quality deliverables, and timeline management.',
-    subtaskUserPromptTemplate: 'Break down this freelance project into {{breakdownLevel}} specific steps: "{{taskTitle}}"{{taskContext}}. Include client communication points, deliverables, and review stages. For each step, provide an estimated time (in hours) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a freelance project management expert. Break down freelance projects into clear milestones and deliverables.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 2, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this freelance project into {{breakdownLevel}} specific steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a freelance business consultant specializing in project management and client acquisition. Generate practical freelance project ideas.',
     ideaUserPromptTemplate: 'Generate 5 freelance project ideas that could help a freelancer grow their business and portfolio. Include a variety of project types and complexity levels. Provide one project idea per line.',
     temperature: 0.7,
@@ -145,8 +151,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'travel',
     label: 'Trip Planner',
     description: 'Prompts for planning and organizing travel itineraries',
-    subtaskSystemPrompt: 'You are a travel planning expert. Break down travel plans into detailed preparation and itinerary steps. Focus on logistics, accommodations, activities, and contingency planning.',
-    subtaskUserPromptTemplate: 'Break down this travel plan into {{breakdownLevel}} detailed steps: "{{taskTitle}}"{{taskContext}}. Include preparation tasks, booking details, and daily itinerary items. For each step, provide an estimated time (in hours or days) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a travel planning expert. Break down travel plans into detailed preparation and itinerary steps.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 2, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this travel plan into {{breakdownLevel}} detailed steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours or days), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a travel consultant specializing in trip planning and itinerary development. Generate inspiring travel planning ideas.',
     ideaUserPromptTemplate: 'Generate 5 travel planning task ideas that would help someone organize a successful trip. Include pre-trip preparation, booking considerations, and on-trip organization. Provide one task per line.',
     temperature: 0.8,
@@ -161,8 +170,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'shopping',
     label: 'Shopping Tasks',
     description: 'Prompts for organizing shopping lists and purchase planning',
-    subtaskSystemPrompt: 'You are a shopping and budgeting expert. Break down shopping tasks into organized categories and specific items. Focus on efficiency, budgeting, and comprehensive planning.',
-    subtaskUserPromptTemplate: 'Break down this shopping task into {{breakdownLevel}} organized steps: "{{taskTitle}}"{{taskContext}}. Group items by category, store, or priority. Include budget considerations and alternatives where appropriate. For each step, provide an estimated time (in hours) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a shopping and budgeting expert. Break down shopping tasks into organized categories and specific items.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Item or category", "estimatedTime": 1, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this shopping task into {{breakdownLevel}} organized steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a shopping and consumer expert specializing in efficient purchasing and budgeting. Generate practical shopping task ideas.',
     ideaUserPromptTemplate: 'Generate 5 practical shopping task ideas that help people organize their purchases efficiently and stay within budget. Include different types of shopping (groceries, clothing, gifts, etc.). Provide one task per line.',
     temperature: 0.6,
@@ -177,8 +189,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'study',
     label: 'Study Plan',
     description: 'Prompts for organizing study sessions and learning materials',
-    subtaskSystemPrompt: 'You are an educational expert. Break down study plans into focused learning sessions with specific objectives. Focus on effective learning techniques, resource management, and knowledge retention.',
-    subtaskUserPromptTemplate: 'Break down this study plan into {{breakdownLevel}} focused learning sessions: "{{taskTitle}}"{{taskContext}}. Include specific learning objectives, resources to use, and study techniques for each session. For each session, provide an estimated time (in hours) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are an educational expert. Break down study plans into focused learning sessions with specific objectives.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Session name", "estimatedTime": 2, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this study plan into {{breakdownLevel}} focused learning sessions: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each session.',
     ideaSystemPrompt: 'You are an educational consultant specializing in effective study techniques and learning strategies. Generate practical study task ideas.',
     ideaUserPromptTemplate: 'Generate 5 effective study task ideas that help students learn efficiently and retain information. Include different study approaches and techniques. Provide one task per line.',
     temperature: 0.7,
@@ -193,8 +208,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'events',
     label: 'Event Planning',
     description: 'Prompts for organizing and managing events',
-    subtaskSystemPrompt: 'You are an event planning expert. Break down event planning tasks into detailed action items. Focus on logistics, guest management, venue preparation, and contingency planning.',
-    subtaskUserPromptTemplate: 'Break down this event planning task into {{breakdownLevel}} detailed steps: "{{taskTitle}}"{{taskContext}}. Include timeline, responsibilities, vendor coordination, and guest management. For each step, provide an estimated time (in hours or days) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are an event planning expert. Break down event planning tasks into detailed action items.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 3, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this event planning task into {{breakdownLevel}} detailed steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours or days), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are an event planning consultant specializing in organizing successful gatherings of all sizes. Generate practical event planning task ideas.',
     ideaUserPromptTemplate: 'Generate 5 essential event planning task ideas that help ensure a successful event. Include pre-event preparation, day-of coordination, and post-event follow-up. Provide one task per line.',
     temperature: 0.7,
@@ -209,8 +227,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'diy',
     label: 'DIY Projects',
     description: 'Prompts for breaking down DIY and craft projects',
-    subtaskSystemPrompt: 'You are a DIY and crafting expert. Break down DIY projects into clear, sequential steps. Focus on materials needed, techniques used, and safety considerations.',
-    subtaskUserPromptTemplate: 'Break down this DIY project into {{breakdownLevel}} clear steps: "{{taskTitle}}"{{taskContext}}. Start with a materials list, then provide detailed instructions for each step. Include measurements, techniques, and safety precautions. For each step, provide an estimated time (in hours) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a DIY and crafting expert. Break down DIY projects into clear, sequential steps.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Step name", "estimatedTime": 2, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this DIY project into {{breakdownLevel}} clear steps: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each step.',
     ideaSystemPrompt: 'You are a DIY and crafting consultant specializing in creative home projects. Generate inspiring DIY project ideas.',
     ideaUserPromptTemplate: 'Generate 5 creative DIY project ideas that people can make at home. Include a variety of difficulty levels and project types (decor, functional items, gifts, etc.). Provide one project idea per line.',
     temperature: 0.8,
@@ -225,8 +246,11 @@ Format: [{"title": "Step name", "estimatedTime": 10, "priority": "low|medium|hig
     category: 'creative',
     label: 'Creative Projects',
     description: 'Prompts for organizing creative and artistic endeavors',
-    subtaskSystemPrompt: 'You are a creative project management expert. Break down creative projects into structured phases while maintaining artistic freedom. Focus on ideation, execution, refinement, and presentation.',
-    subtaskUserPromptTemplate: 'Break down this creative project into {{breakdownLevel}} structured phases: "{{taskTitle}}"{{taskContext}}. Include research/inspiration, planning, creation, refinement, and presentation/sharing. For each phase, provide an estimated time (in hours) and priority level (low/medium/high).',
+    subtaskSystemPrompt: `You are a creative project management expert. Break down creative projects into structured phases while maintaining artistic freedom.
+
+CRITICAL: Respond ONLY with a valid JSON array. NO other text, explanations, or markdown formatting.
+Format: [{"title": "Phase name", "estimatedTime": 3, "priority": "low|medium|high"}]`,
+    subtaskUserPromptTemplate: 'Break down this creative project into {{breakdownLevel}} structured phases: "{{taskTitle}}"{{taskContext}}. Return ONLY a JSON array with title, estimatedTime (in hours), and priority (low/medium/high) for each phase.',
     ideaSystemPrompt: 'You are a creative consultant specializing in artistic expression and creative project development. Generate inspiring creative project ideas.',
     ideaUserPromptTemplate: 'Generate 5 inspiring creative project ideas across different artistic mediums (writing, visual arts, music, etc.). Include projects of varying complexity and time commitment. Provide one project idea per line.',
     temperature: 0.9,
