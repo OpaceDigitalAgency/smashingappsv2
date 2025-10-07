@@ -135,10 +135,11 @@ const CanvasViewport: React.FC = () => {
         );
       }
 
-      // Get saved strokes from layer metadata
+      // Get saved strokes and shapes from layer metadata
       const savedStrokes = (layer.metadata?.strokes as BrushStroke[]) || [];
+      const savedShapes = (layer.metadata?.shapes as Shape[]) || [];
       const layerFill = layer.metadata?.fill as string | undefined;
-      const hasContent = savedStrokes.length > 0 || layerFill;
+      const hasContent = savedStrokes.length > 0 || savedShapes.length > 0 || layerFill;
 
       return (
         <Group
@@ -175,6 +176,38 @@ const CanvasViewport: React.FC = () => {
               globalCompositeOperation={stroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
             />
           ))}
+
+          {/* Render saved shapes */}
+          {savedShapes.map((shape, shapeIndex) => {
+            if (shape.type === 'rectangle' && shape.width && shape.height) {
+              return (
+                <Rect
+                  key={`shape-${shapeIndex}`}
+                  x={shape.x}
+                  y={shape.y}
+                  width={shape.width}
+                  height={shape.height}
+                  fill={shape.fill || 'transparent'}
+                  stroke={shape.stroke || '#000000'}
+                  strokeWidth={shape.strokeWidth || 1}
+                />
+              );
+            } else if (shape.type === 'ellipse' && shape.width && shape.height) {
+              return (
+                <Ellipse
+                  key={`shape-${shapeIndex}`}
+                  x={shape.x + shape.width / 2}
+                  y={shape.y + shape.height / 2}
+                  radiusX={Math.abs(shape.width) / 2}
+                  radiusY={Math.abs(shape.height) / 2}
+                  fill={shape.fill || 'transparent'}
+                  stroke={shape.stroke || '#000000'}
+                  strokeWidth={shape.strokeWidth || 1}
+                />
+              );
+            }
+            return null;
+          })}
 
           {/* Layer placeholder visual - only show if no content */}
           {!hasContent && (
