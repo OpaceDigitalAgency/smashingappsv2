@@ -114,6 +114,27 @@ class ModelRegistry {
       releaseDate: '2025-08-07'
     });
 
+    this.registerModel({
+      id: 'gpt-5-nano',
+      provider: 'openai',
+      name: 'GPT-5 Nano',
+      description: 'Smallest GPT-5 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: false,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 128000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.001,
+        outputCostPer1kTokens: 0.004,
+        currency: 'USD'
+      },
+      releaseDate: '2025-08-07'
+    });
+
     // OpenAI O3 Models
     this.registerModel({
       id: 'o3',
@@ -131,6 +152,27 @@ class ModelRegistry {
       pricing: {
         inputCostPer1kTokens: 0.015,
         outputCostPer1kTokens: 0.06,
+        currency: 'USD'
+      },
+      releaseDate: '2025-04-16'
+    });
+
+    this.registerModel({
+      id: 'o3-pro',
+      provider: 'openai',
+      name: 'O3 Pro',
+      description: 'Most capable O3 reasoning model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 100000,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.03,
+        outputCostPer1kTokens: 0.12,
         currency: 'USD'
       },
       releaseDate: '2025-04-16'
@@ -157,6 +199,28 @@ class ModelRegistry {
       releaseDate: '2025-01-31'
     });
 
+    // OpenAI O4 Models
+    this.registerModel({
+      id: 'o4-mini',
+      provider: 'openai',
+      name: 'O4 Mini',
+      description: 'Next-gen efficient reasoning model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 65536,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.003,
+        outputCostPer1kTokens: 0.012,
+        currency: 'USD'
+      },
+      releaseDate: '2025-06-01'
+    });
+
     // OpenAI GPT-4.1 Models
     this.registerModel({
       id: 'gpt-4.1',
@@ -174,6 +238,27 @@ class ModelRegistry {
       pricing: {
         inputCostPer1kTokens: 0.008,
         outputCostPer1kTokens: 0.024,
+        currency: 'USD'
+      },
+      releaseDate: '2025-04-14'
+    });
+
+    this.registerModel({
+      id: 'gpt-4.1-mini',
+      provider: 'openai',
+      name: 'GPT-4.1 Mini',
+      description: 'Efficient GPT-4.1 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 16384,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 128000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.004,
+        outputCostPer1kTokens: 0.012,
         currency: 'USD'
       },
       releaseDate: '2025-04-14'
@@ -220,6 +305,27 @@ class ModelRegistry {
         currency: 'USD'
       },
       releaseDate: '2024-07-18'
+    });
+
+    this.registerModel({
+      id: 'chatgpt-4o-latest',
+      provider: 'openai',
+      name: 'ChatGPT-4o Latest',
+      description: 'Latest ChatGPT-4o model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 16384,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 128000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.005,
+        outputCostPer1kTokens: 0.015,
+        currency: 'USD'
+      },
+      releaseDate: '2024-11-20'
     });
 
     // OpenAI O1 Models
@@ -288,7 +394,7 @@ class ModelRegistry {
 
     // Anthropic Claude 4.5 Models (Newest)
     this.registerModel({
-      id: 'claude-sonnet-4.5-20250514',
+      id: 'claude-sonnet-4-5-20250929',
       provider: 'anthropic',
       name: 'Claude Sonnet 4.5',
       description: 'Latest Claude model with enhanced capabilities',
@@ -305,28 +411,7 @@ class ModelRegistry {
         outputCostPer1kTokens: 0.015,
         currency: 'USD'
       },
-      releaseDate: '2025-05-14'
-    });
-
-    this.registerModel({
-      id: 'claude-opus-4.5-20250514',
-      provider: 'anthropic',
-      name: 'Claude Opus 4.5',
-      description: 'Most capable Claude model',
-      type: 'chat',
-      capabilities: {
-        maxTokens: 8192,
-        supportsImages: true,
-        supportsFunctions: true,
-        supportsStreaming: true,
-        contextWindow: 200000
-      },
-      pricing: {
-        inputCostPer1kTokens: 0.015,
-        outputCostPer1kTokens: 0.075,
-        currency: 'USD'
-      },
-      releaseDate: '2025-05-14'
+      releaseDate: '2025-09-29'
     });
 
     // Anthropic Claude 4 Models
@@ -372,7 +457,202 @@ class ModelRegistry {
       releaseDate: '2024-10-22'
     });
 
-    // Google Gemini 2.0 Models (Newest)
+    // Anthropic Claude 4.1 Models
+    this.registerModel({
+      id: 'claude-opus-4-1-20250805',
+      provider: 'anthropic',
+      name: 'Claude Opus 4.1',
+      description: 'Enhanced Claude Opus model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.015,
+        outputCostPer1kTokens: 0.075,
+        currency: 'USD'
+      },
+      releaseDate: '2025-08-05'
+    });
+
+    // Anthropic Claude 3.7 Models
+    this.registerModel({
+      id: 'claude-3-7-sonnet-20250219',
+      provider: 'anthropic',
+      name: 'Claude 3.7 Sonnet',
+      description: 'Advanced Claude 3.7 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.003,
+        outputCostPer1kTokens: 0.015,
+        currency: 'USD'
+      },
+      releaseDate: '2025-02-19'
+    });
+
+    // Anthropic Claude 3.5 Models
+    this.registerModel({
+      id: 'claude-3-5-haiku-20241022',
+      provider: 'anthropic',
+      name: 'Claude 3.5 Haiku',
+      description: 'Fast and efficient Claude model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: false,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.001,
+        outputCostPer1kTokens: 0.005,
+        currency: 'USD'
+      },
+      releaseDate: '2024-10-22'
+    });
+
+    // Anthropic Claude 3 Models
+    this.registerModel({
+      id: 'claude-3-haiku-20240307',
+      provider: 'anthropic',
+      name: 'Claude 3 Haiku',
+      description: 'Fastest Claude 3 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 4096,
+        supportsImages: false,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.00025,
+        outputCostPer1kTokens: 0.00125,
+        currency: 'USD'
+      },
+      releaseDate: '2024-03-07'
+    });
+
+    // Google Gemini 2.5 Models (Newest)
+    this.registerModel({
+      id: 'gemini-2.5-flash',
+      provider: 'gemini',
+      name: 'Gemini 2.5 Flash',
+      description: 'Latest Gemini text model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 1000000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.0,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2025-09-01'
+    });
+
+    this.registerModel({
+      id: 'gemini-2.5-pro',
+      provider: 'gemini',
+      name: 'Gemini 2.5 Pro',
+      description: 'Most capable Gemini 2.5 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 2000000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.00125,
+        outputCostPer1kTokens: 0.005,
+        currency: 'USD'
+      },
+      releaseDate: '2025-09-01'
+    });
+
+    this.registerModel({
+      id: 'gemini-2.5-flash-lite',
+      provider: 'gemini',
+      name: 'Gemini 2.5 Flash Lite',
+      description: 'Lightweight Gemini 2.5 model',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: false,
+        supportsFunctions: true,
+        supportsStreaming: true,
+        contextWindow: 1000000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.0,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2025-09-01'
+    });
+
+    // Gemini 2.5 Image Models
+    this.registerModel({
+      id: 'gemini-2.5-flash-image',
+      provider: 'gemini',
+      name: 'Gemini 2.5 Flash Image',
+      description: 'Gemini model for image generation',
+      type: 'image',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: false,
+        supportsStreaming: false,
+        contextWindow: 1000000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.0,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2025-09-01'
+    });
+
+    this.registerModel({
+      id: 'gemini-2.5-flash-image-preview',
+      provider: 'gemini',
+      name: 'Gemini 2.5 Flash Image (Preview)',
+      description: 'Preview version of Gemini image generation',
+      type: 'image',
+      capabilities: {
+        maxTokens: 8192,
+        supportsImages: true,
+        supportsFunctions: false,
+        supportsStreaming: false,
+        contextWindow: 1000000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.0,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2025-09-01'
+    });
+
+    // Google Gemini 2.0 Models
     this.registerModel({
       id: 'gemini-2.0-flash-exp',
       provider: 'gemini',
