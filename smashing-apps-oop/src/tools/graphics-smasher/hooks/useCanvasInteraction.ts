@@ -9,6 +9,38 @@ interface Point {
   y: number;
 }
 
+// Helper function to convert RGB to HSL
+function rgbToHsl(r: number, g: number, b: number): string {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      case b:
+        h = ((r - g) / d + 4) / 6;
+        break;
+    }
+  }
+
+  return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+}
+
 export interface BrushStroke {
   tool: string;
   points: number[];
@@ -100,10 +132,31 @@ export function useCanvasInteraction() {
           const canvas = stage.toCanvas();
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            const pixelData = ctx.getImageData(pos.x, pos.y, 1, 1).data;
-            const hexColor = `#${((1 << 24) + (pixelData[0] << 16) + (pixelData[1] << 8) + pixelData[2]).toString(16).slice(1)}`;
-            setToolOptions('brush', { color: hexColor });
-            console.log('Picked color:', hexColor);
+            const x = Math.floor(pos.x);
+            const y = Math.floor(pos.y);
+
+            // Ensure coordinates are within canvas bounds
+            if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+              const pixelData = ctx.getImageData(x, y, 1, 1).data;
+              const r = pixelData[0];
+              const g = pixelData[1];
+              const b = pixelData[2];
+              const a = pixelData[3] / 255;
+
+              // Convert to hex color
+              const hexColor = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+
+              // Update brush color
+              setToolOptions('brush', { color: hexColor });
+
+              // Log color in multiple formats for user reference
+              console.log('Picked color:', {
+                hex: hexColor,
+                rgb: `rgb(${r}, ${g}, ${b})`,
+                rgba: `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`,
+                hsl: rgbToHsl(r, g, b)
+              });
+            }
           }
         }
         setIsDrawing(false);
@@ -226,49 +279,66 @@ export function useCanvasInteraction() {
           if (ctx) {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const clickedPixel = ctx.getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
-            const tolerance = 32;
-            
+            const tolerance = toolOptions.selection.tolerance;
+
+            const x = Math.floor(pos.x);
+            const y = Math.floor(pos.y);
+
+            // Ensure click is within canvas bounds
+            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+              console.log('Magic wand: Click outside canvas bounds');
+              setIsDrawing(false);
+              return;
+            }
+
             const selectedPoints: number[] = [];
             const visited = new Set<string>();
-            const stack: Point[] = [{ x: Math.floor(pos.x), y: Math.floor(pos.y) }];
-            
-            const colorMatch = (x: number, y: number): boolean => {
-              const idx = (y * canvas.width + x) * 4;
+            const stack: Point[] = [{ x, y }];
+            const maxPixels = 50000; // Limit to prevent performance issues
+
+            const colorMatch = (px: number, py: number): boolean => {
+              const idx = (py * canvas.width + px) * 4;
               const r = Math.abs(imageData.data[idx] - clickedPixel[0]);
               const g = Math.abs(imageData.data[idx + 1] - clickedPixel[1]);
               const b = Math.abs(imageData.data[idx + 2] - clickedPixel[2]);
               return r <= tolerance && g <= tolerance && b <= tolerance;
             };
-            
-            while (stack.length > 0 && visited.size < 10000) {
+
+            while (stack.length > 0 && visited.size < maxPixels) {
               const point = stack.pop()!;
               const key = `${point.x},${point.y}`;
-              
+
               if (visited.has(key) || point.x < 0 || point.y < 0 ||
                   point.x >= canvas.width || point.y >= canvas.height) {
                 continue;
               }
-              
+
               if (!colorMatch(point.x, point.y)) {
                 continue;
               }
-              
+
               visited.add(key);
               selectedPoints.push(point.x, point.y);
-              
+
+              // Add adjacent pixels to stack
               stack.push({ x: point.x + 1, y: point.y });
               stack.push({ x: point.x - 1, y: point.y });
               stack.push({ x: point.x, y: point.y + 1 });
               stack.push({ x: point.x, y: point.y - 1 });
             }
-            
+
             if (selectedPoints.length > 0) {
               setSelection({
                 tool: 'magic-wand',
                 shape: { type: 'lasso', points: selectedPoints },
                 layerId: activeDocument.activeLayerId
               });
-              console.log('Magic wand selected', visited.size, 'pixels');
+              console.log(`Magic wand selected ${visited.size} pixels (tolerance: ${tolerance})`);
+              if (visited.size >= maxPixels) {
+                console.warn(`Selection limited to ${maxPixels} pixels for performance`);
+              }
+            } else {
+              console.log('Magic wand: No matching pixels found');
             }
           }
         }

@@ -144,6 +144,7 @@ export interface PenToolOptions {
 
 export interface SelectionToolOptions {
   feather: number;
+  tolerance: number; // For magic wand tool (0-255)
 }
 
 export interface TextToolOptions {

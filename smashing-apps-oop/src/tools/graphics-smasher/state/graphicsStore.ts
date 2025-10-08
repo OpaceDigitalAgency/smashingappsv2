@@ -71,7 +71,8 @@ const defaultToolOptions: ToolOptionsState = {
     underline: false
   },
   selection: {
-    feather: 0
+    feather: 0,
+    tolerance: 32
   }
 };
 
