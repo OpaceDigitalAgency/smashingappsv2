@@ -302,24 +302,7 @@ const CanvasViewport: React.FC = () => {
           key={layer.id}
           opacity={layer.opacity}
           visible={layer.visible}
-          x={layer.transform.x}
-          y={layer.transform.y}
-          rotation={layer.transform.rotation}
-          scaleX={layer.transform.scaleX}
-          scaleY={layer.transform.scaleY}
-          draggable={activeTool === 'move' && !layer.locked}
-          listening={activeTool === 'move' && !layer.locked}
-          onDragEnd={(evt) => {
-            const node = evt.target;
-            updateLayer(activeDocument.id, layer.id, (current) => ({
-              ...current,
-              transform: {
-                ...current.transform,
-                x: node.x(),
-                y: node.y()
-              }
-            }));
-          }}
+          listening={false}
         >
           {layerFill && (
             <Rect
@@ -564,14 +547,7 @@ const CanvasViewport: React.FC = () => {
             shadowOffsetX={0}
             shadowOffsetY={4}
           />
-          <Group
-            clip={{
-              x: 0,
-              y: 0,
-              width: activeDocument.width,
-              height: activeDocument.height
-            }}
-          >
+          <Group>
             {renderLayers}
 
             {currentStroke && (
