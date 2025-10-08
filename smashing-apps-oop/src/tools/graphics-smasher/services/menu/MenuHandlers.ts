@@ -2,6 +2,8 @@ import type { DocumentState, Layer } from '../../types';
 import { renderDocumentToCanvas } from '../../utils/export/renderDocumentToCanvas';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { ClipboardService } from '../clipboard/ClipboardService';
+import { ProjectService } from '../filesystem/ProjectService';
+import { ExportDialogService } from '../dialogs/ExportDialog';
 
 export class MenuHandlers {
   private static instance: MenuHandlers;
@@ -78,6 +80,7 @@ export class MenuHandlers {
 
   async save(document: DocumentState | null): Promise<void> {
     if (!document) return;
+    // For now, save as PNG. In future, could check if project file exists
     await this.exportAs(document, 'png');
   }
 
@@ -86,8 +89,45 @@ export class MenuHandlers {
     await this.exportAs(document, 'png');
   }
 
-  async exportAs(document: DocumentState | null, format: 'png' | 'jpeg' | 'webp' | 'svg'): Promise<void> {
+  async saveProject(document: DocumentState | null): Promise<void> {
     if (!document) return;
+    await ProjectService.saveProject(document);
+  }
+
+  async loadProject(): Promise<void> {
+    const document = await ProjectService.loadProject();
+    if (document) {
+      const { documents, setActiveDocument } = useGraphicsStore.getState();
+      // Add the loaded document to the store
+      // For now, we'll need to create a new document and copy the data
+      // This is a simplified implementation
+      const { createDocument } = useGraphicsStore.getState();
+      const newId = createDocument({
+        name: document.name,
+        width: document.width,
+        height: document.height
+      });
+      setActiveDocument(newId);
+      // TODO: Properly restore all document state including layers
+    }
+  }
+
+  async exportAs(document: DocumentState | null, format: 'png' | 'jpeg' | 'webp' | 'svg', quality?: number): Promise<void> {
+    if (!document) return;
+
+    // Get quality setting for JPEG/WebP if not provided
+    let exportQuality = quality;
+    if (!exportQuality) {
+      if (format === 'jpeg') {
+        const options = await ExportDialogService.showJpegExportDialog();
+        if (options.cancelled) return;
+        exportQuality = options.quality;
+      } else if (format === 'webp') {
+        const options = await ExportDialogService.showWebPExportDialog();
+        if (options.cancelled) return;
+        exportQuality = options.quality;
+      }
+    }
 
     try {
       const canvas = await renderDocumentToCanvas(document);
@@ -106,6 +146,8 @@ export class MenuHandlers {
       }
 
       const mimeType = `image/${format}`;
+      const qualityValue = exportQuality ? exportQuality / 100 : (format === 'jpeg' ? 0.95 : 0.9);
+
       canvas.toBlob((blob) => {
         if (!blob) {
           console.error('Failed to export document.');
@@ -118,16 +160,27 @@ export class MenuHandlers {
         a.download = `${document.name}.${format}`;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 100);
-      }, mimeType, format === 'jpeg' ? 0.95 : undefined);
+      }, mimeType, format === 'jpeg' || format === 'webp' ? qualityValue : undefined);
     } catch (error) {
       console.error('Failed to export document:', error);
     }
   }
 
-  closeDocument(documentId: string | null): void {
+  async closeDocument(documentId: string | null): Promise<void> {
     if (!documentId) return;
-    const { closeDocument } = useGraphicsStore.getState();
-    closeDocument(documentId);
+
+    const { documents, closeDocument } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+
+    if (document) {
+      // Check for unsaved changes and prompt if needed
+      const canClose = await ProjectService.promptSaveBeforeClose(document);
+      if (canClose) {
+        closeDocument(documentId);
+      }
+    } else {
+      closeDocument(documentId);
+    }
   }
 
   // Edit Menu Handlers

@@ -55,6 +55,16 @@ export const fileCommands: Command[] = [
     isEnabled: (context) => context.documentId !== null
   },
   {
+    id: 'file.saveProject',
+    label: 'Save Project...',
+    category: 'file',
+    run: async (context) => {
+      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
+      await menuHandlers.saveProject(document ?? null);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
     id: 'file.export.png',
     label: 'Export as PNG...',
     category: 'file',
