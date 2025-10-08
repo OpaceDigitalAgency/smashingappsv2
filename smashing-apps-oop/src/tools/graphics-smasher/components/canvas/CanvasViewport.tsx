@@ -53,6 +53,7 @@ const CanvasViewport: React.FC = () => {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [dashOffset, setDashOffset] = useState(0);
 
   const {
     isDrawing,
@@ -80,6 +81,17 @@ const CanvasViewport: React.FC = () => {
     const observer = new ResizeObserver(updateSize);
     observer.observe(node);
     return () => observer.disconnect();
+  }, []);
+
+  // Marching ants animation
+  useEffect(() => {
+    let animationId: number;
+    const animate = () => {
+      setDashOffset((prev) => (prev + 0.5) % 12);
+      animationId = requestAnimationFrame(animate);
+    };
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
   }, []);
 
   const handleWheel = useCallback(
@@ -151,6 +163,7 @@ const CanvasViewport: React.FC = () => {
               height={height}
               stroke="#6366f1"
               dash={[8, 4]}
+              dashOffset={dashOffset}
               strokeWidth={selectionStrokeWidth}
               listening={false}
             />
@@ -178,6 +191,7 @@ const CanvasViewport: React.FC = () => {
             stroke="#6366f1"
             strokeWidth={selectionStrokeWidth}
             dash={[8, 4]}
+            dashOffset={dashOffset}
             closed
             listening={false}
             fill={isPreview ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)'}
@@ -188,7 +202,7 @@ const CanvasViewport: React.FC = () => {
 
       return null;
     },
-    [selectionStrokeWidth]
+    [selectionStrokeWidth, dashOffset]
   );
 
   const stageCursor = useMemo(() => {
