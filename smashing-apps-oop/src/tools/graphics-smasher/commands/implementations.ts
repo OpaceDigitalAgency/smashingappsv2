@@ -191,6 +191,17 @@ export const editCommands: Command[] = [
     isEnabled: (context) => context.hasSelection
   },
   {
+    id: 'edit.delete',
+    label: 'Delete',
+    shortcut: 'Delete',
+    category: 'edit',
+    run: async (context) => {
+      const selection = useGraphicsStore.getState().selection;
+      await ClipboardService.deleteSelection(selection, context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
     id: 'edit.transform.free',
     label: 'Free Transform',
     shortcut: '⌘T',

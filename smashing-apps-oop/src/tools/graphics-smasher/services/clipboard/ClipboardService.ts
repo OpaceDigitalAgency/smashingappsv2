@@ -70,12 +70,75 @@ class ClipboardServiceClass {
   async cutSelection(selection: SelectionState | null, documentId: string | null): Promise<boolean> {
     const success = await this.copySelection(selection, documentId);
     if (success && documentId && selection?.layerId) {
-      // Clear the selection area by creating an eraser effect
-      const { clearSelection } = useGraphicsStore.getState();
-      clearSelection();
+      // Delete the selected area from the layer
+      await this.deleteSelection(selection, documentId);
       console.log('Cut selection to clipboard');
     }
     return success;
+  }
+
+  async deleteSelection(selection: SelectionState | null, documentId: string | null): Promise<boolean> {
+    if (!selection || !documentId || !selection.layerId) {
+      console.warn('No selection to delete');
+      return false;
+    }
+
+    const { documents, updateLayer, clearSelection } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return false;
+
+    const layer = document.layers.find(l => l.id === selection.layerId);
+    if (!layer) return false;
+
+    // Create an eraser stroke that covers the selection area
+    if (selection.shape.type === 'rect') {
+      // For rectangular selections, create a filled rectangle eraser
+      const existingShapes = (layer.metadata?.shapes as any[]) || [];
+
+      // Add a white rectangle to erase the selection
+      const eraserShape = {
+        type: 'rectangle' as const,
+        x: selection.shape.x,
+        y: selection.shape.y,
+        width: selection.shape.width,
+        height: selection.shape.height,
+        fill: '#ffffff',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        isEraser: true
+      };
+
+      updateLayer(documentId, selection.layerId, (l) => ({
+        ...l,
+        metadata: {
+          ...l.metadata,
+          shapes: [...existingShapes, eraserShape]
+        }
+      }));
+    } else if (selection.shape.type === 'lasso') {
+      // For lasso selections, create an eraser stroke
+      const existingStrokes = (layer.metadata?.strokes as any[]) || [];
+
+      const eraserStroke = {
+        tool: 'eraser',
+        points: selection.shape.points,
+        color: '#ffffff',
+        size: 50, // Large size to cover the area
+        opacity: 1
+      };
+
+      updateLayer(documentId, selection.layerId, (l) => ({
+        ...l,
+        metadata: {
+          ...l.metadata,
+          strokes: [...existingStrokes, eraserStroke]
+        }
+      }));
+    }
+
+    clearSelection();
+    console.log('Deleted selection');
+    return true;
   }
 
   async paste(documentId: string | null): Promise<boolean> {

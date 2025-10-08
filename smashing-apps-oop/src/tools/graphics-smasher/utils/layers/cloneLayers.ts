@@ -32,17 +32,8 @@ function deepClone<T>(obj: T): T {
 }
 
 export function cloneLayers(layers: Layer[]): Layer[] {
-  if (typeof structuredClone === 'function') {
-    try {
-      return structuredClone(layers);
-    } catch (error) {
-      if (process.env.NODE_ENV !== 'test') {
-        console.warn('structuredClone failed for layer snapshot, falling back to manual clone', error);
-      }
-    }
-  }
-
-  // Manual deep clone with proper handling of nested structures
+  // Always use manual deep clone to avoid structuredClone issues with complex objects
+  // structuredClone fails with certain canvas-related objects and nested arrays
   return layers.map((layer) => ({
     ...layer,
     masks: layer.masks.map((mask) => ({

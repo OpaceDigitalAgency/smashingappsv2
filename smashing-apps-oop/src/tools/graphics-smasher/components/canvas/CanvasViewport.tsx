@@ -83,6 +83,42 @@ const CanvasViewport: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Center canvas on initial load or when document changes
+  useEffect(() => {
+    if (!activeDocument || size.width === 0 || size.height === 0) {
+      return;
+    }
+
+    // Only center if viewport is at default position (0, 0, zoom 1)
+    const isDefaultViewport =
+      activeDocument.viewport.panX === 0 &&
+      activeDocument.viewport.panY === 0 &&
+      activeDocument.viewport.zoom === 1;
+
+    if (isDefaultViewport) {
+      // Calculate zoom to fit canvas in viewport with some padding
+      const padding = 100;
+      const availableWidth = size.width - padding * 2;
+      const availableHeight = size.height - padding * 2;
+
+      const scaleX = availableWidth / activeDocument.width;
+      const scaleY = availableHeight / activeDocument.height;
+      const fitZoom = Math.min(scaleX, scaleY, 1); // Don't zoom in beyond 100%
+
+      // Center the canvas
+      const canvasWidth = activeDocument.width * fitZoom;
+      const canvasHeight = activeDocument.height * fitZoom;
+      const panX = (size.width - canvasWidth) / 2;
+      const panY = (size.height - canvasHeight) / 2;
+
+      setViewport(activeDocument.id, {
+        zoom: fitZoom,
+        panX,
+        panY
+      });
+    }
+  }, [activeDocument?.id, size.width, size.height]);
+
   // Marching ants animation
   useEffect(() => {
     let animationId: number;
@@ -353,6 +389,7 @@ const CanvasViewport: React.FC = () => {
               );
             }
             if (shape.type === 'rectangle' && shape.width && shape.height) {
+              const isEraser = (shape as any).isEraser === true;
               return (
                 <Rect
                   key={`shape-${layer.id}-${shapeIndex}`}
@@ -364,6 +401,7 @@ const CanvasViewport: React.FC = () => {
                   stroke={shape.stroke || '#000000'}
                   strokeWidth={shape.strokeWidth || 1}
                   listening={activeTool === 'move' || activeTool === 'object-select'}
+                  globalCompositeOperation={isEraser ? 'destination-out' : 'source-over'}
                   onClick={() => {
                     if (activeTool === 'move' || activeTool === 'object-select') {
                       console.log('Selected shape:', shapeIndex);

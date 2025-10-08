@@ -328,12 +328,30 @@ export function useCanvasInteraction() {
             }
 
             if (selectedPoints.length > 0) {
+              // Calculate bounding box from selected pixels
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              for (let i = 0; i < selectedPoints.length; i += 2) {
+                const px = selectedPoints[i];
+                const py = selectedPoints[i + 1];
+                minX = Math.min(minX, px);
+                minY = Math.min(minY, py);
+                maxX = Math.max(maxX, px);
+                maxY = Math.max(maxY, py);
+              }
+
+              // Create a rectangular selection from the bounding box
               setSelection({
                 tool: 'magic-wand',
-                shape: { type: 'lasso', points: selectedPoints },
+                shape: {
+                  type: 'rect',
+                  x: minX,
+                  y: minY,
+                  width: maxX - minX + 1,
+                  height: maxY - minY + 1
+                },
                 layerId: activeDocument.activeLayerId
               });
-              console.log(`Magic wand selected ${visited.size} pixels (tolerance: ${tolerance})`);
+              console.log(`Magic wand selected ${visited.size} pixels (tolerance: ${tolerance}), bounding box: ${minX},${minY} to ${maxX},${maxY}`);
               if (visited.size >= maxPixels) {
                 console.warn(`Selection limited to ${maxPixels} pixels for performance`);
               }
@@ -371,7 +389,7 @@ export function useCanvasInteraction() {
           points: [pos.x, pos.y],
           color: '#ffffff',
           size: eraserSettings.size,
-          opacity: eraserSettings.opacity
+          opacity: 1 // Always use full opacity for eraser to ensure complete removal
         });
         break;
       case 'shape':
