@@ -125,11 +125,6 @@ function createDocumentState(input: Partial<Pick<DocumentState, 'name' | 'width'
 }
 
 function pushSnapshot(document: DocumentState, description: string) {
-  // Temporarily disable snapshots to fix drawing tools
-  // TODO: Fix structuredClone issues and re-enable
-  console.log('Snapshot disabled:', description);
-  return;
-  
   const snapshot: LayerSnapshot = {
     id: createId('hist'),
     payload: cloneLayers(document.layers),
@@ -397,6 +392,28 @@ export const useGraphicsStore = create<GraphicsStore>()(
           };
           document.updatedAt = Date.now();
           pushSnapshot(document, `Update layer "${currentLayer.name}"`);
+        })
+      ),
+    updateLayerSilent: (documentId, layerId, updater) =>
+      set((state) =>
+        produce(state, (draft) => {
+          const document = draft.documents.find((doc) => doc.id === documentId);
+          if (!document) {
+            return;
+          }
+          const layerIndex = document.layers.findIndex((layer) => layer.id === layerId);
+          if (layerIndex === -1) {
+            return;
+          }
+          const currentLayer = document.layers[layerIndex];
+          const updatedLayer = updater({ ...currentLayer });
+          document.layers[layerIndex] = {
+            ...currentLayer,
+            ...updatedLayer,
+            id: currentLayer.id
+          };
+          document.updatedAt = Date.now();
+          // No history push - silent update
         })
       ),
     toggleLayerVisibility: (documentId, layerId) =>

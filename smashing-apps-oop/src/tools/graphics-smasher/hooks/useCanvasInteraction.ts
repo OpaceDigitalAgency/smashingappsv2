@@ -39,6 +39,8 @@ export function useCanvasInteraction() {
   const activeTool = useGraphicsStore((state) => state.activeTool);
   const activeDocument = useActiveDocument();
   const updateLayer = useGraphicsStore((state) => state.updateLayer);
+  const updateLayerSilent = useGraphicsStore((state) => state.updateLayerSilent);
+  const pushHistory = useGraphicsStore((state) => state.pushHistory);
   const toolOptions = useGraphicsStore((state) => state.toolOptions);
   const setSelection = useGraphicsStore((state) => state.setSelection);
   const clearSelection = useGraphicsStore((state) => state.clearSelection);

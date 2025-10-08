@@ -252,6 +252,7 @@ export interface GraphicsStoreActions {
   reorderLayer: (documentId: string, layerId: string, targetIndex: number) => void;
   setActiveLayer: (documentId: string, layerId: string | null) => void;
   updateLayer: (documentId: string, layerId: string, updater: (layer: Layer) => Layer) => void;
+  updateLayerSilent: (documentId: string, layerId: string, updater: (layer: Layer) => Layer) => void;
   toggleLayerVisibility: (documentId: string, layerId: string) => void;
   toggleLayerLock: (documentId: string, layerId: string) => void;
   pushHistory: (documentId: string, description: string) => void;

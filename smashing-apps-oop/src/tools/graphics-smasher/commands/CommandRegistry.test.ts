@@ -66,8 +66,8 @@ describe('CommandRegistry', () => {
     });
   });
 
-  describe('execute', () => {
-    it('should execute a registered command', () => {
+  describe('run', () => {
+    it('should execute a registered command', async () => {
       let executed = false;
       const command: Command = {
         id: 'test.execute',
@@ -79,12 +79,12 @@ describe('CommandRegistry', () => {
       };
 
       CommandRegistry.register(command);
-      CommandRegistry.execute('test.execute');
+      await CommandRegistry.run('test.execute');
 
       expect(executed).toBe(true);
     });
 
-    it('should pass context to command', () => {
+    it('should pass context to command', async () => {
       let receivedContext: any = null;
       const command: Command = {
         id: 'test.context',
@@ -95,19 +95,16 @@ describe('CommandRegistry', () => {
         }
       };
 
-      const testContext = {
-        documentId: 'doc-123',
-        activeLayerId: 'layer-456',
-        hasSelection: true
-      };
-
       CommandRegistry.register(command);
-      CommandRegistry.execute('test.context', testContext);
+      await CommandRegistry.run('test.context');
 
-      expect(receivedContext).toEqual(testContext);
+      // Context is generated from store, so just check it was passed
+      expect(receivedContext).toBeDefined();
+      expect(receivedContext).toHaveProperty('documentId');
+      expect(receivedContext).toHaveProperty('activeLayerId');
     });
 
-    it('should not execute if command is disabled', () => {
+    it('should not execute if command is disabled', async () => {
       let executed = false;
       const command: Command = {
         id: 'test.disabled',
@@ -120,12 +117,12 @@ describe('CommandRegistry', () => {
       };
 
       CommandRegistry.register(command);
-      CommandRegistry.execute('test.disabled');
+      await CommandRegistry.run('test.disabled');
 
       expect(executed).toBe(false);
     });
 
-    it('should execute if command is enabled', () => {
+    it('should execute if command is enabled', async () => {
       let executed = false;
       const command: Command = {
         id: 'test.enabled',
@@ -138,15 +135,14 @@ describe('CommandRegistry', () => {
       };
 
       CommandRegistry.register(command);
-      CommandRegistry.execute('test.enabled');
+      await CommandRegistry.run('test.enabled');
 
       expect(executed).toBe(true);
     });
 
-    it('should handle non-existent commands gracefully', () => {
-      expect(() => {
-        CommandRegistry.execute('non.existent');
-      }).not.toThrow();
+    it('should handle non-existent commands gracefully', async () => {
+      // Should not throw, just log a warning
+      await expect(CommandRegistry.run('non.existent')).resolves.not.toThrow();
     });
   });
 
