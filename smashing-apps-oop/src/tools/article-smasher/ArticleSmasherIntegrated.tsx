@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { PromptProvider } from './contexts/PromptContext';
 import { ArticleWizardProvider } from './contexts/ArticleWizardContext';
 import ArticleWizard from './components/ArticleWizard';
@@ -129,6 +129,48 @@ const ArticleSmasherLanding: React.FC = () => {
 };
 
 /**
+ * Component that handles article type routing
+ * Maps URL paths to article types and redirects to wizard
+ */
+const ArticleTypeRouter: React.FC = () => {
+  const { articleType } = useParams<{ articleType: string }>();
+
+  // Map URL paths to article type values
+  const articleTypeMap: Record<string, string> = {
+    'blog-post': 'blog-post',
+    'seo-article': 'seo-article',
+    'academic-paper': 'academic-paper',
+    'news-article': 'news-article',
+    'product-description': 'product-description',
+    'long-form': 'long-form',
+    'short-form': 'short-form',
+    'social-post': 'social-post',
+    'whitepaper': 'whitepaper',
+    'press-release': 'press-release',
+    'case-study': 'case-study',
+    'technical-doc': 'technical-doc',
+    'how-to': 'how-to',
+    'faq-page': 'faq-page'
+  };
+
+  // Check if the article type is valid
+  const mappedType = articleType ? articleTypeMap[articleType] : null;
+
+  if (!mappedType) {
+    // If invalid article type, redirect to main page
+    return <Navigate to="/tools/article-smasher" replace />;
+  }
+
+  // Store the article type in localStorage so the wizard can pick it up
+  React.useEffect(() => {
+    localStorage.setItem('preselected_article_type', mappedType);
+  }, [mappedType]);
+
+  // Redirect to wizard
+  return <Navigate to="/tools/article-smasher/wizard" replace />;
+};
+
+/**
  * Main Article Smasher component with routing
  */
 const ArticleSmasherIntegrated: React.FC = () => {
@@ -144,6 +186,8 @@ const ArticleSmasherIntegrated: React.FC = () => {
             </ArticleWizardProvider>
           }
         />
+        {/* Article type specific routes */}
+        <Route path=":articleType" element={<ArticleTypeRouter />} />
       </Routes>
     </PromptProvider>
   );

@@ -14,9 +14,14 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   const [currentStep, setCurrentStep] = useState(1);
   const [showComplete, setShowComplete] = useState(false);
   
-  // Article type
-  const [selectedArticleType, setSelectedArticleType] = useState('blog-post');
-  const [isArticleTypeLocked, setIsArticleTypeLocked] = useState(false);
+  // Article type - check for preselected type from URL routing
+  const [selectedArticleType, setSelectedArticleType] = useState(() => {
+    const preselected = localStorage.getItem('preselected_article_type');
+    return preselected || 'blog-post';
+  });
+  const [isArticleTypeLocked, setIsArticleTypeLocked] = useState(() => {
+    return !!localStorage.getItem('preselected_article_type');
+  });
   
   // Topic
   const [title, setTitle] = useState('');
@@ -46,7 +51,14 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   const [generating, setGenerating] = useState(false);
   const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
   const [isLoadingKeywords, setIsLoadingKeywords] = useState(false);
-  
+
+  // Clear preselected article type on unmount
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('preselected_article_type');
+    };
+  }, []);
+
   // Navigation functions
   const goToNextStep = () => {
     if (currentStep < 6) {
