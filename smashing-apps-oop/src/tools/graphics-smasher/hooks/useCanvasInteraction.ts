@@ -64,6 +64,9 @@ export function useCanvasInteraction() {
   }, [activeDocument]);
 
   const handleMouseDown = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+    // Ignore right-click (button 2) and middle-click (button 1)
+    if (e.evt.button !== 0) return;
+
     if (!activeDocument) return;
 
     const stage = e.target.getStage();

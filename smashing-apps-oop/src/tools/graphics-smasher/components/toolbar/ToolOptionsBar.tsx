@@ -288,6 +288,13 @@ const ToolOptionsBar: React.FC = () => {
     }
   };
 
+  const toolOptionsContent = getToolOptions();
+
+  // Don't render the bar if there are no options
+  if (!toolOptionsContent) {
+    return null;
+  }
+
   return (
     <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-1.5 shadow-sm flex-shrink-0">
       <div className="flex items-center gap-2">
@@ -295,7 +302,7 @@ const ToolOptionsBar: React.FC = () => {
           {activeTool.replace(/-/g, ' ')}
         </span>
         <div className="h-4 w-px bg-slate-300" />
-        {getToolOptions()}
+        {toolOptionsContent}
       </div>
     </div>
   );

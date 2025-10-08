@@ -415,44 +415,19 @@ export class MenuHandlers {
 
   rotateCanvas(documentId: string | null, degrees: number): void {
     if (!documentId) return;
-    const { documents, updateLayer } = useGraphicsStore.getState();
-    const document = documents.find(d => d.id === documentId);
-    if (!document) return;
 
-    const radians = (degrees * Math.PI) / 180;
-    
-    // Rotate each layer around the document center
-    const centerX = document.width / 2;
-    const centerY = document.height / 2;
-    
-    document.layers.forEach(layer => {
-      const currentRotation = layer.transform.rotation || 0;
-      const currentX = layer.transform.x || 0;
-      const currentY = layer.transform.y || 0;
-      
-      // Calculate new position after rotation around center
-      const dx = currentX - centerX;
-      const dy = currentY - centerY;
-      const cos = Math.cos(radians);
-      const sin = Math.sin(radians);
-      
-      const newX = centerX + (dx * cos - dy * sin);
-      const newY = centerY + (dx * sin + dy * cos);
-      
-      updateLayer(documentId, layer.id, (l) => ({
-        ...l,
-        transform: {
-          ...l.transform,
-          x: newX,
-          y: newY,
-          rotation: currentRotation + radians
-        }
-      }));
-    });
-    
-    // Force a re-render by updating the document timestamp
-    const { updateDocumentMeta } = useGraphicsStore.getState();
-    updateDocumentMeta(documentId, {});
+    alert('Canvas rotation is currently disabled due to technical limitations. Please use Layer > Transform > Rotate to rotate individual layers instead.');
+    return;
+
+    // TODO: Implement proper canvas rotation that:
+    // 1. Swaps canvas dimensions for 90/270 degree rotations
+    // 2. Properly transforms all layer content (strokes, shapes, images)
+    // 3. Maintains visual appearance after rotation
+    //
+    // Current implementation has issues with:
+    // - Brush strokes not rotating correctly
+    // - Layer positions becoming incorrect
+    // - Content going off-canvas
   }
 
   flipHorizontal(documentId: string | null): void {
