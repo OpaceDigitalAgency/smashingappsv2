@@ -25,6 +25,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ onClose
         { label: 'Cut', shortcut: '⌘X' },
         { label: 'Copy', shortcut: '⌘C' },
         { label: 'Paste', shortcut: '⌘V' },
+        { label: 'Delete', shortcut: 'Delete/Backspace' },
         { label: 'Select All', shortcut: '⌘A' },
         { label: 'Deselect', shortcut: '⌘D' },
         { label: 'Free Transform', shortcut: '⌘T' }
@@ -50,6 +51,13 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ onClose
         { label: 'Show Grid', shortcut: '⌘\'' },
         { label: 'Show Rulers', shortcut: '⌘R' },
         { label: 'Show Guides', shortcut: '⌘;' }
+      ]
+    },
+    {
+      category: 'Help',
+      items: [
+        { label: 'Keyboard Shortcuts', shortcut: '⌘/' },
+        { label: 'Command Palette', shortcut: '⌘K' }
       ]
     },
     {

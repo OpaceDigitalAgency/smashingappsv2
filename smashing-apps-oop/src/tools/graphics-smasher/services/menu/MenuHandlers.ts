@@ -1241,15 +1241,13 @@ export class MenuHandlers {
   }
 
   showKeyboardShortcuts(): void {
-    // This will be handled by the component that calls it
-    // The modal will be shown via state management
-    console.log('Show keyboard shortcuts modal');
+    const { setKeyboardShortcutsModalOpen } = useGraphicsStore.getState();
+    setKeyboardShortcutsModalOpen(true);
   }
 
   showAbout(): void {
-    // This will be handled by the component that calls it
-    // The modal will be shown via state management
-    console.log('Show about modal');
+    const { setAboutModalOpen } = useGraphicsStore.getState();
+    setAboutModalOpen(true);
   }
 }
 

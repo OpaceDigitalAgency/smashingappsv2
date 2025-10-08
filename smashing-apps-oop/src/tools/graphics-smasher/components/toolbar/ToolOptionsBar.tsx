@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useGraphicsStore } from '../../state/graphicsStore';
+import { Keyboard } from 'lucide-react';
 
 const ToolOptionsBar: React.FC = () => {
   const activeTool = useGraphicsStore((state) => state.activeTool);
   const toolOptions = useGraphicsStore((state) => state.toolOptions);
   const setToolOptions = useGraphicsStore((state) => state.setToolOptions);
+  const setKeyboardShortcutsModalOpen = useGraphicsStore((state) => state.setKeyboardShortcutsModalOpen);
   const [tolerance, setTolerance] = useState(32);
 
   const renderBrushOptions = () => (
@@ -304,6 +306,14 @@ const ToolOptionsBar: React.FC = () => {
         <div className="h-4 w-px bg-slate-300" />
         {toolOptionsContent}
       </div>
+      <button
+        onClick={() => setKeyboardShortcutsModalOpen(true)}
+        className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+        title="Keyboard Shortcuts (⌘/)"
+      >
+        <Keyboard size={14} />
+        <span>Shortcuts</span>
+      </button>
     </div>
   );
 };

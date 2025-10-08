@@ -140,6 +140,14 @@ export function useGraphicsShortcuts(documentId: string | null) {
         return;
       }
 
+      // Keyboard Shortcuts (Cmd/Ctrl + /)
+      if (metaKey && event.key === '/') {
+        event.preventDefault();
+        const { setKeyboardShortcutsModalOpen } = useGraphicsStore.getState();
+        setKeyboardShortcutsModalOpen(true);
+        return;
+      }
+
       // Tool shortcuts (only when not in input)
       if (!metaKey && !event.shiftKey && !event.altKey) {
         const key = event.key.toLowerCase();

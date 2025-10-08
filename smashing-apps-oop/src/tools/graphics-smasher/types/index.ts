@@ -229,6 +229,8 @@ export interface GraphicsStoreState {
   activePanel: PanelTab;
   panelVisibility: PanelVisibility;
   commandPaletteOpen: boolean;
+  keyboardShortcutsModalOpen: boolean;
+  aboutModalOpen: boolean;
   workerStatus: WorkerStatus;
   canvasEngine: CanvasEngineStatus;
   toolOptions: ToolOptionsState;
@@ -265,6 +267,8 @@ export interface GraphicsStoreActions {
   togglePanelVisibility: (panel: PanelTab) => void;
   setPanelVisibility: (panel: PanelTab, visible: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
+  setKeyboardShortcutsModalOpen: (open: boolean) => void;
+  setAboutModalOpen: (open: boolean) => void;
   setWorkerStatus: (worker: keyof WorkerStatus, status: WorkerStatus[keyof WorkerStatus]) => void;
   setCanvasEngineStatus: (status: Partial<CanvasEngineStatus>) => void;
   setToolOptions: <T extends ToolOptionKey>(tool: T, options: Partial<ToolOptionsState[T]>) => void;

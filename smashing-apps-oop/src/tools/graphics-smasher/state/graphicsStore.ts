@@ -169,6 +169,8 @@ export const useGraphicsStore = create<GraphicsStore>()(
     activePanel: 'layers',
     panelVisibility: loadPanelVisibility(),
     commandPaletteOpen: false,
+    keyboardShortcutsModalOpen: false,
+    aboutModalOpen: false,
     workerStatus: {
       imageProcessing: 'idle',
       ai: 'idle'
@@ -552,6 +554,18 @@ export const useGraphicsStore = create<GraphicsStore>()(
       set((state) =>
         produce(state, (draft) => {
           draft.commandPaletteOpen = open;
+        })
+      ),
+    setKeyboardShortcutsModalOpen: (open) =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.keyboardShortcutsModalOpen = open;
+        })
+      ),
+    setAboutModalOpen: (open) =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.aboutModalOpen = open;
         })
       ),
     setWorkerStatus: (worker, status) =>

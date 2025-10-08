@@ -331,6 +331,7 @@ const MenuBar: React.FC = () => {
       title: 'Help',
       items: [
         { label: 'Graphics Smasher Help', shortcut: 'F1', action: wrapHandler(() => menuHandlers.showHelp()) },
+        { label: 'Selection Tools Guide', action: wrapHandler(() => { window.open('https://github.com/OpaceDigitalAgency/smashingappsv2/blob/main/SELECTION_TOOLS_GUIDE.md', '_blank'); }) },
         { label: 'Keyboard Shortcuts', shortcut: '⌘/', action: wrapHandler(() => menuHandlers.showKeyboardShortcuts()) },
         { divider: true },
         { label: 'About Graphics Smasher', action: wrapHandler(() => menuHandlers.showAbout()) },

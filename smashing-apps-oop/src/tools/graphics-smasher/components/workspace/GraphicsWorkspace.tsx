@@ -11,6 +11,8 @@ import HistoryPanel from '../panels/HistoryPanel';
 import PropertiesPanel from '../panels/PropertiesPanel';
 import AssetsPanel from '../panels/AssetsPanel';
 import CommandPaletteOverlay from '../overlays/CommandPaletteOverlay';
+import KeyboardShortcutsModal from '../dialogs/KeyboardShortcutsModal';
+import AboutModal from '../dialogs/AboutModal';
 import { useActiveDocument, useActiveDocumentId } from '../../hooks/useGraphicsStore';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { useGraphicsShortcuts } from '../../hooks/useGraphicsShortcuts';
@@ -26,6 +28,10 @@ const GraphicsWorkspace: React.FC = () => {
   const documents = useGraphicsStore((state) => state.documents);
   const createDocument = useGraphicsStore((state) => state.createDocument);
   const setActiveDocument = useGraphicsStore((state) => state.setActiveDocument);
+  const keyboardShortcutsModalOpen = useGraphicsStore((state) => state.keyboardShortcutsModalOpen);
+  const setKeyboardShortcutsModalOpen = useGraphicsStore((state) => state.setKeyboardShortcutsModalOpen);
+  const aboutModalOpen = useGraphicsStore((state) => state.aboutModalOpen);
+  const setAboutModalOpen = useGraphicsStore((state) => state.setAboutModalOpen);
   const [topOffset, setTopOffset] = useState(0);
 
   useGraphicsShortcuts(activeDocumentId);
@@ -210,6 +216,12 @@ const GraphicsWorkspace: React.FC = () => {
           </div>
         </div>
         <CommandPaletteOverlay />
+        {keyboardShortcutsModalOpen && (
+          <KeyboardShortcutsModal onClose={() => setKeyboardShortcutsModalOpen(false)} />
+        )}
+        {aboutModalOpen && (
+          <AboutModal onClose={() => setAboutModalOpen(false)} />
+        )}
       </div>
     </div>
   );
