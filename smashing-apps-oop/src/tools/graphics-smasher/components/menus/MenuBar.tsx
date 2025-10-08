@@ -177,8 +177,8 @@ const MenuBar: React.FC = () => {
     {
       title: 'Image',
       items: [
-        { label: 'Image Size...', shortcut: '⌥⌘I', action: wrapHandler(() => menuHandlers.showImageSizeDialog(activeDocumentId, activeDocument)), disabled: !activeDocumentId },
-        { label: 'Canvas Size...', shortcut: '⌥⌘C', action: wrapHandler(() => menuHandlers.showCanvasSizeDialog(activeDocumentId, activeDocument)), disabled: !activeDocumentId },
+        { label: 'Image Size...', shortcut: '⌥⌘I', action: wrapHandler(() => menuHandlers.showImageSizeDialog(activeDocumentId)), disabled: !activeDocumentId },
+        { label: 'Canvas Size...', shortcut: '⌥⌘C', action: wrapHandler(() => menuHandlers.showCanvasSizeDialog(activeDocumentId)), disabled: !activeDocumentId },
         { divider: true },
         { label: 'Crop', action: wrapHandler(() => menuHandlers.cropToSelection(activeDocumentId, selection)), disabled: !selection },
         { label: 'Trim...', action: wrapHandler(() => menuHandlers.trim(activeDocumentId)), disabled: !activeDocumentId },

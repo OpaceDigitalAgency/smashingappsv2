@@ -325,9 +325,8 @@ export const imageCommands: Command[] = [
     label: 'Image Size...',
     shortcut: '⌥⌘I',
     category: 'image',
-    run: (context) => {
-      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
-      menuHandlers.showImageSizeDialog(context.documentId, document ?? null);
+    run: async (context) => {
+      await menuHandlers.showImageSizeDialog(context.documentId);
     },
     isEnabled: (context) => context.documentId !== null
   },
@@ -336,9 +335,8 @@ export const imageCommands: Command[] = [
     label: 'Canvas Size...',
     shortcut: '⌥⌘C',
     category: 'image',
-    run: (context) => {
-      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
-      menuHandlers.showCanvasSizeDialog(context.documentId, document ?? null);
+    run: async (context) => {
+      await menuHandlers.showCanvasSizeDialog(context.documentId);
     },
     isEnabled: (context) => context.documentId !== null
   },

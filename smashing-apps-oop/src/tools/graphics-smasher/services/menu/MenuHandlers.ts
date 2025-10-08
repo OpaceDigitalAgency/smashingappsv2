@@ -4,6 +4,7 @@ import { useGraphicsStore } from '../../state/graphicsStore';
 import { ClipboardService } from '../clipboard/ClipboardService';
 import { ProjectService } from '../filesystem/ProjectService';
 import { ExportDialogService } from '../dialogs/ExportDialog';
+import { ImageSizeDialogService } from '../dialogs/ImageSizeDialog';
 
 export class MenuHandlers {
   private static instance: MenuHandlers;
@@ -342,16 +343,32 @@ export class MenuHandlers {
     });
   }
 
-  resizeDocument(documentId: string | null, width: number, height: number): void {
+  async resizeDocument(documentId: string | null): Promise<void> {
     if (!documentId) return;
-    const { resizeDocument } = useGraphicsStore.getState();
-    resizeDocument(documentId, width, height);
+
+    const { documents, resizeDocument } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    const options = await ImageSizeDialogService.showImageSizeDialog(document.width, document.height);
+    if (!options.cancelled) {
+      resizeDocument(documentId, options.width, options.height);
+    }
   }
 
-  resizeCanvas(documentId: string | null, width: number, height: number): void {
+  async resizeCanvas(documentId: string | null): Promise<void> {
     if (!documentId) return;
-    const { resizeDocument } = useGraphicsStore.getState();
-    resizeDocument(documentId, width, height);
+
+    const { documents, resizeDocument } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    const options = await ImageSizeDialogService.showCanvasSizeDialog(document.width, document.height);
+    if (!options.cancelled) {
+      // For canvas size, we don't scale layers, just change document dimensions
+      // Layers stay in their current positions
+      resizeDocument(documentId, options.width, options.height);
+    }
   }
 
   rotateCanvas(documentId: string | null, degrees: number): void {
@@ -457,8 +474,44 @@ export class MenuHandlers {
   // Transform Menu Handlers
   transformLayer(documentId: string | null, activeLayerId: string | null, type: 'scale' | 'rotate' | 'skew'): void {
     if (!documentId || !activeLayerId) return;
-    // TODO: Implement transform UI
-    alert(`Transform ${type} - Coming soon`);
+    // Transform dialog will be shown by the component that calls this
+    // For now, we'll use a simple prompt-based approach
+    const { documents, updateLayer } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    const layer = document?.layers.find(l => l.id === activeLayerId);
+
+    if (!layer) return;
+
+    if (type === 'scale') {
+      const scaleInput = prompt('Enter scale percentage (e.g., 150 for 150%):', '100');
+      if (scaleInput) {
+        const scale = parseFloat(scaleInput) / 100;
+        if (!isNaN(scale)) {
+          updateLayer(documentId, activeLayerId, (l) => ({
+            ...l,
+            transform: {
+              ...l.transform,
+              scaleX: scale,
+              scaleY: scale
+            }
+          }));
+        }
+      }
+    } else if (type === 'rotate') {
+      const rotateInput = prompt('Enter rotation in degrees:', '0');
+      if (rotateInput) {
+        const rotation = parseFloat(rotateInput);
+        if (!isNaN(rotation)) {
+          updateLayer(documentId, activeLayerId, (l) => ({
+            ...l,
+            transform: {
+              ...l.transform,
+              rotation
+            }
+          }));
+        }
+      }
+    }
   }
 
   // Fill and Stroke Handlers
@@ -548,24 +601,14 @@ export class MenuHandlers {
   }
 
   // Image Size & Canvas Size Dialogs
-  showImageSizeDialog(documentId: string | null, document: DocumentState | null): void {
-    if (!documentId || !document) return;
-    const width = prompt('Enter new image width:', String(document.width));
-    if (!width) return;
-    const height = prompt('Enter new image height:', String(document.height));
-    if (!height) return;
-    
-    this.resizeDocument(documentId, parseInt(width), parseInt(height));
+  async showImageSizeDialog(documentId: string | null): Promise<void> {
+    if (!documentId) return;
+    await this.resizeDocument(documentId);
   }
 
-  showCanvasSizeDialog(documentId: string | null, document: DocumentState | null): void {
-    if (!documentId || !document) return;
-    const width = prompt('Enter new canvas width:', String(document.width));
-    if (!width) return;
-    const height = prompt('Enter new canvas height:', String(document.height));
-    if (!height) return;
-    
-    this.resizeCanvas(documentId, parseInt(width), parseInt(height));
+  async showCanvasSizeDialog(documentId: string | null): Promise<void> {
+    if (!documentId) return;
+    await this.resizeCanvas(documentId);
   }
 
   showArbitraryRotateDialog(documentId: string | null): void {
@@ -577,10 +620,64 @@ export class MenuHandlers {
   }
 
   // Trim functionality
-  trim(documentId: string | null): void {
+  async trim(documentId: string | null): Promise<void> {
     if (!documentId) return;
-    // TODO: Implement trim transparent pixels
-    alert('Trim - Coming soon');
+
+    const { documents } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    try {
+      // Render document to canvas to analyze
+      const { renderDocumentToCanvas } = await import('../../utils/export/renderDocumentToCanvas');
+      const canvas = await renderDocumentToCanvas(document);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      // Find bounds of non-transparent pixels
+      let minX = canvas.width;
+      let minY = canvas.height;
+      let maxX = 0;
+      let maxY = 0;
+
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const alpha = data[(y * canvas.width + x) * 4 + 3];
+          if (alpha > 0) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+
+      if (minX <= maxX && minY <= maxY) {
+        const newWidth = maxX - minX + 1;
+        const newHeight = maxY - minY + 1;
+
+        // Crop to the trimmed bounds
+        this.cropToSelection(documentId, {
+          tool: 'crop',
+          layerId: document.activeLayerId || '',
+          shape: {
+            type: 'rect',
+            x: minX,
+            y: minY,
+            width: newWidth,
+            height: newHeight
+          }
+        });
+      } else {
+        alert('No content to trim');
+      }
+    } catch (error) {
+      console.error('Failed to trim:', error);
+      alert('Failed to trim document');
+    }
   }
 
   // Place and Import
