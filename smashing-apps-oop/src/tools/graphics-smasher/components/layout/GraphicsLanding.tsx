@@ -22,9 +22,9 @@ const GraphicsLanding: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-slate-50 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Landing Content */}
-      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+      <div className="flex-1 bg-gradient-to-br from-indigo-50 via-white to-blue-50">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-16">
         <section className="rounded-3xl bg-white/80 p-10 shadow-lg ring-1 ring-black/5 backdrop-blur">
           <div className="grid gap-8 md:grid-cols-2 md:items-center">

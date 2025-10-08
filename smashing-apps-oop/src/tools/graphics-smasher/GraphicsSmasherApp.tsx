@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import GraphicsAppProvider from './providers/GraphicsAppProvider';
 import GraphicsWorkspace from './components/workspace/GraphicsWorkspace';
 import GraphicsLanding from './components/layout/GraphicsLanding';

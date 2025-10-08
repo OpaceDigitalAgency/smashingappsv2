@@ -163,6 +163,7 @@ const ArticleTypeRouter: React.FC = () => {
 
   // Store the article type in localStorage so the wizard can pick it up
   React.useEffect(() => {
+    console.log('ArticleTypeRouter: Setting preselected type:', mappedType);
     localStorage.setItem('preselected_article_type', mappedType);
   }, [mappedType]);
 

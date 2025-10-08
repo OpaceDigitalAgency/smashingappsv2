@@ -17,10 +17,13 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Article type - check for preselected type from URL routing
   const [selectedArticleType, setSelectedArticleType] = useState(() => {
     const preselected = localStorage.getItem('preselected_article_type');
+    console.log('ArticleWizardContext: Initializing with preselected type:', preselected);
     return preselected || 'blog-post';
   });
   const [isArticleTypeLocked, setIsArticleTypeLocked] = useState(() => {
-    return !!localStorage.getItem('preselected_article_type');
+    const locked = !!localStorage.getItem('preselected_article_type');
+    console.log('ArticleWizardContext: Article type locked:', locked);
+    return locked;
   });
   
   // Topic

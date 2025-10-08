@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import AICore from '../../../core/AICore';
+import SEOHead from './SEOHead';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -43,6 +44,7 @@ const Layout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead />
       {/* Header */}
       <header
         data-layout-header
