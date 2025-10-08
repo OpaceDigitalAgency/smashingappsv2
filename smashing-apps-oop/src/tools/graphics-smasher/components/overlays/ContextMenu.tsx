@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useGraphicsStore } from '../../state/graphicsStore';
-import { useActiveDocument, useActiveDocumentId } from '../../hooks/useGraphicsStore';
+import { CommandRegistry } from '../../commands';
 
 interface ContextMenuProps {
   x: number;
@@ -10,9 +9,6 @@ interface ContextMenuProps {
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
   const menuRef = useRef<HTMLDivElement>(null);
-  const activeDocumentId = useActiveDocumentId();
-  const activeDocument = useActiveDocument();
-  const { addLayer, removeLayer, duplicateDocument, undo, redo } = useGraphicsStore();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,58 +31,27 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
     };
   }, [onClose]);
 
-  const handleUndo = () => {
-    if (activeDocumentId) {
-      undo(activeDocumentId);
-    }
-    onClose();
-  };
-
-  const handleRedo = () => {
-    if (activeDocumentId) {
-      redo(activeDocumentId);
-    }
-    onClose();
-  };
-
-  const handleNewLayer = () => {
-    if (activeDocumentId) {
-      addLayer(activeDocumentId, { name: `Layer ${(activeDocument?.layers.length || 0) + 1}` });
-    }
-    onClose();
-  };
-
-  const handleDeleteLayer = () => {
-    if (activeDocumentId && activeDocument?.activeLayerId) {
-      removeLayer(activeDocumentId, activeDocument.activeLayerId);
-    }
-    onClose();
-  };
-
-  const handleDuplicate = () => {
-    if (activeDocumentId) {
-      duplicateDocument(activeDocumentId);
-    }
+  const runCommand = async (commandId: string) => {
+    await CommandRegistry.run(commandId as any);
     onClose();
   };
 
   const menuItems = [
-    { label: 'Undo', shortcut: '⌘Z', action: handleUndo, disabled: !activeDocument?.history.past.length },
-    { label: 'Redo', shortcut: '⇧⌘Z', action: handleRedo, disabled: !activeDocument?.history.future.length },
+    { label: 'Undo', shortcut: '⌘Z', action: () => runCommand('edit.undo'), disabled: !CommandRegistry.isEnabled('edit.undo') },
+    { label: 'Redo', shortcut: '⇧⌘Z', action: () => runCommand('edit.redo'), disabled: !CommandRegistry.isEnabled('edit.redo') },
     { divider: true },
-    { label: 'Cut', shortcut: '⌘X', action: () => console.log('Cut'), disabled: !activeDocumentId },
-    { label: 'Copy', shortcut: '⌘C', action: () => console.log('Copy'), disabled: !activeDocumentId },
-    { label: 'Paste', shortcut: '⌘V', action: () => console.log('Paste') },
+    { label: 'Cut', shortcut: '⌘X', action: () => runCommand('edit.cut'), disabled: !CommandRegistry.isEnabled('edit.cut') },
+    { label: 'Copy', shortcut: '⌘C', action: () => runCommand('edit.copy'), disabled: !CommandRegistry.isEnabled('edit.copy') },
+    { label: 'Paste', shortcut: '⌘V', action: () => runCommand('edit.paste'), disabled: !CommandRegistry.isEnabled('edit.paste') },
     { divider: true },
-    { label: 'New Layer', shortcut: '⇧⌘N', action: handleNewLayer, disabled: !activeDocumentId },
-    { label: 'Delete Layer', action: handleDeleteLayer, disabled: !activeDocument?.activeLayerId },
-    { label: 'Duplicate Document', action: handleDuplicate, disabled: !activeDocumentId },
+    { label: 'New Layer', shortcut: '⇧⌘N', action: () => runCommand('layer.new'), disabled: !CommandRegistry.isEnabled('layer.new') },
+    { label: 'Delete Layer', action: () => runCommand('layer.delete'), disabled: !CommandRegistry.isEnabled('layer.delete') },
+    { label: 'Duplicate Document', action: () => runCommand('document.duplicate'), disabled: !CommandRegistry.isEnabled('document.duplicate') },
     { divider: true },
-    { label: 'Select All', shortcut: '⌘A', action: () => console.log('Select all'), disabled: !activeDocumentId },
-    { label: 'Deselect', shortcut: '⌘D', action: () => console.log('Deselect'), disabled: !activeDocumentId },
+    { label: 'Select All', shortcut: '⌘A', action: () => runCommand('select.all'), disabled: !CommandRegistry.isEnabled('select.all') },
+    { label: 'Deselect', shortcut: '⌘D', action: () => runCommand('select.deselect'), disabled: !CommandRegistry.isEnabled('select.deselect') },
     { divider: true },
-    { label: 'Transform', shortcut: '⌘T', action: () => console.log('Transform'), disabled: !activeDocumentId },
-    { label: 'Free Transform', action: () => console.log('Free transform'), disabled: !activeDocumentId }
+    { label: 'Free Transform', shortcut: '⌘T', action: () => runCommand('edit.transform.free'), disabled: !CommandRegistry.isEnabled('edit.transform.free') }
   ];
 
   return (

@@ -1,18 +1,11 @@
 import { useEffect } from 'react';
 import { useGraphicsStore } from '../state/graphicsStore';
+import { CommandRegistry } from '../commands';
 
 export function useGraphicsShortcuts(documentId: string | null) {
   const {
-    undo,
-    redo,
     setActiveTool,
     setCommandPaletteOpen,
-    createDocument,
-    setActiveDocument,
-    closeDocument,
-    addLayer,
-    selection,
-    clearSelection,
   } = useGraphicsStore();
 
   useEffect(() => {
@@ -42,82 +35,101 @@ export function useGraphicsShortcuts(documentId: string | null) {
       if (documentId && metaKey && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         if (event.shiftKey) {
-          redo(documentId);
+          CommandRegistry.run('edit.redo');
         } else {
-          undo(documentId);
+          CommandRegistry.run('edit.undo');
         }
         return;
       }
 
       // New Document (Cmd/Ctrl + N)
-      if (metaKey && event.key.toLowerCase() === 'n') {
+      if (metaKey && event.key.toLowerCase() === 'n' && !event.shiftKey) {
         event.preventDefault();
-        const id = createDocument({ name: 'Untitled', width: 1920, height: 1080 });
-        setActiveDocument(id);
+        CommandRegistry.run('file.new');
         return;
       }
 
       // Close Document (Cmd/Ctrl + W)
       if (documentId && metaKey && event.key.toLowerCase() === 'w') {
         event.preventDefault();
-        closeDocument(documentId);
+        CommandRegistry.run('file.close');
         return;
       }
 
       // Cut (Cmd/Ctrl + X)
-      if (documentId && selection && metaKey && event.key.toLowerCase() === 'x') {
+      if (metaKey && event.key.toLowerCase() === 'x') {
         event.preventDefault();
-        // Store selection in clipboard
-        navigator.clipboard.writeText(JSON.stringify(selection)).catch(() => {
-          console.log('Clipboard write failed, using internal clipboard');
-        });
-        // Clear the selection visually
-        clearSelection();
-        console.log('Cut selection to clipboard');
+        CommandRegistry.run('edit.cut');
         return;
       }
 
       // Copy (Cmd/Ctrl + C)
-      if (documentId && selection && metaKey && event.key.toLowerCase() === 'c') {
+      if (metaKey && event.key.toLowerCase() === 'c') {
         event.preventDefault();
-        // Store selection in clipboard
-        navigator.clipboard.writeText(JSON.stringify(selection)).catch(() => {
-          console.log('Clipboard write failed, using internal clipboard');
-        });
-        console.log('Copied selection to clipboard');
+        CommandRegistry.run('edit.copy');
         return;
       }
 
       // Paste (Cmd/Ctrl + V)
-      if (documentId && metaKey && event.key.toLowerCase() === 'v') {
+      if (metaKey && event.key.toLowerCase() === 'v') {
         event.preventDefault();
-        // For now, just log - actual paste implementation would need canvas data
-        navigator.clipboard.readText().then((text) => {
-          try {
-            const data = JSON.parse(text);
-            console.log('Pasted from clipboard:', data);
-            // TODO: Implement actual paste functionality
-          } catch {
-            console.log('Clipboard does not contain valid selection data');
-          }
-        }).catch(() => {
-          console.log('Clipboard read failed');
-        });
+        CommandRegistry.run('edit.paste');
         return;
       }
 
-      // Delete/Backspace (delete selection)
-      if (documentId && selection && (event.key === 'Delete' || event.key === 'Backspace')) {
+      // Select All (Cmd/Ctrl + A)
+      if (metaKey && event.key.toLowerCase() === 'a') {
         event.preventDefault();
-        clearSelection();
-        console.log('Deleted selection');
+        CommandRegistry.run('edit.selectAll');
+        return;
+      }
+
+      // Deselect (Cmd/Ctrl + D)
+      if (metaKey && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        CommandRegistry.run('edit.deselect');
+        return;
+      }
+
+      // Free Transform (Cmd/Ctrl + T)
+      if (metaKey && event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        CommandRegistry.run('edit.transform.free');
         return;
       }
 
       // New Layer (Shift + Cmd/Ctrl + N)
       if (documentId && metaKey && event.shiftKey && event.key.toLowerCase() === 'n') {
         event.preventDefault();
-        addLayer(documentId, { name: `Layer ${useGraphicsStore.getState().documents.find(d => d.id === documentId)?.layers.length || 0}` });
+        CommandRegistry.run('layer.new');
+        return;
+      }
+
+      // Zoom In (Cmd/Ctrl + +)
+      if (metaKey && (event.key === '+' || event.key === '=')) {
+        event.preventDefault();
+        CommandRegistry.run('view.zoomIn');
+        return;
+      }
+
+      // Zoom Out (Cmd/Ctrl + -)
+      if (metaKey && event.key === '-') {
+        event.preventDefault();
+        CommandRegistry.run('view.zoomOut');
+        return;
+      }
+
+      // Fit on Screen (Cmd/Ctrl + 0)
+      if (metaKey && event.key === '0') {
+        event.preventDefault();
+        CommandRegistry.run('view.zoomFit');
+        return;
+      }
+
+      // Actual Pixels (Cmd/Ctrl + 1)
+      if (metaKey && event.key === '1') {
+        event.preventDefault();
+        CommandRegistry.run('view.zoomActual');
         return;
       }
 
@@ -164,5 +176,5 @@ export function useGraphicsShortcuts(documentId: string | null) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [documentId, undo, redo, setActiveTool, setCommandPaletteOpen, createDocument, setActiveDocument, closeDocument, addLayer, selection, clearSelection]);
+  }, [documentId, setActiveTool, setCommandPaletteOpen]);
 }

@@ -237,6 +237,7 @@ export interface GraphicsStoreActions {
   setActiveDocument: (documentId: string) => void;
   duplicateDocument: (documentId: string) => string | null;
   updateDocumentMeta: (documentId: string, metadata: Partial<Pick<DocumentState, 'name' | 'background'>>) => void;
+  resizeDocument: (documentId: string, width: number, height: number) => void;
   addLayer: (documentId: string, layer: Partial<Layer>) => string | null;
   removeLayer: (documentId: string, layerId: string) => void;
   reorderLayer: (documentId: string, layerId: string, targetIndex: number) => void;

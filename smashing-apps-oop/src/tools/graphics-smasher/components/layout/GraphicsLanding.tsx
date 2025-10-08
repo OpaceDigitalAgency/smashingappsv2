@@ -36,15 +36,9 @@ const GraphicsLanding: React.FC = () => {
               <div className="mt-6 flex flex-wrap gap-4">
                 <button
                   className="inline-flex items-center rounded-xl bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  onClick={() => navigate('/tools/graphics-smasher/workspace')}
-                >
-                  {t('landing.ctaPrimary')}
-                </button>
-                <button
-                  className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-base font-semibold text-indigo-700 transition hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   onClick={() => handleCreate()}
                 >
-                  {t('landing.ctaSecondary')}
+                  Create New Document
                 </button>
               </div>
             </div>

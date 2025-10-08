@@ -5,6 +5,7 @@ import GraphicsWorkspace from './components/workspace/GraphicsWorkspace';
 import GraphicsLanding from './components/layout/GraphicsLanding';
 import { appRegistry, initializeAIServices } from '../../shared/services';
 import { useGraphicsStore } from './state/graphicsStore';
+import { initializeCommandRegistry } from './commands';
 import './styles/graphics-smasher.css';
 
 const GraphicsSmasherApp: React.FC = () => {
@@ -14,6 +15,7 @@ const GraphicsSmasherApp: React.FC = () => {
     try {
       appRegistry.registerApp('graphics-smasher');
       initializeAIServices();
+      initializeCommandRegistry();
       setReady(true);
     } catch (error) {
       console.error('Graphics Smasher initialization failed', error);

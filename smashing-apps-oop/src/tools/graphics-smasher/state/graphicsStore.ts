@@ -257,6 +257,18 @@ export const useGraphicsStore = create<GraphicsStore>()(
           document.updatedAt = Date.now();
         })
       ),
+    resizeDocument: (documentId, width, height) =>
+      set((state) =>
+        produce(state, (draft) => {
+          const document = draft.documents.find((doc) => doc.id === documentId);
+          if (!document) {
+            return;
+          }
+          document.width = Math.max(1, width);
+          document.height = Math.max(1, height);
+          document.updatedAt = Date.now();
+        })
+      ),
     addLayer: (documentId, input) => {
       const baseLayer = createBaseLayer(input.name ?? 'Layer');
       const layer: Layer = {

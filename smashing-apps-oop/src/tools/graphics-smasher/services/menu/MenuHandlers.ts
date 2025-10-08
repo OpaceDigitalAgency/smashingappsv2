@@ -1,6 +1,7 @@
 import type { DocumentState, Layer } from '../../types';
 import { renderDocumentToCanvas } from '../../utils/export/renderDocumentToCanvas';
 import { useGraphicsStore } from '../../state/graphicsStore';
+import { ClipboardService } from '../clipboard/ClipboardService';
 
 export class MenuHandlers {
   private static instance: MenuHandlers;
@@ -144,33 +145,18 @@ export class MenuHandlers {
 
   async cut(selection: any, documentId: string | null): Promise<void> {
     if (!selection || !documentId) return;
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(selection));
-      const { clearSelection } = useGraphicsStore.getState();
-      clearSelection();
-    } catch (error) {
-      console.error('Clipboard write failed:', error);
-    }
+    await ClipboardService.cutSelection(selection, documentId);
   }
 
   async copy(selection: any): Promise<void> {
     if (!selection) return;
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(selection));
-    } catch (error) {
-      console.error('Clipboard write failed:', error);
-    }
+    const { activeDocumentId } = useGraphicsStore.getState();
+    await ClipboardService.copySelection(selection, activeDocumentId);
   }
 
   async paste(documentId: string | null): Promise<void> {
     if (!documentId) return;
-    try {
-      const text = await navigator.clipboard.readText();
-      const data = JSON.parse(text);
-      console.log('Pasted from clipboard:', data);
-    } catch (error) {
-      console.log('Clipboard does not contain valid selection data');
-    }
+    await ClipboardService.paste(documentId);
   }
 
   clear(selection: any, documentId: string | null): void {
@@ -305,22 +291,14 @@ export class MenuHandlers {
 
   resizeDocument(documentId: string | null, width: number, height: number): void {
     if (!documentId) return;
-    const { documents } = useGraphicsStore.getState();
-    const document = documents.find(d => d.id === documentId);
-    if (!document) return;
-    document.width = width;
-    document.height = height;
-    document.updatedAt = Date.now();
+    const { resizeDocument } = useGraphicsStore.getState();
+    resizeDocument(documentId, width, height);
   }
 
   resizeCanvas(documentId: string | null, width: number, height: number): void {
     if (!documentId) return;
-    const { documents } = useGraphicsStore.getState();
-    const document = documents.find(d => d.id === documentId);
-    if (!document) return;
-    document.width = width;
-    document.height = height;
-    document.updatedAt = Date.now();
+    const { resizeDocument } = useGraphicsStore.getState();
+    resizeDocument(documentId, width, height);
   }
 
   rotateCanvas(documentId: string | null, degrees: number): void {
@@ -330,50 +308,384 @@ export class MenuHandlers {
     if (!document) return;
 
     const radians = (degrees * Math.PI) / 180;
+    
+    // Rotate each layer around the document center
+    const centerX = document.width / 2;
+    const centerY = document.height / 2;
+    
     document.layers.forEach(layer => {
       const currentRotation = layer.transform.rotation || 0;
+      const currentX = layer.transform.x || 0;
+      const currentY = layer.transform.y || 0;
+      
+      // Calculate new position after rotation around center
+      const dx = currentX - centerX;
+      const dy = currentY - centerY;
+      const cos = Math.cos(radians);
+      const sin = Math.sin(radians);
+      
+      const newX = centerX + (dx * cos - dy * sin);
+      const newY = centerY + (dx * sin + dy * cos);
+      
       updateLayer(documentId, layer.id, (l) => ({
         ...l,
         transform: {
           ...l.transform,
+          x: newX,
+          y: newY,
           rotation: currentRotation + radians
         }
       }));
     });
+    
+    // Force a re-render by updating the document timestamp
+    const { updateDocumentMeta } = useGraphicsStore.getState();
+    updateDocumentMeta(documentId, {});
   }
 
   flipHorizontal(documentId: string | null): void {
     if (!documentId) return;
-    const { documents, updateLayer } = useGraphicsStore.getState();
+    const { documents, updateLayer, updateDocumentMeta } = useGraphicsStore.getState();
     const document = documents.find(d => d.id === documentId);
     if (!document) return;
 
+    const centerX = document.width / 2;
+    
     document.layers.forEach(layer => {
+      const currentX = layer.transform.x || 0;
+      const currentScaleX = layer.transform.scaleX;
+      
+      // Calculate new X position to keep layer centered after flip
+      const newX = centerX - (currentX - centerX);
+      
       updateLayer(documentId, layer.id, (l) => ({
         ...l,
         transform: {
           ...l.transform,
-          scaleX: -l.transform.scaleX
+          x: newX,
+          scaleX: -currentScaleX
         }
       }));
     });
+    
+    // Force a re-render
+    updateDocumentMeta(documentId, {});
   }
 
   flipVertical(documentId: string | null): void {
     if (!documentId) return;
-    const { documents, updateLayer } = useGraphicsStore.getState();
+    const { documents, updateLayer, updateDocumentMeta } = useGraphicsStore.getState();
     const document = documents.find(d => d.id === documentId);
     if (!document) return;
 
+    const centerY = document.height / 2;
+    
     document.layers.forEach(layer => {
+      const currentY = layer.transform.y || 0;
+      const currentScaleY = layer.transform.scaleY;
+      
+      // Calculate new Y position to keep layer centered after flip
+      const newY = centerY - (currentY - centerY);
+      
       updateLayer(documentId, layer.id, (l) => ({
         ...l,
         transform: {
           ...l.transform,
-          scaleY: -l.transform.scaleY
+          y: newY,
+          scaleY: -currentScaleY
         }
       }));
     });
+    
+    // Force a re-render
+    updateDocumentMeta(documentId, {});
+  }
+
+  // Transform Menu Handlers
+  transformLayer(documentId: string | null, activeLayerId: string | null, type: 'scale' | 'rotate' | 'skew'): void {
+    if (!documentId || !activeLayerId) return;
+    // TODO: Implement transform UI
+    alert(`Transform ${type} - Coming soon`);
+  }
+
+  // Fill and Stroke Handlers
+  fill(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const color = prompt('Enter fill colour (hex):', '#000000');
+    if (!color) return;
+    
+    const { updateLayer } = useGraphicsStore.getState();
+    updateLayer(documentId, activeLayerId, (layer) => ({
+      ...layer,
+      metadata: {
+        ...layer.metadata,
+        fill: color
+      }
+    }));
+  }
+
+  stroke(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const color = prompt('Enter stroke colour (hex):', '#000000');
+    if (!color) return;
+    const width = prompt('Enter stroke width:', '2');
+    if (!width) return;
+    
+    const { updateLayer } = useGraphicsStore.getState();
+    updateLayer(documentId, activeLayerId, (layer) => ({
+      ...layer,
+      metadata: {
+        ...layer.metadata,
+        stroke: color,
+        strokeWidth: parseFloat(width)
+      }
+    }));
+  }
+
+  // Select Menu Handlers
+  reselect(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement reselect from history
+    alert('Reselect - Coming soon');
+  }
+
+  inverseSelection(documentId: string | null, document: DocumentState | null): void {
+    if (!documentId || !document) return;
+    // TODO: Implement inverse selection
+    alert('Inverse Selection - Coming soon');
+  }
+
+  modifySelection(type: 'border' | 'smooth' | 'expand' | 'contract' | 'feather', documentId: string | null): void {
+    if (!documentId) return;
+    const value = prompt(`Enter ${type} value:`, '1');
+    if (!value) return;
+    // TODO: Implement selection modification
+    alert(`Modify Selection: ${type} by ${value}px - Coming soon`);
+  }
+
+  growSelection(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement grow selection
+    alert('Grow Selection - Coming soon');
+  }
+
+  similarSelection(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement similar selection
+    alert('Similar Selection - Coming soon');
+  }
+
+  transformSelection(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement transform selection
+    alert('Transform Selection - Coming soon');
+  }
+
+  saveSelection(documentId: string | null): void {
+    if (!documentId) return;
+    const name = prompt('Enter selection name:', 'Selection 1');
+    if (!name) return;
+    // TODO: Implement save selection
+    alert(`Save Selection: ${name} - Coming soon`);
+  }
+
+  loadSelection(): void {
+    // TODO: Implement load selection
+    alert('Load Selection - Coming soon');
+  }
+
+  // Image Size & Canvas Size Dialogs
+  showImageSizeDialog(documentId: string | null, document: DocumentState | null): void {
+    if (!documentId || !document) return;
+    const width = prompt('Enter new image width:', String(document.width));
+    if (!width) return;
+    const height = prompt('Enter new image height:', String(document.height));
+    if (!height) return;
+    
+    this.resizeDocument(documentId, parseInt(width), parseInt(height));
+  }
+
+  showCanvasSizeDialog(documentId: string | null, document: DocumentState | null): void {
+    if (!documentId || !document) return;
+    const width = prompt('Enter new canvas width:', String(document.width));
+    if (!width) return;
+    const height = prompt('Enter new canvas height:', String(document.height));
+    if (!height) return;
+    
+    this.resizeCanvas(documentId, parseInt(width), parseInt(height));
+  }
+
+  showArbitraryRotateDialog(documentId: string | null): void {
+    if (!documentId) return;
+    const degrees = prompt('Enter rotation angle in degrees:', '45');
+    if (!degrees) return;
+    
+    this.rotateCanvas(documentId, parseFloat(degrees));
+  }
+
+  // Trim functionality
+  trim(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement trim transparent pixels
+    alert('Trim - Coming soon');
+  }
+
+  // Place and Import
+  async placeFile(): Promise<void> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) {
+          resolve();
+          return;
+        }
+
+        try {
+          const { activeDocumentId, addLayer, updateLayer } = useGraphicsStore.getState();
+          if (!activeDocumentId) {
+            resolve();
+            return;
+          }
+
+          const img = new Image();
+          const reader = new FileReader();
+
+          reader.onload = (event) => {
+            img.onload = () => {
+              const layerId = addLayer(activeDocumentId, {
+                name: file.name.replace(/\.[^/.]+$/, ''),
+              });
+
+              if (layerId) {
+                updateLayer(activeDocumentId, layerId, (layer) => ({
+                  ...layer,
+                  metadata: {
+                    ...layer.metadata,
+                    imageUrl: img.src,
+                    imageWidth: img.width,
+                    imageHeight: img.height
+                  }
+                }));
+              }
+              resolve();
+            };
+            img.src = event.target?.result as string;
+          };
+
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('Failed to place file:', error);
+          resolve();
+        }
+      };
+      input.click();
+    });
+  }
+
+  async importFromClipboard(): Promise<void> {
+    const { activeDocumentId } = useGraphicsStore.getState();
+    if (!activeDocumentId) return;
+    await ClipboardService.paste(activeDocumentId);
+  }
+
+  // Filter Menu Handlers
+  applyFilter(filter: string, documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement actual filters with Web Workers
+    alert(`Apply Filter: ${filter} - Coming soon`);
+  }
+
+  // Layer Operations
+  mergeDown(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const { documents, updateLayer, removeLayer } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    const currentIndex = document.layers.findIndex(l => l.id === activeLayerId);
+    if (currentIndex <= 0) return; // Can't merge down from bottom layer
+
+    const belowLayer = document.layers[currentIndex - 1];
+    if (!belowLayer) return;
+
+    // TODO: Implement actual layer merging with canvas composition
+    alert('Merge Down - Coming soon');
+  }
+
+  mergeVisible(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement merge visible layers
+    alert('Merge Visible - Coming soon');
+  }
+
+  flattenImage(documentId: string | null): void {
+    if (!documentId) return;
+    if (!confirm('Flatten all layers into one? This cannot be undone.')) return;
+    
+    // TODO: Implement actual layer flattening
+    alert('Flatten Image - Coming soon');
+  }
+
+  // Layer Properties
+  showLayerProperties(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const { setActivePanel } = useGraphicsStore.getState();
+    setActivePanel('properties');
+  }
+
+  // Layer Styles (placeholder implementations)
+  applyLayerStyle(style: string, documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    alert(`Apply ${style} - Coming soon`);
+  }
+
+  // Adjustment Layers
+  addAdjustmentLayer(type: string, documentId: string | null): void {
+    if (!documentId) return;
+    const { addLayer } = useGraphicsStore.getState();
+    addLayer(documentId, {
+      name: `${type} Adjustment`,
+      kind: 'adjustment',
+      metadata: { adjustmentType: type }
+    });
+  }
+
+  // Layer Masks
+  addLayerMask(type: 'reveal' | 'hide' | 'selection', documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    alert(`Add Layer Mask: ${type} - Coming soon`);
+  }
+
+  // View Operations
+  toggleSnap(): void {
+    const { settings, setSetting } = useGraphicsStore.getState();
+    setSetting('snapToGrid', !settings.snapToGrid);
+  }
+
+  lockGuides(): void {
+    // TODO: Implement guide locking
+    alert('Lock Guides - Coming soon');
+  }
+
+  clearGuides(documentId: string | null): void {
+    if (!documentId) return;
+    // TODO: Implement clear guides
+    alert('Clear Guides - Coming soon');
+  }
+
+  // Workspace presets
+  setWorkspace(preset: string): void {
+    // TODO: Implement workspace layouts
+    alert(`Switch to ${preset} workspace - Coming soon`);
+  }
+
+  // Preferences
+  showPreferences(): void {
+    // TODO: Implement preferences dialog
+    alert('Preferences - Coming soon');
   }
 
   // Help Menu Handlers
