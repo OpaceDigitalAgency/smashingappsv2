@@ -41,6 +41,24 @@ function rgbToHsl(r: number, g: number, b: number): string {
   return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
 }
 
+// Helper function to check if a point is inside a polygon
+function isPointInPolygon(x: number, y: number, polygonPoints: number[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygonPoints.length - 2; i < polygonPoints.length; i += 2) {
+    const xi = polygonPoints[i];
+    const yi = polygonPoints[i + 1];
+    const xj = polygonPoints[j];
+    const yj = polygonPoints[j + 1];
+
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+
+    j = i;
+  }
+  return inside;
+}
+
 export interface BrushStroke {
   tool: string;
   points: number[];
@@ -456,10 +474,97 @@ export function useCanvasInteraction() {
     switch (activeTool) {
       case 'move': {
         const selection = useGraphicsStore.getState().selection;
-        if (selection && selectionStartRef.current) {
+        if (selection && selectionStartRef.current && selection.layerId) {
           const deltaX = pos.x - selectionStartRef.current.x;
           const deltaY = pos.y - selectionStartRef.current.y;
-          
+
+          // Move the actual layer content, not just the selection outline
+          const { documents } = useGraphicsStore.getState();
+          const document = documents.find(d => d.id === activeDocument.id);
+          if (document) {
+            const layer = document.layers.find(l => l.id === selection.layerId);
+            if (layer) {
+              const metadata = layer.metadata || {};
+              const strokes = (metadata.strokes as any[]) || [];
+              const shapes = (metadata.shapes as any[]) || [];
+
+              // Move strokes within the selection
+              const movedStrokes = strokes.map(stroke => {
+                if (!stroke.points || stroke.points.length < 2) return stroke;
+
+                // Check if stroke is within selection
+                let isInSelection = false;
+                if (selection.shape.type === 'rect') {
+                  const shape = selection.shape;
+                  for (let i = 0; i < stroke.points.length; i += 2) {
+                    const x = stroke.points[i];
+                    const y = stroke.points[i + 1];
+                    if (x >= shape.x && x <= shape.x + shape.width &&
+                        y >= shape.y && y <= shape.y + shape.height) {
+                      isInSelection = true;
+                      break;
+                    }
+                  }
+                } else if (selection.shape.type === 'lasso') {
+                  const shape = selection.shape;
+                  for (let i = 0; i < stroke.points.length; i += 2) {
+                    const x = stroke.points[i];
+                    const y = stroke.points[i + 1];
+                    if (isPointInPolygon(x, y, shape.points)) {
+                      isInSelection = true;
+                      break;
+                    }
+                  }
+                }
+
+                if (isInSelection) {
+                  return {
+                    ...stroke,
+                    points: stroke.points.map((val: number, idx: number) =>
+                      idx % 2 === 0 ? val + deltaX : val + deltaY
+                    )
+                  };
+                }
+                return stroke;
+              });
+
+              // Move shapes within the selection
+              const movedShapes = shapes.map(shape => {
+                const sx = shape.x || 0;
+                const sy = shape.y || 0;
+
+                let isInSelection = false;
+                if (selection.shape.type === 'rect') {
+                  const selShape = selection.shape;
+                  isInSelection = !(sx < selShape.x || sx > selShape.x + selShape.width ||
+                                   sy < selShape.y || sy > selShape.y + selShape.height);
+                } else if (selection.shape.type === 'lasso') {
+                  const selShape = selection.shape;
+                  isInSelection = isPointInPolygon(sx, sy, selShape.points);
+                }
+
+                if (isInSelection) {
+                  return {
+                    ...shape,
+                    x: sx + deltaX,
+                    y: sy + deltaY
+                  };
+                }
+                return shape;
+              });
+
+              updateLayer(activeDocument.id, selection.layerId, (l) => ({
+                ...l,
+                metadata: {
+                  ...metadata,
+                  strokes: movedStrokes,
+                  shapes: movedShapes
+                }
+              }));
+            }
+          }
+
+          // Also move the selection outline
           if (selection.shape.type === 'rect') {
             setSelection({
               ...selection,
@@ -481,7 +586,7 @@ export function useCanvasInteraction() {
               }
             });
           }
-          
+
           selectionStartRef.current = pos;
         }
         break;

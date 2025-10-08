@@ -29,12 +29,15 @@ class ClipboardServiceClass {
     const layer = document.layers.find(l => l.id === selection.layerId);
     if (!layer) return false;
 
+    // Extract only the strokes and shapes within the selection bounds
+    const extractedMetadata = this.extractSelectionContent(layer, selection.shape);
+
     this.clipboardData = {
       type: 'selection',
       selection: {
         shape: selection.shape,
         layerId: selection.layerId,
-        metadata: layer.metadata
+        metadata: extractedMetadata
       }
     };
 
@@ -47,6 +50,91 @@ class ClipboardServiceClass {
       console.error('Failed to write to clipboard:', error);
       return false;
     }
+  }
+
+  private extractSelectionContent(layer: Layer, shape: SelectionState['shape']): Record<string, unknown> {
+    const metadata = layer.metadata || {};
+    const strokes = (metadata.strokes as any[]) || [];
+    const shapes = (metadata.shapes as any[]) || [];
+
+    if (shape.type === 'rect') {
+      // Extract strokes that intersect with the rectangle
+      const extractedStrokes = strokes.filter(stroke => {
+        if (!stroke.points || stroke.points.length < 2) return false;
+        // Check if any point is within the rectangle
+        for (let i = 0; i < stroke.points.length; i += 2) {
+          const x = stroke.points[i];
+          const y = stroke.points[i + 1];
+          if (x >= shape.x && x <= shape.x + shape.width &&
+              y >= shape.y && y <= shape.y + shape.height) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      // Extract shapes that intersect with the rectangle
+      const extractedShapes = shapes.filter(s => {
+        const sx = s.x || 0;
+        const sy = s.y || 0;
+        const sw = s.width || 0;
+        const sh = s.height || 0;
+        // Check if shape intersects with selection
+        return !(sx + sw < shape.x || sx > shape.x + shape.width ||
+                 sy + sh < shape.y || sy > shape.y + shape.height);
+      });
+
+      return {
+        ...metadata,
+        strokes: extractedStrokes,
+        shapes: extractedShapes
+      };
+    } else if (shape.type === 'lasso') {
+      // For lasso, check if points are inside the polygon
+      const extractedStrokes = strokes.filter(stroke => {
+        if (!stroke.points || stroke.points.length < 2) return false;
+        // Check if any point is within the lasso polygon
+        for (let i = 0; i < stroke.points.length; i += 2) {
+          const x = stroke.points[i];
+          const y = stroke.points[i + 1];
+          if (this.isPointInPolygon(x, y, shape.points)) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      const extractedShapes = shapes.filter(s => {
+        const sx = s.x || 0;
+        const sy = s.y || 0;
+        return this.isPointInPolygon(sx, sy, shape.points);
+      });
+
+      return {
+        ...metadata,
+        strokes: extractedStrokes,
+        shapes: extractedShapes
+      };
+    }
+
+    return metadata;
+  }
+
+  private isPointInPolygon(x: number, y: number, polygonPoints: number[]): boolean {
+    let inside = false;
+    for (let i = 0, j = polygonPoints.length - 2; i < polygonPoints.length; i += 2) {
+      const xi = polygonPoints[i];
+      const yi = polygonPoints[i + 1];
+      const xj = polygonPoints[j];
+      const yj = polygonPoints[j + 1];
+
+      const intersect = ((yi > y) !== (yj > y)) &&
+        (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+
+      j = i;
+    }
+    return inside;
   }
 
   async copyLayer(layer: Layer): Promise<boolean> {
@@ -90,49 +178,72 @@ class ClipboardServiceClass {
     const layer = document.layers.find(l => l.id === selection.layerId);
     if (!layer) return false;
 
-    // Create an eraser shape/stroke that covers the selection area
-    if (selection.shape.type === 'rect') {
-      // For rectangular selections, create a filled rectangle with destination-out
-      const existingShapes = (layer.metadata?.shapes as any[]) || [];
+    const metadata = layer.metadata || {};
+    const strokes = (metadata.strokes as any[]) || [];
+    const shapes = (metadata.shapes as any[]) || [];
 
-      const eraserShape = {
-        type: 'rectangle' as const,
-        x: selection.shape.x,
-        y: selection.shape.y,
-        width: selection.shape.width,
-        height: selection.shape.height,
-        fill: '#ffffff',
-        stroke: 'transparent',
-        strokeWidth: 0,
-        isEraser: true
-      };
+    // Remove strokes and shapes that are within the selection
+    if (selection.shape.type === 'rect') {
+      const shape = selection.shape;
+      const remainingStrokes = strokes.filter(stroke => {
+        if (!stroke.points || stroke.points.length < 2) return true;
+        // Keep stroke if no points are within the rectangle
+        for (let i = 0; i < stroke.points.length; i += 2) {
+          const x = stroke.points[i];
+          const y = stroke.points[i + 1];
+          if (x >= shape.x && x <= shape.x + shape.width &&
+              y >= shape.y && y <= shape.y + shape.height) {
+            return false; // Remove this stroke
+          }
+        }
+        return true; // Keep this stroke
+      });
+
+      const remainingShapes = shapes.filter(s => {
+        const sx = s.x || 0;
+        const sy = s.y || 0;
+        const sw = s.width || 0;
+        const sh = s.height || 0;
+        // Keep shape if it doesn't intersect with selection
+        return (sx + sw < shape.x || sx > shape.x + shape.width ||
+                sy + sh < shape.y || sy > shape.y + shape.height);
+      });
 
       updateLayer(documentId, selection.layerId, (l) => ({
         ...l,
         metadata: {
-          ...l.metadata,
-          shapes: [...existingShapes, eraserShape]
+          ...metadata,
+          strokes: remainingStrokes,
+          shapes: remainingShapes
         }
       }));
     } else if (selection.shape.type === 'lasso') {
-      // For lasso selections, fill the polygon with eraser
-      const existingShapes = (layer.metadata?.shapes as any[]) || [];
+      const shape = selection.shape;
+      const remainingStrokes = strokes.filter(stroke => {
+        if (!stroke.points || stroke.points.length < 2) return true;
+        // Keep stroke if no points are within the lasso polygon
+        for (let i = 0; i < stroke.points.length; i += 2) {
+          const x = stroke.points[i];
+          const y = stroke.points[i + 1];
+          if (this.isPointInPolygon(x, y, shape.points)) {
+            return false; // Remove this stroke
+          }
+        }
+        return true; // Keep this stroke
+      });
 
-      // Create a polygon shape from lasso points
-      const eraserShape = {
-        type: 'polygon' as const,
-        points: selection.shape.points,
-        fill: '#ffffff',
-        stroke: 'transparent',
-        strokeWidth: 0,
-        isEraser: true
-      };
+      const remainingShapes = shapes.filter(s => {
+        const sx = s.x || 0;
+        const sy = s.y || 0;
+        return !this.isPointInPolygon(sx, sy, shape.points);
+      });
 
       updateLayer(documentId, selection.layerId, (l) => ({
         ...l,
         metadata: {
-          ...l.metadata,
-          shapes: [...existingShapes, eraserShape]
+          ...metadata,
+          strokes: remainingStrokes,
+          shapes: remainingShapes
         }
       }));
     }
@@ -228,8 +339,8 @@ class ClipboardServiceClass {
       if (metadata.strokes && Array.isArray(metadata.strokes)) {
         metadata.strokes = (metadata.strokes as any[]).map(stroke => ({
           ...stroke,
-          points: stroke.points ? stroke.points.map((val: number) =>
-            val + offset
+          points: stroke.points ? stroke.points.map((val: number, idx: number) =>
+            idx % 2 === 0 ? val + offset : val + offset
           ) : stroke.points
         }));
       }
