@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { useActiveDocument, useActiveDocumentId } from '../../hooks/useGraphicsStore';
 import { ChevronDown, Sun, Moon } from 'lucide-react';
+import { menuHandlers } from '../../services/menu/MenuHandlers';
 
 interface MenuItem {
-  label: string;
+  label?: string;
   shortcut?: string;
   action?: () => void;
   divider?: boolean;
@@ -28,15 +29,8 @@ const MenuBar: React.FC = () => {
   const activeDocument = useActiveDocument();
   
   const {
-    createDocument,
-    setActiveDocument,
-    closeDocument,
-    duplicateDocument,
-    undo,
-    redo,
-    addLayer,
-    removeLayer,
     setCommandPaletteOpen,
+    selection,
   } = useGraphicsStore();
 
   useEffect(() => {
@@ -94,169 +88,53 @@ const MenuBar: React.FC = () => {
       body.style.backgroundColor = '';
       body.style.color = '';
     }
+
+    // Cleanup function to remove body styles when component unmounts
+    return () => {
+      body.style.backgroundColor = '';
+      body.style.color = '';
+    };
   }, [isDarkMode]);
+
+  // Cleanup body styles when component unmounts
+  useEffect(() => {
+    return () => {
+      const body = document.body;
+      body.style.backgroundColor = '';
+      body.style.color = '';
+    };
+  }, []);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleNewDocument = () => {
-    const id = createDocument({ name: 'Untitled', width: 1920, height: 1080 });
-    setActiveDocument(id);
-    setActiveMenu(null);
-  };
-
-  const handleOpenFile = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      try {
-        const img = new Image();
-        const reader = new FileReader();
-
-        reader.onload = (event) => {
-          img.onload = () => {
-            // Create a new document with the image dimensions
-            const docId = createDocument({
-              name: file.name.replace(/\.[^/.]+$/, ''),
-              width: img.width,
-              height: img.height
-            });
-
-            // Set as active document
-            setActiveDocument(docId);
-
-            // Store the image URL in the document's background layer metadata
-            const doc = useGraphicsStore.getState().documents.find(d => d.id === docId);
-            if (doc) {
-              useGraphicsStore.getState().updateLayer(docId, doc.layers[0].id, (layer) => ({
-                ...layer,
-                metadata: {
-                  ...layer.metadata,
-                  imageUrl: img.src,
-                  imageWidth: img.width,
-                  imageHeight: img.height
-                }
-              }));
-            }
-          };
-          img.src = event.target?.result as string;
-        };
-
-        reader.readAsDataURL(file);
-      } catch (error) {
-        console.error('Failed to open file:', error);
-      }
+  const wrapHandler = (handler: () => void | Promise<void>) => {
+    return async () => {
+      await handler();
+      setActiveMenu(null);
     };
-    input.click();
-    setActiveMenu(null);
-  };
-
-  const handleSave = () => {
-    if (!activeDocument) return;
-    // For now, just export as PNG
-    handleExportAs('png');
-  };
-
-  const handleSaveAs = () => {
-    if (!activeDocument) return;
-    handleExportAs('png');
-  };
-
-  const handleExportAs = (format: 'png' | 'jpeg' | 'webp' | 'svg') => {
-    if (!activeDocument) return;
-
-    // Create a temporary canvas to render the document
-    const canvas = document.createElement('canvas');
-    canvas.width = activeDocument.width;
-    canvas.height = activeDocument.height;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return;
-
-    // Fill with background colour
-    ctx.fillStyle = activeDocument.background;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // TODO: Render all layers to the canvas
-    // For now, just export the background
-
-    // Convert to blob and download
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${activeDocument.name}.${format}`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, `image/${format}`, format === 'jpeg' ? 0.95 : undefined);
-
-    setActiveMenu(null);
-  };
-
-  const handleExport = () => {
-    handleExportAs('png');
-  };
-
-  const handleUndo = () => {
-    if (activeDocumentId) {
-      undo(activeDocumentId);
-    }
-    setActiveMenu(null);
-  };
-
-  const handleRedo = () => {
-    if (activeDocumentId) {
-      redo(activeDocumentId);
-    }
-    setActiveMenu(null);
-  };
-
-  const handleAddLayer = () => {
-    if (activeDocumentId) {
-      addLayer(activeDocumentId, { name: `Layer ${(activeDocument?.layers.length || 0) + 1}` });
-    }
-    setActiveMenu(null);
-  };
-
-  const handleDuplicateLayer = () => {
-    // TODO: Implement duplicate layer
-    console.log('Duplicate layer');
-    setActiveMenu(null);
-  };
-
-  const handleDeleteLayer = () => {
-    if (activeDocumentId && activeDocument?.activeLayerId) {
-      removeLayer(activeDocumentId, activeDocument.activeLayerId);
-    }
-    setActiveMenu(null);
   };
 
   const menus: MenuSection[] = [
     {
       title: 'File',
       items: [
-        { label: 'New...', shortcut: '⌘N', action: handleNewDocument },
-        { label: 'Open...', shortcut: '⌘O', action: handleOpenFile },
+        { label: 'New...', shortcut: '⌘N', action: wrapHandler(() => menuHandlers.newDocument()) },
+        { label: 'Open...', shortcut: '⌘O', action: wrapHandler(() => menuHandlers.openFile()) },
         { label: 'Open Recent', submenu: [
           { label: 'No recent files', disabled: true }
         ]},
         { divider: true },
-        { label: 'Close', shortcut: '⌘W', action: () => activeDocumentId && closeDocument(activeDocumentId) },
-        { label: 'Save', shortcut: '⌘S', action: handleSave, disabled: !activeDocumentId },
-        { label: 'Save As...', shortcut: '⇧⌘S', action: handleSaveAs, disabled: !activeDocumentId },
+        { label: 'Close', shortcut: '⌘W', action: wrapHandler(() => menuHandlers.closeDocument(activeDocumentId)) },
+        { label: 'Save', shortcut: '⌘S', action: wrapHandler(() => menuHandlers.save(activeDocument)), disabled: !activeDocumentId },
+        { label: 'Save As...', shortcut: '⇧⌘S', action: wrapHandler(() => menuHandlers.saveAs(activeDocument)), disabled: !activeDocumentId },
         { divider: true },
         { label: 'Export', submenu: [
-          { label: 'Export As PNG...', action: () => handleExportAs('png') },
-          { label: 'Export As JPEG...', action: () => handleExportAs('jpeg') },
-          { label: 'Export As WebP...', action: () => handleExportAs('webp') },
-          { label: 'Export As SVG...', action: () => handleExportAs('svg') },
+          { label: 'Export As PNG...', action: wrapHandler(() => menuHandlers.exportAs(activeDocument, 'png')) },
+          { label: 'Export As JPEG...', action: wrapHandler(() => menuHandlers.exportAs(activeDocument, 'jpeg')) },
+          { label: 'Export As WebP...', action: wrapHandler(() => menuHandlers.exportAs(activeDocument, 'webp')) },
+          { label: 'Export As SVG...', action: wrapHandler(() => menuHandlers.exportAs(activeDocument, 'svg')) },
         ]},
         { divider: true },
         { label: 'Place...', action: () => console.log('Place') },
@@ -269,28 +147,28 @@ const MenuBar: React.FC = () => {
     {
       title: 'Edit',
       items: [
-        { label: 'Undo', shortcut: '⌘Z', action: handleUndo, disabled: !activeDocument?.history.past.length },
-        { label: 'Redo', shortcut: '⇧⌘Z', action: handleRedo, disabled: !activeDocument?.history.future.length },
+        { label: 'Undo', shortcut: '⌘Z', action: wrapHandler(() => menuHandlers.undo(activeDocumentId)), disabled: !activeDocument?.history.past.length },
+        { label: 'Redo', shortcut: '⇧⌘Z', action: wrapHandler(() => menuHandlers.redo(activeDocumentId)), disabled: !activeDocument?.history.future.length },
         { divider: true },
-        { label: 'Cut', shortcut: '⌘X', action: () => console.log('Cut'), disabled: !activeDocumentId },
-        { label: 'Copy', shortcut: '⌘C', action: () => console.log('Copy'), disabled: !activeDocumentId },
-        { label: 'Paste', shortcut: '⌘V', action: () => console.log('Paste') },
+        { label: 'Cut', shortcut: '⌘X', action: wrapHandler(() => menuHandlers.cut(selection, activeDocumentId)), disabled: !selection },
+        { label: 'Copy', shortcut: '⌘C', action: wrapHandler(() => menuHandlers.copy(selection)), disabled: !selection },
+        { label: 'Paste', shortcut: '⌘V', action: wrapHandler(() => menuHandlers.paste(activeDocumentId)) },
         { label: 'Paste Special', submenu: [
           { label: 'Paste in Place', shortcut: '⇧⌘V', action: () => console.log('Paste in place') },
           { label: 'Paste Into Selection', action: () => console.log('Paste into') },
         ]},
         { divider: true },
-        { label: 'Clear', action: () => console.log('Clear'), disabled: !activeDocumentId },
+        { label: 'Clear', action: wrapHandler(() => menuHandlers.clear(selection, activeDocumentId)), disabled: !selection },
         { label: 'Fill...', shortcut: '⇧F5', action: () => console.log('Fill') },
         { label: 'Stroke...', action: () => console.log('Stroke') },
         { divider: true },
         { label: 'Transform', submenu: [
-          { label: 'Free Transform', shortcut: '⌘T', action: () => console.log('Transform') },
-          { label: 'Scale', action: () => console.log('Scale') },
-          { label: 'Rotate', action: () => console.log('Rotate') },
-          { label: 'Skew', action: () => console.log('Skew') },
-          { label: 'Flip Horizontal', action: () => console.log('Flip H') },
-          { label: 'Flip Vertical', action: () => console.log('Flip V') },
+          { label: 'Free Transform', shortcut: '⌘T', action: wrapHandler(() => console.log('Transform - TODO')) },
+          { label: 'Scale', action: wrapHandler(() => console.log('Scale - TODO')) },
+          { label: 'Rotate', action: wrapHandler(() => console.log('Rotate - TODO')) },
+          { label: 'Skew', action: wrapHandler(() => console.log('Skew - TODO')) },
+          { label: 'Flip Horizontal', action: wrapHandler(() => menuHandlers.flipHorizontal(activeDocumentId)) },
+          { label: 'Flip Vertical', action: wrapHandler(() => menuHandlers.flipVertical(activeDocumentId)) },
         ]},
         { divider: true },
         { label: 'Preferences...', shortcut: '⌘,', action: () => console.log('Preferences') },
@@ -299,17 +177,17 @@ const MenuBar: React.FC = () => {
     {
       title: 'Image',
       items: [
-        { label: 'Image Size...', shortcut: '⌥⌘I', action: () => console.log('Image size'), disabled: !activeDocumentId },
-        { label: 'Canvas Size...', shortcut: '⌥⌘C', action: () => console.log('Canvas size'), disabled: !activeDocumentId },
+        { label: 'Image Size...', shortcut: '⌥⌘I', action: wrapHandler(() => console.log('Image size dialog - TODO')), disabled: !activeDocumentId },
+        { label: 'Canvas Size...', shortcut: '⌥⌘C', action: wrapHandler(() => console.log('Canvas size dialog - TODO')), disabled: !activeDocumentId },
         { divider: true },
-        { label: 'Crop', action: () => console.log('Crop'), disabled: !activeDocumentId },
+        { label: 'Crop', action: wrapHandler(() => menuHandlers.cropToSelection(activeDocumentId, selection)), disabled: !selection },
         { label: 'Trim...', action: () => console.log('Trim'), disabled: !activeDocumentId },
         { divider: true },
         { label: 'Rotate Canvas', submenu: [
-          { label: '90° Clockwise', action: () => console.log('Rotate 90 CW') },
-          { label: '90° Counter Clockwise', action: () => console.log('Rotate 90 CCW') },
-          { label: '180°', action: () => console.log('Rotate 180') },
-          { label: 'Arbitrary...', action: () => console.log('Rotate arbitrary') },
+          { label: '90° Clockwise', action: wrapHandler(() => menuHandlers.rotateCanvas(activeDocumentId, 90)) },
+          { label: '90° Counter Clockwise', action: wrapHandler(() => menuHandlers.rotateCanvas(activeDocumentId, -90)) },
+          { label: '180°', action: wrapHandler(() => menuHandlers.rotateCanvas(activeDocumentId, 180)) },
+          { label: 'Arbitrary...', action: wrapHandler(() => console.log('Rotate arbitrary dialog - TODO')) },
         ]},
         { divider: true },
         { label: 'Adjustments', submenu: [
@@ -326,9 +204,9 @@ const MenuBar: React.FC = () => {
     {
       title: 'Layer',
       items: [
-        { label: 'New Layer', shortcut: '⇧⌘N', action: handleAddLayer, disabled: !activeDocumentId },
-        { label: 'Duplicate Layer', shortcut: '⌘J', action: handleDuplicateLayer, disabled: !activeDocument?.activeLayerId },
-        { label: 'Delete Layer', action: handleDeleteLayer, disabled: !activeDocument?.activeLayerId },
+        { label: 'New Layer', shortcut: '⇧⌘N', action: wrapHandler(() => menuHandlers.addLayer(activeDocumentId, activeDocument)), disabled: !activeDocumentId },
+        { label: 'Duplicate Layer', shortcut: '⌘J', action: wrapHandler(() => menuHandlers.duplicateLayer(activeDocumentId, activeDocument?.activeLayerId || null)), disabled: !activeDocument?.activeLayerId },
+        { label: 'Delete Layer', action: wrapHandler(() => menuHandlers.deleteLayer(activeDocumentId, activeDocument?.activeLayerId || null)), disabled: !activeDocument?.activeLayerId },
         { divider: true },
         { label: 'Layer Properties...', action: () => console.log('Layer props'), disabled: !activeDocument?.activeLayerId },
         { label: 'Layer Style', submenu: [
@@ -359,8 +237,8 @@ const MenuBar: React.FC = () => {
     {
       title: 'Select',
       items: [
-        { label: 'All', shortcut: '⌘A', action: () => console.log('Select all'), disabled: !activeDocumentId },
-        { label: 'Deselect', shortcut: '⌘D', action: () => console.log('Deselect'), disabled: !activeDocumentId },
+        { label: 'All', shortcut: '⌘A', action: wrapHandler(() => menuHandlers.selectAll(activeDocumentId, activeDocument)), disabled: !activeDocumentId },
+        { label: 'Deselect', shortcut: '⌘D', action: wrapHandler(() => menuHandlers.deselect()), disabled: !selection },
         { label: 'Reselect', shortcut: '⇧⌘D', action: () => console.log('Reselect'), disabled: !activeDocumentId },
         { label: 'Inverse', shortcut: '⇧⌘I', action: () => console.log('Inverse'), disabled: !activeDocumentId },
         { divider: true },
@@ -415,14 +293,14 @@ const MenuBar: React.FC = () => {
     {
       title: 'View',
       items: [
-        { label: 'Zoom In', shortcut: '⌘+', action: () => console.log('Zoom in') },
-        { label: 'Zoom Out', shortcut: '⌘-', action: () => console.log('Zoom out') },
-        { label: 'Fit to Screen', shortcut: '⌘0', action: () => console.log('Fit') },
-        { label: 'Actual Pixels', shortcut: '⌘1', action: () => console.log('100%') },
+        { label: 'Zoom In', shortcut: '⌘+', action: wrapHandler(() => menuHandlers.zoomIn(activeDocumentId, activeDocument)) },
+        { label: 'Zoom Out', shortcut: '⌘-', action: wrapHandler(() => menuHandlers.zoomOut(activeDocumentId, activeDocument)) },
+        { label: 'Fit to Screen', shortcut: '⌘0', action: wrapHandler(() => menuHandlers.fitToScreen(activeDocumentId)) },
+        { label: 'Actual Pixels', shortcut: '⌘1', action: wrapHandler(() => menuHandlers.actualPixels(activeDocumentId)) },
         { divider: true },
-        { label: 'Show Rulers', shortcut: '⌘R', action: () => console.log('Rulers') },
-        { label: 'Show Grid', shortcut: "⌘'", action: () => console.log('Grid') },
-        { label: 'Show Guides', shortcut: '⌘;', action: () => console.log('Guides') },
+        { label: 'Show Rulers', shortcut: '⌘R', action: wrapHandler(() => menuHandlers.toggleRulers(activeDocumentId, activeDocument)) },
+        { label: 'Show Grid', shortcut: "⌘'", action: wrapHandler(() => menuHandlers.toggleGrid(activeDocumentId, activeDocument)) },
+        { label: 'Show Guides', shortcut: '⌘;', action: wrapHandler(() => menuHandlers.toggleGuides(activeDocumentId, activeDocument)) },
         { divider: true },
         { label: 'Snap', action: () => console.log('Snap') },
         { label: 'Lock Guides', shortcut: '⌥⌘;', action: () => console.log('Lock guides') },
@@ -432,10 +310,10 @@ const MenuBar: React.FC = () => {
     {
       title: 'Window',
       items: [
-        { label: 'Layers', shortcut: 'F7', action: () => console.log('Show layers') },
-        { label: 'History', shortcut: 'F9', action: () => console.log('Show history') },
-        { label: 'Properties', action: () => console.log('Show props') },
-        { label: 'Adjustments', action: () => console.log('Show adjustments') },
+        { label: 'Layers', shortcut: 'F7', action: wrapHandler(() => menuHandlers.showPanel('layers')) },
+        { label: 'History', shortcut: 'F9', action: wrapHandler(() => menuHandlers.showPanel('history')) },
+        { label: 'Properties', action: wrapHandler(() => menuHandlers.showPanel('properties')) },
+        { label: 'Adjustments', action: wrapHandler(() => menuHandlers.showPanel('adjustments')) },
         { divider: true },
         { label: 'Workspace', submenu: [
           { label: 'Essentials', action: () => console.log('Workspace essentials') },
@@ -448,10 +326,10 @@ const MenuBar: React.FC = () => {
     {
       title: 'Help',
       items: [
-        { label: 'Graphics Smasher Help', shortcut: 'F1', action: () => console.log('Help') },
-        { label: 'Keyboard Shortcuts', shortcut: '⌘/', action: () => console.log('Shortcuts') },
+        { label: 'Graphics Smasher Help', shortcut: 'F1', action: wrapHandler(() => menuHandlers.showHelp()) },
+        { label: 'Keyboard Shortcuts', shortcut: '⌘/', action: wrapHandler(() => menuHandlers.showKeyboardShortcuts()) },
         { divider: true },
-        { label: 'About Graphics Smasher', action: () => console.log('About') },
+        { label: 'About Graphics Smasher', action: wrapHandler(() => menuHandlers.showAbout()) },
       ]
     },
   ];
@@ -559,4 +437,3 @@ const MenuBar: React.FC = () => {
 };
 
 export default MenuBar;
-

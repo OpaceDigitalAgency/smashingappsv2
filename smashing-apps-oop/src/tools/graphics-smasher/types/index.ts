@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type Konva from 'konva';
 
 export type GraphicsToolId =
   | 'move'
@@ -119,6 +120,62 @@ export type PanelTab =
   | 'properties'
   | 'assets';
 
+export interface BrushToolOptions {
+  size: number;
+  color: string;
+  opacity: number; // 0-1 range
+}
+
+export interface EraserToolOptions {
+  size: number;
+  opacity: number; // 0-1 range
+}
+
+export interface ShapeToolOptions {
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+}
+
+export interface PenToolOptions {
+  stroke: string;
+  strokeWidth: number;
+}
+
+export interface SelectionToolOptions {
+  feather: number;
+}
+
+export interface TextToolOptions {
+  font: string;
+  size: number;
+  color: string;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+}
+
+export interface ToolOptionsState {
+  brush: BrushToolOptions;
+  eraser: EraserToolOptions;
+  shape: ShapeToolOptions;
+  pen: PenToolOptions;
+  text: TextToolOptions;
+  selection: SelectionToolOptions;
+}
+
+export type ToolOptionKey = keyof ToolOptionsState;
+
+export type SelectionShape =
+  | { type: 'rect'; x: number; y: number; width: number; height: number }
+  | { type: 'lasso'; points: number[] };
+
+export interface SelectionState {
+  tool: 'marquee-rect' | 'lasso-free' | 'crop' | 'magic-wand';
+  shape: SelectionShape;
+  layerId: string | null;
+}
+
 export interface CommandDescriptor {
   id: string;
   label: string;
@@ -164,6 +221,9 @@ export interface GraphicsStoreState {
   commandPaletteOpen: boolean;
   workerStatus: WorkerStatus;
   canvasEngine: CanvasEngineStatus;
+  toolOptions: ToolOptionsState;
+  selection: SelectionState | null;
+  canvasStage: Konva.Stage | null;
 }
 
 export interface GraphicsStoreActions {
@@ -193,6 +253,11 @@ export interface GraphicsStoreActions {
   setCommandPaletteOpen: (open: boolean) => void;
   setWorkerStatus: (worker: keyof WorkerStatus, status: WorkerStatus[keyof WorkerStatus]) => void;
   setCanvasEngineStatus: (status: Partial<CanvasEngineStatus>) => void;
+  setToolOptions: <T extends ToolOptionKey>(tool: T, options: Partial<ToolOptionsState[T]>) => void;
+  setSelection: (selection: SelectionState | null) => void;
+  clearSelection: () => void;
+  cropDocument: (documentId: string, rect: { x: number; y: number; width: number; height: number }) => void;
+  setCanvasStage: (stage: Konva.Stage | null) => void;
 }
 
 export type GraphicsStore = GraphicsStoreState & GraphicsStoreActions;

@@ -11,6 +11,8 @@ export function useGraphicsShortcuts(documentId: string | null) {
     setActiveDocument,
     closeDocument,
     addLayer,
+    selection,
+    clearSelection,
   } = useGraphicsStore();
 
   useEffect(() => {
@@ -59,6 +61,56 @@ export function useGraphicsShortcuts(documentId: string | null) {
       if (documentId && metaKey && event.key.toLowerCase() === 'w') {
         event.preventDefault();
         closeDocument(documentId);
+        return;
+      }
+
+      // Cut (Cmd/Ctrl + X)
+      if (documentId && selection && metaKey && event.key.toLowerCase() === 'x') {
+        event.preventDefault();
+        // Store selection in clipboard
+        navigator.clipboard.writeText(JSON.stringify(selection)).catch(() => {
+          console.log('Clipboard write failed, using internal clipboard');
+        });
+        // Clear the selection visually
+        clearSelection();
+        console.log('Cut selection to clipboard');
+        return;
+      }
+
+      // Copy (Cmd/Ctrl + C)
+      if (documentId && selection && metaKey && event.key.toLowerCase() === 'c') {
+        event.preventDefault();
+        // Store selection in clipboard
+        navigator.clipboard.writeText(JSON.stringify(selection)).catch(() => {
+          console.log('Clipboard write failed, using internal clipboard');
+        });
+        console.log('Copied selection to clipboard');
+        return;
+      }
+
+      // Paste (Cmd/Ctrl + V)
+      if (documentId && metaKey && event.key.toLowerCase() === 'v') {
+        event.preventDefault();
+        // For now, just log - actual paste implementation would need canvas data
+        navigator.clipboard.readText().then((text) => {
+          try {
+            const data = JSON.parse(text);
+            console.log('Pasted from clipboard:', data);
+            // TODO: Implement actual paste functionality
+          } catch {
+            console.log('Clipboard does not contain valid selection data');
+          }
+        }).catch(() => {
+          console.log('Clipboard read failed');
+        });
+        return;
+      }
+
+      // Delete/Backspace (delete selection)
+      if (documentId && selection && (event.key === 'Delete' || event.key === 'Backspace')) {
+        event.preventDefault();
+        clearSelection();
+        console.log('Deleted selection');
         return;
       }
 
@@ -112,5 +164,5 @@ export function useGraphicsShortcuts(documentId: string | null) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [documentId, undo, redo, setActiveTool, setCommandPaletteOpen, createDocument, setActiveDocument, closeDocument, addLayer]);
+  }, [documentId, undo, redo, setActiveTool, setCommandPaletteOpen, createDocument, setActiveDocument, closeDocument, addLayer, selection, clearSelection]);
 }

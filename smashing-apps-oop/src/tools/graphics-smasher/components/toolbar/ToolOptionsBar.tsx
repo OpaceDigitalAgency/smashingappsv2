@@ -1,62 +1,65 @@
 import React, { useState } from 'react';
 import { useGraphicsStore } from '../../state/graphicsStore';
-import { Slider } from '../../../shared/components/Slider';
 
 const ToolOptionsBar: React.FC = () => {
   const activeTool = useGraphicsStore((state) => state.activeTool);
-  const [brushSize, setBrushSize] = useState(25);
-  const [brushOpacity, setBrushOpacity] = useState(100);
-  const [brushColor, setBrushColor] = useState('#000000');
-  const [textFont, setTextFont] = useState('Arial');
-  const [textSize, setTextSize] = useState(16);
-  const [textColor, setTextColor] = useState('#000000');
-  const [feather, setFeather] = useState(0);
-  const [fillColor, setFillColor] = useState('#4f46e5');
-  const [strokeColor, setStrokeColor] = useState('#000000');
-  const [strokeWidth, setStrokeWidth] = useState(2);
+  const toolOptions = useGraphicsStore((state) => state.toolOptions);
+  const setToolOptions = useGraphicsStore((state) => state.setToolOptions);
   const [tolerance, setTolerance] = useState(32);
 
   const renderBrushOptions = () => (
     <div className="flex items-center gap-6">
+      {(() => {
+        const targetTool =
+          activeTool === 'eraser' ? 'eraser' : 'brush';
+        const options = toolOptions[targetTool];
+        const opacityPercent = Math.round(options.opacity * 100);
+        return (
+          <>
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Size:</label>
         <input
           type="range"
           min="1"
           max="500"
-          value={brushSize}
-          onChange={(e) => setBrushSize(Number(e.target.value))}
+          value={options.size}
+          onChange={(e) => setToolOptions(targetTool as 'brush' | 'eraser', { size: Number(e.target.value) })}
           className="h-1 w-32 cursor-pointer appearance-none rounded-lg bg-slate-200"
         />
         <input
           type="number"
-          value={brushSize}
-          onChange={(e) => setBrushSize(Number(e.target.value))}
+          value={options.size}
+          onChange={(e) => setToolOptions(targetTool as 'brush' | 'eraser', { size: Number(e.target.value) })}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">px</span>
       </div>
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600">Colour:</label>
-        <input
-          type="color"
-          value={brushColor}
-          onChange={(e) => setBrushColor(e.target.value)}
-          className="h-6 w-12 cursor-pointer rounded border"
-        />
-      </div>
+      {activeTool !== 'eraser' && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-slate-600">Colour:</label>
+          <input
+            type="color"
+            value={toolOptions.brush.color}
+            onChange={(e) => setToolOptions('brush', { color: e.target.value })}
+            className="h-6 w-12 cursor-pointer rounded border"
+          />
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Opacity:</label>
         <input
           type="range"
           min="0"
           max="100"
-          value={brushOpacity}
-          onChange={(e) => setBrushOpacity(Number(e.target.value))}
+          value={opacityPercent}
+          onChange={(e) => setToolOptions(targetTool as 'brush' | 'eraser', { opacity: Number(e.target.value) / 100 })}
           className="h-1 w-24 cursor-pointer appearance-none rounded-lg bg-slate-200"
         />
-        <span className="text-xs text-slate-500">{brushOpacity}%</span>
+        <span className="text-xs text-slate-500">{opacityPercent}%</span>
       </div>
+        </>
+        );
+      })()}
     </div>
   );
 
@@ -66,8 +69,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Feather:</label>
         <input
           type="number"
-          value={feather}
-          onChange={(e) => setFeather(Number(e.target.value))}
+          value={toolOptions.selection.feather}
+          onChange={(e) => setToolOptions('selection', { feather: Number(e.target.value) })}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">px</span>
@@ -95,8 +98,8 @@ const ToolOptionsBar: React.FC = () => {
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600">Font:</label>
         <select
-          value={textFont}
-          onChange={(e) => setTextFont(e.target.value)}
+          value={toolOptions.text.font}
+          onChange={(e) => setToolOptions('text', { font: e.target.value })}
           className="rounded border border-slate-300 px-2 py-1 text-xs"
         >
           <option>Arial</option>
@@ -110,20 +113,35 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Size:</label>
         <input
           type="number"
-          value={textSize}
-          onChange={(e) => setTextSize(Number(e.target.value))}
+          value={toolOptions.text.size}
+          onChange={(e) => setToolOptions('text', { size: Number(e.target.value) })}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">pt</span>
       </div>
       <div className="flex items-center gap-1">
-        <button className="rounded border border-slate-300 px-2 py-1 text-xs font-bold hover:bg-slate-100">
+        <button
+          onClick={() => setToolOptions('text', { bold: !toolOptions.text.bold })}
+          className={`rounded border border-slate-300 px-2 py-1 text-xs font-bold hover:bg-slate-100 ${
+            toolOptions.text.bold ? 'bg-slate-200' : ''
+          }`}
+        >
           B
         </button>
-        <button className="rounded border border-slate-300 px-2 py-1 text-xs italic hover:bg-slate-100">
+        <button
+          onClick={() => setToolOptions('text', { italic: !toolOptions.text.italic })}
+          className={`rounded border border-slate-300 px-2 py-1 text-xs italic hover:bg-slate-100 ${
+            toolOptions.text.italic ? 'bg-slate-200' : ''
+          }`}
+        >
           I
         </button>
-        <button className="rounded border border-slate-300 px-2 py-1 text-xs underline hover:bg-slate-100">
+        <button
+          onClick={() => setToolOptions('text', { underline: !toolOptions.text.underline })}
+          className={`rounded border border-slate-300 px-2 py-1 text-xs underline hover:bg-slate-100 ${
+            toolOptions.text.underline ? 'bg-slate-200' : ''
+          }`}
+        >
           U
         </button>
       </div>
@@ -131,8 +149,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Colour:</label>
         <input
           type="color"
-          value={textColor}
-          onChange={(e) => setTextColor(e.target.value)}
+          value={toolOptions.text.color}
+          onChange={(e) => setToolOptions('text', { color: e.target.value })}
           className="h-6 w-12 cursor-pointer rounded border"
         />
       </div>
@@ -145,8 +163,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Fill:</label>
         <input
           type="color"
-          value={fillColor}
-          onChange={(e) => setFillColor(e.target.value)}
+          value={toolOptions.shape.fill}
+          onChange={(e) => setToolOptions('shape', { fill: e.target.value })}
           className="h-6 w-12 cursor-pointer rounded border"
         />
       </div>
@@ -154,8 +172,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Stroke:</label>
         <input
           type="color"
-          value={strokeColor}
-          onChange={(e) => setStrokeColor(e.target.value)}
+          value={toolOptions.shape.stroke}
+          onChange={(e) => setToolOptions('shape', { stroke: e.target.value })}
           className="h-6 w-12 cursor-pointer rounded border"
         />
       </div>
@@ -163,8 +181,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Stroke Width:</label>
         <input
           type="number"
-          value={strokeWidth}
-          onChange={(e) => setStrokeWidth(Number(e.target.value))}
+          value={toolOptions.shape.strokeWidth}
+          onChange={(e) => setToolOptions('shape', { strokeWidth: Number(e.target.value) })}
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-500">px</span>
@@ -220,8 +238,8 @@ const ToolOptionsBar: React.FC = () => {
         <label className="text-xs font-medium text-slate-600">Fill Colour:</label>
         <input
           type="color"
-          value={brushColor}
-          onChange={(e) => setBrushColor(e.target.value)}
+          value={toolOptions.brush.color}
+          onChange={(e) => setToolOptions('brush', { color: e.target.value })}
           className="h-6 w-12 cursor-pointer rounded border"
         />
       </div>
@@ -290,4 +308,3 @@ const ToolOptionsBar: React.FC = () => {
 };
 
 export default ToolOptionsBar;
-

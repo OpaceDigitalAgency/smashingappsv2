@@ -7,11 +7,13 @@ import {
   type DocumentState,
   type Layer,
   type LayerSnapshot,
-  type CanvasEngineStatus
+  type CanvasEngineStatus,
+  type ToolOptionsState
 } from '../types';
 import { createId } from '../utils/id';
 import { createBaseLayer } from '../utils/layers/defaultLayers';
 import { cloneLayers } from '../utils/layers/cloneLayers';
+import type Konva from 'konva';
 
 const MAX_HISTORY_ITEMS = 60;
 
@@ -39,6 +41,38 @@ const defaultCanvasEngine: CanvasEngineStatus = {
   webgpuAvailable: false,
   webglAvailable: false,
   initialized: false
+};
+
+const defaultToolOptions: ToolOptionsState = {
+  brush: {
+    size: 25,
+    color: '#000000',
+    opacity: 1
+  },
+  eraser: {
+    size: 25,
+    opacity: 1
+  },
+  shape: {
+    fill: '#4f46e5',
+    stroke: '#000000',
+    strokeWidth: 2
+  },
+  pen: {
+    stroke: '#000000',
+    strokeWidth: 2
+  },
+  text: {
+    font: 'Arial',
+    size: 16,
+    color: '#000000',
+    bold: false,
+    italic: false,
+    underline: false
+  },
+  selection: {
+    feather: 0
+  }
 };
 
 const defaultViewport = {
@@ -124,6 +158,9 @@ export const useGraphicsStore = create<GraphicsStore>()(
       ai: 'idle'
     },
     canvasEngine: defaultCanvasEngine,
+    toolOptions: { ...defaultToolOptions },
+    selection: null,
+    canvasStage: null,
     setReady: (ready) => set({ ready }),
     setLocale: (locale) =>
       set((state) =>
@@ -458,6 +495,98 @@ export const useGraphicsStore = create<GraphicsStore>()(
             initialized: status.initialized ?? draft.canvasEngine.initialized
           };
         })
+      ),
+    setToolOptions: (tool, options) =>
+      set((state) =>
+        produce(state, (draft) => {
+          const key: typeof tool = tool;
+          draft.toolOptions[key] = {
+            ...(draft.toolOptions[key] as ToolOptionsState[typeof key]),
+            ...options
+          } as ToolOptionsState[typeof key];
+        })
+      ),
+    setSelection: (selection) =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.selection = selection;
+        })
+      ),
+    clearSelection: () =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.selection = null;
+        })
+      ),
+    cropDocument: (documentId, rect) =>
+      set((state) =>
+        produce(state, (draft) => {
+          const document = draft.documents.find((doc) => doc.id === documentId);
+          if (!document) {
+            return;
+          }
+
+          const clampedX = Math.max(0, Math.min(rect.x, document.width));
+          const clampedY = Math.max(0, Math.min(rect.y, document.height));
+          const clampedWidth = Math.max(
+            1,
+            Math.min(rect.width, document.width - clampedX)
+          );
+          const clampedHeight = Math.max(
+            1,
+            Math.min(rect.height, document.height - clampedY)
+          );
+
+          const dx = clampedX;
+          const dy = clampedY;
+
+          document.layers.forEach((layer, index) => {
+            layer.transform = {
+              ...layer.transform,
+              x: index === 0 ? 0 : layer.transform.x - dx,
+              y: index === 0 ? 0 : layer.transform.y - dy
+            };
+
+            const metadata = layer.metadata ?? {};
+            const strokes = Array.isArray((metadata as any).strokes) ? (metadata as any).strokes : [];
+            const shapes = Array.isArray((metadata as any).shapes) ? (metadata as any).shapes : [];
+
+            const shiftedStrokes = strokes.map((stroke: any) => ({
+              ...stroke,
+              points: stroke.points.map((value: number, pointIndex: number) =>
+                pointIndex % 2 === 0 ? value - dx : value - dy
+              )
+            }));
+
+            const shiftedShapes = shapes.map((shape: any) => ({
+              ...shape,
+              x: (shape.x ?? 0) - dx,
+              y: (shape.y ?? 0) - dy
+            }));
+
+            layer.metadata = {
+              ...metadata,
+              strokes: shiftedStrokes,
+              shapes: shiftedShapes
+            };
+          });
+
+          document.width = clampedWidth;
+          document.height = clampedHeight;
+          document.viewport = {
+            ...document.viewport,
+            panX: 0,
+            panY: 0
+          };
+          document.updatedAt = Date.now();
+          draft.selection = null;
+        })
+      ),
+    setCanvasStage: (stage) =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.canvasStage = stage;
+        })
       )
   })),
   { name: 'GraphicsSmasherStore' }
@@ -483,6 +612,9 @@ export function resetGraphicsStore() {
       ai: 'idle'
     },
     canvasEngine: { ...defaultCanvasEngine },
+    toolOptions: { ...defaultToolOptions },
+    selection: null,
+    canvasStage: null,
     setReady: useGraphicsStore.getState().setReady,
     setLocale: useGraphicsStore.getState().setLocale,
     setTheme: useGraphicsStore.getState().setTheme,
@@ -508,6 +640,11 @@ export function resetGraphicsStore() {
     setActivePanel: useGraphicsStore.getState().setActivePanel,
     setCommandPaletteOpen: useGraphicsStore.getState().setCommandPaletteOpen,
     setWorkerStatus: useGraphicsStore.getState().setWorkerStatus,
-    setCanvasEngineStatus: useGraphicsStore.getState().setCanvasEngineStatus
+    setCanvasEngineStatus: useGraphicsStore.getState().setCanvasEngineStatus,
+    setToolOptions: useGraphicsStore.getState().setToolOptions,
+    setSelection: useGraphicsStore.getState().setSelection,
+    clearSelection: useGraphicsStore.getState().clearSelection,
+    cropDocument: useGraphicsStore.getState().cropDocument,
+    setCanvasStage: useGraphicsStore.getState().setCanvasStage
   }));
 }

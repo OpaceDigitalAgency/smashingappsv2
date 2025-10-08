@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type Konva from 'konva';
 import { Stage, Layer as KonvaLayer, Rect, Group, Text, Line, Image as KonvaImage, Ellipse } from 'react-konva';
 import { useActiveDocument } from '../../hooks/useGraphicsStore';
 import { useGraphicsStore } from '../../state/graphicsStore';
 import { useCanvasInteraction, type BrushStroke, type Shape } from '../../hooks/useCanvasInteraction';
+import type { SelectionState } from '../../types';
 import useImage from 'use-image';
 import ContextMenu from '../overlays/ContextMenu';
 
@@ -40,17 +42,23 @@ const BackgroundLayer: React.FC<{ layer: any; docWidth: number; docHeight: numbe
 
 const CanvasViewport: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
   const activeDocument = useActiveDocument();
   const setViewport = useGraphicsStore((state) => state.setViewport);
   const settings = useGraphicsStore((state) => state.settings);
   const activeTool = useGraphicsStore((state) => state.activeTool);
+  const updateLayer = useGraphicsStore((state) => state.updateLayer);
+  const selection = useGraphicsStore((state) => state.selection);
+  const setCanvasStage = useGraphicsStore((state) => state.setCanvasStage);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
 
   const {
     isDrawing,
     currentStroke,
     currentShape,
+    selectionPreview,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
@@ -116,6 +124,105 @@ const CanvasViewport: React.FC = () => {
     setContextMenu({ x: e.clientX, y: e.clientY });
   }, []);
 
+  const selectionStrokeWidth = useMemo(() => Math.max(1 / (activeDocument?.viewport.zoom ?? 1), 0.5), [activeDocument?.viewport.zoom]);
+
+  const renderSelectionOverlay = useCallback(
+    (shape: SelectionState['shape'], isPreview = false) => {
+      if (!shape) {
+        return null;
+      }
+
+      if (shape.type === 'rect') {
+        const width = Math.abs(shape.width);
+        const height = Math.abs(shape.height);
+        if (width < 1 || height < 1) {
+          return null;
+        }
+
+        const x = shape.width >= 0 ? shape.x : shape.x + shape.width;
+        const y = shape.height >= 0 ? shape.y : shape.y + shape.height;
+
+        return (
+          <>
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              stroke="#6366f1"
+              dash={[8, 4]}
+              strokeWidth={selectionStrokeWidth}
+              listening={false}
+            />
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={isPreview ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)'}
+              listening={false}
+              opacity={isPreview ? 0.6 : 0.4}
+            />
+          </>
+        );
+      }
+
+      if (shape.type === 'lasso') {
+        if (shape.points.length < 4) {
+          return null;
+        }
+
+        return (
+          <Line
+            points={shape.points}
+            stroke="#6366f1"
+            strokeWidth={selectionStrokeWidth}
+            dash={[8, 4]}
+            closed
+            listening={false}
+            fill={isPreview ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)'}
+            opacity={isPreview ? 0.6 : 0.4}
+          />
+        );
+      }
+
+      return null;
+    },
+    [selectionStrokeWidth]
+  );
+
+  const stageCursor = useMemo(() => {
+    switch (activeTool) {
+      case 'hand':
+        return isPanning ? 'grabbing' : 'grab';
+      case 'move':
+        return 'move';
+      case 'zoom':
+        return 'zoom-in';
+      case 'paint-bucket':
+        return 'cell';
+      case 'eyedropper':
+        return 'crosshair';
+      case 'brush':
+      case 'clone-stamp':
+      case 'healing-brush':
+      case 'eraser':
+      case 'shape':
+      case 'pen':
+      case 'marquee-rect':
+      case 'marquee-ellipse':
+      case 'lasso-free':
+      case 'lasso-poly':
+      case 'lasso-magnetic':
+      case 'magic-wand':
+      case 'object-select':
+      case 'crop':
+        return 'crosshair';
+      default:
+        return 'default';
+    }
+  }, [activeTool, isPanning]);
+
   const renderLayers = useMemo(() => {
     if (!activeDocument) {
       return null;
@@ -135,19 +242,10 @@ const CanvasViewport: React.FC = () => {
         );
       }
 
-      // Get saved strokes and shapes from layer metadata
       const savedStrokes = (layer.metadata?.strokes as BrushStroke[]) || [];
       const savedShapes = (layer.metadata?.shapes as Shape[]) || [];
       const layerFill = layer.metadata?.fill as string | undefined;
       const hasContent = savedStrokes.length > 0 || savedShapes.length > 0 || layerFill;
-      
-      // Debug logging
-      if (savedStrokes.length > 0) {
-        console.log(`Rendering ${savedStrokes.length} saved strokes for layer ${layer.name}:`, savedStrokes);
-      }
-      if (savedShapes.length > 0) {
-        console.log(`Rendering ${savedShapes.length} saved shapes for layer ${layer.name}:`, savedShapes);
-      }
 
       return (
         <Group
@@ -159,21 +257,47 @@ const CanvasViewport: React.FC = () => {
           rotation={layer.transform.rotation}
           scaleX={layer.transform.scaleX}
           scaleY={layer.transform.scaleY}
-          listening={!layer.locked}
+          draggable={activeTool === 'move' && !layer.locked}
+          listening={activeTool === 'move' && !layer.locked}
+          onDragEnd={(evt) => {
+            const node = evt.target;
+            updateLayer(activeDocument.id, layer.id, (current) => ({
+              ...current,
+              transform: {
+                ...current.transform,
+                x: node.x(),
+                y: node.y()
+              }
+            }));
+          }}
         >
-          {/* Layer fill if present */}
           {layerFill && (
             <Rect
               width={activeDocument.width}
               height={activeDocument.height}
               fill={layerFill}
+              listening={false}
             />
           )}
 
-          {/* Render saved strokes */}
+          {layer.metadata?.fillImageUrl && (() => {
+            const img = new window.Image();
+            img.src = layer.metadata.fillImageUrl as string;
+            return (
+              <KonvaImage
+                image={img}
+                x={0}
+                y={0}
+                width={activeDocument.width}
+                height={activeDocument.height}
+                listening={false}
+              />
+            );
+          })()}
+
           {savedStrokes.map((stroke, strokeIndex) => (
             <Line
-              key={`stroke-${strokeIndex}`}
+              key={`stroke-${layer.id}-${strokeIndex}`}
               points={stroke.points}
               stroke={stroke.color}
               strokeWidth={stroke.size}
@@ -181,16 +305,43 @@ const CanvasViewport: React.FC = () => {
               tension={0.5}
               lineCap="round"
               lineJoin="round"
+              listening={activeTool === 'move' || activeTool === 'object-select'}
+              onClick={() => {
+                if (activeTool === 'move' || activeTool === 'object-select') {
+                  console.log('Selected stroke:', strokeIndex);
+                }
+              }}
               globalCompositeOperation={stroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
             />
           ))}
 
-          {/* Render saved shapes */}
           {savedShapes.map((shape, shapeIndex) => {
+            if ((shape as any).text) {
+              const fontStyle = `${(shape as any).fontBold ? 'bold ' : ''}${(shape as any).fontItalic ? 'italic ' : ''}${(shape as any).fontSize || 16}px ${(shape as any).font || 'Arial'}`;
+              return (
+                <Text
+                  key={`text-${layer.id}-${shapeIndex}`}
+                  x={shape.x}
+                  y={shape.y}
+                  text={(shape as any).text}
+                  fontSize={(shape as any).fontSize || 16}
+                  fontFamily={(shape as any).font || 'Arial'}
+                  fontStyle={(shape as any).fontBold ? 'bold' : (shape as any).fontItalic ? 'italic' : 'normal'}
+                  textDecoration={(shape as any).fontUnderline ? 'underline' : ''}
+                  fill={(shape as any).fontColor || '#000000'}
+                  listening={activeTool === 'move' || activeTool === 'object-select'}
+                  onClick={() => {
+                    if (activeTool === 'move' || activeTool === 'object-select') {
+                      console.log('Selected text:', shapeIndex);
+                    }
+                  }}
+                />
+              );
+            }
             if (shape.type === 'rectangle' && shape.width && shape.height) {
               return (
                 <Rect
-                  key={`shape-${shapeIndex}`}
+                  key={`shape-${layer.id}-${shapeIndex}`}
                   x={shape.x}
                   y={shape.y}
                   width={shape.width}
@@ -198,12 +349,19 @@ const CanvasViewport: React.FC = () => {
                   fill={shape.fill || 'transparent'}
                   stroke={shape.stroke || '#000000'}
                   strokeWidth={shape.strokeWidth || 1}
+                  listening={activeTool === 'move' || activeTool === 'object-select'}
+                  onClick={() => {
+                    if (activeTool === 'move' || activeTool === 'object-select') {
+                      console.log('Selected shape:', shapeIndex);
+                    }
+                  }}
                 />
               );
-            } else if (shape.type === 'ellipse' && shape.width && shape.height) {
+            }
+            if (shape.type === 'ellipse' && shape.width && shape.height) {
               return (
                 <Ellipse
-                  key={`shape-${shapeIndex}`}
+                  key={`shape-${layer.id}-${shapeIndex}`}
                   x={shape.x + shape.width / 2}
                   y={shape.y + shape.height / 2}
                   radiusX={Math.abs(shape.width) / 2}
@@ -211,13 +369,18 @@ const CanvasViewport: React.FC = () => {
                   fill={shape.fill || 'transparent'}
                   stroke={shape.stroke || '#000000'}
                   strokeWidth={shape.strokeWidth || 1}
+                  listening={activeTool === 'move' || activeTool === 'object-select'}
+                  onClick={() => {
+                    if (activeTool === 'move' || activeTool === 'object-select') {
+                      console.log('Selected shape:', shapeIndex);
+                    }
+                  }}
                 />
               );
             }
             return null;
           })}
 
-          {/* Layer placeholder visual - only show if no content */}
           {!hasContent && (
             <>
               <Rect
@@ -227,19 +390,21 @@ const CanvasViewport: React.FC = () => {
                 stroke="rgba(79,70,229,0.8)"
                 dash={[6, 6]}
                 cornerRadius={12}
+                listening={false}
               />
               <Text
                 text={layer.name}
                 fontSize={16}
                 fill="#1f2937"
                 padding={12}
+                listening={false}
               />
             </>
           )}
         </Group>
       );
     });
-  }, [activeDocument]);
+  }, [activeDocument, activeTool, updateLayer]);
 
   if (!activeDocument) {
     return (
@@ -248,6 +413,12 @@ const CanvasViewport: React.FC = () => {
       </div>
     );
   }
+
+  useEffect(() => {
+    return () => {
+      setCanvasStage(null);
+    };
+  }, [setCanvasStage]);
 
   return (
     <div
@@ -277,18 +448,35 @@ const CanvasViewport: React.FC = () => {
 
       {/* Canvas stage */}
       <Stage
+        ref={(node) => {
+          stageRef.current = node;
+          setCanvasStage(node ?? null);
+        }}
         width={size.width}
         height={size.height}
         scaleX={activeDocument.viewport.zoom}
         scaleY={activeDocument.viewport.zoom}
         x={activeDocument.viewport.panX}
         y={activeDocument.viewport.panY}
+        draggable={activeTool === 'hand'}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        style={{ cursor: activeTool === 'hand' ? 'grab' : activeTool === 'zoom' ? 'zoom-in' : 'crosshair' }}
+        onDragStart={() => setIsPanning(true)}
+        onDragEnd={(event) => {
+          setIsPanning(false);
+          if (!activeDocument) {
+            return;
+          }
+          const node = event.target as Konva.Stage;
+          setViewport(activeDocument.id, {
+            panX: node.x(),
+            panY: node.y()
+          });
+        }}
+        style={{ cursor: stageCursor }}
       >
         <KonvaLayer listening={false}>
           <Rect
@@ -313,45 +501,58 @@ const CanvasViewport: React.FC = () => {
             shadowOffsetX={0}
             shadowOffsetY={4}
           />
-          {renderLayers}
+          <Group
+            clip={{
+              x: 0,
+              y: 0,
+              width: activeDocument.width,
+              height: activeDocument.height
+            }}
+          >
+            {renderLayers}
 
-          {/* Current brush stroke */}
-          {currentStroke && (
-            <Line
-              points={currentStroke.points}
-              stroke={currentStroke.color}
-              strokeWidth={currentStroke.size}
-              opacity={currentStroke.opacity}
-              tension={0.5}
-              lineCap="round"
-              lineJoin="round"
-              globalCompositeOperation={currentStroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
-            />
-          )}
+            {currentStroke && (
+              <Line
+                points={currentStroke.points}
+                stroke={currentStroke.color}
+                strokeWidth={currentStroke.size}
+                opacity={currentStroke.opacity}
+                tension={0.5}
+                lineCap="round"
+                lineJoin="round"
+                listening={false}
+                globalCompositeOperation={currentStroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
+              />
+            )}
 
-          {/* Current shape being drawn */}
-          {currentShape && currentShape.type === 'rectangle' && (
-            <Rect
-              x={currentShape.x}
-              y={currentShape.y}
-              width={currentShape.width || 0}
-              height={currentShape.height || 0}
-              fill={currentShape.fill}
-              stroke={currentShape.stroke}
-              strokeWidth={currentShape.strokeWidth}
-            />
-          )}
-          {currentShape && currentShape.type === 'ellipse' && (
-            <Ellipse
-              x={currentShape.x + (currentShape.width || 0) / 2}
-              y={currentShape.y + (currentShape.height || 0) / 2}
-              radiusX={Math.abs((currentShape.width || 0) / 2)}
-              radiusY={Math.abs((currentShape.height || 0) / 2)}
-              fill={currentShape.fill}
-              stroke={currentShape.stroke}
-              strokeWidth={currentShape.strokeWidth}
-            />
-          )}
+            {currentShape && currentShape.type === 'rectangle' && (
+              <Rect
+                x={currentShape.x}
+                y={currentShape.y}
+                width={currentShape.width || 0}
+                height={currentShape.height || 0}
+                fill={currentShape.fill}
+                stroke={currentShape.stroke}
+                strokeWidth={currentShape.strokeWidth}
+                listening={false}
+              />
+            )}
+            {currentShape && currentShape.type === 'ellipse' && (
+              <Ellipse
+                x={currentShape.x + (currentShape.width || 0) / 2}
+                y={currentShape.y + (currentShape.height || 0) / 2}
+                radiusX={Math.abs((currentShape.width || 0) / 2)}
+                radiusY={Math.abs((currentShape.height || 0) / 2)}
+                fill={currentShape.fill}
+                stroke={currentShape.stroke}
+                strokeWidth={currentShape.strokeWidth}
+                listening={false}
+              />
+            )}
+
+            {selectionPreview && renderSelectionOverlay(selectionPreview, true)}
+            {selection?.shape && renderSelectionOverlay(selection.shape, false)}
+          </Group>
         </KonvaLayer>
       </Stage>
 
