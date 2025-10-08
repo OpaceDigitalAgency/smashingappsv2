@@ -1,20 +1,19 @@
 /**
- * Article AI Service Hook - AI-Core Integration
+ * Article AI Service Hook - Working AI Integration
  *
- * This hook provides access to the Article AI Core Adapter,
- * which bridges the original Article Smasher interface with
- * the new AI-Core system.
+ * This hook provides access to the working Article AI implementation
+ * using the proven useArticleAI hook that works with the shared AI services.
  */
 
-import articleAICoreAdapter from '../services/articleAICoreAdapter';
+import { useArticleAI } from './useArticleAI';
 
 /**
- * Hook to access the Article AI Core Adapter
+ * Hook to access the Article AI service
  *
- * @returns The Article AI Core Adapter instance
+ * @returns The useArticleAI hook instance
  */
 export const useArticleAIService = () => {
-  return articleAICoreAdapter;
+  return useArticleAI();
 };
 
 export default useArticleAIService;

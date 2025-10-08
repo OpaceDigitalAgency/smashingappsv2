@@ -28,7 +28,7 @@ export const useArticleAI = () => {
       // Process the prompt template
       const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
         articleType,
-        subject
+        niche: subject
       });
       
       // Execute the AI request

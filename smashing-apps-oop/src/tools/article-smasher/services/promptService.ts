@@ -18,7 +18,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     name: 'Topic Generator',
     description: 'Generates article topic ideas based on the selected article type',
     systemPrompt: 'You are a professional content strategist specializing in creating engaging article topics. Your task is to generate 5 compelling topic ideas for the specified article type.',
-    userPromptTemplate: 'Generate 5 engaging topic ideas for a {{articleType}} about {{subject}}. Each topic should be SEO-friendly and appeal to my target audience.',
+    userPromptTemplate: 'Generate 5 engaging topic ideas for a {{articleType}} about {{niche}}. Each topic should be SEO-friendly and appeal to my target audience.',
     category: 'topic',
     temperature: 0.8,
     maxTokens: 500,

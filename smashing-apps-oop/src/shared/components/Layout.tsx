@@ -50,11 +50,12 @@ const Layout: React.FC = () => {
         <nav className="w-full px-4">
           <div className="flex justify-between items-center h-16 max-w-7xl mx-auto">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className={`text-xl font-bold ${isGraphicsDarkMode ? 'text-white' : 'text-gray-900'}`}>SmashingApps v2</span>
+            <Link to="/" className="flex items-center">
+              <img
+                src="/smashingapps-ai-small.png"
+                alt="SmashingApps.ai Logo"
+                className="h-16 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation */}
