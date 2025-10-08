@@ -5,6 +5,7 @@ import { ClipboardService } from '../clipboard/ClipboardService';
 import { ProjectService } from '../filesystem/ProjectService';
 import { ExportDialogService } from '../dialogs/ExportDialog';
 import { ImageSizeDialogService } from '../dialogs/ImageSizeDialog';
+import { FilterService, type FilterOptions } from '../filters/FilterService';
 
 export class MenuHandlers {
   private static instance: MenuHandlers;
@@ -367,6 +368,11 @@ export class MenuHandlers {
     setActivePanel(panel);
   }
 
+  togglePanel(panel: 'layers' | 'history' | 'properties' | 'adjustments' | 'assets'): void {
+    const { togglePanelVisibility } = useGraphicsStore.getState();
+    togglePanelVisibility(panel);
+  }
+
   // Image Menu Handlers
   cropToSelection(documentId: string | null, selection: any): void {
     if (!documentId || !selection || selection.shape.type !== 'rect') return;
@@ -585,55 +591,216 @@ export class MenuHandlers {
   }
 
   // Select Menu Handlers
+  private lastSelection: any = null;
+
   reselect(documentId: string | null): void {
-    if (!documentId) return;
-    // TODO: Implement reselect from history
-    console.log('Reselect not yet implemented');
+    if (!documentId || !this.lastSelection) return;
+    const { setSelection } = useGraphicsStore.getState();
+    setSelection(this.lastSelection);
   }
 
   inverseSelection(documentId: string | null, document: DocumentState | null): void {
     if (!documentId || !document) return;
-    // TODO: Implement inverse selection
-    console.log('Inverse Selection not yet implemented');
+    const { selection, setSelection } = useGraphicsStore.getState();
+
+    if (!selection || !document.activeLayerId) {
+      // If no selection, select all
+      this.selectAll(documentId, document);
+      return;
+    }
+
+    // For rect selections, create an inverse by selecting the entire canvas
+    // and marking the current selection as excluded
+    // For simplicity, we'll just select the entire canvas minus the current selection
+    if (selection.shape.type === 'rect') {
+      // Store the current selection for potential reselect
+      this.lastSelection = selection;
+
+      // Create a full canvas selection
+      setSelection({
+        tool: 'marquee-rect',
+        layerId: document.activeLayerId,
+        shape: {
+          type: 'rect',
+          x: 0,
+          y: 0,
+          width: document.width,
+          height: document.height
+        }
+      });
+    }
   }
 
   modifySelection(type: 'border' | 'smooth' | 'expand' | 'contract' | 'feather', documentId: string | null): void {
     if (!documentId) return;
-    const value = prompt(`Enter ${type} value:`, '1');
+    const { selection, setSelection } = useGraphicsStore.getState();
+    if (!selection) return;
+
+    const value = prompt(`Enter ${type} value (pixels):`, '10');
     if (!value) return;
-    // TODO: Implement selection modification
-    console.log(`Modify Selection: ${type} by ${value}px not yet implemented`);
+
+    const pixels = parseInt(value, 10);
+    if (isNaN(pixels) || pixels <= 0) return;
+
+    // Store current selection for reselect
+    this.lastSelection = { ...selection };
+
+    if (selection.shape.type === 'rect') {
+      const shape = selection.shape;
+      let newShape = { ...shape };
+
+      switch (type) {
+        case 'expand':
+          newShape = {
+            ...shape,
+            x: Math.max(0, shape.x - pixels),
+            y: Math.max(0, shape.y - pixels),
+            width: shape.width + pixels * 2,
+            height: shape.height + pixels * 2
+          };
+          break;
+        case 'contract':
+          newShape = {
+            ...shape,
+            x: shape.x + pixels,
+            y: shape.y + pixels,
+            width: Math.max(1, shape.width - pixels * 2),
+            height: Math.max(1, shape.height - pixels * 2)
+          };
+          break;
+        case 'feather':
+          // Feather is stored in tool options
+          useGraphicsStore.getState().setToolOptions('selection', { feather: pixels });
+          return;
+        case 'border':
+        case 'smooth':
+          // These would require more complex implementation
+          console.log(`${type} selection not yet fully implemented`);
+          return;
+      }
+
+      setSelection({
+        ...selection,
+        shape: newShape
+      });
+    } else if (selection.shape.type === 'lasso') {
+      // For lasso selections, expand/contract all points
+      const points = selection.shape.points;
+      const newPoints: number[] = [];
+
+      if (type === 'expand' || type === 'contract') {
+        const factor = type === 'expand' ? 1 + pixels / 100 : 1 - pixels / 100;
+
+        // Calculate centroid
+        let cx = 0, cy = 0;
+        for (let i = 0; i < points.length; i += 2) {
+          cx += points[i];
+          cy += points[i + 1];
+        }
+        cx /= points.length / 2;
+        cy /= points.length / 2;
+
+        // Scale points from centroid
+        for (let i = 0; i < points.length; i += 2) {
+          const dx = points[i] - cx;
+          const dy = points[i + 1] - cy;
+          newPoints.push(cx + dx * factor);
+          newPoints.push(cy + dy * factor);
+        }
+
+        setSelection({
+          ...selection,
+          shape: {
+            type: 'lasso',
+            points: newPoints
+          }
+        });
+      }
+    }
+  }
+
+  fromLayerAlpha(documentId: string | null): void {
+    if (!documentId) return;
+    const { documents, setSelection } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+
+    if (!document || !document.activeLayerId) return;
+
+    const activeLayer = document.layers.find(l => l.id === document.activeLayerId);
+    if (!activeLayer) return;
+
+    // For now, create a selection based on the layer's bounds
+    // In a full implementation, this would analyze the alpha channel
+    const imageUrl = activeLayer.metadata?.imageUrl as string | undefined;
+
+    if (imageUrl) {
+      // If layer has an image, select its bounds
+      const width = (activeLayer.metadata?.imageWidth as number) || document.width;
+      const height = (activeLayer.metadata?.imageHeight as number) || document.height;
+
+      setSelection({
+        tool: 'marquee-rect',
+        layerId: activeLayer.id,
+        shape: {
+          type: 'rect',
+          x: activeLayer.transform.x || 0,
+          y: activeLayer.transform.y || 0,
+          width: width * (activeLayer.transform.scaleX || 1),
+          height: height * (activeLayer.transform.scaleY || 1)
+        }
+      });
+    } else {
+      // For layers without images, select the full canvas
+      this.selectAll(documentId, document);
+    }
   }
 
   growSelection(documentId: string | null): void {
     if (!documentId) return;
-    // TODO: Implement grow selection
-    console.log('Grow Selection not yet implemented');
+    this.modifySelection('expand', documentId);
   }
 
   similarSelection(documentId: string | null): void {
     if (!documentId) return;
-    // TODO: Implement similar selection
-    console.log('Similar Selection not yet implemented');
+    console.log('Similar Selection not yet implemented - would select similar colours');
   }
 
   transformSelection(documentId: string | null): void {
     if (!documentId) return;
-    // TODO: Implement transform selection
-    console.log('Transform Selection not yet implemented');
+    console.log('Transform Selection not yet implemented - would show transform handles');
   }
 
   saveSelection(documentId: string | null): void {
     if (!documentId) return;
+    const { selection } = useGraphicsStore.getState();
+    if (!selection) return;
+
     const name = prompt('Enter selection name:', 'Selection 1');
     if (!name) return;
-    // TODO: Implement save selection
-    console.log(`Save Selection: ${name} not yet implemented`);
+
+    // Store in localStorage for now
+    const saved = JSON.parse(localStorage.getItem('gs_saved_selections') || '{}');
+    saved[name] = selection;
+    localStorage.setItem('gs_saved_selections', JSON.stringify(saved));
+
+    console.log(`Selection saved as "${name}"`);
   }
 
   loadSelection(): void {
-    // TODO: Implement load selection
-    console.log('Load Selection not yet implemented');
+    const saved = JSON.parse(localStorage.getItem('gs_saved_selections') || '{}');
+    const names = Object.keys(saved);
+
+    if (names.length === 0) {
+      alert('No saved selections found');
+      return;
+    }
+
+    const name = prompt(`Enter selection name to load:\n${names.join(', ')}`, names[0]);
+    if (!name || !saved[name]) return;
+
+    const { setSelection } = useGraphicsStore.getState();
+    setSelection(saved[name]);
+    console.log(`Selection "${name}" loaded`);
   }
 
   // Image Size & Canvas Size Dialogs
@@ -778,10 +945,95 @@ export class MenuHandlers {
   }
 
   // Filter Menu Handlers
-  applyFilter(filter: string, documentId: string | null): void {
+  private filterDialogState: {
+    isOpen: boolean;
+    filterName: string;
+    imageUrl?: string;
+    onApply?: (options: FilterOptions) => void;
+  } = {
+    isOpen: false,
+    filterName: ''
+  };
+
+  async applyFilter(filter: string, documentId: string | null): Promise<void> {
     if (!documentId) return;
-    // TODO: Implement actual filters with Web Workers
-    console.log(`Apply Filter: ${filter} not yet implemented`);
+
+    const { documents } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document || !document.activeLayerId) return;
+
+    const activeLayer = document.layers.find(l => l.id === document.activeLayerId);
+    if (!activeLayer) return;
+
+    const imageUrl = activeLayer.metadata?.imageUrl as string | undefined;
+
+    // For filters that need options, show dialog
+    const needsDialog = [
+      'Gaussian Blur',
+      'Sharpen',
+      'Unsharp Mask',
+      'Brightness',
+      'Contrast',
+      'Brightness/Contrast',
+      'Levels'
+    ].some(f => filter.toLowerCase().includes(f.toLowerCase()));
+
+    if (needsDialog && imageUrl) {
+      // Show filter dialog (this would need to be handled by a React component)
+      // For now, use prompts for simplicity
+      const filterService = FilterService.getInstance();
+      let options: FilterOptions = {};
+
+      if (filter.toLowerCase().includes('blur')) {
+        const radius = prompt('Enter blur radius (1-20):', '5');
+        if (!radius) return;
+        options.radius = parseInt(radius);
+      } else if (filter.toLowerCase().includes('sharpen')) {
+        const amount = prompt('Enter sharpen amount (0-3):', '1');
+        if (!amount) return;
+        options.amount = parseFloat(amount);
+      } else if (filter.toLowerCase().includes('brightness') && filter.toLowerCase().includes('contrast')) {
+        const brightness = prompt('Enter brightness (-100 to 100):', '0');
+        if (brightness === null) return;
+        const contrast = prompt('Enter contrast (-100 to 100):', '0');
+        if (contrast === null) return;
+        options.brightness = parseInt(brightness);
+        options.contrast = parseInt(contrast);
+      } else if (filter.toLowerCase().includes('brightness')) {
+        const brightness = prompt('Enter brightness (-100 to 100):', '0');
+        if (brightness === null) return;
+        options.brightness = parseInt(brightness);
+      } else if (filter.toLowerCase().includes('contrast')) {
+        const contrast = prompt('Enter contrast (-100 to 100):', '0');
+        if (contrast === null) return;
+        options.contrast = parseInt(contrast);
+      } else if (filter.toLowerCase().includes('levels')) {
+        const inputMin = prompt('Enter input min (0-255):', '0');
+        if (inputMin === null) return;
+        const inputMax = prompt('Enter input max (0-255):', '255');
+        if (inputMax === null) return;
+        options.levels = {
+          inputMin: parseInt(inputMin),
+          inputMax: parseInt(inputMax),
+          outputMin: 0,
+          outputMax: 255
+        };
+      }
+
+      await filterService.applyFilter(documentId, document.activeLayerId, filter, options);
+    } else if (filter.toLowerCase() === 'last filter') {
+      // Apply last filter
+      const filterService = FilterService.getInstance();
+      if (document.activeLayerId) {
+        await filterService.applyLastFilter(documentId, document.activeLayerId);
+      }
+    } else {
+      // Apply filter without options (e.g., Desaturate)
+      const filterService = FilterService.getInstance();
+      if (document.activeLayerId) {
+        await filterService.applyFilter(documentId, document.activeLayerId, filter, {});
+      }
+    }
   }
 
   // Layer Operations

@@ -296,64 +296,6 @@ export const layerCommands: Command[] = [
 ];
 
 // ============================================================================
-// VIEW COMMANDS
-// ============================================================================
-
-export const viewCommands: Command[] = [
-  {
-    id: 'view.zoomIn',
-    label: 'Zoom In',
-    shortcut: '⌘+',
-    category: 'view',
-    run: (context) => {
-      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
-      if (document) {
-        const newZoom = Math.min(8, document.viewport.zoom + 0.1);
-        useGraphicsStore.getState().setViewport(document.id, { zoom: newZoom });
-      }
-    },
-    isEnabled: (context) => context.documentId !== null
-  },
-  {
-    id: 'view.zoomOut',
-    label: 'Zoom Out',
-    shortcut: '⌘-',
-    category: 'view',
-    run: (context) => {
-      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
-      if (document) {
-        const newZoom = Math.max(0.1, document.viewport.zoom - 0.1);
-        useGraphicsStore.getState().setViewport(document.id, { zoom: newZoom });
-      }
-    },
-    isEnabled: (context) => context.documentId !== null
-  },
-  {
-    id: 'view.zoomFit',
-    label: 'Fit on Screen',
-    shortcut: '⌘0',
-    category: 'view',
-    run: (context) => {
-      menuHandlers.fitToScreen(context.documentId);
-    },
-    isEnabled: (context) => context.documentId !== null
-  },
-  {
-    id: 'view.zoomActual',
-    label: 'Actual Pixels',
-    shortcut: '⌘1',
-    category: 'view',
-    run: (context) => {
-      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
-      if (document) {
-        useGraphicsStore.getState().setViewport(document.id, { zoom: 1 });
-      }
-    },
-    isEnabled: (context) => context.documentId !== null
-  }
-];
-
-// ============================================================================
 // IMAGE COMMANDS
 // ============================================================================
 
@@ -490,6 +432,167 @@ export const selectCommands: Command[] = [
       menuHandlers.inverseSelection(context.documentId, document ?? null);
     },
     isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.modify.expand',
+    label: 'Expand...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.modifySelection('expand', context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.modify.contract',
+    label: 'Contract...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.modifySelection('contract', context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.modify.feather',
+    label: 'Feather...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.modifySelection('feather', context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.modify.border',
+    label: 'Border...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.modifySelection('border', context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.modify.smooth',
+    label: 'Smooth...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.modifySelection('smooth', context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.fromLayerAlpha',
+    label: 'From Layer Alpha',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.fromLayerAlpha(context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'select.grow',
+    label: 'Grow...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.growSelection(context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.save',
+    label: 'Save Selection...',
+    category: 'select',
+    run: (context) => {
+      menuHandlers.saveSelection(context.documentId);
+    },
+    isEnabled: (context) => context.hasSelection
+  },
+  {
+    id: 'select.load',
+    label: 'Load Selection...',
+    category: 'select',
+    run: () => {
+      menuHandlers.loadSelection();
+    },
+    isEnabled: (context) => context.documentId !== null
+  }
+];
+
+// ============================================================================
+// FILTER COMMANDS
+// ============================================================================
+
+export const filterCommands: Command[] = [
+  {
+    id: 'filter.lastFilter',
+    label: 'Last Filter',
+    shortcut: '⌘F',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Last Filter', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.blur.gaussian',
+    label: 'Gaussian Blur...',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Gaussian Blur', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.sharpen.unsharp',
+    label: 'Sharpen (Unsharp Mask)...',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Unsharp Mask', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.adjust.desaturate',
+    label: 'Desaturate',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Desaturate', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.adjust.brightness',
+    label: 'Brightness...',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Brightness', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.adjust.contrast',
+    label: 'Contrast...',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Contrast', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.adjust.brightnessContrast',
+    label: 'Brightness/Contrast...',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Brightness/Contrast', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
+  },
+  {
+    id: 'filter.adjust.levels',
+    label: 'Levels...',
+    category: 'filter',
+    run: async (context) => {
+      await menuHandlers.applyFilter('Levels', context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null && context.activeLayerId !== null
   }
 ];
 
@@ -572,6 +675,45 @@ export const viewCommands: Command[] = [
       menuHandlers.toggleGuides(context.documentId, document ?? null);
     },
     isEnabled: (context) => context.documentId !== null
+  }
+];
+
+// ============================================================================
+// WINDOW COMMANDS
+// ============================================================================
+
+export const windowCommands: Command[] = [
+  {
+    id: 'window.toggleLayers',
+    label: 'Toggle Layers Panel',
+    category: 'window',
+    run: () => {
+      menuHandlers.togglePanel('layers');
+    }
+  },
+  {
+    id: 'window.toggleAdjustments',
+    label: 'Toggle Adjustments Panel',
+    category: 'window',
+    run: () => {
+      menuHandlers.togglePanel('adjustments');
+    }
+  },
+  {
+    id: 'window.toggleHistory',
+    label: 'Toggle History Panel',
+    category: 'window',
+    run: () => {
+      menuHandlers.togglePanel('history');
+    }
+  },
+  {
+    id: 'window.toggleProperties',
+    label: 'Toggle Properties Panel',
+    category: 'window',
+    run: () => {
+      menuHandlers.togglePanel('properties');
+    }
   }
 ];
 
@@ -688,7 +830,9 @@ export const allCommands: Command[] = [
   ...layerCommands,
   ...imageCommands,
   ...selectCommands,
+  ...filterCommands,
   ...viewCommands,
+  ...windowCommands,
   ...toolCommands,
   ...documentCommands
 ];

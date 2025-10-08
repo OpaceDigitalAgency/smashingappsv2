@@ -144,6 +144,25 @@ function pushSnapshot(document: DocumentState, description: string) {
   document.history.future = [];
 }
 
+// Load panel visibility from localStorage
+const loadPanelVisibility = (): import('../types').PanelVisibility => {
+  try {
+    const saved = localStorage.getItem('gs_panel_visibility');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('Failed to load panel visibility:', error);
+  }
+  return {
+    layers: true,
+    adjustments: true,
+    history: true,
+    properties: true,
+    assets: true
+  };
+};
+
 export const useGraphicsStore = create<GraphicsStore>()(
   devtools((set, get) => ({
     ready: false,
@@ -152,6 +171,7 @@ export const useGraphicsStore = create<GraphicsStore>()(
     activeDocumentId: null,
     activeTool: 'move',
     activePanel: 'layers',
+    panelVisibility: loadPanelVisibility(),
     commandPaletteOpen: false,
     workerStatus: {
       imageProcessing: 'idle',
@@ -486,6 +506,30 @@ export const useGraphicsStore = create<GraphicsStore>()(
           draft.activePanel = panel;
         })
       ),
+    togglePanelVisibility: (panel) =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.panelVisibility[panel] = !draft.panelVisibility[panel];
+          // Save to localStorage
+          try {
+            localStorage.setItem('gs_panel_visibility', JSON.stringify(draft.panelVisibility));
+          } catch (error) {
+            console.error('Failed to save panel visibility:', error);
+          }
+        })
+      ),
+    setPanelVisibility: (panel, visible) =>
+      set((state) =>
+        produce(state, (draft) => {
+          draft.panelVisibility[panel] = visible;
+          // Save to localStorage
+          try {
+            localStorage.setItem('gs_panel_visibility', JSON.stringify(draft.panelVisibility));
+          } catch (error) {
+            console.error('Failed to save panel visibility:', error);
+          }
+        })
+      ),
     setCommandPaletteOpen: (open) =>
       set((state) =>
         produce(state, (draft) => {
@@ -650,6 +694,8 @@ export function resetGraphicsStore() {
     setViewport: useGraphicsStore.getState().setViewport,
     setActiveTool: useGraphicsStore.getState().setActiveTool,
     setActivePanel: useGraphicsStore.getState().setActivePanel,
+    togglePanelVisibility: useGraphicsStore.getState().togglePanelVisibility,
+    setPanelVisibility: useGraphicsStore.getState().setPanelVisibility,
     setCommandPaletteOpen: useGraphicsStore.getState().setCommandPaletteOpen,
     setWorkerStatus: useGraphicsStore.getState().setWorkerStatus,
     setCanvasEngineStatus: useGraphicsStore.getState().setCanvasEngineStatus,

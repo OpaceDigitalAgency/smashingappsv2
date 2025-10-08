@@ -211,6 +211,14 @@ export interface WorkerStatus {
   ai: 'idle' | 'initializing' | 'ready' | 'error';
 }
 
+export interface PanelVisibility {
+  layers: boolean;
+  adjustments: boolean;
+  history: boolean;
+  properties: boolean;
+  assets: boolean;
+}
+
 export interface GraphicsStoreState {
   ready: boolean;
   settings: GraphicsSettings;
@@ -218,6 +226,7 @@ export interface GraphicsStoreState {
   activeDocumentId: string | null;
   activeTool: GraphicsToolId;
   activePanel: PanelTab;
+  panelVisibility: PanelVisibility;
   commandPaletteOpen: boolean;
   workerStatus: WorkerStatus;
   canvasEngine: CanvasEngineStatus;
@@ -251,6 +260,8 @@ export interface GraphicsStoreActions {
   setViewport: (documentId: string, viewport: Partial<DocumentViewport>) => void;
   setActiveTool: (tool: GraphicsToolId) => void;
   setActivePanel: (panel: PanelTab) => void;
+  togglePanelVisibility: (panel: PanelTab) => void;
+  setPanelVisibility: (panel: PanelTab, visible: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setWorkerStatus: (worker: keyof WorkerStatus, status: WorkerStatus[keyof WorkerStatus]) => void;
   setCanvasEngineStatus: (status: Partial<CanvasEngineStatus>) => void;
