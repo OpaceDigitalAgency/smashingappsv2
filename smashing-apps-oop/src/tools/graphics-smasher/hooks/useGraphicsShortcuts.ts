@@ -91,6 +91,13 @@ export function useGraphicsShortcuts(documentId: string | null) {
         return;
       }
 
+      // Delete (Delete or Backspace key)
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        CommandRegistry.run('edit.delete');
+        return;
+      }
+
       // Free Transform (Cmd/Ctrl + T)
       if (metaKey && event.key.toLowerCase() === 't') {
         event.preventDefault();

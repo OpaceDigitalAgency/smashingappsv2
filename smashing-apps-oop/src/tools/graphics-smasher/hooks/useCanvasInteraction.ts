@@ -406,17 +406,13 @@ export function useCanvasInteraction() {
         });
         break;
       case 'pen': {
-        shapeStartRef.current = pos;
         const penSettings = toolOptions.pen;
-        setCurrentShape({
-          type: 'rectangle',
-          x: pos.x,
-          y: pos.y,
-          width: 0,
-          height: 0,
-          fill: 'transparent',
-          stroke: penSettings.stroke,
-          strokeWidth: penSettings.strokeWidth
+        setCurrentStroke({
+          tool: 'pen',
+          points: [pos.x, pos.y],
+          color: penSettings.stroke,
+          size: penSettings.strokeWidth,
+          opacity: 1
         });
         break;
       }
@@ -494,6 +490,7 @@ export function useCanvasInteraction() {
       case 'clone-stamp':
       case 'healing-brush':
       case 'eraser':
+      case 'pen':
         if (currentStroke) {
           setCurrentStroke({
             ...currentStroke,

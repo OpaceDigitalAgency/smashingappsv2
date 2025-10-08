@@ -430,6 +430,21 @@ const CanvasViewport: React.FC = () => {
                 />
               );
             }
+            if ((shape as any).type === 'polygon' && (shape as any).points) {
+              const isEraser = (shape as any).isEraser === true;
+              return (
+                <Line
+                  key={`shape-${layer.id}-${shapeIndex}`}
+                  points={(shape as any).points}
+                  fill={(shape as any).fill || 'transparent'}
+                  stroke={(shape as any).stroke || 'transparent'}
+                  strokeWidth={(shape as any).strokeWidth || 0}
+                  closed
+                  listening={false}
+                  globalCompositeOperation={isEraser ? 'destination-out' : 'source-over'}
+                />
+              );
+            }
             return null;
           })}
 

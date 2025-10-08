@@ -21,6 +21,7 @@ export type CommandId =
   | 'edit.cut'
   | 'edit.copy'
   | 'edit.paste'
+  | 'edit.delete'
   | 'edit.selectAll'
   | 'edit.deselect'
   | 'edit.transform.free'

@@ -83,19 +83,18 @@ class ClipboardServiceClass {
       return false;
     }
 
-    const { documents, updateLayer, clearSelection } = useGraphicsStore.getState();
+    const { documents, updateLayer, clearSelection, pushHistory } = useGraphicsStore.getState();
     const document = documents.find(d => d.id === documentId);
     if (!document) return false;
 
     const layer = document.layers.find(l => l.id === selection.layerId);
     if (!layer) return false;
 
-    // Create an eraser stroke that covers the selection area
+    // Create an eraser shape/stroke that covers the selection area
     if (selection.shape.type === 'rect') {
-      // For rectangular selections, create a filled rectangle eraser
+      // For rectangular selections, create a filled rectangle with destination-out
       const existingShapes = (layer.metadata?.shapes as any[]) || [];
 
-      // Add a white rectangle to erase the selection
       const eraserShape = {
         type: 'rectangle' as const,
         x: selection.shape.x,
@@ -116,27 +115,30 @@ class ClipboardServiceClass {
         }
       }));
     } else if (selection.shape.type === 'lasso') {
-      // For lasso selections, create an eraser stroke
-      const existingStrokes = (layer.metadata?.strokes as any[]) || [];
+      // For lasso selections, fill the polygon with eraser
+      const existingShapes = (layer.metadata?.shapes as any[]) || [];
 
-      const eraserStroke = {
-        tool: 'eraser',
+      // Create a polygon shape from lasso points
+      const eraserShape = {
+        type: 'polygon' as const,
         points: selection.shape.points,
-        color: '#ffffff',
-        size: 50, // Large size to cover the area
-        opacity: 1
+        fill: '#ffffff',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        isEraser: true
       };
 
       updateLayer(documentId, selection.layerId, (l) => ({
         ...l,
         metadata: {
           ...l.metadata,
-          strokes: [...existingStrokes, eraserStroke]
+          shapes: [...existingShapes, eraserShape]
         }
       }));
     }
 
     clearSelection();
+    pushHistory(documentId, 'Delete selection');
     console.log('Deleted selection');
     return true;
   }
@@ -202,7 +204,7 @@ class ClipboardServiceClass {
   }
 
   private pasteSelection(selection: { shape: SelectionState['shape']; layerId: string; metadata?: Record<string, unknown> }, documentId: string): boolean {
-    const { addLayer, updateLayer, documents } = useGraphicsStore.getState();
+    const { addLayer, updateLayer, documents, setSelection } = useGraphicsStore.getState();
     const document = documents.find(d => d.id === documentId);
     if (!document) return false;
 
@@ -218,10 +220,48 @@ class ClipboardServiceClass {
     });
 
     if (newLayerId && selection.metadata) {
+      // Offset the pasted content by 20px to make it visible
+      const offset = 20;
+      const metadata = { ...selection.metadata };
+
+      // Offset strokes if they exist
+      if (metadata.strokes && Array.isArray(metadata.strokes)) {
+        metadata.strokes = (metadata.strokes as any[]).map(stroke => ({
+          ...stroke,
+          points: stroke.points ? stroke.points.map((val: number) =>
+            val + offset
+          ) : stroke.points
+        }));
+      }
+
+      // Offset shapes if they exist
+      if (metadata.shapes && Array.isArray(metadata.shapes)) {
+        metadata.shapes = (metadata.shapes as any[]).map(shape => ({
+          ...shape,
+          x: (shape.x || 0) + offset,
+          y: (shape.y || 0) + offset
+        }));
+      }
+
       updateLayer(documentId, newLayerId, (l) => ({
         ...l,
-        metadata: { ...selection.metadata }
+        metadata
       }));
+
+      // Create a selection around the pasted content
+      if (selection.shape.type === 'rect') {
+        setSelection({
+          tool: 'marquee-rect',
+          shape: {
+            type: 'rect',
+            x: selection.shape.x + offset,
+            y: selection.shape.y + offset,
+            width: selection.shape.width,
+            height: selection.shape.height
+          },
+          layerId: newLayerId
+        });
+      }
     }
 
     console.log('Pasted selection as new layer:', newLayerId);

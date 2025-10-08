@@ -173,7 +173,7 @@ const ProfessionalToolbar: React.FC = () => {
               )}
               
               {/* Tooltip */}
-              <div className="pointer-events-none absolute left-full top-0 z-[10000] ml-2 hidden whitespace-nowrap rounded bg-[#1a1a1a] px-2 py-1 text-xs text-white shadow-lg group-hover:block">
+              <div className="pointer-events-none absolute left-full top-0 z-[99999] ml-2 hidden whitespace-nowrap rounded bg-[#1a1a1a] px-2 py-1 text-xs text-white shadow-lg transition-none delay-0 group-hover:block group-hover:delay-0">
                 {currentTool.label}
                 {currentTool.shortcut && (
                   <span className="ml-2 text-[#808080]">({currentTool.shortcut})</span>
@@ -198,7 +198,7 @@ const ProfessionalToolbar: React.FC = () => {
                   />
                   
                   {/* Tooltip */}
-                  <div className="pointer-events-none absolute left-full top-0 z-[10001] ml-2 hidden whitespace-nowrap rounded bg-[#1a1a1a] px-2 py-1 text-xs text-white shadow-lg group-hover:block">
+                  <div className="pointer-events-none absolute left-full top-0 z-[99999] ml-2 hidden whitespace-nowrap rounded bg-[#1a1a1a] px-2 py-1 text-xs text-white shadow-lg transition-none delay-0 group-hover:block group-hover:delay-0">
                     {group.primary.label}
                     {group.primary.shortcut && (
                       <span className="ml-2 text-[#808080]">({group.primary.shortcut})</span>
@@ -224,7 +224,7 @@ const ProfessionalToolbar: React.FC = () => {
                       />
                       
                       {/* Tooltip */}
-                      <div className="pointer-events-none absolute left-full top-0 z-[10001] ml-2 hidden whitespace-nowrap rounded bg-[#1a1a1a] px-2 py-1 text-xs text-white shadow-lg group-hover:block">
+                      <div className="pointer-events-none absolute left-full top-0 z-[99999] ml-2 hidden whitespace-nowrap rounded bg-[#1a1a1a] px-2 py-1 text-xs text-white shadow-lg transition-none delay-0 group-hover:block group-hover:delay-0">
                         {alt.label}
                         {alt.shortcut && (
                           <span className="ml-2 text-[#808080]">({alt.shortcut})</span>
