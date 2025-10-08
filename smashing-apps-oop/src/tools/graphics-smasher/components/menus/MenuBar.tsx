@@ -20,11 +20,13 @@ interface MenuSection {
 
 const MenuBar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('graphics-smasher-theme');
     return saved ? saved === 'dark' : true;
   });
   const menuRef = useRef<HTMLDivElement>(null);
+  const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activeDocumentId = useActiveDocumentId();
   const activeDocument = useActiveDocument();
   
@@ -337,7 +339,7 @@ const MenuBar: React.FC = () => {
   ];
 
   const renderSubmenu = (items: MenuItem[], parentKey: string) => (
-    <div className="absolute left-full top-0 z-[10001] ml-1 min-w-[200px] rounded-md border border-slate-200 bg-white py-1 shadow-xl">
+    <div className="absolute left-full top-0 z-[10001] -ml-1 min-w-[200px] rounded-md border border-slate-200 bg-white py-1 shadow-xl pointer-events-auto">
       {items.map((item, index) => {
         if (item.divider) {
           return <div key={`${parentKey}-divider-${index}`} className="my-1 h-px bg-slate-200" />;
@@ -369,9 +371,32 @@ const MenuBar: React.FC = () => {
         }
 
         const hasSubmenu = item.submenu && item.submenu.length > 0;
+        const submenuKey = `${menuKey}-${index}`;
+
+        const handleMouseEnter = () => {
+          if (hasSubmenu) {
+            if (submenuTimeoutRef.current) {
+              clearTimeout(submenuTimeoutRef.current);
+            }
+            setActiveSubmenu(submenuKey);
+          }
+        };
+
+        const handleMouseLeave = () => {
+          if (hasSubmenu) {
+            submenuTimeoutRef.current = setTimeout(() => {
+              setActiveSubmenu(null);
+            }, 200);
+          }
+        };
 
         return (
-          <div key={`${menuKey}-${index}`} className="relative group">
+          <div
+            key={submenuKey}
+            className="relative"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               onClick={!hasSubmenu ? item.action : undefined}
               disabled={item.disabled}
@@ -387,9 +412,9 @@ const MenuBar: React.FC = () => {
                 {hasSubmenu && <ChevronDown size={14} className="rotate-[-90deg]" />}
               </div>
             </button>
-            {hasSubmenu && (
-              <div className="hidden group-hover:block">
-                {renderSubmenu(item.submenu!, `${menuKey}-${index}`)}
+            {hasSubmenu && activeSubmenu === submenuKey && (
+              <div>
+                {renderSubmenu(item.submenu!, submenuKey)}
               </div>
             )}
           </div>
