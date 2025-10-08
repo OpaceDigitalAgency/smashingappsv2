@@ -280,6 +280,42 @@ export class MenuHandlers {
     removeLayer(documentId, activeLayerId);
   }
 
+  moveLayerUp(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const { documents, reorderLayer } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    const currentIndex = document.layers.findIndex(l => l.id === activeLayerId);
+    if (currentIndex === -1 || currentIndex >= document.layers.length - 1) return;
+
+    reorderLayer(documentId, activeLayerId, currentIndex + 1);
+  }
+
+  moveLayerDown(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const { documents, reorderLayer } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    const currentIndex = document.layers.findIndex(l => l.id === activeLayerId);
+    if (currentIndex <= 1) return; // Can't move below background layer
+
+    reorderLayer(documentId, activeLayerId, currentIndex - 1);
+  }
+
+  toggleLayerVisibility(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const { toggleLayerVisibility } = useGraphicsStore.getState();
+    toggleLayerVisibility(documentId, activeLayerId);
+  }
+
+  toggleLayerLock(documentId: string | null, activeLayerId: string | null): void {
+    if (!documentId || !activeLayerId) return;
+    const { toggleLayerLock } = useGraphicsStore.getState();
+    toggleLayerLock(documentId, activeLayerId);
+  }
+
   // View Menu Handlers
   zoomIn(documentId: string | null, document: DocumentState | null): void {
     if (!documentId || !document) return;
@@ -749,34 +785,73 @@ export class MenuHandlers {
   }
 
   // Layer Operations
-  mergeDown(documentId: string | null, activeLayerId: string | null): void {
+  async mergeDown(documentId: string | null, activeLayerId: string | null): Promise<void> {
     if (!documentId || !activeLayerId) return;
-    const { documents, updateLayer, removeLayer } = useGraphicsStore.getState();
+    const { documents, updateLayer, removeLayer, setActiveLayer } = useGraphicsStore.getState();
     const document = documents.find(d => d.id === documentId);
     if (!document) return;
 
     const currentIndex = document.layers.findIndex(l => l.id === activeLayerId);
     if (currentIndex <= 0) return; // Can't merge down from bottom layer
 
+    const currentLayer = document.layers[currentIndex];
     const belowLayer = document.layers[currentIndex - 1];
-    if (!belowLayer) return;
+    if (!belowLayer || !currentLayer) return;
 
-    // TODO: Implement actual layer merging with canvas composition
-    alert('Merge Down - Coming soon');
+    // Merge the current layer's content into the layer below
+    // Combine strokes and shapes
+    const currentStrokes = (currentLayer.metadata?.strokes as any[]) || [];
+    const currentShapes = (currentLayer.metadata?.shapes as any[]) || [];
+    const belowStrokes = (belowLayer.metadata?.strokes as any[]) || [];
+    const belowShapes = (belowLayer.metadata?.shapes as any[]) || [];
+
+    updateLayer(documentId, belowLayer.id, (layer) => ({
+      ...layer,
+      metadata: {
+        ...layer.metadata,
+        strokes: [...belowStrokes, ...currentStrokes],
+        shapes: [...belowShapes, ...currentShapes]
+      }
+    }));
+
+    // Remove the current layer
+    removeLayer(documentId, activeLayerId);
+
+    // Set the below layer as active
+    setActiveLayer(documentId, belowLayer.id);
   }
 
   mergeVisible(documentId: string | null): void {
     if (!documentId) return;
-    // TODO: Implement merge visible layers
-    alert('Merge Visible - Coming soon');
+    const { documents } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    const visibleLayers = document.layers.filter(l => l.visible);
+    if (visibleLayers.length <= 1) {
+      alert('Need at least 2 visible layers to merge');
+      return;
+    }
+
+    // For now, just show a message
+    alert(`Merge Visible - Would merge ${visibleLayers.length} visible layers`);
   }
 
   flattenImage(documentId: string | null): void {
     if (!documentId) return;
     if (!confirm('Flatten all layers into one? This cannot be undone.')) return;
-    
-    // TODO: Implement actual layer flattening
-    alert('Flatten Image - Coming soon');
+
+    const { documents } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
+
+    if (document.layers.length <= 1) {
+      alert('Image already has only one layer');
+      return;
+    }
+
+    // For now, just show a message
+    alert(`Flatten Image - Would flatten ${document.layers.length} layers`);
   }
 
   // Layer Properties

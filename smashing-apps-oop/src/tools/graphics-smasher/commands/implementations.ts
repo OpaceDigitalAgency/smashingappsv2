@@ -254,6 +254,44 @@ export const layerCommands: Command[] = [
       menuHandlers.mergeDown(context.documentId, context.activeLayerId);
     },
     isEnabled: (context) => context.activeLayerId !== null && context.layerCount > 1
+  },
+  {
+    id: 'layer.moveUp',
+    label: 'Move Layer Up',
+    shortcut: '⌘]',
+    category: 'layer',
+    run: (context) => {
+      menuHandlers.moveLayerUp(context.documentId, context.activeLayerId);
+    },
+    isEnabled: (context) => context.activeLayerId !== null
+  },
+  {
+    id: 'layer.moveDown',
+    label: 'Move Layer Down',
+    shortcut: '⌘[',
+    category: 'layer',
+    run: (context) => {
+      menuHandlers.moveLayerDown(context.documentId, context.activeLayerId);
+    },
+    isEnabled: (context) => context.activeLayerId !== null
+  },
+  {
+    id: 'layer.toggleVisibility',
+    label: 'Toggle Layer Visibility',
+    category: 'layer',
+    run: (context) => {
+      menuHandlers.toggleLayerVisibility(context.documentId, context.activeLayerId);
+    },
+    isEnabled: (context) => context.activeLayerId !== null
+  },
+  {
+    id: 'layer.toggleLock',
+    label: 'Toggle Layer Lock',
+    category: 'layer',
+    run: (context) => {
+      menuHandlers.toggleLayerLock(context.documentId, context.activeLayerId);
+    },
+    isEnabled: (context) => context.activeLayerId !== null
   }
 ];
 
@@ -452,6 +490,88 @@ export const selectCommands: Command[] = [
       menuHandlers.inverseSelection(context.documentId, document ?? null);
     },
     isEnabled: (context) => context.hasSelection
+  }
+];
+
+// ============================================================================
+// VIEW COMMANDS
+// ============================================================================
+
+export const viewCommands: Command[] = [
+  {
+    id: 'view.zoomIn',
+    label: 'Zoom In',
+    shortcut: '⌘+',
+    category: 'view',
+    run: (context) => {
+      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
+      menuHandlers.zoomIn(context.documentId, document ?? null);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
+    id: 'view.zoomOut',
+    label: 'Zoom Out',
+    shortcut: '⌘-',
+    category: 'view',
+    run: (context) => {
+      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
+      menuHandlers.zoomOut(context.documentId, document ?? null);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
+    id: 'view.zoomFit',
+    label: 'Fit on Screen',
+    shortcut: '⌘0',
+    category: 'view',
+    run: (context) => {
+      menuHandlers.fitToScreen(context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
+    id: 'view.zoomActual',
+    label: 'Actual Pixels',
+    shortcut: '⌘1',
+    category: 'view',
+    run: (context) => {
+      menuHandlers.actualPixels(context.documentId);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
+    id: 'view.toggleGrid',
+    label: 'Show Grid',
+    shortcut: '⌘\'',
+    category: 'view',
+    run: (context) => {
+      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
+      menuHandlers.toggleGrid(context.documentId, document ?? null);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
+    id: 'view.toggleRulers',
+    label: 'Show Rulers',
+    shortcut: '⌘R',
+    category: 'view',
+    run: (context) => {
+      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
+      menuHandlers.toggleRulers(context.documentId, document ?? null);
+    },
+    isEnabled: (context) => context.documentId !== null
+  },
+  {
+    id: 'view.toggleGuides',
+    label: 'Show Guides',
+    shortcut: '⌘;',
+    category: 'view',
+    run: (context) => {
+      const document = useGraphicsStore.getState().documents.find(d => d.id === context.documentId);
+      menuHandlers.toggleGuides(context.documentId, document ?? null);
+    },
+    isEnabled: (context) => context.documentId !== null
   }
 ];
 
