@@ -588,13 +588,13 @@ export class MenuHandlers {
   reselect(documentId: string | null): void {
     if (!documentId) return;
     // TODO: Implement reselect from history
-    alert('Reselect - Coming soon');
+    console.log('Reselect not yet implemented');
   }
 
   inverseSelection(documentId: string | null, document: DocumentState | null): void {
     if (!documentId || !document) return;
     // TODO: Implement inverse selection
-    alert('Inverse Selection - Coming soon');
+    console.log('Inverse Selection not yet implemented');
   }
 
   modifySelection(type: 'border' | 'smooth' | 'expand' | 'contract' | 'feather', documentId: string | null): void {
@@ -602,25 +602,25 @@ export class MenuHandlers {
     const value = prompt(`Enter ${type} value:`, '1');
     if (!value) return;
     // TODO: Implement selection modification
-    alert(`Modify Selection: ${type} by ${value}px - Coming soon`);
+    console.log(`Modify Selection: ${type} by ${value}px not yet implemented`);
   }
 
   growSelection(documentId: string | null): void {
     if (!documentId) return;
     // TODO: Implement grow selection
-    alert('Grow Selection - Coming soon');
+    console.log('Grow Selection not yet implemented');
   }
 
   similarSelection(documentId: string | null): void {
     if (!documentId) return;
     // TODO: Implement similar selection
-    alert('Similar Selection - Coming soon');
+    console.log('Similar Selection not yet implemented');
   }
 
   transformSelection(documentId: string | null): void {
     if (!documentId) return;
     // TODO: Implement transform selection
-    alert('Transform Selection - Coming soon');
+    console.log('Transform Selection not yet implemented');
   }
 
   saveSelection(documentId: string | null): void {
@@ -628,12 +628,12 @@ export class MenuHandlers {
     const name = prompt('Enter selection name:', 'Selection 1');
     if (!name) return;
     // TODO: Implement save selection
-    alert(`Save Selection: ${name} - Coming soon`);
+    console.log(`Save Selection: ${name} not yet implemented`);
   }
 
   loadSelection(): void {
     // TODO: Implement load selection
-    alert('Load Selection - Coming soon');
+    console.log('Load Selection not yet implemented');
   }
 
   // Image Size & Canvas Size Dialogs
@@ -781,7 +781,7 @@ export class MenuHandlers {
   applyFilter(filter: string, documentId: string | null): void {
     if (!documentId) return;
     // TODO: Implement actual filters with Web Workers
-    alert(`Apply Filter: ${filter} - Coming soon`);
+    console.log(`Apply Filter: ${filter} not yet implemented`);
   }
 
   // Layer Operations
@@ -864,7 +864,7 @@ export class MenuHandlers {
   // Layer Styles (placeholder implementations)
   applyLayerStyle(style: string, documentId: string | null, activeLayerId: string | null): void {
     if (!documentId || !activeLayerId) return;
-    alert(`Apply ${style} - Coming soon`);
+    console.log(`Apply ${style} not yet implemented`);
   }
 
   // Adjustment Layers
@@ -881,7 +881,7 @@ export class MenuHandlers {
   // Layer Masks
   addLayerMask(type: 'reveal' | 'hide' | 'selection', documentId: string | null, activeLayerId: string | null): void {
     if (!documentId || !activeLayerId) return;
-    alert(`Add Layer Mask: ${type} - Coming soon`);
+    console.log(`Add Layer Mask: ${type} not yet implemented`);
   }
 
   // View Operations
@@ -892,39 +892,42 @@ export class MenuHandlers {
 
   lockGuides(): void {
     // TODO: Implement guide locking
-    alert('Lock Guides - Coming soon');
+    console.log('Lock Guides not yet implemented');
   }
 
   clearGuides(documentId: string | null): void {
     if (!documentId) return;
     // TODO: Implement clear guides
-    alert('Clear Guides - Coming soon');
+    console.log('Clear Guides not yet implemented');
   }
 
   // Workspace presets
   setWorkspace(preset: string): void {
     // TODO: Implement workspace layouts
-    alert(`Switch to ${preset} workspace - Coming soon`);
+    console.log(`Switch to ${preset} workspace not yet implemented`);
   }
 
   // Preferences
   showPreferences(): void {
     // TODO: Implement preferences dialog
-    alert('Preferences - Coming soon');
+    console.log('Preferences not yet implemented');
   }
 
   // Help Menu Handlers
   showHelp(): void {
-    window.open('https://github.com/your-repo/graphics-smasher/wiki', '_blank');
+    window.open('https://github.com/OpaceDigitalAgency/smashingappsv2', '_blank');
   }
 
   showKeyboardShortcuts(): void {
-    const { setCommandPaletteOpen } = useGraphicsStore.getState();
-    setCommandPaletteOpen(true);
+    // This will be handled by the component that calls it
+    // The modal will be shown via state management
+    console.log('Show keyboard shortcuts modal');
   }
 
   showAbout(): void {
-    alert('Graphics Smasher\nVersion 1.0.0\nA professional graphics editor built with React and TypeScript');
+    // This will be handled by the component that calls it
+    // The modal will be shown via state management
+    console.log('Show about modal');
   }
 }
 
