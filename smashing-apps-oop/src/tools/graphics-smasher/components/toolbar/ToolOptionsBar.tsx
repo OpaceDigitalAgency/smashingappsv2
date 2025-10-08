@@ -224,13 +224,7 @@ const ToolOptionsBar: React.FC = () => {
     </div>
   );
 
-  const renderDefaultOptions = () => (
-    <div className="flex items-center gap-4">
-      <span className="text-xs text-slate-500">
-        Select a tool to see options
-      </span>
-    </div>
-  );
+  const renderDefaultOptions = () => null;
 
   const renderPaintBucketOptions = () => (
     <div className="flex items-center gap-6">

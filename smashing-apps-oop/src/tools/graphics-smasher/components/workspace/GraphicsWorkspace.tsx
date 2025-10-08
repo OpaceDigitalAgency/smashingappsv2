@@ -23,11 +23,27 @@ const GraphicsWorkspace: React.FC = () => {
   const activeDocumentId = useActiveDocumentId();
   const engineStatus = useGraphicsStore((state) => state.canvasEngine);
   const activeTool = useGraphicsStore((state) => state.activeTool);
+  const documents = useGraphicsStore((state) => state.documents);
+  const createDocument = useGraphicsStore((state) => state.createDocument);
+  const setActiveDocument = useGraphicsStore((state) => state.setActiveDocument);
   const [topOffset, setTopOffset] = useState(0);
 
   useGraphicsShortcuts(activeDocumentId);
   useCanvasEngineBootstrap();
   useImageWorkerBootstrap();
+
+  // Auto-create a default document on first load
+  useEffect(() => {
+    if (documents.length === 0) {
+      const docId = createDocument({
+        name: 'Untitled',
+        width: 1920,
+        height: 1080,
+        background: '#ffffff'
+      });
+      setActiveDocument(docId);
+    }
+  }, []);
 
   const panelContent = useMemo(() => {
     switch (activePanel) {
@@ -173,7 +189,7 @@ const GraphicsWorkspace: React.FC = () => {
               </aside>
             </div>
             <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-1.5 text-xs text-slate-500 shadow-inner flex-shrink-0">
-              {activeDocument ? (
+              {activeDocument && (
                 <>
                   <span className="font-medium">
                     {activeDocument.name} • {activeDocument.width}×{activeDocument.height}px •{' '}
@@ -189,8 +205,6 @@ const GraphicsWorkspace: React.FC = () => {
                     • Tool: {activeTool.toUpperCase()}
                   </span>
                 </>
-              ) : (
-                <span>Create a document to begin editing.</span>
               )}
             </footer>
           </div>

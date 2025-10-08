@@ -407,11 +407,7 @@ const CanvasViewport: React.FC = () => {
   }, [activeDocument, activeTool, updateLayer]);
 
   if (!activeDocument) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-slate-500">
-        Select or create a document to begin editing.
-      </div>
-    );
+    return null;
   }
 
   useEffect(() => {
