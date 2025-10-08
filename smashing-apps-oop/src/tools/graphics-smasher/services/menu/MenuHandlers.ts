@@ -416,18 +416,113 @@ export class MenuHandlers {
   rotateCanvas(documentId: string | null, degrees: number): void {
     if (!documentId) return;
 
-    alert('Canvas rotation is currently disabled due to technical limitations. Please use Layer > Transform > Rotate to rotate individual layers instead.');
-    return;
+    const { documents, updateLayer, resizeDocument } = useGraphicsStore.getState();
+    const document = documents.find(d => d.id === documentId);
+    if (!document) return;
 
-    // TODO: Implement proper canvas rotation that:
-    // 1. Swaps canvas dimensions for 90/270 degree rotations
-    // 2. Properly transforms all layer content (strokes, shapes, images)
-    // 3. Maintains visual appearance after rotation
-    //
-    // Current implementation has issues with:
-    // - Brush strokes not rotating correctly
-    // - Layer positions becoming incorrect
-    // - Content going off-canvas
+    const radians = (degrees * Math.PI) / 180;
+    const normalizedDegrees = ((degrees % 360) + 360) % 360;
+
+    // Helper function to rotate a point around origin
+    const rotatePoint = (x: number, y: number, centerX: number, centerY: number, angle: number): { x: number; y: number } => {
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const dx = x - centerX;
+      const dy = y - centerY;
+      return {
+        x: centerX + (dx * cos - dy * sin),
+        y: centerY + (dx * sin + dy * cos)
+      };
+    };
+
+    const oldWidth = document.width;
+    const oldHeight = document.height;
+    const oldCenterX = oldWidth / 2;
+    const oldCenterY = oldHeight / 2;
+
+    // For 90/270 degree rotations, swap dimensions
+    let newWidth = oldWidth;
+    let newHeight = oldHeight;
+    if (normalizedDegrees === 90 || normalizedDegrees === 270) {
+      newWidth = oldHeight;
+      newHeight = oldWidth;
+    }
+
+    const newCenterX = newWidth / 2;
+    const newCenterY = newHeight / 2;
+
+    // First, rotate all layer content before resizing
+    document.layers.forEach(layer => {
+      const metadata = layer.metadata || {};
+      const strokes = (metadata.strokes as any[]) || [];
+      const shapes = (metadata.shapes as any[]) || [];
+
+      // Rotate stroke coordinates
+      const rotatedStrokes = strokes.map((stroke: any) => {
+        const rotatedPoints: number[] = [];
+        for (let i = 0; i < stroke.points.length; i += 2) {
+          const rotated = rotatePoint(
+            stroke.points[i],
+            stroke.points[i + 1],
+            oldCenterX,
+            oldCenterY,
+            radians
+          );
+          // Adjust for new canvas center
+          rotatedPoints.push(rotated.x - oldCenterX + newCenterX);
+          rotatedPoints.push(rotated.y - oldCenterY + newCenterY);
+        }
+        return {
+          ...stroke,
+          points: rotatedPoints
+        };
+      });
+
+      // Rotate shape coordinates
+      const rotatedShapes = shapes.map((shape: any) => {
+        const shapeX = shape.x || 0;
+        const shapeY = shape.y || 0;
+        const rotated = rotatePoint(shapeX, shapeY, oldCenterX, oldCenterY, radians);
+
+        // For rectangles, also need to swap width/height for 90/270 rotations
+        let newShapeWidth = shape.width;
+        let newShapeHeight = shape.height;
+        if (normalizedDegrees === 90 || normalizedDegrees === 270) {
+          newShapeWidth = shape.height;
+          newShapeHeight = shape.width;
+        }
+
+        return {
+          ...shape,
+          x: rotated.x - oldCenterX + newCenterX,
+          y: rotated.y - oldCenterY + newCenterY,
+          width: newShapeWidth,
+          height: newShapeHeight
+        };
+      });
+
+      // Update layer with rotated content
+      updateLayer(documentId, layer.id, (l) => ({
+        ...l,
+        metadata: {
+          ...l.metadata,
+          strokes: rotatedStrokes,
+          shapes: rotatedShapes
+        },
+        transform: {
+          ...l.transform,
+          // Reset layer transform since we've rotated the content itself
+          rotation: 0
+        }
+      }));
+    });
+
+    // Update document dimensions
+    resizeDocument(documentId, newWidth, newHeight);
+
+    // Force a re-render
+    const { updateDocumentMeta } = useGraphicsStore.getState();
+    updateDocumentMeta(documentId, {});
   }
 
   flipHorizontal(documentId: string | null): void {
