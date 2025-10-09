@@ -63,9 +63,12 @@ function injectMetaTagsAndContent() {
   // Get the default meta information from our single source of truth
   const defaultMeta = seoMaster.defaultMeta;
   
-  // Replace title
+  // Always add title (Vite removes it during build)
   if (defaultMeta.title) {
-    defaultHtml = defaultHtml.replace(/<title>[^<]*<\/title>/, `<title>${defaultMeta.title}</title>`);
+    // Remove any existing title tags first
+    defaultHtml = defaultHtml.replace(/<title>[^<]*<\/title>/g, '');
+    // Add new title tag
+    defaultHtml = defaultHtml.replace(/(<head[^>]*>)/, `$1\n    <title>${defaultMeta.title}</title>`);
   }
   // Replace or add meta description
   if (defaultMeta.description) {
@@ -266,11 +269,14 @@ function injectMetaTagsAndContent() {
     // Create a copy of the HTML with route-specific meta tags
     let routeHtml = originalHtml;
     
-    // Replace title - Ensure meta exists
+    // Always add title (Vite removes it during build)
     if (meta.title) {
       console.log(`   Setting title to: ${meta.title}`);
-      routeHtml = routeHtml.replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`);
-      console.log('   Replaced title tag');
+      // Remove any existing title tags first
+      routeHtml = routeHtml.replace(/<title>[^<]*<\/title>/g, '');
+      // Add new title tag
+      routeHtml = routeHtml.replace(/(<head[^>]*>)/, `$1\n    <title>${meta.title}</title>`);
+      console.log('   Added title tag');
     } else {
       console.log('   Skipped title - no title provided');
     }
