@@ -427,6 +427,8 @@ useEffect(() => {
     description: currentUseCase.definition.description
   } : undefined;
 
+
+
   return (
     <div className="min-h-screen w-full flex fade-in-app relative pt-0">
       {/* Apply SEO overrides for the current use case */}

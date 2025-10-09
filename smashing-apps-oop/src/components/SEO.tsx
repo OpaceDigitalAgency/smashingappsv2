@@ -19,31 +19,20 @@ interface SEOProps {
  * - overrides: Optional object to override specific meta values for the current page
  */
 const SEO: React.FC<SEOProps> = ({ overrides = {} }) => {
+
   const location = useLocation();
   const [currentMeta, setCurrentMeta] = useState<MetaConfig>(seoMaster.defaultMeta);
   const prevOverridesRef = useRef<Partial<MetaConfig>>(overrides);
   const prevPathRef = useRef<string>(location.pathname);
   
   useEffect(() => {
-    // Check if we actually need to update
-    const overridesChanged = JSON.stringify(prevOverridesRef.current) !== JSON.stringify(overrides);
-    const pathChanged = prevPathRef.current !== location.pathname;
-
-    if (!overridesChanged && !pathChanged) {
-      return;
-    }
-
-    // Update refs
-    prevOverridesRef.current = overrides;
-    prevPathRef.current = location.pathname;
-
     // Get the meta data for this route
     const meta = seoMaster.getMetaForRoute(location.pathname);
 
     // Apply any overrides
     const finalMeta = { ...meta, ...overrides };
     setCurrentMeta(finalMeta);
-  }, [location.pathname, overrides]);
+  }, [location.pathname, JSON.stringify(overrides)]);
   
   // Construct the full URL for canonical and OG tags
   const fullUrl = `https://smashingapps.ai${location.pathname}`;
