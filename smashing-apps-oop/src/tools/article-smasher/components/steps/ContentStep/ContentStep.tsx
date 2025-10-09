@@ -250,10 +250,10 @@ const ContentStep: React.FC = () => {
             <button
               onClick={handleGenerateContent}
               disabled={!title || selectedKeywords.length === 0 || outline.length === 0}
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
             >
               <Sparkles size={16} />
-              <span>Generate Content</span>
+              <span className="font-bold">Generate Content</span>
             </button>
             
             {(!title || selectedKeywords.length === 0 || outline.length === 0) && (
