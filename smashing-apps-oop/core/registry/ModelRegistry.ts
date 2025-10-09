@@ -609,6 +609,49 @@ class ModelRegistry {
       releaseDate: '2025-09-01'
     });
 
+    // OpenAI Image Models
+    this.registerModel({
+      id: 'dall-e-3',
+      provider: 'openai',
+      name: 'DALL-E 3',
+      description: 'Most advanced OpenAI image generation model',
+      type: 'image',
+      capabilities: {
+        maxTokens: 0,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: false,
+        contextWindow: 0
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.04,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2023-11-01'
+    });
+
+    this.registerModel({
+      id: 'dall-e-2',
+      provider: 'openai',
+      name: 'DALL-E 2',
+      description: 'OpenAI image generation model',
+      type: 'image',
+      capabilities: {
+        maxTokens: 0,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: false,
+        contextWindow: 0
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.02,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2022-11-01'
+    });
+
     // Gemini 2.5 Image Models
     this.registerModel({
       id: 'gemini-2.5-flash-image',
