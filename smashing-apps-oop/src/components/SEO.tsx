@@ -28,20 +28,21 @@ const SEO: React.FC<SEOProps> = ({ overrides = {} }) => {
     // Check if we actually need to update
     const overridesChanged = JSON.stringify(prevOverridesRef.current) !== JSON.stringify(overrides);
     const pathChanged = prevPathRef.current !== location.pathname;
-    
+
     if (!overridesChanged && !pathChanged) {
       return;
     }
-    
+
     // Update refs
     prevOverridesRef.current = overrides;
     prevPathRef.current = location.pathname;
-    
+
     // Get the meta data for this route
     const meta = seoMaster.getMetaForRoute(location.pathname);
-    
+
     // Apply any overrides
-    setCurrentMeta({ ...meta, ...overrides });
+    const finalMeta = { ...meta, ...overrides };
+    setCurrentMeta(finalMeta);
   }, [location.pathname, overrides]);
   
   // Construct the full URL for canonical and OG tags

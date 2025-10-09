@@ -10,6 +10,7 @@ import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { PromptProvider } from './contexts/PromptContext';
 import { ArticleWizardProvider } from './contexts/ArticleWizardContext';
 import ArticleWizard from './components/ArticleWizard';
+import SEO from '../../components/SEO';
 import './styles/article-smasher-v2.css';
 
 // Import the landing page component from the original App
@@ -17,6 +18,7 @@ import './styles/article-smasher-v2.css';
 const ArticleSmasherLanding: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <SEO />
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">

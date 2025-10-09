@@ -6,6 +6,7 @@ import GraphicsLanding from './components/layout/GraphicsLanding';
 import { appRegistry, initializeAIServices } from '../../shared/services';
 import { useGraphicsStore } from './state/graphicsStore';
 import { initializeCommandRegistry } from './commands';
+import SEO from '../../components/SEO';
 import './styles/graphics-smasher.css';
 
 const GraphicsSmasherApp: React.FC = () => {
@@ -24,6 +25,7 @@ const GraphicsSmasherApp: React.FC = () => {
 
   return (
     <GraphicsAppProvider>
+      <SEO />
       <Routes>
         <Route index element={<GraphicsLanding />} />
         <Route path="workspace" element={<GraphicsWorkspace />} />

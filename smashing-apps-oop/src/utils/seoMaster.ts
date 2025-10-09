@@ -319,12 +319,12 @@ Object.entries(articleSmasherUseCases).forEach(([id, definition]) => {
 export function getMetaForRoute(route: string): MetaConfig {
   // Ensure trailing slash for consistency
   const normalizedRoute = route.endsWith('/') || route === '/' ? route : `${route}/`;
-  
+
   // Try to find an exact match first
   if (routeMeta[normalizedRoute]) {
     return routeMeta[normalizedRoute];
   }
-  
+
   // If no exact match, try to find a parent route
   const pathParts = normalizedRoute.split('/').filter(Boolean);
   while (pathParts.length > 0) {
@@ -334,7 +334,7 @@ export function getMetaForRoute(route: string): MetaConfig {
     }
     pathParts.pop();
   }
-  
+
   // Fall back to default if no match found
   return defaultMeta;
 }

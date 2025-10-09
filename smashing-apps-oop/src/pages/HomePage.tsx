@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Hammer, Brain, Target, Sparkles, Star, ListChecks, FileText, Palette } from 'lucide-react';
 import AICore from '../../core/AICore';
+import SEO from '../components/SEO';
 
 const HomePage: React.FC = () => {
   const aiCore = AICore.getInstance();
@@ -90,6 +91,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO />
       <div className="container mx-auto px-4">
         {/* Hero Section */}
         <section className="py-16 sm:py-24">

@@ -420,7 +420,7 @@ useEffect(() => {
   };
 
   const currentUseCase = getCurrentUseCase();
-  
+
   // Create SEO overrides based on the current use case - match the format in metaConfig.ts
   const seoOverrides = currentUseCase ? {
     title: `${currentUseCase.definition.label} | Free AI Planner & Magic To-Do Lists - TaskSmasher`,
@@ -430,7 +430,7 @@ useEffect(() => {
   return (
     <div className="min-h-screen w-full flex fade-in-app relative pt-0">
       {/* Apply SEO overrides for the current use case */}
-      {seoOverrides && <SEO overrides={seoOverrides} />}
+      <SEO overrides={seoOverrides} />
       
       {/* Add structured data for the current use case */}
       {currentUseCase && (
