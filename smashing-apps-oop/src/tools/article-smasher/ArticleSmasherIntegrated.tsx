@@ -168,8 +168,8 @@ const ArticleTypeRouter: React.FC = () => {
     localStorage.setItem('preselected_article_type', mappedType);
   }, [mappedType]);
 
-  // Redirect to wizard (relative path)
-  return <Navigate to="../wizard" replace />;
+  // Redirect to wizard (absolute path)
+  return <Navigate to="/tools/article-smasher/wizard" replace />;
 };
 
 /**
