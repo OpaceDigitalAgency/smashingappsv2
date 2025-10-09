@@ -40,7 +40,7 @@ export interface GlobalSettings {
 export const DEFAULT_SETTINGS: GlobalSettings = {
   _version: 1,
   defaultProvider: 'openai',
-  defaultModel: 'gpt-3.5-turbo',
+  defaultModel: 'gpt-4o-mini',
   defaultSystemPrompt: '',
   defaultTemperature: 0.7,
   defaultMaxTokens: 2000,

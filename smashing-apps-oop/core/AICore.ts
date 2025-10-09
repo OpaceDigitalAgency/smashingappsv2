@@ -185,7 +185,7 @@ class AICore {
     messages: Message[],
     options: Partial<RequestOptions> = {}
   ): Promise<NormalisedResponse> {
-    const model = this.settings.defaultModel || 'gpt-3.5-turbo';
+    const model = this.settings.defaultModel || 'gpt-4o-mini';
     return this.sendTextRequest(model, messages, options);
   }
   

@@ -12,6 +12,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
   const [models, setModels] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [defaultModel, setDefaultModel] = useState<string>('');
+  const [activeType, setActiveType] = useState<'chat' | 'image'>('chat');
   const modelRegistry = ModelRegistry.getInstance();
 
   const configuredProviders = aiCore.getConfiguredProviders();
@@ -22,8 +23,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
       setSelectedProvider(configuredProviders[0]);
     }
     // Load current default model
-    setDefaultModel(settings.model || '');
-  }, [configuredProviders, selectedProvider, settings.model]);
+    setDefaultModel(settings.defaultModel || '');
+  }, [configuredProviders, selectedProvider, settings.defaultModel]);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -135,7 +136,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
   };
 
   const handleSetDefaultModel = (modelId: string) => {
-    aiCore.updateSettings({ model: modelId });
+    aiCore.updateSettings({ defaultModel: modelId });
     setDefaultModel(modelId);
 
     // Dispatch event to notify other components
@@ -172,6 +173,33 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
             </option>
           ))}
         </select>
+      {/* Model Type Tabs and Refresh */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 -mt-2">
+        <div className="flex items-center justify-between">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveType('chat')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${activeType === 'chat' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Chat / Text
+            </button>
+            <button
+              onClick={() => setActiveType('image')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${activeType === 'image' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Image / Vision
+            </button>
+          </div>
+          <button
+            onClick={() => loadModels()}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+            title="Refresh models from provider APIs"
+          >
+            Refresh models
+          </button>
+        </div>
+      </div>
+
       </div>
 
       {/* Models List */}
@@ -190,7 +218,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {models.map((model) => (
+          {models
+            .filter((model) => (activeType === 'chat' ? model.type === 'chat' : model.type === 'image'))
+            .map((model) => (
             <div
               key={model.id}
               className={`bg-white rounded-lg border-2 p-6 hover:shadow-md transition-all ${
@@ -225,7 +255,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
                   <span>Model ID:</span>
                   <code className="text-xs bg-gray-100 px-2 py-1 rounded">{model.id}</code>
                 </div>
-                
+
                 {model.capabilities && (
                   <>
                     <div className="flex items-center justify-between text-gray-600">
@@ -273,24 +303,26 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
                 )}
               </div>
 
-              {/* Set as Default Button */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                {defaultModel === model.id ? (
-                  <button
-                    disabled
-                    className="w-full px-4 py-2 bg-indigo-100 text-indigo-600 font-medium rounded-lg cursor-not-allowed"
-                  >
-                    ✓ Current Default Model
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleSetDefaultModel(model.id)}
-                    className="w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Set as Default
-                  </button>
-                )}
-              </div>
+              {/* Set as Default Button (chat models only) */}
+              {model.type === 'chat' && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  {defaultModel === model.id ? (
+                    <button
+                      disabled
+                      className="w-full px-4 py-2 bg-indigo-100 text-indigo-600 font-medium rounded-lg cursor-not-allowed"
+                    >
+                      ✓ Current Default Model
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleSetDefaultModel(model.id)}
+                      className="w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Set as Default
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

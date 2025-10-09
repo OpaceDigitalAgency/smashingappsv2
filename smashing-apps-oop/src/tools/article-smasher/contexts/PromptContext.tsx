@@ -14,6 +14,7 @@ import {
   deletePromptFromAdmin
 } from '../utils/adminBridge';
 import { getGlobalSettings } from '../../../shared/services/globalSettingsService';
+import AICore from '../../../../core/AICore';
 import {
   loadPrompts,
   savePrompts,
@@ -33,20 +34,23 @@ const PromptContext = createContext<PromptContextType | null>(null);
 export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [prompts, setPrompts] = useState<PromptTemplate[]>([]);
   const [settings, setSettings] = useState<PromptSettings>(() => {
-    // Try to get settings from global settings first
     try {
+      // Prefer AI-Core default model if available
+      const aiCore = AICore.getInstance();
+      const aiSettings = aiCore.getSettings();
+
+      // Fallback to global settings for other values
       const globalSettings = getGlobalSettings();
       return {
-        defaultModel: globalSettings.defaultModel,
+        defaultModel: aiSettings.defaultModel || globalSettings.defaultModel || 'gpt-4o-mini',
         defaultTemperature: globalSettings.defaultTemperature,
         defaultMaxTokens: globalSettings.defaultMaxTokens,
         enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
       };
     } catch (error) {
-      console.error('Error getting global settings:', error);
-      // Fall back to default settings
+      console.error('Error initialising prompt settings:', error);
       return {
-        defaultModel: 'gpt-4o',
+        defaultModel: 'gpt-4o-mini',
         defaultTemperature: 0.7,
         defaultMaxTokens: 1000,
         enabledCategories: ['topic', 'keyword', 'outline', 'content', 'image']
@@ -62,7 +66,7 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   useEffect(() => {
     // Initialize the admin bridge
     initAdminBridge();
-    
+
     const initializePrompts = async () => {
       setIsLoading(true);
       try {
@@ -107,7 +111,7 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
     initializePrompts();
   }, []);
-  
+
   // Listen for global settings changes
   useEffect(() => {
     // Handler for custom event
@@ -120,7 +124,7 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         defaultMaxTokens: globalSettings.defaultMaxTokens,
       }));
     };
-    
+
     // Handler for storage event (for cross-tab synchronization)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'smashingapps_globalSettings' && e.newValue) {
@@ -137,16 +141,34 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         }
       }
     };
-    
+
     // Add event listeners
     window.addEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
     window.addEventListener('storage', handleStorageChange);
-    
+
     return () => {
-      // Remove event listeners on cleanup
       window.removeEventListener('globalSettingsChanged', handleGlobalSettingsChanged as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
+  }, []);
+
+  // Listen for AI-Core settings changes (default model updates)
+  useEffect(() => {
+    const handleAICoreSettingsChanged = () => {
+      try {
+        const aiCore = AICore.getInstance();
+        const aiSettings = aiCore.getSettings();
+        setSettings(prev => ({
+          ...prev,
+          defaultModel: aiSettings.defaultModel
+        }));
+      } catch (e) {
+        console.error('Error syncing with AI-Core settings:', e);
+      }
+    };
+
+    window.addEventListener('ai-core-settings-changed', handleAICoreSettingsChanged as EventListener);
+    return () => window.removeEventListener('ai-core-settings-changed', handleAICoreSettingsChanged as EventListener);
   }, []);
 
   // Add a new prompt
@@ -169,18 +191,18 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     try {
       setIsLoading(true);
       const updatedPrompt = updatePromptService(id, promptUpdate);
-      
+
       if (updatedPrompt) {
-        setPrompts(prevPrompts => 
+        setPrompts(prevPrompts =>
           prevPrompts.map(p => p.id === id ? updatedPrompt : p)
         );
-        
+
         // Update activePrompt if it's the one being updated
         if (activePrompt && activePrompt.id === id) {
           setActivePrompt(updatedPrompt);
         }
       }
-      
+
       return Promise.resolve();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update prompt'));
@@ -195,16 +217,16 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     try {
       setIsLoading(true);
       const success = deletePromptService(id);
-      
+
       if (success) {
         setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== id));
-        
+
         // Clear activePrompt if it's the one being deleted
         if (activePrompt && activePrompt.id === id) {
           setActivePrompt(null);
         }
       }
-      
+
       return Promise.resolve();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to delete prompt'));
@@ -218,21 +240,21 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const getPromptsByCategory = (category: PromptTemplate['category']) => {
     // First try to get prompts from our current state
     const categoryPrompts = prompts.filter(p => p.category === category);
-    
+
     // If no prompts found for the category, try the service
     if (categoryPrompts.length === 0) {
       console.warn(`No prompts found for category: ${category} in current state. Trying service.`);
       const servicePrompts = getPromptsByCategoryService(category);
-      
+
       if (servicePrompts.length === 0) {
         console.warn(`No prompts found for category: ${category} in service. Using default prompts.`);
         // Return default prompts for the category from promptService
         return loadPrompts().filter(p => p.category === category);
       }
-      
+
       return servicePrompts;
     }
-    
+
     return categoryPrompts;
   };
 
@@ -241,30 +263,37 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     try {
       setIsLoading(true);
       const updatedSettings = { ...settings, ...settingsUpdate };
-      
+
       // Save to app-specific settings
       saveSettings(updatedSettings);
       setSettings(updatedSettings);
-      
+
       // Also update global settings if relevant properties are changed
       if (settingsUpdate.defaultModel || settingsUpdate.defaultTemperature || settingsUpdate.defaultMaxTokens) {
         try {
-          // Import the updateGlobalSettings function dynamically to avoid circular dependencies
+          // Keep Global Settings in sync for legacy components
           const { updateGlobalSettings } = await import('../../../shared/services/globalSettingsService');
-          
-          // Only update the properties that were changed
+
           const globalSettingsUpdate: any = {};
           if (settingsUpdate.defaultModel) globalSettingsUpdate.defaultModel = settingsUpdate.defaultModel;
           if (settingsUpdate.defaultTemperature) globalSettingsUpdate.defaultTemperature = settingsUpdate.defaultTemperature;
           if (settingsUpdate.defaultMaxTokens) globalSettingsUpdate.defaultMaxTokens = settingsUpdate.defaultMaxTokens;
-          
-          // Update global settings
           updateGlobalSettings(globalSettingsUpdate);
         } catch (error) {
           console.error('Error updating global settings:', error);
         }
+
+        // Sync AI-Core default model
+        try {
+          if (settingsUpdate.defaultModel) {
+            const aiCore = AICore.getInstance();
+            aiCore.updateSettings({ defaultModel: settingsUpdate.defaultModel });
+          }
+        } catch (err) {
+          console.error('Error syncing default model to AI-Core:', err);
+        }
       }
-      
+
       return Promise.resolve();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update settings'));
@@ -278,10 +307,10 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const testPrompt = async (promptId: string, variables: Record<string, string>) => {
     try {
       setIsLoading(true);
-      
+
       // First try to find the prompt in our current state
       let prompt = prompts.find(p => p.id === promptId);
-      
+
       // If not found, try to find it in the admin interface
       if (!prompt && isAdminContextAvailable()) {
         const adminPrompt = getPromptByIdFromAdmin(promptId);
@@ -289,7 +318,7 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
           prompt = adminPrompt;
         }
       }
-      
+
       if (!prompt) {
         console.warn(`Prompt with ID ${promptId} not found. Attempting to find a similar prompt.`);
         // Try to find a similar prompt by category if possible
@@ -298,7 +327,7 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
                          promptId.includes('outline') ? 'outline' :
                          promptId.includes('content') ? 'content' :
                          promptId.includes('image') ? 'image' : null;
-        
+
         if (category) {
           const fallbackPrompts = getPromptsByCategory(category);
           if (fallbackPrompts.length > 0) {
@@ -306,18 +335,18 @@ export const PromptProvider: React.FC<{children: ReactNode}> = ({ children }) =>
             prompt = fallbackPrompts[0];
           }
         }
-        
+
         if (!prompt) {
           throw new Error(`No suitable fallback prompt found for ID ${promptId}`);
         }
       }
-      
+
       const result = await articleAIService.testPrompt(
         prompt,
         variables,
         settings.defaultModel
       );
-      
+
       return result;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to test prompt'));

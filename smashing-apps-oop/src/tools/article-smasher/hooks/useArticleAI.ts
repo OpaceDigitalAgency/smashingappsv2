@@ -38,7 +38,7 @@ export const useArticleAI = () => {
 
       // Get the model from AI-Core settings if not specified
       const settings = aiCore.getSettings();
-      const modelToUse = options.model || settings.model || 'gpt-4o';
+      const modelToUse = options.model || settings.defaultModel || 'gpt-4o-mini';
 
       // Send request using AI-Core
       const response = await aiCore.sendTextRequest(
