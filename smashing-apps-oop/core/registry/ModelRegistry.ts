@@ -764,6 +764,24 @@ class ModelRegistry {
   }
   
   /**
+   * Get models by type
+   */
+  public getModelsByType(type: 'chat' | 'completion' | 'image'): ModelInfo[] {
+    return Array.from(this.models.values())
+      .filter(model => model.type === type)
+      .sort((a, b) => {
+        // Models with release dates come first, sorted newest to oldest
+        if (a.releaseDate && b.releaseDate) {
+          return b.releaseDate.localeCompare(a.releaseDate);
+        }
+        if (a.releaseDate) return -1;
+        if (b.releaseDate) return 1;
+        // If no release dates, sort alphabetically by name
+        return a.name.localeCompare(b.name);
+      });
+  }
+  
+  /**
    * Get provider for a model
    */
   public getProvider(modelId: string): string | undefined {

@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useArticleWizard } from '../../../contexts/ArticleWizardContext';
 import { usePrompt } from '../../../contexts/PromptContext';
 import { RefreshCw, Image as ImageIcon, Check, X, ArrowLeft, ArrowRight, Plus as PlusIcon, AlertCircle } from 'lucide-react';
-import ImageService from '../../../../../shared/services/imageService';
-import { ImageModel } from '../../../../../shared/types/aiProviders';
+import AICore from '../../../../../../core/AICore';
+import { ModelInfo } from '../../../../../../core/registry/ModelRegistry';
 
 const ImageStep: React.FC = () => {
-  const { 
-    title, 
+  const {
+    title,
     selectedKeywords,
-    images, 
-    setImages, 
+    images,
+    setImages,
     generating,
     setGenerating,
     generateImages,
-    goToNextStep, 
-    goToPreviousStep 
+    goToNextStep,
+    goToPreviousStep
   } = useArticleWizard();
   
   const { prompts, settings, updateSettings } = usePrompt();
@@ -26,18 +26,27 @@ const ImageStep: React.FC = () => {
   
   const [prompt, setPrompt] = useState('');
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
-  const [imageModels, setImageModels] = useState<ImageModel[]>([]);
-  const [selectedImageModel, setSelectedImageModel] = useState<string>('dall-e-3');
+  const [imageModels, setImageModels] = useState<ModelInfo[]>([]);
+  const [chatModels, setChatModels] = useState<ModelInfo[]>([]);
+  const [selectedImageModel, setSelectedImageModel] = useState<string>('');
   const [textModel, setTextModel] = useState<string>(settings.defaultModel);
   
-  // Load available image models
+  // Load available models from AI-Core
   useEffect(() => {
-    const models = ImageService.getModels();
-    setImageModels(models as ImageModel[]);
+    const aiCore = AICore.getInstance();
     
-    // Set default image model
-    const defaultModel = ImageService.getDefaultModel();
-    setSelectedImageModel(defaultModel.id);
+    // Get available image models (only from configured providers)
+    const availableImageModels = aiCore.getAvailableImageModels();
+    setImageModels(availableImageModels);
+    
+    // Get available chat models (only from configured providers)
+    const availableChatModels = aiCore.getAvailableChatModels();
+    setChatModels(availableChatModels);
+    
+    // Set default image model if available
+    if (availableImageModels.length > 0) {
+      setSelectedImageModel(availableImageModels[0].id);
+    }
   }, []);
   
   // Set default prompt based on title
@@ -140,12 +149,15 @@ const ImageStep: React.FC = () => {
               onChange={handleTextModelChange}
               className="w-full p-2 border border-gray-300 rounded-md"
             >
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              <option value="gpt-4o">GPT-4o</option>
-              <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="claude-3-haiku">Claude 3 Haiku</option>
-              <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-              <option value="claude-3-opus">Claude 3 Opus</option>
+              {chatModels.length > 0 ? (
+                chatModels.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))
+              ) : (
+                <option value="">No chat models available - Configure API keys in settings</option>
+              )}
             </select>
             <p className="text-xs text-gray-500 mt-1">
               Model used for generating article content and prompts
@@ -161,12 +173,17 @@ const ImageStep: React.FC = () => {
               value={selectedImageModel}
               onChange={handleImageModelChange}
               className="w-full p-2 border border-gray-300 rounded-md"
+              disabled={imageModels.length === 0}
             >
-              {imageModels.map(model => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
+              {imageModels.length > 0 ? (
+                imageModels.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))
+              ) : (
+                <option value="">No image models available - Configure API keys for providers with image generation</option>
+              )}
             </select>
             <p className="text-xs text-gray-500 mt-1">
               Model used for generating images

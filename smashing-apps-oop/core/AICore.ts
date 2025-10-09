@@ -220,6 +220,39 @@ class AICore {
   }
   
   /**
+   * Get models by type from registry
+   */
+  public getModelsByType(type: 'chat' | 'completion' | 'image') {
+    return this.modelRegistry.getModelsByType(type);
+  }
+  
+  /**
+   * Get available image models based on configured providers
+   */
+  public getAvailableImageModels() {
+    const allImageModels = this.modelRegistry.getModelsByType('image');
+    const configuredProviders = this.getConfiguredProviders();
+    
+    // Filter to only show models from configured providers
+    return allImageModels.filter(model =>
+      configuredProviders.includes(model.provider)
+    );
+  }
+  
+  /**
+   * Get available chat models based on configured providers
+   */
+  public getAvailableChatModels() {
+    const allChatModels = this.modelRegistry.getModelsByType('chat');
+    const configuredProviders = this.getConfiguredProviders();
+    
+    // Filter to only show models from configured providers
+    return allChatModels.filter(model =>
+      configuredProviders.includes(model.provider)
+    );
+  }
+  
+  /**
    * Test API key for a provider
    */
   public async testApiKey(provider: string): Promise<boolean> {
