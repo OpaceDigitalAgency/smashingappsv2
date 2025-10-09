@@ -82,16 +82,27 @@ const TopicStep: React.FC = () => {
         <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
           Article Title or Topic
         </label>
-        <div className="relative">
-          <Pencil className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="E.g., Best WordPress Plugins for SEO"
-            className="input pl-10"
-          />
+        <div className="flex items-start gap-2">
+          <div className="relative flex-1">
+            <Pencil className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) { goToNextStep(); } }}
+              placeholder="E.g., eCommerce SEO strategy for 2025"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10"
+            />
+          </div>
+          <button
+            onClick={goToNextStep}
+            disabled={!title.trim()}
+            className="btn btn-primary whitespace-nowrap flex items-center"
+            aria-label="Continue to keywords"
+          >
+            Continue <ArrowRight className="ml-1" size={16} />
+          </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">
           Tip: Be specific about your topic for better results

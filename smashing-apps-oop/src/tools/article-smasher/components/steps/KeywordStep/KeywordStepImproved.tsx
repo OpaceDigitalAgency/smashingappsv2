@@ -50,6 +50,7 @@ const KeywordStepImproved: React.FC = () => {
   };
   
   const toggleKeywordSelection = (keyword: string) => {
+    if (!keyword || !keyword.trim()) return; // guard against empty values
     if (selectedKeywords.includes(keyword)) {
       setSelectedKeywords(selectedKeywords.filter(k => k !== keyword));
     } else {
@@ -94,7 +95,7 @@ const KeywordStepImproved: React.FC = () => {
             <span className="text-xs text-gray-500">{selectedKeywords.length} selected</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {selectedKeywords.map((keyword, index) => (
+            {selectedKeywords.filter(k => k && k.trim().length > 0).map((keyword, index) => (
               <div
                 key={index}
                 className="bg-primary-50 text-primary px-3 py-1 rounded-full text-sm flex items-center"
@@ -123,7 +124,7 @@ const KeywordStepImproved: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search for keywords..."
-            className="input pl-10 pr-4 w-full"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10 pr-4"
           />
         </div>
         <button
