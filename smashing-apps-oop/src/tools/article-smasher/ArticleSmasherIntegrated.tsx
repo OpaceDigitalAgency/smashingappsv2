@@ -5,13 +5,12 @@
  * for integration into the main SmashingApps application.
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route, useParams, Navigate, Link } from 'react-router-dom';
 import { PromptProvider } from './contexts/PromptContext';
 import { ArticleWizardProvider } from './contexts/ArticleWizardContext';
 import ArticleWizard from './components/ArticleWizard';
 import SEO from '../../components/SEO';
-import { appRegistry, initializeAIServices } from '../../shared/services';
 import './styles/article-smasher-v2.css';
 
 // Import the landing page component from the original App
@@ -169,43 +168,23 @@ const ArticleTypeRouter: React.FC = () => {
     localStorage.setItem('preselected_article_type', mappedType);
   }, [mappedType]);
 
-  // Redirect to wizard (absolute path)
-  return <Navigate to="/tools/article-smasher/wizard" replace />;
+  // Render the wizard at the same SEO-friendly URL (no redirect)
+  return (
+    <ArticleWizardProvider>
+      <ArticleWizard />
+    </ArticleWizardProvider>
+  );
 };
 
 /**
  * Main Article Smasher component with routing
  */
 const ArticleSmasherIntegrated: React.FC = () => {
-  // Initialize AI services on mount
-  useEffect(() => {
-    console.log('ArticleSmasher: Starting initialization');
-
-    try {
-      // Register the app once on mount using the centralized app registry
-      appRegistry.registerApp('article-smasher');
-      console.log('ArticleSmasher: Registered with app registry');
-
-      // Initialize AI services if not already initialized
-      initializeAIServices();
-      console.log('ArticleSmasher: AI services initialized');
-
-      console.log('ArticleSmasher: Initialization complete');
-    } catch (error) {
-      console.error('Error during ArticleSmasher initialization:', error);
-    }
-
-    // Cleanup function
-    return () => {
-      console.log('ArticleSmasher: Component unmounting');
-    };
-  }, []); // Run only once on mount
-
   return (
     <PromptProvider>
       <Routes>
         <Route index element={<ArticleSmasherLanding />} />
-        {/* Wizard route must come before :articleType to avoid conflicts */}
+        {/* Generic wizard path for non-specific entry */}
         <Route
           path="wizard"
           element={
@@ -214,7 +193,7 @@ const ArticleSmasherIntegrated: React.FC = () => {
             </ArticleWizardProvider>
           }
         />
-        {/* Article type specific routes - these redirect to wizard with preselected type */}
+        {/* Article type specific routes - render wizard in-place without redirect */}
         <Route path=":articleType/*" element={<ArticleTypeRouter />} />
       </Routes>
     </PromptProvider>

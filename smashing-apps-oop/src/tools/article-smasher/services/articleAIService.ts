@@ -8,8 +8,8 @@ import {
 
 // Import the hook-based implementation
 import useArticleAI from '../hooks/useArticleAI';
-// Import shared AI services
-import { aiServiceRegistry, getServiceForModel } from '../../../shared/services/aiServices';
+// Use AI-Core directly for any non-React fallback paths
+import AICore from '../../../../core/AICore';
 
 /**
  * This is a facade for the article AI service that maintains the same API
@@ -182,39 +182,34 @@ class ArticleAIServiceFacade {
       return this.hookInstance.testPrompt(prompt, variables, model);
     }
     
-    // Direct integration with shared AI services for non-React contexts
+    // Direct integration using AI-Core for non-React contexts
     try {
       // Process the prompt template
       const userPrompt = processPromptTemplate(prompt.userPromptTemplate, variables);
-      
-      // Get the appropriate service for the model
-      const service = getServiceForModel(model);
-      
-      if (!service) {
-        throw new Error(`No service found for model: ${model}`);
+
+      const aiCore = AICore.getInstance();
+      if (!aiCore.isConfigured()) {
+        throw new Error('No AI provider configured. Please add your API key in the admin settings.');
       }
-      
-      // Check if the service is configured
-      if (!service.isConfigured()) {
-        throw new Error(`${service.provider} service is not configured. Please add your API key in the settings.`);
-      }
-      
-      // Execute the AI request using the service
-      const result = await service.createChatCompletion({
-        model: model,
-        messages: [
+
+      const response = await aiCore.sendTextRequest(
+        model,
+        [
           { role: 'system', content: prompt.systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: prompt.temperature ?? 0.7,
-        maxTokens: prompt.maxTokens,
-      });
-      
-      return result.data.content;
+        {
+          temperature: prompt.temperature ?? 0.7,
+          maxTokens: prompt.maxTokens
+        },
+        'article-smasher'
+      );
+
+      return AICore.extractContent(response);
     } catch (err) {
-      console.error('Error in direct AI service call:', err);
+      console.error('Error in AI-Core prompt test:', err);
       throw new Error(
-        'Failed to test prompt. Please ensure you have configured the AI service properly in the admin interface.'
+        'Failed to test prompt. Please ensure you have configured the AI provider properly in Admin.'
       );
     }
   }
