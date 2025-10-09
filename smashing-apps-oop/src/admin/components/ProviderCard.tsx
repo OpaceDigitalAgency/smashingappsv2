@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AICore from '../../../core/AICore';
+import ModelRegistry from '../../../core/registry/ModelRegistry';
 import { ProviderStatus } from '../../../core/interfaces/IProvider';
 
 interface ProviderCardProps {
@@ -39,7 +40,32 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, status, aiCore, o
       const isValid = await aiCore.testApiKey(provider.id);
 
       if (isValid) {
-        setTestResult({ success: true, message: 'API key saved and validated successfully!' });
+        // Check if a default model is already set
+        const currentSettings = aiCore.getSettings();
+        if (!currentSettings.model) {
+          // No default model set, automatically select the latest model for this provider
+          const modelRegistry = ModelRegistry.getInstance();
+          const providerModels = modelRegistry.getModelsByProvider(provider.id);
+
+          if (providerModels.length > 0) {
+            // Models are already sorted by release date (newest first)
+            const latestModel = providerModels[0];
+            aiCore.updateSettings({ model: latestModel.id });
+
+            // Dispatch event to notify other components
+            window.dispatchEvent(new CustomEvent('ai-core-settings-changed'));
+
+            setTestResult({
+              success: true,
+              message: `API key saved and validated successfully! Automatically selected ${latestModel.name} as your default model.`
+            });
+          } else {
+            setTestResult({ success: true, message: 'API key saved and validated successfully!' });
+          }
+        } else {
+          setTestResult({ success: true, message: 'API key saved and validated successfully!' });
+        }
+
         setApiKey('');
         onUpdate();
       } else {

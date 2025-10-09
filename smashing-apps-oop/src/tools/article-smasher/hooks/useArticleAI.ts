@@ -1,19 +1,71 @@
-import { useCallback } from 'react';
-import { useAI } from '../../../shared/hooks/useAI';
+import { useCallback, useState } from 'react';
+import AICore from '../../../../core/AICore';
 import { processPromptTemplate } from '../services/promptService';
-import { 
-  PromptTemplate, 
-  KeywordData, 
-  OutlineItem, 
+import {
+  PromptTemplate,
+  KeywordData,
+  OutlineItem,
   ArticleContent
 } from '../types';
 
 /**
  * Hook for generating article content using AI
- * This properly integrates with the shared AI services
+ * This uses the new AI-Core system like Task Smasher
  */
 export const useArticleAI = () => {
-  const { execute, isLoading, error } = useAI();
+  const [aiCore] = useState(() => AICore.getInstance());
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  /**
+   * Execute an AI request using AI-Core
+   */
+  const execute = useCallback(async (options: {
+    model: string;
+    systemPrompt: string;
+    userPrompt: string;
+    temperature?: number;
+    maxTokens?: number;
+  }): Promise<{ content: string }> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Check if AI-Core is configured
+      if (!aiCore.isConfigured()) {
+        throw new Error('No AI provider configured. Please add your API key in the admin settings.');
+      }
+
+      // Get the model from AI-Core settings if not specified
+      const settings = aiCore.getSettings();
+      const modelToUse = options.model || settings.model || 'gpt-4o';
+
+      // Send request using AI-Core
+      const response = await aiCore.sendTextRequest(
+        modelToUse,
+        [
+          { role: 'system', content: options.systemPrompt },
+          { role: 'user', content: options.userPrompt }
+        ],
+        {
+          temperature: options.temperature ?? 0.7,
+          maxTokens: options.maxTokens || 2000
+        },
+        'article-smasher'
+      );
+
+      // Extract content from response
+      const content = AICore.extractContent(response);
+
+      return { content };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      setError(error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [aiCore]);
 
   /**
    * Generate topic ideas based on article type

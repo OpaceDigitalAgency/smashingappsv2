@@ -5,12 +5,13 @@
  * for integration into the main SmashingApps application.
  */
 
-import React from 'react';
-import { Routes, Route, useParams, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useParams, Navigate, Link } from 'react-router-dom';
 import { PromptProvider } from './contexts/PromptContext';
 import { ArticleWizardProvider } from './contexts/ArticleWizardContext';
 import ArticleWizard from './components/ArticleWizard';
 import SEO from '../../components/SEO';
+import { appRegistry, initializeAIServices } from '../../shared/services';
 import './styles/article-smasher-v2.css';
 
 // Import the landing page component from the original App
@@ -27,12 +28,12 @@ const ArticleSmasherLanding: React.FC = () => {
           <p className="text-xl text-gray-600 mb-8">
             AI-Powered Content Creation Tool
           </p>
-          <a
-            href="/tools/article-smasher/wizard"
+          <Link
+            to="/tools/article-smasher/wizard"
             className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             Start Creating
-          </a>
+          </Link>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mt-16">
@@ -176,10 +177,35 @@ const ArticleTypeRouter: React.FC = () => {
  * Main Article Smasher component with routing
  */
 const ArticleSmasherIntegrated: React.FC = () => {
+  // Initialize AI services on mount
+  useEffect(() => {
+    console.log('ArticleSmasher: Starting initialization');
+
+    try {
+      // Register the app once on mount using the centralized app registry
+      appRegistry.registerApp('article-smasher');
+      console.log('ArticleSmasher: Registered with app registry');
+
+      // Initialize AI services if not already initialized
+      initializeAIServices();
+      console.log('ArticleSmasher: AI services initialized');
+
+      console.log('ArticleSmasher: Initialization complete');
+    } catch (error) {
+      console.error('Error during ArticleSmasher initialization:', error);
+    }
+
+    // Cleanup function
+    return () => {
+      console.log('ArticleSmasher: Component unmounting');
+    };
+  }, []); // Run only once on mount
+
   return (
     <PromptProvider>
       <Routes>
         <Route index element={<ArticleSmasherLanding />} />
+        {/* Wizard route must come before :articleType to avoid conflicts */}
         <Route
           path="wizard"
           element={
@@ -188,8 +214,8 @@ const ArticleSmasherIntegrated: React.FC = () => {
             </ArticleWizardProvider>
           }
         />
-        {/* Article type specific routes */}
-        <Route path=":articleType" element={<ArticleTypeRouter />} />
+        {/* Article type specific routes - these redirect to wizard with preselected type */}
+        <Route path=":articleType/*" element={<ArticleTypeRouter />} />
       </Routes>
     </PromptProvider>
   );
