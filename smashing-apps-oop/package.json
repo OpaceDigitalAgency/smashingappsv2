@@ -16,6 +16,7 @@
     "build:seo": "npm run build && npm run inject-meta",
     "cleanup-seo": "node scripts/cleanup-old-seo-files.js",
     "preview": "vite preview",
+    "preview-seo": "npx serve dist -p 3001",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "vitest run"
