@@ -141,6 +141,13 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
     }
   }, [currentStep, title]);
 
+  // Auto-generate outline when moving to step 3
+  useEffect(() => {
+    if (currentStep === 3 && title && selectedKeywords.length > 0 && outline.length === 0 && !generating) {
+      generateOutline(title, selectedKeywords);
+    }
+  }, [currentStep, title, selectedKeywords]);
+
   // Generate topic ideas based on the selected article type
   const generateTopicIdeas = async () => {
     try {
