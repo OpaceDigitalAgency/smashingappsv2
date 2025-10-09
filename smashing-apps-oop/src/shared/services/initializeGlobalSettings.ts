@@ -30,14 +30,7 @@ export function initializeGlobalSettings() {
   const currentSettings = getGlobalSettings();
   console.log('Current global settings:', currentSettings);
   
-  // Ensure the default model is set correctly
-  // This fixes the issue with gpt-3.5-turbo not persisting
-  if (currentSettings.defaultModel !== 'gpt-3.5-turbo') {
-    console.log('Fixing model persistence: Setting default model to gpt-3.5-turbo');
-    updateGlobalSettings({
-      defaultModel: 'gpt-3.5-turbo'
-    });
-  }
+  // Model is now managed by AI-Core settings - no hardcoded override needed
   
   // Apply global settings to all apps
   applyGlobalSettingsToAllApps();
@@ -56,16 +49,6 @@ export function initializeGlobalSettings() {
   if (taskSmasherProvider || taskSmasherModel) {
     console.log('Found TaskSmasher settings, applying to global settings');
     applyTaskSmasherSettingsToGlobal();
-    
-    // Validate that the model is still gpt-3.5-turbo after applying TaskSmasher settings
-    // This prevents fallback to gpt-4o
-    const updatedSettings = getGlobalSettings();
-    if (updatedSettings.defaultModel !== 'gpt-3.5-turbo') {
-      console.log('Model changed after applying TaskSmasher settings, resetting to gpt-3.5-turbo');
-      updateGlobalSettings({
-        defaultModel: 'gpt-3.5-turbo'
-      });
-    }
   }
   
   // Final validation to ensure settings are properly saved
