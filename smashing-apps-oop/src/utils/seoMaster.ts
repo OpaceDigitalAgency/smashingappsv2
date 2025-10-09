@@ -129,22 +129,22 @@ export const useCaseDefinitions: UseCaseDefinitionsMap = {
 
 // Use case definitions for ArticleSmasher
 export const articleSmasherUseCases: UseCaseDefinitionsMap = {
-  blog: {
+  'blog-post': {
     label: "Blog Post",
     description: "Create engaging blog posts with proper structure using AI assistance. Our Blog Post generator helps you craft compelling content that resonates with your audience.",
     keywords: ["blog", "post", "content", "writing", "article", "blogging"]
   },
-  seo: {
+  'seo-article': {
     label: "SEO Article",
     description: "Generate SEO-optimized content for better rankings. Our SEO Article tool helps you create content that satisfies both search engines and human readers.",
     keywords: ["seo", "search engine", "optimization", "keywords", "ranking", "organic traffic"]
   },
-  academic: {
+  'academic-paper': {
     label: "Academic Paper",
     description: "Create academic-style content with proper citations and structure. Our Academic Paper generator helps researchers and students draft scholarly articles.",
     keywords: ["academic", "research", "paper", "journal", "scholarly", "citation", "study"]
   },
-  news: {
+  'news-article': {
     label: "News Article",
     description: "Generate news-style articles with journalistic structure. Our News Article tool helps you create timely, factual content in a professional news format.",
     keywords: ["news", "journalism", "article", "report", "current events", "press"]
@@ -214,6 +214,27 @@ export const routeMeta: MetaConfigMap = {
       description: 'Create high-quality articles, blog posts, and SEO content with AI assistance. ArticleSmasher helps you generate well-structured content for various purposes.'
     }
   },
+  '/tools/graphics-smasher/': {
+    title: 'GraphicsSmasher - AI-Powered Graphic Design Tool | Create Stunning Graphics',
+    description: 'Create stunning graphics with AI assistance. Design logos, banners, social media posts, and more with our intelligent design tool.',
+    image: `${BASE_URL}/og/graphics-smasher.png`,
+    canonical: `${BASE_URL}/tools/graphics-smasher/`,
+    urlPath: '/tools/graphics-smasher/',
+    keywords: 'AI graphic design, logo creator, banner maker, social media graphics, design tool, AI design assistant',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'GraphicsSmasher',
+      applicationCategory: 'DesignApplication',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD'
+      },
+      operatingSystem: 'Web',
+      description: 'Create stunning graphics with AI assistance. Design logos, banners, social media posts, and more with our intelligent design tool.'
+    }
+  },
   '/contact': {
     title: 'Contact SmashingApps.ai | Free AI Productivity Apps & Tools',
     description: 'Contact SmashingApps.ai for support, feedback, or collaboration. Reach out to learn more about our free AI productivity tools.',
@@ -261,14 +282,14 @@ Object.entries(useCaseDefinitions).forEach(([id, definition]) => {
 
 // Generate meta configs for all ArticleSmasher use cases
 Object.entries(articleSmasherUseCases).forEach(([id, definition]) => {
-  // Generate URL-friendly path from the definition label
-  const urlPath = `/tools/article-smasher/${definition.label.toLowerCase().replace(/\s+/g, '-')}/`;
-  
+  // Use the id directly as it's already URL-friendly
+  const urlPath = `/tools/article-smasher/${id}/`;
+
   // Store the meta data for this use case
   routeMeta[urlPath] = {
     title: `${definition.label} | AI Content Creator - ArticleSmasher`,
     description: definition.description,
-    image: `${BASE_URL}/og/article-smasher-${id}.png`,
+    image: `${BASE_URL}/og/article-smasher-${id.replace('-', '')}.png`,
     canonical: `${BASE_URL}${urlPath}`,
     urlPath: urlPath,
     keywords: `AI content creator, ${definition.label.toLowerCase()}, ${definition.keywords ? definition.keywords.join(', ') : ''}, SmashingApps`,
