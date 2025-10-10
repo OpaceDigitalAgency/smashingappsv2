@@ -143,8 +143,9 @@ export const useArticleAI = () => {
       });
 
       // Execute the AI request
+      // Priority: 1) prompt.model (if specified), 2) model parameter, 3) global default
       const result = await execute({
-        model,
+        model: prompt.model || model, // Use prompt's model if specified
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
@@ -175,6 +176,11 @@ export const useArticleAI = () => {
     model?: string
   ): Promise<KeywordData[]> => {
     try {
+      console.log('[generateKeywords] Prompt object:', prompt);
+      console.log('[generateKeywords] prompt.model:', prompt.model);
+      console.log('[generateKeywords] model parameter:', model);
+      console.log('[generateKeywords] Will use model:', prompt.model || model);
+      
       // Process the prompt template
       const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
         title
@@ -223,8 +229,9 @@ export const useArticleAI = () => {
       });
 
       // Execute the AI request
+      // Priority: 1) prompt.model (if specified), 2) model parameter, 3) global default
       const result = await execute({
-        model,
+        model: prompt.model || model, // Use prompt's model if specified
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
@@ -300,8 +307,9 @@ export const useArticleAI = () => {
       }) + (additionalInstructions ? `\n\nAdditional requirements: ${additionalInstructions}` : '');
 
       // Execute the AI request
+      // Priority: 1) prompt.model (if specified), 2) model parameter, 3) global default
       const result = await execute({
-        model,
+        model: prompt.model || model, // Use prompt's model if specified
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
@@ -339,8 +347,9 @@ export const useArticleAI = () => {
       });
 
       // Get the model from AI-Core settings if not specified
+      // Priority: 1) prompt.model (if specified), 2) model parameter, 3) global default
       const settings = aiCore.getSettings();
-      const modelToUse = (model && model.trim()) ? model : settings.defaultModel;
+      const modelToUse = (prompt.model && prompt.model.trim()) ? prompt.model : ((model && model.trim()) ? model : settings.defaultModel);
 
       // Build request options
       const requestOptions: any = {

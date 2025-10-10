@@ -14,7 +14,7 @@ const PROMPTS_VERSION_KEY = 'article_smasher_prompts_version';
 
 // Version number - increment this when you change DEFAULT_PROMPTS
 // This will force localStorage to reload with new defaults
-const CURRENT_PROMPTS_VERSION = 3; // Added per-prompt model field, keyword now uses gpt-4o-mini
+const CURRENT_PROMPTS_VERSION = 4; // Changed keyword model to gpt-3.5-turbo for speed
 
 // Default prompt templates
 const DEFAULT_PROMPTS: PromptTemplate[] = [
