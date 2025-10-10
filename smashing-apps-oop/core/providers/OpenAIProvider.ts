@@ -182,6 +182,252 @@ class OpenAIProvider implements IProvider {
       throw error;
     }
   }
+  public async sendStreamRequest(
+    messages: Message[], 
+    options: RequestOptions,
+    callbacks: import('../interfaces/IProvider').StreamCallbacks
+  ): Promise<void> {
+    if (!this.isConfigured()) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    try {
+      // Determine which endpoint to use based on model
+      const usesResponsesAPI = options.model.startsWith('gpt-5') ||
+                               options.model.startsWith('o3') ||
+                               options.model.startsWith('o4') ||
+                               options.model.startsWith('o1');
+
+      const supportsCustomTemperature = !usesResponsesAPI;
+      const supportsTextControls = (options.model.startsWith('gpt-4o') && !options.model.includes('mini')) ||
+                                   options.model.startsWith('gpt-5') ||
+                                   options.model.startsWith('o3') ||
+                                   options.model.startsWith('o4');
+
+      callbacks.onStart?.();
+
+      if (usesResponsesAPI) {
+        // Use streaming with Responses API
+        const requestBody: any = {
+          model: options.model,
+          input: this.convertMessagesToInput(messages),
+          stream: true
+        };
+
+        if (options.maxTokens) {
+          requestBody.max_output_tokens = options.maxTokens;
+        } else {
+          requestBody.max_output_tokens = 2000;
+        }
+
+        // Only add temperature/top_p if the model supports it
+        if (supportsCustomTemperature && options.temperature !== undefined) {
+          requestBody.temperature = options.temperature;
+        }
+
+        if (supportsCustomTemperature && options.topP !== undefined) {
+          requestBody.top_p = options.topP;
+        }
+
+        if ((options as any).reasoning?.effort) {
+          requestBody.reasoning = { effort: (options as any).reasoning.effort };
+        }
+
+        if (supportsTextControls && options.text) {
+          requestBody.text = {};
+          if (options.text.format) {
+            requestBody.text.format = options.text.format;
+          }
+          if (options.text.verbosity) {
+            requestBody.text.verbosity = options.text.verbosity;
+          }
+        }
+
+        console.log('[OpenAIProvider] Streaming with /v1/responses for', options.model);
+
+        const response = await fetch(`${this.baseUrl}/responses`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'OpenAI API streaming request failed');
+        }
+
+        await this.processResponsesAPIStream(response, callbacks);
+      } else {
+        // Use streaming with Chat Completions API
+        const requestBody: any = {
+          model: options.model,
+          messages: messages,
+          stream: true
+        };
+
+        if (supportsCustomTemperature && options.temperature !== undefined) {
+          requestBody.temperature = options.temperature;
+        }
+
+        if (options.topP !== undefined) {
+          requestBody.top_p = options.topP;
+        }
+
+        if (options.frequencyPenalty !== undefined) {
+          requestBody.frequency_penalty = options.frequencyPenalty;
+        }
+
+        if (options.presencePenalty !== undefined) {
+          requestBody.presence_penalty = options.presencePenalty;
+        }
+
+        if (options.stop) {
+          requestBody.stop = options.stop;
+        }
+
+        if (options.maxTokens) {
+          requestBody.max_tokens = options.maxTokens;
+        }
+
+        if (supportsTextControls && options.text) {
+          requestBody.text = {};
+          if (options.text.format) {
+            requestBody.text.format = options.text.format;
+          }
+          if (options.text.verbosity) {
+            requestBody.text.verbosity = options.text.verbosity;
+          }
+        }
+
+        console.log('[OpenAIProvider] Streaming with /v1/chat/completions for', options.model);
+
+        const response = await fetch(`${this.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'OpenAI API streaming request failed');
+        }
+
+        await this.processChatCompletionsStream(response, callbacks);
+      }
+    } catch (error) {
+      console.error('[OpenAIProvider] Streaming request failed:', error);
+      callbacks.onError?.(error instanceof Error ? error : new Error('Unknown streaming error'));
+      throw error;
+    }
+  }
+
+  private async processResponsesAPIStream(response: Response, callbacks: import('../interfaces/IProvider').StreamCallbacks): Promise<void> {
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') {
+              callbacks.onComplete?.(fullText);
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              
+              if (parsed.type === 'response.output_text.delta' && parsed.delta) {
+                const token = parsed.delta;
+                fullText += token;
+                callbacks.onToken?.(token);
+              } else if (parsed.type === 'response.output_text.done') {
+                callbacks.onComplete?.(fullText);
+                return;
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+        }
+      }
+
+      callbacks.onComplete?.(fullText);
+    } catch (error) {
+      callbacks.onError?.(error instanceof Error ? error : new Error('Stream processing error'));
+      throw error;
+    }
+  }
+
+  private async processChatCompletionsStream(response: Response, callbacks: import('../interfaces/IProvider').StreamCallbacks): Promise<void> {
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') {
+              callbacks.onComplete?.(fullText);
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              
+              if (parsed.choices && parsed.choices[0]?.delta?.content) {
+                const token = parsed.choices[0].delta.content;
+                fullText += token;
+                callbacks.onToken?.(token);
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+        }
+      }
+
+      callbacks.onComplete?.(fullText);
+    } catch (error) {
+      callbacks.onError?.(error instanceof Error ? error : new Error('Stream processing error'));
+      throw error;
+    }
+  }
+
 
   /**
    * Convert messages array to input format for /v1/responses endpoint

@@ -31,6 +31,7 @@ export const useArticleAI = () => {
     systemPrompt: string;
     userPrompt: string;
     temperature?: number;
+    topP?: number;
     maxTokens?: number;
     reasoningEffort?: 'low' | 'medium' | 'high';
     verbosity?: 'low' | 'medium' | 'high';
@@ -82,6 +83,7 @@ export const useArticleAI = () => {
       // Build request options
       const requestOptions: any = {
         temperature: options.temperature ?? 0.7,
+        topP: options.topP,
         maxTokens: options.maxTokens || 2000
       };
 
@@ -203,9 +205,8 @@ export const useArticleAI = () => {
       const keywords = parseKeywordsFromResponse(result.content);
 
       console.log('[useArticleAI] Parsed keywords:', keywords);
-      return keywords.length > 0 ? keywords : [
-        { keyword: title, volume: 500, difficulty: 5, cpc: 3.0 }
-      ];
+      const defaultKeyword: KeywordData = { keyword: title, volume: 500, difficulty: 5, cpc: 3.0 };
+      return keywords.length > 0 ? keywords : [defaultKeyword];
     } catch (error) {
       console.error('Error generating keywords:', error);
       throw error;
@@ -235,6 +236,7 @@ export const useArticleAI = () => {
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
+        topP: prompt.topP,
         maxTokens: prompt.maxTokens,
         reasoningEffort: prompt.reasoningEffort,
         verbosity: prompt.verbosity
@@ -270,9 +272,13 @@ export const useArticleAI = () => {
       tone?: string;
       includeStats?: boolean;
       includeExamples?: boolean;
-    }
+    },
+    onStreamUpdate?: (text: string) => void
   ): Promise<ArticleContent> => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       // Convert outline to text format
       const outlineText = outlineToText(outline);
 
@@ -306,26 +312,86 @@ export const useArticleAI = () => {
         outline: outlineText
       }) + (additionalInstructions ? `\n\nAdditional requirements: ${additionalInstructions}` : '');
 
-      // Execute the AI request
-      // Priority: 1) prompt.model (if specified), 2) model parameter, 3) global default
-      const result = await execute({
-        model: prompt.model || model, // Use prompt's model if specified
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens,
-        reasoningEffort: prompt.reasoningEffort,
-        verbosity: prompt.verbosity
-      });
+      // Get the model to use
+      const settings = aiCore.getSettings();
+      const modelToUse = (prompt.model && prompt.model.trim()) ? prompt.model : ((model && model.trim()) ? model : settings.defaultModel);
 
-      // Clean the response before parsing
-      const cleanedContent = cleanAIResponse(result.content);
+      // Build request options
+      const requestOptions: any = {
+        temperature: prompt.temperature ?? 0.3,
+        topP: prompt.topP ?? 0.9,
+        maxTokens: prompt.maxTokens || 10000
+      };
 
-      // Parse the result into article content
-      return parseContentFromText(cleanedContent);
+      // Add reasoning for models that support it
+      if (prompt.reasoningEffort && modelToUse.match(/^(gpt-5|o1|o3)/i)) {
+        requestOptions.reasoning = { effort: prompt.reasoningEffort };
+      }
+
+      // Add text verbosity for compatible models
+      if (prompt.verbosity && modelToUse.match(/^(gpt-4o|gpt-5|o3|o4)/i)) {
+        requestOptions.text = {
+          format: { type: 'text' },
+          verbosity: prompt.verbosity
+        };
+      }
+
+      // Use streaming if callback is provided
+      if (onStreamUpdate) {
+        let fullText = '';
+        
+        await aiCore.sendStreamTextRequest(
+          modelToUse,
+          [
+            { role: 'system', content: prompt.systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          {
+            onStart: () => {
+              console.log('[useArticleAI] Stream started');
+            },
+            onToken: (token: string) => {
+              fullText += token;
+              onStreamUpdate(fullText);
+            },
+            onComplete: (text: string) => {
+              console.log('[useArticleAI] Stream completed');
+              fullText = text;
+            },
+            onError: (error: Error) => {
+              console.error('[useArticleAI] Stream error:', error);
+              setError(error);
+            }
+          },
+          requestOptions
+        );
+
+        // Clean and parse the final content
+        const cleanedContent = cleanAIResponse(fullText);
+        return parseContentFromText(cleanedContent);
+      } else {
+        // Fall back to non-streaming
+        const result = await execute({
+          model: modelToUse,
+          systemPrompt: prompt.systemPrompt,
+          userPrompt,
+          temperature: requestOptions.temperature,
+          topP: requestOptions.topP,
+          maxTokens: requestOptions.maxTokens,
+          reasoningEffort: prompt.reasoningEffort,
+          verbosity: prompt.verbosity
+        });
+
+        const cleanedContent = cleanAIResponse(result.content);
+        return parseContentFromText(cleanedContent);
+      }
     } catch (error) {
       console.error('Error generating content:', error);
-      throw error;
+      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+      setError(err);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   }, [execute]);
 

@@ -178,6 +178,44 @@ class AICore {
       throw error;
     }
   }
+  
+  /**
+   * Send streaming text generation request
+   * Automatically selects the right provider based on model
+   */
+  public async sendStreamTextRequest(
+    model: string,
+    messages: Message[],
+    callbacks: import('./interfaces/IProvider').StreamCallbacks,
+    options: Partial<RequestOptions> = {}
+  ): Promise<void> {
+    const provider = this.getProviderForModel(model);
+
+    // Check if provider supports streaming
+    if (!provider.sendStreamRequest) {
+      throw new Error(`Provider ${provider.provider} does not support streaming`);
+    }
+
+    const fullOptions: RequestOptions = {
+      model,
+      maxTokens: options.maxTokens || 2000,
+      temperature: options.temperature ?? 0.7,
+      topP: options.topP,
+      frequencyPenalty: options.frequencyPenalty,
+      presencePenalty: options.presencePenalty,
+      stop: options.stop,
+      reasoning: options.reasoning,
+      text: options.text
+    };
+
+    try {
+      await provider.sendStreamRequest(messages, fullOptions, callbacks);
+    } catch (error) {
+      console.error('[AICore] Stream request failed:', error);
+      throw error;
+    }
+  }
+
 
   /**
    * Simple chat method - uses current settings model

@@ -87,6 +87,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   // Content
   const [htmlOutput, setHtmlOutput] = useState('');
   const [articleContent, setArticleContent] = useState<ArticleContent | null>(null);
+  const [streamingText, setStreamingText] = useState('');
 
   // Generation states
   const [generating, setGenerating] = useState(false);
@@ -363,6 +364,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       }
 
       setGenerating(true);
+      setStreamingText(''); // Clear previous streaming text
 
       // Get the content prompt template
       const contentPrompts = prompts.filter(p => p.category === 'content');
@@ -371,19 +373,24 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
         throw new Error('No content prompt templates found');
       }
 
-      // Generate content using AI
+      // Generate content using AI with streaming
       const generatedContent = await articleAI.generateContent(
         contentPrompts[0],
         topic,
         keywords,
         outline,
         undefined,
-        contentSettings
+        contentSettings,
+        (text: string) => {
+          // Update streaming text as it comes in
+          setStreamingText(text);
+        }
       );
 
-      // Update the content
+      // Update the final content
       setArticleContent(generatedContent);
       setHtmlOutput(generatedContent.html);
+      setStreamingText(''); // Clear streaming text once complete
     } catch (error) {
       console.error('Error generating content:', error);
       // Fallback to default content if AI generation fails
@@ -542,6 +549,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       // Content
       htmlOutput, setHtmlOutput,
       articleContent, setArticleContent,
+      streamingText,
 
       // Generation states
       generating, setGenerating,

@@ -203,16 +203,16 @@ const KeywordStepImproved: React.FC = () => {
                     
                     <div className="flex items-center mt-2 text-xs text-gray-500 space-x-4">
                       <div>
-                        <span className="font-medium">Volume:</span> {keyword.volume.toLocaleString()}
+                        <span className="font-medium">Volume:</span> {keyword.volume?.toLocaleString() ?? 'N/A'}
                       </div>
                       <div>
-                        <span className="font-medium">Difficulty:</span> 
-                        <span className={`ml-1 ${getDifficultyColor(keyword.difficulty)}`}>
-                          {getDifficultyLabel(keyword.difficulty)}
+                        <span className="font-medium">Difficulty:</span>
+                        <span className={`ml-1 ${getDifficultyColor(keyword.difficulty ?? 5)}`}>
+                          {getDifficultyLabel(keyword.difficulty ?? 5)}
                         </span>
                       </div>
                       <div>
-                        <span className="font-medium">CPC:</span> ${keyword.cpc.toFixed(2)}
+                        <span className="font-medium">CPC:</span> ${keyword.cpc?.toFixed(2) ?? 'N/A'}
                       </div>
                     </div>
                   </div>

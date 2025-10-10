@@ -9,6 +9,7 @@ export interface PromptTemplate {
   userPromptTemplate: string;
   category: 'topic' | 'keyword' | 'outline' | 'content' | 'image';
   temperature: number;
+  topP?: number;
   maxTokens?: number;
   /**
    * Optional model override for this specific prompt
@@ -36,9 +37,9 @@ export interface PromptSettings {
 // Article Wizard Types
 export interface KeywordData {
   keyword: string;
-  volume: number;
-  difficulty: number;
-  cpc: number;
+  volume?: number;
+  difficulty?: number;
+  cpc?: number;
 }
 
 export interface ImageItem {
@@ -121,6 +122,7 @@ export interface ArticleWizardContextType {
   setHtmlOutput: (html: string) => void;
   articleContent: ArticleContent | null;
   setArticleContent: (content: ArticleContent | null) => void;
+  streamingText: string;
   
   // Generation states
   generating: boolean;

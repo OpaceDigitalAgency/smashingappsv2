@@ -15,16 +15,17 @@ import {
 } from 'lucide-react';
 
 const ContentStep: React.FC = () => {
-  const { 
-    title, 
-    selectedKeywords, 
+  const {
+    title,
+    selectedKeywords,
     outline,
-    htmlOutput, 
-    setHtmlOutput, 
-    generating, 
+    htmlOutput,
+    setHtmlOutput,
+    generating,
     setGenerating,
     articleContent,
     setArticleContent,
+    streamingText,
     generateContent
   } = useArticleWizard();
   
@@ -213,16 +214,16 @@ const ContentStep: React.FC = () => {
         {htmlOutput ? (
           <div className="relative">
             <div className="absolute top-4 right-4 flex gap-2">
-              <button 
+              <button
                 onClick={copyContent}
-                className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" 
+                className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
                 title="Copy content"
               >
                 <Copy size={16} className="text-gray-600" />
               </button>
-              <button 
+              <button
                 onClick={saveContent}
-                className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors" 
+                className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
                 title="Save content"
               >
                 <Save size={16} className="text-gray-600" />
@@ -233,15 +234,24 @@ const ContentStep: React.FC = () => {
             </div>
           </div>
         ) : generating ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
-              <RefreshCw className="animate-spin text-primary" size={28} />
+          <div className="relative">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <RefreshCw className="animate-spin text-primary" size={20} />
+                <h4 className="text-lg font-medium text-gray-800">Generating your content...</h4>
+              </div>
+              {streamingText ? (
+                <div className="prose prose-sm max-w-none bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <div className="whitespace-pre-wrap">{streamingText}</div>
+                  <div className="inline-block w-2 h-5 bg-primary animate-pulse ml-1"></div>
+                </div>
+              ) : (
+                <p className="text-gray-600">
+                  Our AI is crafting high-quality content based on your topic, keywords, and outline.
+                  Content will appear here as it's being generated.
+                </p>
+              )}
             </div>
-            <h4 className="text-lg font-medium text-gray-800 mb-2">Generating your content...</h4>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Our AI is crafting high-quality content based on your topic, keywords, and outline.
-              This may take a minute or two.
-            </p>
           </div>
         ) : (
           <div className="p-12 text-center">

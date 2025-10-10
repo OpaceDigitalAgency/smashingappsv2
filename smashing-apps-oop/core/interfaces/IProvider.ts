@@ -29,6 +29,13 @@ export interface RequestOptions {
   };
 }
 
+export interface StreamCallbacks {
+  onStart?: () => void;
+  onToken?: (token: string) => void;
+  onComplete?: (fullText: string) => void;
+  onError?: (error: Error) => void;
+}
+
 export interface Usage {
   promptTokens: number;
   completionTokens: number;
@@ -79,6 +86,20 @@ export interface IProvider {
    * @returns Normalised response
    */
   sendRequest(messages: Message[], options: RequestOptions): Promise<NormalisedResponse>;
+  
+  /**
+   * Send a streaming text generation request
+   *
+   * @param messages Array of messages
+   * @param options Request options
+   * @param callbacks Streaming callbacks
+   * @returns Promise that resolves when stream completes
+   */
+  sendStreamRequest?(
+    messages: Message[],
+    options: RequestOptions,
+    callbacks: StreamCallbacks
+  ): Promise<void>;
   
   /**
    * Test the API key by making a simple request
