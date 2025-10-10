@@ -51,10 +51,12 @@ const KeywordStepImproved: React.FC = () => {
   
   const toggleKeywordSelection = (keyword: string) => {
     if (!keyword || !keyword.trim()) return; // guard against empty values
-    if (selectedKeywords.includes(keyword)) {
-      setSelectedKeywords(selectedKeywords.filter(k => k !== keyword));
+    // Clean any metadata like "— Volume: High", "| Volume: High", "- Volume: High"
+    const cleaned = keyword.split(/[\s]*[\|\u2014\-][\s]*(?:Volume|Difficulty|CPC|Search)/i)[0].trim();
+    if (selectedKeywords.includes(cleaned)) {
+      setSelectedKeywords(selectedKeywords.filter(k => k !== cleaned));
     } else {
-      setSelectedKeywords([...selectedKeywords, keyword]);
+      setSelectedKeywords([...selectedKeywords, cleaned]);
     }
   };
   
