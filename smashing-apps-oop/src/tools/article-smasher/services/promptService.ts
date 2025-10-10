@@ -14,7 +14,7 @@ const PROMPTS_VERSION_KEY = 'article_smasher_prompts_version';
 
 // Version number - increment this when you change DEFAULT_PROMPTS
 // This will force localStorage to reload with new defaults
-const CURRENT_PROMPTS_VERSION = 5; // Reduced reasoning effort for faster streaming
+const CURRENT_PROMPTS_VERSION = 6; // Fixed image prompt generator model
 
 // Default prompt templates
 const DEFAULT_PROMPTS: PromptTemplate[] = [
@@ -90,6 +90,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     temperature: 0.8,
     topP: 0.9,
     maxTokens: 1000,
+    model: 'gpt-3.5-turbo', // Fast & cheap - generating text prompts for images
     reasoningEffort: undefined, // No reasoning needed - simple prompt generation
     verbosity: 'low', // Concise, focused image prompts without extra explanation
     createdAt: new Date(),
