@@ -80,14 +80,55 @@ const PublishStep: React.FC = () => {
             <div className="flex items-center">
               <CheckCircle className={`${getSelectedImages().length > 0 ? 'text-green-500' : 'text-gray-300'} mr-2`} size={16} />
               <span className="text-sm text-gray-800">
-                {getSelectedImages().length > 0 
-                  ? `${getSelectedImages().length} images selected` 
+                {getSelectedImages().length > 0
+                  ? `${getSelectedImages().length} images selected`
                   : "No images selected"}
               </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Image Bank Preview */}
+      {getSelectedImages().length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+            <ImageIcon className="mr-2 text-primary" size={16} />
+            Selected Images
+          </h4>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {getSelectedImages().map((image) => (
+              <div key={image.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="relative">
+                  {image.url ? (
+                    <img
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-32 object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = `https://via.placeholder.com/400x300?text=${encodeURIComponent(image.alt || 'Image')}`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="text-gray-400" size={24} />
+                    </div>
+                  )}
+                  <div className="absolute top-1 right-1 bg-primary text-white text-xs px-2 py-0.5 rounded">
+                    {image.type === 'featured' ? 'Featured' : 'Section'}
+                  </div>
+                </div>
+                <div className="p-2">
+                  <p className="text-xs text-gray-600 truncate">{image.alt}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Publishing Options */}
       <div className="bg-white rounded-lg shadow-md border border-indigo-100 mb-4 overflow-hidden">

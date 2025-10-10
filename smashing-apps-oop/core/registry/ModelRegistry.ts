@@ -200,6 +200,27 @@ class ModelRegistry {
       releaseDate: '2025-06-01'
     });
 
+    this.registerModel({
+      id: 'o4-mini-deep-research',
+      provider: 'openai',
+      name: 'O4 Mini Deep Research',
+      description: 'Deep research variant of O4 Mini with enhanced reasoning capabilities',
+      type: 'chat',
+      capabilities: {
+        maxTokens: 100000,
+        supportsImages: false,
+        supportsFunctions: false,
+        supportsStreaming: true,
+        contextWindow: 200000
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.005,
+        outputCostPer1kTokens: 0.015,
+        currency: 'USD'
+      },
+      releaseDate: '2025-06-01'
+    });
+
     // OpenAI GPT-4.1 Models
     this.registerModel({
       id: 'gpt-4.1',

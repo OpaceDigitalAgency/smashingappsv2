@@ -1,14 +1,41 @@
 /**
  * Response Formatter Utility
- * 
+ *
  * Handles cleaning and formatting AI responses from different models
  * to ensure consistent output across GPT-5, GPT-4, O-series, Claude, etc.
- * 
+ *
  * This utility addresses issues where different models return responses with:
  * - Different formatting (bullets, numbers, asterisks, quotes)
  * - Prompt echoes mixed with results
  * - Inconsistent line breaks and separators
  */
+
+/**
+ * Common acronyms and technical terms that should be uppercase
+ */
+const COMMON_ACRONYMS = [
+  'AI', 'SEO', 'API', 'URL', 'HTML', 'CSS', 'JS', 'PHP', 'SQL', 'CMS',
+  'UI', 'UX', 'CTA', 'ROI', 'KPI', 'B2B', 'B2C', 'SaaS', 'PaaS', 'IaaS',
+  'CRM', 'ERP', 'FAQ', 'PDF', 'JSON', 'XML', 'HTTP', 'HTTPS', 'FTP',
+  'SSH', 'SSL', 'TLS', 'DNS', 'CDN', 'VPN', 'IP', 'TCP', 'UDP',
+  'AWS', 'GCP', 'Azure', 'iOS', 'Android', 'macOS', 'Windows', 'Linux',
+  'WordPress', 'WooCommerce', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis'
+];
+
+/**
+ * Preserve proper capitalisation for common acronyms and technical terms
+ */
+const preserveAcronymCapitalisation = (text: string): string => {
+  let result = text;
+
+  COMMON_ACRONYMS.forEach(acronym => {
+    // Create a case-insensitive regex to match the acronym as a whole word
+    const regex = new RegExp(`\\b${acronym}\\b`, 'gi');
+    result = result.replace(regex, acronym);
+  });
+
+  return result;
+};
 
 /**
  * Clean AI response text by removing common formatting artifacts
@@ -24,9 +51,9 @@ export const cleanAIResponse = (text: string): string => {
   // Remove common prompt echoes that models sometimes include
   // These patterns match phrases like "Here are 5 SEO-friendly..." or "Certainly! Here are..."
   const promptEchoes = [
-    /^(Here are|Here's|Certainly!?\s*Here are|Sure!?\s*Here are|Below are|I've created|I've generated|I'll provide|Let me provide)\s+\d*\s*(engaging|SEO-friendly|comprehensive|detailed)?\s*(blog post|article|topic)?\s*(ideas?|suggestions?|titles?|topics?)[\s:]+/gi,
-    /^(Certainly|Sure|Of course|Absolutely|Great|Excellent)!?\s*/gi,
-    /^(Here are|Below are|I've created|I've generated)\s+/gi,
+    /^(Here are|Here's|Certainly!?\s*Here are|Sure!?\s*Here are|Below are|I've created|I've generated|I'll provide|Let me provide)\s+\d*\s*(engaging|SEO-friendly|comprehensive|detailed)?\s*(blog post|article|topic)?\s*(ideas?|suggestions?|titles?|topics?)[\s:]+/gim,
+    /^(Certainly|Sure|Of course|Absolutely|Great|Excellent)!?\s*/gim,
+    /^(Here are|Below are|I've created|I've generated)\s+/gim,
   ];
 
   promptEchoes.forEach(pattern => {
@@ -38,7 +65,12 @@ export const cleanAIResponse = (text: string): string => {
 
   // Remove excessive whitespace but preserve intentional line breaks
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-  
+
+  // Remove Unicode quotes and special characters that some models add
+  // Replace curly quotes with straight quotes, then remove them
+  cleaned = cleaned.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"'); // Double curly quotes
+  cleaned = cleaned.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'"); // Single curly quotes
+
   return cleaned.trim();
 };
 
@@ -94,22 +126,30 @@ export const parseListFromResponse = (text: string, options: {
     if (removeFormatting) {
       // Remove numbered list markers (1. 2. 3. or 1) 2) 3))
       item = item.replace(/^\d+[\.\)]\s*/, '');
-      
+
       // Remove bullet points (-, *, •, ◦, ▪, ▫)
       item = item.replace(/^[\-\*•◦▪▫]\s*/, '');
-      
+
       // Remove markdown bold/italic markers (**text** or *text* or __text__)
       item = item.replace(/^\*\*(.+?)\*\*$/, '$1');
       item = item.replace(/^__(.+?)__$/, '$1');
       item = item.replace(/^\*(.+?)\*$/, '$1');
       item = item.replace(/^_(.+?)_$/, '$1');
-      
-      // Remove surrounding quotes (both single and double)
-      item = item.replace(/^["'](.+?)["']$/, '$1');
-      
+
+      // Remove surrounding quotes (both single, double, and curly quotes)
+      item = item.replace(/^["'\u201C\u201D\u2018\u2019](.+?)["'\u201C\u201D\u2018\u2019]$/g, '$1');
+
+      // Remove quotes at the beginning or end even if not paired
+      item = item.replace(/^["'\u201C\u201D\u2018\u2019]+/, '');
+      item = item.replace(/["'\u201C\u201D\u2018\u2019]+$/, '');
+
       // Remove "Primary keyword:" or similar prefixes
       item = item.replace(/^(Primary keyword|Keyword|Topic|Title)[\s:]+/i, '');
-      
+
+      // Remove asterisks used for emphasis (not already caught by markdown removal)
+      item = item.replace(/\*\*/g, '');
+      item = item.replace(/\*/g, '');
+
       // Clean up any remaining excessive whitespace
       item = item.replace(/\s+/g, ' ').trim();
     }
@@ -143,10 +183,24 @@ export const parseTopicsFromResponse = (text: string, maxTopics: number = 5): st
   return topics.map(topic => {
     // Remove any remaining "Primary keyword:" annotations that might be on the same line
     let cleaned = topic.split(/\n/)[0]; // Take only first line if multi-line
-    
-    // Remove trailing metadata like "(Primary keyword: xyz)"
+
+    // Remove trailing metadata like "(Primary keyword: xyz)" or "Keywords: xyz"
     cleaned = cleaned.replace(/\s*\([^)]*keyword[^)]*\)\s*$/i, '');
-    
+    cleaned = cleaned.replace(/\s*Keywords?:\s*.+$/i, '');
+
+    // Remove any remaining quotes (curly or straight)
+    cleaned = cleaned.replace(/^["'\u201C\u201D\u2018\u2019]+/, '');
+    cleaned = cleaned.replace(/["'\u201C\u201D\u2018\u2019]+$/, '');
+
+    // Remove asterisks and other markdown formatting
+    cleaned = cleaned.replace(/\*\*/g, '');
+    cleaned = cleaned.replace(/\*/g, '');
+    cleaned = cleaned.replace(/__/g, '');
+    cleaned = cleaned.replace(/_/g, '');
+
+    // Preserve proper capitalisation for acronyms
+    cleaned = preserveAcronymCapitalisation(cleaned);
+
     return cleaned.trim();
   }).filter(topic => topic.length >= 10); // Ensure minimum length after cleaning
 };
@@ -186,19 +240,30 @@ export const parseKeywordsFromResponse = (text: string): Array<{
 
     // Try to match a keyword line (numbered, bulleted, or bold)
     const keywordMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(?:\*\*)?([^*\n]+?)(?:\*\*)?$/);
-    
+
     if (keywordMatch) {
-      const potentialKeyword = keywordMatch[1].trim();
-      
+      let potentialKeyword = keywordMatch[1].trim();
+
+      // Remove any inline metadata that might be on the same line
+      // e.g., "keyword | Volume: High | Difficulty: 8/10 | CPC: $5.50"
+      potentialKeyword = potentialKeyword.split(/\s*\|\s*/)[0].trim();
+
+      // Remove trailing metadata in parentheses or brackets
+      potentialKeyword = potentialKeyword.replace(/\s*[\(\[].*?[\)\]]\s*$/g, '');
+
+      // Remove quotes
+      potentialKeyword = potentialKeyword.replace(/^["'\u201C\u201D\u2018\u2019]+/, '');
+      potentialKeyword = potentialKeyword.replace(/["'\u201C\u201D\u2018\u2019]+$/, '');
+
       // Check if this looks like metadata (volume, difficulty, cpc)
       const isMetadata = /^(search volume|difficulty|cpc|volume|score)/i.test(potentialKeyword);
-      
+
       if (!isMetadata && potentialKeyword.length > 2 && potentialKeyword.length < 100) {
         // Save previous keyword if exists
         if (currentKeyword) {
           keywords.push(currentKeyword);
         }
-        
+
         // Start new keyword
         currentKeyword = {
           keyword: potentialKeyword,
@@ -301,7 +366,14 @@ export const parseOutlineFromResponse = (text: string): Array<{
     
     // Clean the title
     title = title.replace(/^\*\*(.+?)\*\*$/, '$1').trim();
-    
+
+    // Remove quotes
+    title = title.replace(/^["'\u201C\u201D\u2018\u2019]+/, '');
+    title = title.replace(/["'\u201C\u201D\u2018\u2019]+$/, '');
+
+    // Preserve proper capitalisation for common acronyms and technical terms
+    title = preserveAcronymCapitalisation(title);
+
     const item = {
       id: `outline-${Date.now()}-${index}`,
       title,

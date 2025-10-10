@@ -30,29 +30,31 @@ const ImageStep: React.FC = () => {
   const [chatModels, setChatModels] = useState<ModelInfo[]>([]);
   const [selectedImageModel, setSelectedImageModel] = useState<string>('');
   const [textModel, setTextModel] = useState<string>(settings.defaultModel);
-  
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+
   // Load available models from AI-Core
   useEffect(() => {
     const aiCore = AICore.getInstance();
-    
+
     // Get available image models (only from configured providers)
     const availableImageModels = aiCore.getAvailableImageModels();
     setImageModels(availableImageModels);
-    
+
     // Get available chat models (only from configured providers)
     const availableChatModels = aiCore.getAvailableChatModels();
     setChatModels(availableChatModels);
-    
+
     // Set default image model if available
     if (availableImageModels.length > 0) {
-      setSelectedImageModel(availableImageModels[0].id);
+      const aiSettings = aiCore.getSettings();
+      setSelectedImageModel(aiSettings.defaultImageModel || availableImageModels[0].id);
     }
   }, []);
-  
-  // Set default prompt based on title
+
+  // Set default prompt based on title - improved version
   useEffect(() => {
     if (title && !prompt) {
-      setPrompt(`${title} in a modern, professional style`);
+      setPrompt(`Create an image for ${title}`);
     }
   }, [title]);
   
@@ -98,18 +100,47 @@ const ImageStep: React.FC = () => {
     return images.filter(img => img.isSelected);
   };
   
-  // Generate suggested prompts based on title and keywords
-  const generateSuggestedPrompts = () => {
+  // Generate suggested prompts based on title and keywords using AI
+  const generateSuggestedPrompts = async () => {
     if (!title) return;
-    
-    const suggestions = [
-      `${title} in a modern, professional style`,
-      `Illustration of ${title} with clean, minimalist design`,
-      `3D render of ${title} concept with vibrant colors`,
-      `${title} with ${selectedKeywords[0] || ''} theme, photorealistic`
-    ];
-    
-    setSuggestedPrompts(suggestions);
+
+    setIsGeneratingSuggestions(true);
+
+    try {
+      // Use AI to generate better image prompts
+      const aiCore = AICore.getInstance();
+      const promptText = `Generate 4 detailed image prompts for an article titled "${title}" about ${selectedKeywords.join(', ')}. Each prompt should be specific and suitable for AI image generation. Return only the prompts, one per line, without numbering or bullets.`;
+
+      const response = await aiCore.sendTextRequest(
+        textModel,
+        [{ role: 'user', content: promptText }],
+        { maxTokens: 500, temperature: 0.8 },
+        'article-smasher-image-prompts'
+      );
+
+      if (response.choices && response.choices.length > 0) {
+        const content = response.choices[0].message.content;
+        const prompts = content
+          .split('\n')
+          .map((p: string) => p.trim())
+          .filter((p: string) => p.length > 10 && !p.match(/^\d+[\.\)]/))
+          .slice(0, 4);
+
+        setSuggestedPrompts(prompts);
+      }
+    } catch (error) {
+      console.error('Error generating suggested prompts:', error);
+      // Fallback to simple suggestions
+      const suggestions = [
+        `${title} in a modern, professional style`,
+        `Illustration of ${title} with clean, minimalist design`,
+        `3D render of ${title} concept with vibrant colors`,
+        `${title} with ${selectedKeywords[0] || ''} theme, photorealistic`
+      ];
+      setSuggestedPrompts(suggestions);
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
   };
   
   // Use suggested prompt
@@ -121,12 +152,13 @@ const ImageStep: React.FC = () => {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-gray-800">Image Generation</h3>
-        <button 
+        <button
           onClick={generateSuggestedPrompts}
-          className="btn btn-ghost text-sm py-1 px-3 flex items-center"
+          disabled={isGeneratingSuggestions}
+          className="btn btn-ghost text-sm py-1 px-3 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RefreshCw className="mr-1" size={14} />
-          Suggest Prompts
+          <RefreshCw className={`mr-1 ${isGeneratingSuggestions ? 'animate-spin' : ''}`} size={14} />
+          {isGeneratingSuggestions ? 'Generating...' : 'Suggest Prompts'}
         </button>
       </div>
       

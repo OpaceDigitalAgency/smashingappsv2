@@ -259,7 +259,7 @@ const ContentStep: React.FC = () => {
               style={{ color: 'white' }}
             >
               <Sparkles size={16} className="text-white" />
-              <span className="font-bold text-white">Generate Content</span>
+              <span className="font-bold text-black">Generate Content</span>
             </button>
             
             {(!title || selectedKeywords.length === 0 || outline.length === 0) && (
