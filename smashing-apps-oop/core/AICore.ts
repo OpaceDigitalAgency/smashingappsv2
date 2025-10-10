@@ -306,9 +306,11 @@ class AICore {
    * Get current settings
    */
   public getSettings(): AISettings {
+    // Always refresh from storage to avoid stale in-memory settings
+    this.settings = this.storage.loadSettings();
     return this.settings;
   }
-  
+
   /**
    * Update settings
    */
@@ -319,7 +321,7 @@ class AICore {
     };
     this.storage.saveSettings(this.settings);
   }
-  
+
   /**
    * Get usage statistics
    */

@@ -407,7 +407,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   };
 
   // Generate image prompts based on topic and keywords
-  const generateImages = async (topic: string, keywords: string[], imageModel: string = 'dall-e-3') => {
+  const generateImages = async (topic: string, keywords: string[], imageModel?: string) => {
     try {
       // Check if prompts are initialized
       if (!isInitialized) {
@@ -439,6 +439,11 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
         throw new Error('Image service is not configured. Please add your API key in the settings.');
       }
 
+      // Determine image model to use (AI-Core defaultImageModel -> provided param -> sensible fallback)
+      const aiCore = (await import('../../../../core/AICore')).default.getInstance();
+      const aiSettings = aiCore.getSettings();
+      const imageModelToUse: string = (imageModel && imageModel.trim()) || aiSettings.defaultImageModel || 'gpt-image-1';
+
       // Generate actual images using the ImageService
       const newImages: ImageItem[] = [];
 
@@ -446,9 +451,9 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       for (let i = 0; i < imagePromptTexts.length; i++) {
         const prompt = imagePromptTexts[i];
         try {
-          // Generate the image using DALL-E
+          // Generate the image using selected model
           const result = await ImageService.createImage({
-            model: imageModel,
+            model: imageModelToUse,
             prompt: prompt,
             size: '1024x1024',
             n: 1

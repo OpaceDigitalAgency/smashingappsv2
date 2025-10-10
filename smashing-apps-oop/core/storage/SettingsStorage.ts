@@ -14,6 +14,7 @@ export interface AISettings {
   };
   defaultProvider: string;
   defaultModel: string;
+  defaultImageModel?: string;
   enableStats: boolean;
   enableCaching: boolean;
   cacheDuration: number;
@@ -75,7 +76,7 @@ class SettingsStorage {
           displayName: 'OpenAI',
           enabled: false,
           apiKey: '',
-          defaultModel: 'gpt-4o-mini',
+          defaultModel: 'gpt-5-pro',
           supportsImages: true,
           supportsStreaming: true
         },
@@ -102,13 +103,14 @@ class SettingsStorage {
           displayName: 'OpenRouter',
           enabled: false,
           apiKey: '',
-          defaultModel: 'openai/gpt-4o-mini',
+          defaultModel: 'openai/gpt-5-pro',
           supportsImages: true,
           supportsStreaming: true
         }
       },
       defaultProvider: 'openai',
-      defaultModel: 'gpt-4o-mini',
+      defaultModel: 'gpt-5-pro',
+      defaultImageModel: 'gpt-image-1',
       enableStats: true,
       enableCaching: true,
       cacheDuration: 3600

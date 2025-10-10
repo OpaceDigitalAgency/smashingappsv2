@@ -146,9 +146,17 @@ export const useArticleAI = () => {
         const trimmed = line.trim();
         if (!trimmed) continue;
 
-        // Check if this is a numbered keyword line (e.g., "1. **AI SEO Tools**" or "1. AI SEO Tools")
-        const keywordMatch = trimmed.match(/^\d+\.\s+\*?\*?(.+?)\*?\*?$/);
-        if (keywordMatch) {
+        // Skip obvious prompt echoes/headings
+        if (/^keywords?:/i.test(trimmed)) continue;
+
+        // Match numbered lines (e.g., "1. **AI SEO Tools**")
+        const numberMatch = trimmed.match(/^\d+\.\s+\*?\*?(.+?)\*?\*?$/);
+        // Match bullet lines (e.g., "- AI SEO Tools" or "• AI SEO Tools")
+        const bulletMatch = trimmed.match(/^[\-•\*]\s+\*?\*?(.+?)\*?\*?$/);
+        const plainMatch = trimmed.match(/^([A-Za-z].{2,})$/); // simple plain line fallback
+
+        const title = (numberMatch?.[1] || bulletMatch?.[1] || '').trim();
+        if (title) {
           // Save previous keyword if exists
           if (currentKeyword && currentKeyword.keyword) {
             keywords.push({
@@ -159,14 +167,22 @@ export const useArticleAI = () => {
             });
           }
 
-          // Start new keyword
           currentKeyword = {
-            keyword: keywordMatch[1].trim(),
+            keyword: title,
             volume: 500,
             difficulty: 5,
             cpc: 3.0
           };
           continue;
+        }
+
+        // If we didn't catch a title but line looks like a plain keyword and we have fewer than 10, use it
+        if (!numberMatch && !bulletMatch && plainMatch && (!currentKeyword || currentKeyword.keyword)) {
+          const possible = plainMatch[1].trim();
+          if (possible && possible.length < 80) {
+            keywords.push({ keyword: possible, volume: 500, difficulty: 5, cpc: 3.0 });
+            continue;
+          }
         }
 
         // Check for metadata lines (Search Volume, Difficulty Score, CPC Value)
@@ -178,15 +194,15 @@ export const useArticleAI = () => {
             continue;
           }
 
-          const difficultyMatch = trimmed.match(/Difficulty Score[:\s]+(\d+)/i);
+          const difficultyMatch = trimmed.match(/Difficulty (Score|Level)[:\s]+(\d+)/i);
           if (difficultyMatch) {
-            currentKeyword.difficulty = parseInt(difficultyMatch[1]);
+            currentKeyword.difficulty = parseInt(difficultyMatch[2]);
             continue;
           }
 
-          const cpcMatch = trimmed.match(/CPC Value[:\s]+\$?(\d+\.?\d*)/i);
+          const cpcMatch = trimmed.match(/CPC (Value)?[:\s]+\$?(\d+\.?\d*)/i);
           if (cpcMatch) {
-            currentKeyword.cpc = parseFloat(cpcMatch[1]);
+            currentKeyword.cpc = parseFloat(cpcMatch[2]);
             continue;
           }
         }

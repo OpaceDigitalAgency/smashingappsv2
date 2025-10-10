@@ -12,6 +12,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
   const [models, setModels] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [defaultModel, setDefaultModel] = useState<string>('');
+  const [defaultImageModel, setDefaultImageModel] = useState<string>('');
   const [activeType, setActiveType] = useState<'chat' | 'image'>('chat');
   const modelRegistry = ModelRegistry.getInstance();
 
@@ -22,9 +23,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
     if (configuredProviders.length > 0 && !selectedProvider) {
       setSelectedProvider(configuredProviders[0]);
     }
-    // Load current default model
+    // Load current defaults
     setDefaultModel(settings.defaultModel || '');
-  }, [configuredProviders, selectedProvider, settings.defaultModel]);
+    setDefaultImageModel(settings.defaultImageModel || '');
+  }, [configuredProviders, selectedProvider, settings.defaultModel, settings.defaultImageModel]);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -138,6 +140,14 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
   const handleSetDefaultModel = (modelId: string) => {
     aiCore.updateSettings({ defaultModel: modelId });
     setDefaultModel(modelId);
+
+    // Dispatch event to notify other components
+    window.dispatchEvent(new CustomEvent('ai-core-settings-changed'));
+  };
+
+  const handleSetDefaultImageModel = (modelId: string) => {
+    aiCore.updateSettings({ defaultImageModel: modelId });
+    setDefaultImageModel(modelId);
 
     // Dispatch event to notify other components
     window.dispatchEvent(new CustomEvent('ai-core-settings-changed'));
@@ -303,26 +313,42 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
                 )}
               </div>
 
-              {/* Set as Default Button (chat models only) */}
-              {model.type === 'chat' && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  {defaultModel === model.id ? (
+              {/* Set as Default Button */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                {model.type === 'chat' ? (
+                  defaultModel === model.id ? (
                     <button
                       disabled
                       className="w-full px-4 py-2 bg-indigo-100 text-indigo-600 font-medium rounded-lg cursor-not-allowed"
                     >
-                      ✓ Current Default Model
+                      ✓ Current Default Chat Model
                     </button>
                   ) : (
                     <button
                       onClick={() => handleSetDefaultModel(model.id)}
                       className="w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     >
-                      Set as Default
+                      Set as Default Chat Model
                     </button>
-                  )}
-                </div>
-              )}
+                  )
+                ) : (
+                  defaultImageModel === model.id ? (
+                    <button
+                      disabled
+                      className="w-full px-4 py-2 bg-purple-100 text-purple-700 font-medium rounded-lg cursor-not-allowed"
+                    >
+                      ✓ Current Default Image Model
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleSetDefaultImageModel(model.id)}
+                      className="w-full px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      Set as Default Image Model
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           ))}
         </div>
