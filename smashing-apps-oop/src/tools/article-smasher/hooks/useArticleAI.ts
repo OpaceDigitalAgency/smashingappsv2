@@ -21,7 +21,7 @@ export const useArticleAI = () => {
    * Execute an AI request using AI-Core
    */
   const execute = useCallback(async (options: {
-    model: string;
+    model?: string;
     systemPrompt: string;
     userPrompt: string;
     temperature?: number;
@@ -36,9 +36,11 @@ export const useArticleAI = () => {
         throw new Error('No AI provider configured. Please add your API key in the admin settings.');
       }
 
-      // Get the model from AI-Core settings if not specified
+      // Get the model from AI-Core settings if not specified or empty
       const settings = aiCore.getSettings();
-      const modelToUse = options.model || settings.defaultModel || 'gpt-4o-mini';
+      const modelToUse = (options.model && options.model.trim()) ? options.model : settings.defaultModel;
+
+      console.log('[useArticleAI] Using model:', modelToUse, 'from options:', options.model, 'AI-Core default:', settings.defaultModel);
 
       // Send request using AI-Core
       const response = await aiCore.sendTextRequest(
@@ -74,7 +76,7 @@ export const useArticleAI = () => {
     prompt: PromptTemplate,
     articleType: string,
     subject: string = 'digital marketing',
-    model: string = 'gpt-4o'
+    model?: string
   ): Promise<string[]> => {
     try {
       // Process the prompt template
@@ -111,14 +113,14 @@ export const useArticleAI = () => {
   const generateKeywords = useCallback(async (
     prompt: PromptTemplate,
     title: string,
-    model: string = 'gpt-4o'
+    model?: string
   ): Promise<KeywordData[]> => {
     try {
       // Process the prompt template
       const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
         title
       });
-      
+
       // Execute the AI request
       const result = await execute({
         model,
@@ -127,28 +129,80 @@ export const useArticleAI = () => {
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens
       });
-      
+
       // Parse the result into keyword data
-      const keywordLines = result.content.split('\n').filter(line => line.trim().length > 0);
-      
-      const keywords: KeywordData[] = keywordLines.map(line => {
-        // Extract keyword and metrics using regex
-        const keywordMatch = line.match(/^(.*?)(?:\s*-\s*|:\s*)/);
-        const volumeMatch = line.match(/volume:\s*(high|medium|low)/i);
-        const difficultyMatch = line.match(/difficulty:\s*(\d+)/i);
-        const cpcMatch = line.match(/cpc:\s*(\d+\.?\d*)/i);
-        
-        return {
-          keyword: keywordMatch ? keywordMatch[1].trim() : line.trim(),
-          volume: volumeMatch ? 
-            (volumeMatch[1].toLowerCase() === 'high' ? 1000 : 
-             volumeMatch[1].toLowerCase() === 'medium' ? 500 : 100) : 
-            Math.floor(Math.random() * 1000),
-          difficulty: difficultyMatch ? parseInt(difficultyMatch[1]) : Math.floor(Math.random() * 10) + 1,
-          cpc: cpcMatch ? parseFloat(cpcMatch[1]) : Math.random() * 5
-        };
-      });
-      
+      // The AI returns keywords in a numbered list format like:
+      // 1. **AI SEO Tools**
+      //    - **Search Volume**: Medium
+      //    - **Difficulty Score**: 6
+      //    - **CPC Value**: $5.50
+
+      const keywords: KeywordData[] = [];
+      const lines = result.content.split('\n');
+
+      let currentKeyword: Partial<KeywordData> | null = null;
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        // Check if this is a numbered keyword line (e.g., "1. **AI SEO Tools**" or "1. AI SEO Tools")
+        const keywordMatch = trimmed.match(/^\d+\.\s+\*?\*?(.+?)\*?\*?$/);
+        if (keywordMatch) {
+          // Save previous keyword if exists
+          if (currentKeyword && currentKeyword.keyword) {
+            keywords.push({
+              keyword: currentKeyword.keyword,
+              volume: currentKeyword.volume ?? 500,
+              difficulty: currentKeyword.difficulty ?? 5,
+              cpc: currentKeyword.cpc ?? 3.0
+            });
+          }
+
+          // Start new keyword
+          currentKeyword = {
+            keyword: keywordMatch[1].trim(),
+            volume: 500,
+            difficulty: 5,
+            cpc: 3.0
+          };
+          continue;
+        }
+
+        // Check for metadata lines (Search Volume, Difficulty Score, CPC Value)
+        if (currentKeyword) {
+          const volumeMatch = trimmed.match(/Search Volume[:\s]+(\w+)/i);
+          if (volumeMatch) {
+            const vol = volumeMatch[1].toLowerCase();
+            currentKeyword.volume = vol === 'high' ? 1000 : vol === 'medium' ? 500 : 100;
+            continue;
+          }
+
+          const difficultyMatch = trimmed.match(/Difficulty Score[:\s]+(\d+)/i);
+          if (difficultyMatch) {
+            currentKeyword.difficulty = parseInt(difficultyMatch[1]);
+            continue;
+          }
+
+          const cpcMatch = trimmed.match(/CPC Value[:\s]+\$?(\d+\.?\d*)/i);
+          if (cpcMatch) {
+            currentKeyword.cpc = parseFloat(cpcMatch[1]);
+            continue;
+          }
+        }
+      }
+
+      // Don't forget the last keyword
+      if (currentKeyword && currentKeyword.keyword) {
+        keywords.push({
+          keyword: currentKeyword.keyword,
+          volume: currentKeyword.volume ?? 500,
+          difficulty: currentKeyword.difficulty ?? 5,
+          cpc: currentKeyword.cpc ?? 3.0
+        });
+      }
+
+      console.log('[useArticleAI] Parsed keywords:', keywords);
       return keywords;
     } catch (error) {
       console.error('Error generating keywords:', error);
@@ -163,7 +217,7 @@ export const useArticleAI = () => {
     prompt: PromptTemplate,
     title: string,
     keywords: string[],
-    model: string = 'gpt-4o'
+    model?: string
   ): Promise<OutlineItem[]> => {
     try {
       // Process the prompt template
@@ -197,19 +251,48 @@ export const useArticleAI = () => {
     title: string,
     keywords: string[],
     outline: OutlineItem[],
-    model: string = 'gpt-4o'
+    model?: string,
+    contentSettings?: {
+      length?: string;
+      tone?: string;
+      includeStats?: boolean;
+      includeExamples?: boolean;
+    }
   ): Promise<ArticleContent> => {
     try {
       // Convert outline to text format
       const outlineText = outlineToText(outline);
-      
+
+      // Build additional instructions based on content settings
+      let additionalInstructions = '';
+      if (contentSettings) {
+        if (contentSettings.length) {
+          const lengthMap: Record<string, string> = {
+            'short': 'approximately 500 words',
+            'medium': 'approximately 1000 words',
+            'long': 'approximately 1500 words',
+            'comprehensive': 'approximately 2000+ words'
+          };
+          additionalInstructions += `The article should be ${lengthMap[contentSettings.length] || 'medium length'}. `;
+        }
+        if (contentSettings.tone) {
+          additionalInstructions += `Write in a ${contentSettings.tone} tone. `;
+        }
+        if (contentSettings.includeStats) {
+          additionalInstructions += 'Include relevant statistics and data points to support your arguments. ';
+        }
+        if (contentSettings.includeExamples) {
+          additionalInstructions += 'Include practical examples and case studies to illustrate key points. ';
+        }
+      }
+
       // Process the prompt template
       const userPrompt = processPromptTemplate(prompt.userPromptTemplate, {
         title,
         keywords: keywords.join(', '),
         outline: outlineText
-      });
-      
+      }) + (additionalInstructions ? `\n\nAdditional requirements: ${additionalInstructions}` : '');
+
       // Execute the AI request
       const result = await execute({
         model,
@@ -218,7 +301,7 @@ export const useArticleAI = () => {
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens
       });
-      
+
       // Parse the result into article content
       return parseContentFromText(result.content);
     } catch (error) {
@@ -234,7 +317,7 @@ export const useArticleAI = () => {
     prompt: PromptTemplate,
     title: string,
     keywords: string[],
-    model: string = 'gpt-4o'
+    model?: string
   ): Promise<string[]> => {
     try {
       // Process the prompt template
@@ -322,8 +405,12 @@ export const useArticleAI = () => {
         level = stack.length > 0 ? stack[stack.length - 1].level + 1 : 2;
       }
       
-      // Extract the title (remove numbering/bullets)
-      const title = trimmedLine.replace(/^[I\d]+\.|^[A-Za-z]\.|^•|^-|\s+/g, '').trim();
+      // Extract the title (remove numbering/bullets but preserve internal spaces)
+      const title = trimmedLine
+        .replace(/^[I\d]+\.\s*/, '')  // Remove Roman/Arabic numerals with dot
+        .replace(/^[A-Za-z]\.\s*/, '') // Remove letter with dot
+        .replace(/^[•\-\*]\s*/, '')    // Remove bullets/dashes
+        .trim();
       
       const item: OutlineItem = {
         id: `outline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

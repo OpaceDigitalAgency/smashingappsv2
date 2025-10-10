@@ -52,7 +52,12 @@ const ContentStep: React.FC = () => {
   
   const handleGenerateContent = async () => {
     if (title && selectedKeywords.length > 0 && outline.length > 0) {
-      await generateContent(title, selectedKeywords, outline);
+      await generateContent(title, selectedKeywords, outline, {
+        length: contentLength,
+        tone: contentTone,
+        includeStats,
+        includeExamples
+      });
     }
   };
   
@@ -250,10 +255,11 @@ const ContentStep: React.FC = () => {
             <button
               onClick={handleGenerateContent}
               disabled={!title || selectedKeywords.length === 0 || outline.length === 0}
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow-sm disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed disabled:shadow-none"
+              style={{ color: 'white' }}
             >
-              <Sparkles size={16} />
-              <span className="font-bold">Generate Content</span>
+              <Sparkles size={16} className="text-white" />
+              <span className="font-bold text-white">Generate Content</span>
             </button>
             
             {(!title || selectedKeywords.length === 0 || outline.length === 0) && (

@@ -611,10 +611,31 @@ class ModelRegistry {
 
     // OpenAI Image Models
     this.registerModel({
+      id: 'gpt-image-1',
+      provider: 'openai',
+      name: 'GPT Image 1',
+      description: 'Primary OpenAI multimodal image model for generation, editing, and variations',
+      type: 'image',
+      capabilities: {
+        maxTokens: 0,
+        supportsImages: true,
+        supportsFunctions: false,
+        supportsStreaming: false,
+        contextWindow: 0
+      },
+      pricing: {
+        inputCostPer1kTokens: 0.04,
+        outputCostPer1kTokens: 0.0,
+        currency: 'USD'
+      },
+      releaseDate: '2025-01-01'
+    });
+
+    this.registerModel({
       id: 'dall-e-3',
       provider: 'openai',
       name: 'DALL-E 3',
-      description: 'Most advanced OpenAI image generation model',
+      description: 'Advanced OpenAI image generation model (legacy)',
       type: 'image',
       capabilities: {
         maxTokens: 0,
@@ -635,7 +656,7 @@ class ModelRegistry {
       id: 'dall-e-2',
       provider: 'openai',
       name: 'DALL-E 2',
-      description: 'OpenAI image generation model',
+      description: 'OpenAI image generation model (legacy)',
       type: 'image',
       capabilities: {
         maxTokens: 0,

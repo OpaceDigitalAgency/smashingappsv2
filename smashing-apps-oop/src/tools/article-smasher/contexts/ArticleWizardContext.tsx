@@ -338,7 +338,17 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
   };
 
   // Generate content based on outline and keywords
-  const generateContent = async (topic: string, keywords: string[], outline: OutlineItem[]) => {
+  const generateContent = async (
+    topic: string,
+    keywords: string[],
+    outline: OutlineItem[],
+    contentSettings?: {
+      length?: string;
+      tone?: string;
+      includeStats?: boolean;
+      includeExamples?: boolean;
+    }
+  ) => {
     try {
       // Check if prompts are initialized
       if (!isInitialized) {
@@ -360,7 +370,8 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
         topic,
         keywords,
         outline,
-        settings.defaultModel
+        settings.defaultModel,
+        contentSettings
       );
 
       // Update the content

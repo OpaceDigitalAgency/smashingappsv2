@@ -127,7 +127,17 @@ export interface ArticleWizardContextType {
   generateTopicIdeas: () => Promise<void>;
   generateKeywords: (topic: string) => Promise<void>;
   generateOutline: (topic: string, keywords: string[]) => Promise<void>;
-  generateContent: (topic: string, keywords: string[], outline: OutlineItem[]) => Promise<void>;
+  generateContent: (
+    topic: string,
+    keywords: string[],
+    outline: OutlineItem[],
+    contentSettings?: {
+      length?: string;
+      tone?: string;
+      includeStats?: boolean;
+      includeExamples?: boolean;
+    }
+  ) => Promise<void>;
   generateImages: (topic: string, keywords: string[], imageModel?: string) => Promise<void>;
 }
 
