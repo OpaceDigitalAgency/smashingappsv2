@@ -11,6 +11,7 @@ export interface PromptTemplate {
   temperature: number;
   maxTokens?: number;
   reasoningEffort?: 'low' | 'medium' | 'high'; // For reasoning models like GPT-5
+  verbosity?: 'low' | 'medium' | 'high'; // Text verbosity for GPT-4o and GPT-5+ models
   createdAt: Date;
   updatedAt: Date;
 }

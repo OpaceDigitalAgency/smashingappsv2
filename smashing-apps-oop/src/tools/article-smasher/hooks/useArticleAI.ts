@@ -33,6 +33,7 @@ export const useArticleAI = () => {
     temperature?: number;
     maxTokens?: number;
     reasoningEffort?: 'low' | 'medium' | 'high';
+    verbosity?: 'low' | 'medium' | 'high';
   }): Promise<{ content: string }> => {
     setIsLoading(true);
     setError(null);
@@ -60,6 +61,16 @@ export const useArticleAI = () => {
       if (options.reasoningEffort && modelToUse.match(/^(gpt-5|o1|o3)/i)) {
         requestOptions.reasoning = { effort: options.reasoningEffort };
         console.log('[useArticleAI] Adding reasoning effort:', options.reasoningEffort, 'for model:', modelToUse);
+      }
+
+      // Add text format and verbosity for compatible models (GPT-4o and GPT-5+)
+      // Only if verbosity is explicitly provided
+      if (options.verbosity && modelToUse.match(/^(gpt-4o|gpt-5|o3|o4)/i)) {
+        requestOptions.text = {
+          format: { type: 'text' },
+          verbosity: options.verbosity
+        };
+        console.log('[useArticleAI] Adding text verbosity:', options.verbosity, 'for model:', modelToUse);
       }
 
       // Send request using AI-Core
@@ -109,7 +120,8 @@ export const useArticleAI = () => {
         userPrompt,
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens,
-        reasoningEffort: prompt.reasoningEffort
+        reasoningEffort: prompt.reasoningEffort,
+        verbosity: prompt.verbosity
       });
 
       // Parse the result using the robust formatter
@@ -146,7 +158,8 @@ export const useArticleAI = () => {
         userPrompt,
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens,
-        reasoningEffort: prompt.reasoningEffort
+        reasoningEffort: prompt.reasoningEffort,
+        verbosity: prompt.verbosity
       });
 
       // Parse the result using the robust formatter
@@ -186,7 +199,8 @@ export const useArticleAI = () => {
         userPrompt,
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens,
-        reasoningEffort: prompt.reasoningEffort
+        reasoningEffort: prompt.reasoningEffort,
+        verbosity: prompt.verbosity
       });
 
       // Parse the result using the robust formatter
@@ -262,7 +276,8 @@ export const useArticleAI = () => {
         userPrompt,
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens,
-        reasoningEffort: prompt.reasoningEffort
+        reasoningEffort: prompt.reasoningEffort,
+        verbosity: prompt.verbosity
       });
 
       // Clean the response before parsing
@@ -297,6 +312,21 @@ export const useArticleAI = () => {
       const settings = aiCore.getSettings();
       const modelToUse = (model && model.trim()) ? model : settings.defaultModel;
 
+      // Build request options
+      const requestOptions: any = {
+        temperature: prompt.temperature ?? 0.8,
+        maxTokens: prompt.maxTokens || 1000
+        // No reasoning parameter for simple prompt generation
+      };
+
+      // Add text verbosity for compatible models if specified
+      if (prompt.verbosity && modelToUse.match(/^(gpt-4o|gpt-5|o3|o4)/i)) {
+        requestOptions.text = {
+          format: { type: 'text' },
+          verbosity: prompt.verbosity
+        };
+      }
+
       // Execute directly without reasoning to avoid token limits
       const response = await aiCore.sendTextRequest(
         modelToUse,
@@ -304,11 +334,7 @@ export const useArticleAI = () => {
           { role: 'system', content: prompt.systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        {
-          temperature: prompt.temperature ?? 0.8,
-          maxTokens: prompt.maxTokens || 1000
-          // No reasoning parameter for simple prompt generation
-        },
+        requestOptions,
         'article-smasher-image-prompts'
       );
 

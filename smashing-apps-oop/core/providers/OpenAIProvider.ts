@@ -48,6 +48,12 @@ class OpenAIProvider implements IProvider {
       // GPT-5 and O-series models only support default temperature (1.0)
       const supportsCustomTemperature = !usesResponsesAPI;
 
+      // Text format and verbosity are supported by GPT-4o and GPT-5+ models
+      const supportsTextControls = options.model.startsWith('gpt-4o') ||
+                                   options.model.startsWith('gpt-5') ||
+                                   options.model.startsWith('o3') ||
+                                   options.model.startsWith('o4');
+
       if (usesResponsesAPI) {
         // Use /v1/responses endpoint for GPT-5, O3, O4, O1
         const requestBody: any = {
@@ -70,8 +76,24 @@ class OpenAIProvider implements IProvider {
           console.log('[OpenAIProvider] Using reasoning effort:', requestBody.reasoning.effort, 'for model:', options.model);
         }
 
+        // Add text format and verbosity controls if provided and supported
+        if (supportsTextControls && options.text) {
+          requestBody.text = {};
+
+          // Always set format to text for natural prose output
+          if (options.text.format) {
+            requestBody.text.format = options.text.format;
+          }
+
+          // Set verbosity level if specified
+          if (options.text.verbosity) {
+            requestBody.text.verbosity = options.text.verbosity;
+            console.log('[OpenAIProvider] Using text verbosity:', options.text.verbosity, 'for model:', options.model);
+          }
+        }
+
         // Note: temperature is not supported for these models (only default 1.0)
-        console.log('[OpenAIProvider] Using /v1/responses endpoint for', options.model, 'with reasoning effort:', requestBody.reasoning?.effort || 'default');
+        console.log('[OpenAIProvider] Using /v1/responses endpoint for', options.model, 'with reasoning effort:', requestBody.reasoning?.effort || 'default', 'verbosity:', requestBody.text?.verbosity || 'default');
 
         const response = await fetch(`${this.baseUrl}/responses`, {
           method: 'POST',
@@ -120,7 +142,23 @@ class OpenAIProvider implements IProvider {
           requestBody.max_tokens = options.maxTokens;
         }
 
-        console.log('[OpenAIProvider] Using /v1/chat/completions endpoint for', options.model);
+        // Add text format and verbosity controls if provided and supported (GPT-4o)
+        if (supportsTextControls && options.text) {
+          requestBody.text = {};
+
+          // Always set format to text for natural prose output
+          if (options.text.format) {
+            requestBody.text.format = options.text.format;
+          }
+
+          // Set verbosity level if specified
+          if (options.text.verbosity) {
+            requestBody.text.verbosity = options.text.verbosity;
+            console.log('[OpenAIProvider] Using text verbosity:', options.text.verbosity, 'for model:', options.model);
+          }
+        }
+
+        console.log('[OpenAIProvider] Using /v1/chat/completions endpoint for', options.model, 'verbosity:', requestBody.text?.verbosity || 'default');
 
         const response = await fetch(`${this.baseUrl}/chat/completions`, {
           method: 'POST',

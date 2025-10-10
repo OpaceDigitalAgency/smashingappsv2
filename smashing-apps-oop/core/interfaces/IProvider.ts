@@ -18,6 +18,11 @@ export interface RequestOptions {
   frequencyPenalty?: number;
   presencePenalty?: number;
   stop?: string[];
+  // Text format and verbosity controls (GPT-4o and GPT-5+ only)
+  text?: {
+    format?: { type: 'text' };
+    verbosity?: 'low' | 'medium' | 'high';
+  };
 }
 
 export interface Usage {

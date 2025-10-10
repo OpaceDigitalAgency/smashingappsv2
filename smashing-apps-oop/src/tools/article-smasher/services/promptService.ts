@@ -23,6 +23,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     temperature: 0.8,
     maxTokens: 500,
     reasoningEffort: 'low', // Simple creative task, low effort is sufficient
+    verbosity: 'low', // Balanced output - concise but clear topic ideas
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -36,6 +37,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     temperature: 0.5,
     maxTokens: 800,
     reasoningEffort: 'low', // Keyword research is straightforward
+    verbosity: 'low', // Detailed explanations with reasoning, context, and practical value
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -48,7 +50,8 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'outline',
     temperature: 0.6,
     maxTokens: 1000,
-    reasoningEffort: 'medium', // Outlining benefits from structured thinking
+    reasoningEffort: 'low', // Outlining benefits from structured thinking
+    verbosity: 'low', // Balanced - clear structure without excessive detail
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -62,6 +65,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     temperature: 0.7,
     maxTokens: 4000,
     reasoningEffort: 'medium', // Content writing benefits from deeper reasoning for quality
+    verbosity: 'low', // High verbosity for rich, detailed, SEO-optimised content with examples and context
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -75,6 +79,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     temperature: 0.8,
     maxTokens: 1000,
     reasoningEffort: undefined, // No reasoning needed - simple prompt generation
+    verbosity: 'low', // Concise, focused image prompts without extra explanation
     createdAt: new Date(),
     updatedAt: new Date()
   }
