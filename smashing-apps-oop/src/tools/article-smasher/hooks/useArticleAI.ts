@@ -57,7 +57,8 @@ export const useArticleAI = () => {
         ],
         {
           temperature: options.temperature ?? 0.7,
-          maxTokens: options.maxTokens || 2000
+          maxTokens: options.maxTokens || 2000,
+          reasoning: { effort: 'medium' }
         },
         'article-smasher'
       );
@@ -263,6 +264,7 @@ export const useArticleAI = () => {
 
   /**
    * Generate image prompts based on article topic and keywords
+   * Uses a simpler execution without reasoning to avoid token limits
    */
   const generateImagePrompts = useCallback(async (
     prompt: PromptTemplate,
@@ -277,18 +279,30 @@ export const useArticleAI = () => {
         keywords: keywords.join(', ')
       });
 
-      // Execute the AI request
-      const result = await execute({
-        model,
-        systemPrompt: prompt.systemPrompt,
-        userPrompt,
-        temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
-      });
+      // Get the model from AI-Core settings if not specified
+      const settings = aiCore.getSettings();
+      const modelToUse = (model && model.trim()) ? model : settings.defaultModel;
+
+      // Execute directly without reasoning to avoid token limits
+      const response = await aiCore.sendTextRequest(
+        modelToUse,
+        [
+          { role: 'system', content: prompt.systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        {
+          temperature: prompt.temperature ?? 0.8,
+          maxTokens: prompt.maxTokens || 1000
+          // No reasoning parameter for simple prompt generation
+        },
+        'article-smasher-image-prompts'
+      );
+
+      const content = AICore.extractContent(response);
 
       // Parse the result using the robust formatter
       const { parseListFromResponse } = await import('../utils/responseFormatter');
-      const prompts = parseListFromResponse(result.content, {
+      const prompts = parseListFromResponse(content, {
         maxItems: 3,
         minLength: 10,
         removeFormatting: true
@@ -305,7 +319,7 @@ export const useArticleAI = () => {
       console.error('Error generating image prompts:', error);
       throw error;
     }
-  }, [execute]);
+  }, [aiCore]);
 
   /**
    * Test a prompt with variables

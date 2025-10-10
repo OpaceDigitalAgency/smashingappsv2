@@ -233,21 +233,62 @@ export const parseKeywordsFromResponse = (text: string): Array<{
   } | null = null;
 
   for (const line of lines) {
-    // Skip obvious headers
-    if (/^(keywords?|search terms?|seo keywords?)[\s:]/i.test(line)) {
+    // Skip obvious headers and tips
+    if (/^(keywords?|search terms?|seo keywords?|tip:)[\s:]/i.test(line)) {
       continue;
     }
 
-    // Try to match a keyword line (numbered, bulleted, or bold)
+    // Try to match a keyword line with metadata
+    // Match: "- keyword — Volume: High | Difficulty: 8/10 | CPC: $4.50"
+    const metadataMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(.+?)\s+[\u2014\|\-]\s*Volume:\s*([^\|]+)(?:\s*\|\s*Difficulty:\s*([^\|]+))?(?:\s*\|\s*CPC:\s*\$?([\d\.]+))?/i);
+
+    if (metadataMatch) {
+      const keyword = metadataMatch[1].trim();
+      const volumeStr = metadataMatch[2]?.trim().toLowerCase();
+      const difficultyStr = metadataMatch[3]?.trim();
+      const cpcStr = metadataMatch[4]?.trim();
+
+      // Parse volume
+      let volume = 500;
+      if (volumeStr) {
+        if (volumeStr.includes('high')) volume = 1000;
+        else if (volumeStr.includes('medium-high')) volume = 750;
+        else if (volumeStr.includes('medium')) volume = 500;
+        else if (volumeStr.includes('low-medium')) volume = 250;
+        else if (volumeStr.includes('low')) volume = 100;
+      }
+
+      // Parse difficulty (e.g., "8/10" -> 8)
+      let difficulty = 5;
+      if (difficultyStr) {
+        const diffMatch = difficultyStr.match(/(\d+)/);
+        if (diffMatch) difficulty = parseInt(diffMatch[1]);
+      }
+
+      // Parse CPC
+      let cpc = 3.0;
+      if (cpcStr) {
+        cpc = parseFloat(cpcStr);
+      }
+
+      if (keyword.length > 2 && keyword.length < 100) {
+        keywords.push({
+          keyword,
+          volume,
+          difficulty,
+          cpc
+        });
+      }
+      continue;
+    }
+
+    // Fallback: Try to match a simple keyword line without metadata
     const keywordMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(?:\*\*)?([^*\n]+?)(?:\*\*)?$/);
 
     if (keywordMatch) {
       let potentialKeyword = keywordMatch[1].trim();
 
       // Remove any inline metadata that might be on the same line
-      // e.g., "keyword | Volume: High | Difficulty: 8/10 | CPC: $5.50"
-      // or "keyword — Volume: High — Difficulty: 8/10"
-      // or "keyword - Volume: High"
       potentialKeyword = potentialKeyword.split(/\s*[\|—\-]\s*(?:Volume|Difficulty|CPC|Search)/i)[0].trim();
 
       // Remove trailing metadata in parentheses or brackets
@@ -261,45 +302,17 @@ export const parseKeywordsFromResponse = (text: string): Array<{
       const isMetadata = /^(search volume|difficulty|cpc|volume|score)/i.test(potentialKeyword);
 
       if (!isMetadata && potentialKeyword.length > 2 && potentialKeyword.length < 100) {
-        // Save previous keyword if exists
-        if (currentKeyword) {
-          keywords.push(currentKeyword);
-        }
-
-        // Start new keyword
-        currentKeyword = {
+        keywords.push({
           keyword: potentialKeyword,
           volume: 500,
           difficulty: 5,
           cpc: 3.0
-        };
-      }
-    }
-    
-    // Try to extract metadata for current keyword
-    if (currentKeyword) {
-      const volumeMatch = line.match(/(?:search\s+)?volume[\s:]+(\w+|\d+)/i);
-      if (volumeMatch) {
-        const vol = volumeMatch[1].toLowerCase();
-        currentKeyword.volume = vol === 'high' ? 1000 : vol === 'medium' ? 500 : vol === 'low' ? 100 : parseInt(vol) || 500;
-      }
-      
-      const difficultyMatch = line.match(/difficulty(?:\s+score)?[\s:]+(\d+)/i);
-      if (difficultyMatch) {
-        currentKeyword.difficulty = parseInt(difficultyMatch[1]) || 5;
-      }
-      
-      const cpcMatch = line.match(/cpc(?:\s+value)?[\s:]+\$?(\d+\.?\d*)/i);
-      if (cpcMatch) {
-        currentKeyword.cpc = parseFloat(cpcMatch[1]) || 3.0;
+        });
       }
     }
   }
-  
-  // Don't forget the last keyword
-  if (currentKeyword) {
-    keywords.push(currentKeyword);
-  }
+
+
   
   return keywords;
 };
