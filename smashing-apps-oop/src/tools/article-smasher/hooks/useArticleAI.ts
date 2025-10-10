@@ -340,30 +340,18 @@ export const useArticleAI = () => {
    */
   const outlineToText = (outline: OutlineItem[], level: number = 0): string => {
     let result = '';
-    
-    outline.forEach((item, index) => {
-      // Add indentation based on level
-      const indent = '  '.repeat(level);
-      
-      // Add numbering based on level
-      let prefix = '';
-      if (level === 0) {
-        prefix = `${index + 1}. `;
-      } else if (level === 1) {
-        prefix = `${String.fromCharCode(97 + index)}. `;
-      } else {
-        prefix = '• ';
-      }
-      
-      // Add the item title
-      result += `${indent}${prefix}${item.title}\n`;
-      
+
+    outline.forEach((item) => {
+      // Use clean markdown headings without numbering to avoid outline-style outputs
+      const heading = level === 0 ? '##' : '###';
+      result += `${heading} ${item.title}\n`;
+
       // Add children recursively
       if (item.children.length > 0) {
         result += outlineToText(item.children, level + 1);
       }
     });
-    
+
     return result;
   };
 

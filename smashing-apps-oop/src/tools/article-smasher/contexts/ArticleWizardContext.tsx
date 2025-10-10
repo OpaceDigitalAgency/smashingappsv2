@@ -148,19 +148,19 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
     }
   }, [currentStep, title, selectedKeywords]);
 
-  // Auto-generate images when moving to step 4
+  // Auto-generate content when moving to step 4 (Content step)
   useEffect(() => {
-    if (currentStep === 4 && title && selectedKeywords.length > 0 && images.length === 0 && !generating) {
-      generateImages(title, selectedKeywords);
-    }
-  }, [currentStep, title, selectedKeywords]);
-
-  // Auto-generate content when moving to step 5
-  useEffect(() => {
-    if (currentStep === 5 && title && selectedKeywords.length > 0 && outline.length > 0 && !htmlOutput && !generating) {
+    if (currentStep === 4 && title && selectedKeywords.length > 0 && outline.length > 0 && !htmlOutput && !generating) {
       generateContent(title, selectedKeywords, outline);
     }
   }, [currentStep, title, selectedKeywords, outline]);
+
+  // Auto-generate images when moving to step 5 (Image step)
+  useEffect(() => {
+    if (currentStep === 5 && title && selectedKeywords.length > 0 && images.length === 0 && !generating) {
+      generateImages(title, selectedKeywords);
+    }
+  }, [currentStep, title, selectedKeywords]);
 
   // Generate topic ideas based on the selected article type
   const generateTopicIdeas = async () => {
@@ -231,6 +231,8 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       const sanitise = (s: string) => s
         .replace(/^[\s\-\*•]*\d+\.\s*/, '') // remove leading numbering like "1. "
         .replace(/^[\s\-\*•]+/, '') // remove leading bullets/dashes
+        // remove inline metadata like "| Volume: High" or "— Volume: High" or "- Volume: High"
+        .split(/\s*[\|\u2014\-]\s*(?:Volume|Difficulty|CPC|Search)/i)[0]
         .trim();
 
       const cleaned = generatedKeywords
