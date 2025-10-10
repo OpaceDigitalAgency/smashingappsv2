@@ -29,19 +29,12 @@ const KeywordStepImproved: React.FC = () => {
     if (!searchQuery.trim()) {
       setFilteredKeywords(keywords);
     } else {
-      const filtered = keywords.filter(k => 
+      const filtered = keywords.filter(k =>
         k.keyword.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredKeywords(filtered);
     }
   }, [keywords, searchQuery]);
-  
-  // Initialize search query with title when component mounts
-  useEffect(() => {
-    if (title && !searchQuery) {
-      setSearchQuery(title);
-    }
-  }, [title]);
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

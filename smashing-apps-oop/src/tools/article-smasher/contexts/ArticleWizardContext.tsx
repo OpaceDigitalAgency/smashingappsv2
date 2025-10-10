@@ -222,10 +222,13 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       }
 
       // Generate keywords using AI
+      // Model is now controlled per-prompt in promptService.ts
       const generatedKeywords = await articleAI.generateKeywords(
         keywordPrompts[0],
         topic
       );
+      
+      console.log('[generateKeywords] Raw keywords from AI:', generatedKeywords);
 
       // Sanitise and de-duplicate keywords
       const sanitise = (s: string) => s
@@ -238,13 +241,18 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       const cleaned = generatedKeywords
         .map(k => ({ ...k, keyword: sanitise(k.keyword) }))
         .filter(k => k.keyword.length > 0);
+      
+      console.log('[generateKeywords] After sanitisation:', cleaned);
 
       const uniqueMap = new Map<string, typeof cleaned[number]>();
       cleaned.forEach(k => uniqueMap.set(k.keyword.toLowerCase(), k));
       const unique = Array.from(uniqueMap.values());
+      
+      console.log('[generateKeywords] After deduplication:', unique);
 
       // Update the keywords
       setKeywords(unique);
+      console.log('[generateKeywords] Keywords set in context');
 
       // Select the top 3 keywords by default
       setSelectedKeywords(unique.slice(0, 3).map(k => k.keyword));

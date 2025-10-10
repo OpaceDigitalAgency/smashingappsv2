@@ -10,6 +10,11 @@ const createDeterministicId = (name: string, category: string): string => {
 // Local storage keys
 const PROMPTS_STORAGE_KEY = 'article_smasher_prompts';
 const SETTINGS_STORAGE_KEY = 'article_smasher_prompt_settings';
+const PROMPTS_VERSION_KEY = 'article_smasher_prompts_version';
+
+// Version number - increment this when you change DEFAULT_PROMPTS
+// This will force localStorage to reload with new defaults
+const CURRENT_PROMPTS_VERSION = 3; // Added per-prompt model field, keyword now uses gpt-4o-mini
 
 // Default prompt templates
 const DEFAULT_PROMPTS: PromptTemplate[] = [
@@ -35,9 +40,8 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     userPromptTemplate: 'Identify 10 relevant keywords for an article titled "{{title}}". For each keyword, provide an estimated search volume (high/medium/low), difficulty score (1-10), and potential CPC value.',
     category: 'keyword',
     temperature: 0.5,
-    maxTokens: 800,
-    reasoningEffort: 'low', // Keyword research is straightforward
-    verbosity: 'low', // Detailed explanations with reasoning, context, and practical value
+    maxTokens: 1200,
+    model: 'gpt-4o-mini', // Fast & cheap - keyword research doesn't need advanced reasoning
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -98,6 +102,17 @@ const DEFAULT_SETTINGS: PromptSettings = {
  */
 export const loadPrompts = (): PromptTemplate[] => {
   try {
+    const storedVersion = localStorage.getItem(PROMPTS_VERSION_KEY);
+    const currentVersion = parseInt(storedVersion || '0', 10);
+    
+    // If version mismatch, reload defaults
+    if (currentVersion !== CURRENT_PROMPTS_VERSION) {
+      console.log(`[promptService] Version mismatch (stored: ${currentVersion}, current: ${CURRENT_PROMPTS_VERSION}). Reloading defaults.`);
+      savePrompts(DEFAULT_PROMPTS);
+      localStorage.setItem(PROMPTS_VERSION_KEY, CURRENT_PROMPTS_VERSION.toString());
+      return DEFAULT_PROMPTS;
+    }
+    
     const storedPrompts = localStorage.getItem(PROMPTS_STORAGE_KEY);
     if (storedPrompts) {
       const parsedPrompts = JSON.parse(storedPrompts);
@@ -108,8 +123,10 @@ export const loadPrompts = (): PromptTemplate[] => {
         updatedAt: new Date(prompt.updatedAt)
       }));
     }
+    
     // Initialize with defaults if no stored prompts
     savePrompts(DEFAULT_PROMPTS);
+    localStorage.setItem(PROMPTS_VERSION_KEY, CURRENT_PROMPTS_VERSION.toString());
     return DEFAULT_PROMPTS;
   } catch (error) {
     console.error('Error loading prompts:', error);

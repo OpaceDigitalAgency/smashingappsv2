@@ -10,6 +10,16 @@ export interface PromptTemplate {
   category: 'topic' | 'keyword' | 'outline' | 'content' | 'image';
   temperature: number;
   maxTokens?: number;
+  /**
+   * Optional model override for this specific prompt
+   * - If omitted/undefined: Uses global default model from AI-Core settings
+   * - If specified: Uses this model (e.g., 'gpt-4o-mini', 'claude-3-5-sonnet-20241022')
+   * - Smart fallback: If specified model is from a different provider than configured
+   *   (e.g., 'gpt-4o-mini' when only Anthropic is configured), automatically falls back to default model
+   * - Best practice: Specify model for optimization (e.g., 'gpt-4o-mini' for simple tasks),
+   *   fallback ensures it still works with any provider
+   */
+  model?: string;
   reasoningEffort?: 'low' | 'medium' | 'high'; // For reasoning models like GPT-5
   verbosity?: 'low' | 'medium' | 'high'; // Text verbosity for GPT-4o and GPT-5+ models
   createdAt: Date;

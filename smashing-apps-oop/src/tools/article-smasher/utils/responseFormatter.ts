@@ -51,7 +51,7 @@ export const cleanAIResponse = (text: string): string => {
   // Remove common prompt echoes that models sometimes include
   // These patterns match phrases like "Here are 5 SEO-friendly..." or "Certainly! Here are..."
   const promptEchoes = [
-    /^(Here are|Here's|Certainly!?\s*Here are|Sure!?\s*Here are|Below are|I've created|I've generated|I'll provide|Let me provide)\s+\d*\s*(engaging|SEO-friendly|comprehensive|detailed)?\s*(blog post|article|topic)?\s*(ideas?|suggestions?|titles?|topics?)[\s:]+/gim,
+    /^(Here are|Here's|Certainly!?\s*Here are|Sure!?\s*Here are|Below are|I've created|I've generated|I'll provide|Let me provide)\s+\d*\s*(engaging|SEO-friendly|comprehensive|detailed|relevant)?\s*(blog post|article|topic|keyword)?\s*(ideas?|suggestions?|titles?|topics?|keywords?)[\s:]+/gim,
     /^(Certainly|Sure|Of course|Absolutely|Great|Excellent)!?\s*/gim,
     /^(Here are|Below are|I've created|I've generated)\s+/gim,
   ];
@@ -217,6 +217,8 @@ export const parseKeywordsFromResponse = (text: string): Array<{
 }> => {
   const cleaned = cleanAIResponse(text);
   const lines = cleaned.split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
+  
+  console.log('[parseKeywordsFromResponse] Processing lines:', lines.length);
 
   const keywords: Array<{
     keyword: string;
@@ -235,14 +237,15 @@ export const parseKeywordsFromResponse = (text: string): Array<{
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Skip obvious headers, tips, and notes
-    if (/^(keywords?|search terms?|seo keywords?|tip:|note:|here are)/i.test(line)) {
+    // Skip obvious headers, tips, notes, and intro text
+    if (/^(keywords?|search terms?|seo keywords?|tip:|note:|here are|with estimated|approximate)/i.test(line)) {
       continue;
     }
 
     // Try to match a keyword line with inline metadata
-    // Match: "- keyword — Volume: High | Difficulty: 8/10 | CPC: $4.50"
-    const inlineMetadataMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(.+?)\s+[\u2014\|\-]\s*Volume:\s*([^\|]+)(?:\s*\|\s*Difficulty:\s*([^\|]+))?(?:\s*\|\s*CPC:\s*\$?([\d\.]+))?/i);
+    // Match: "- keyword — Volume: High — Difficulty: 8/10 — CPC: $4.50"
+    // Also supports pipes: "- keyword | Volume: High | Difficulty: 8 | CPC: $4.50"
+    const inlineMetadataMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(.+?)\s+[\u2014\|\-]\s*Volume:\s*([^\u2014\|]+)(?:\s*[\u2014\|]\s*Difficulty:\s*([^\u2014\|]+))?(?:\s*[\u2014\|]\s*CPC:\s*\$?([\d\.]+))?/i);
 
     if (inlineMetadataMatch) {
       const keyword = inlineMetadataMatch[1].trim();
@@ -274,6 +277,7 @@ export const parseKeywordsFromResponse = (text: string): Array<{
       }
 
       if (keyword.length > 2 && keyword.length < 100) {
+        console.log('[parseKeywordsFromResponse] Parsed keyword:', { keyword, volume, difficulty, cpc });
         keywords.push({ keyword, volume, difficulty, cpc });
       }
       continue;
@@ -369,6 +373,7 @@ export const parseKeywordsFromResponse = (text: string): Array<{
 
 
   
+  console.log('[parseKeywordsFromResponse] Total keywords parsed:', keywords.length);
   return keywords;
 };
 

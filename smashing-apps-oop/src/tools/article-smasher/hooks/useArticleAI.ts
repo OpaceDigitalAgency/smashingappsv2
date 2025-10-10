@@ -46,7 +46,36 @@ export const useArticleAI = () => {
 
       // Get the model from AI-Core settings if not specified or empty
       const settings = aiCore.getSettings();
-      const modelToUse = (options.model && options.model.trim()) ? options.model : settings.defaultModel;
+      let modelToUse = (options.model && options.model.trim()) ? options.model : settings.defaultModel;
+
+      // Smart fallback: If requested model starts with a provider prefix that doesn't match
+      // the configured provider, fall back to the default model
+      // E.g., if prompt requests 'gpt-4o-mini' but only Anthropic is configured
+      if (options.model && options.model.trim()) {
+        const requestedModel = options.model.toLowerCase();
+        const defaultModel = settings.defaultModel.toLowerCase();
+        
+        // Check if models are from different providers
+        const isOpenAI = (m: string) => m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3');
+        const isAnthropic = (m: string) => m.startsWith('claude-');
+        const isGemini = (m: string) => m.startsWith('gemini-');
+        
+        const requestedIsOpenAI = isOpenAI(requestedModel);
+        const requestedIsAnthropic = isAnthropic(requestedModel);
+        const requestedIsGemini = isGemini(requestedModel);
+        
+        const defaultIsOpenAI = isOpenAI(defaultModel);
+        const defaultIsAnthropic = isAnthropic(defaultModel);
+        const defaultIsGemini = isGemini(defaultModel);
+        
+        // If requested model is from a different provider than default, fall back
+        if ((requestedIsOpenAI && (defaultIsAnthropic || defaultIsGemini)) ||
+            (requestedIsAnthropic && (defaultIsOpenAI || defaultIsGemini)) ||
+            (requestedIsGemini && (defaultIsOpenAI || defaultIsAnthropic))) {
+          console.warn(`[useArticleAI] Model mismatch: prompt requested "${options.model}" but default provider uses "${settings.defaultModel}". Falling back to default.`);
+          modelToUse = settings.defaultModel;
+        }
+      }
 
       console.log('[useArticleAI] Using model:', modelToUse, 'from options:', options.model, 'AI-Core default:', settings.defaultModel);
 
@@ -152,8 +181,9 @@ export const useArticleAI = () => {
       });
 
       // Execute the AI request
+      // Priority: 1) prompt.model (if specified), 2) model parameter, 3) global default
       const result = await execute({
-        model,
+        model: prompt.model || model, // Use prompt's model if specified
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,

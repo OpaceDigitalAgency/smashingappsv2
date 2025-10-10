@@ -48,8 +48,8 @@ class OpenAIProvider implements IProvider {
       // GPT-5 and O-series models only support default temperature (1.0)
       const supportsCustomTemperature = !usesResponsesAPI;
 
-      // Text format and verbosity are supported by GPT-4o and GPT-5+ models
-      const supportsTextControls = options.model.startsWith('gpt-4o') ||
+      // Text format and verbosity are supported by GPT-4o (not mini) and GPT-5+ models
+      const supportsTextControls = (options.model.startsWith('gpt-4o') && !options.model.includes('mini')) ||
                                    options.model.startsWith('gpt-5') ||
                                    options.model.startsWith('o3') ||
                                    options.model.startsWith('o4');

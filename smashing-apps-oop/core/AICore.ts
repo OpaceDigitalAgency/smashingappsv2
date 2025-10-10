@@ -147,7 +147,9 @@ class AICore {
       topP: options.topP,
       frequencyPenalty: options.frequencyPenalty,
       presencePenalty: options.presencePenalty,
-      stop: options.stop
+      stop: options.stop,
+      reasoning: options.reasoning,
+      text: options.text
     };
 
     try {

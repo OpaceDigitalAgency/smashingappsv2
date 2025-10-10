@@ -18,6 +18,10 @@ export interface RequestOptions {
   frequencyPenalty?: number;
   presencePenalty?: number;
   stop?: string[];
+  // Reasoning effort control (GPT-5, o1, o3+ models)
+  reasoning?: {
+    effort?: 'low' | 'medium' | 'high';
+  };
   // Text format and verbosity controls (GPT-4o and GPT-5+ only)
   text?: {
     format?: { type: 'text' };
