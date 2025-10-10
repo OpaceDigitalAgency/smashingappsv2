@@ -186,8 +186,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       const topics = await articleAI.generateTopics(
         topicPrompts[0],
         selectedType?.label || selectedArticleType,
-        'digital marketing',
-        settings.defaultModel
+        'digital marketing'
       );
 
       // Update the topic suggestions
@@ -225,8 +224,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       // Generate keywords using AI
       const generatedKeywords = await articleAI.generateKeywords(
         keywordPrompts[0],
-        topic,
-        settings.defaultModel
+        topic
       );
 
       // Sanitise and de-duplicate keywords
@@ -284,8 +282,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       const generatedOutline = await articleAI.generateOutline(
         outlinePrompts[0],
         topic,
-        keywords,
-        settings.defaultModel
+        keywords
       );
 
       // Update the outline
@@ -370,7 +367,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
         topic,
         keywords,
         outline,
-        settings.defaultModel,
+        undefined,
         contentSettings
       );
 
@@ -427,8 +424,7 @@ export const ArticleWizardProvider: React.FC<{children: ReactNode}> = ({ childre
       const imagePromptTexts = await articleAI.generateImagePrompts(
         imagePrompts[0],
         topic,
-        keywords,
-        settings.defaultModel
+        keywords
       );
 
       // Import the ImageService
