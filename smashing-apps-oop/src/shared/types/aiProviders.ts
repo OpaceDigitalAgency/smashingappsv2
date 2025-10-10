@@ -86,6 +86,9 @@ export interface ImageGenerationOptions extends BaseRequestOptions {
   prompt: string;
   size?: string;
   format?: string;
+  quality?: string; // 'standard' or 'hd' for DALL-E
+  background?: string; // 'transparent' or 'white' for Responses API
+  responseFormat?: string; // 'url' or 'b64_json' for DALL-E
   n?: number; // Number of images to generate
 }
 

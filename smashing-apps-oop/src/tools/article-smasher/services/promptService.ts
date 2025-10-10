@@ -29,6 +29,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     maxTokens: 500,
     reasoningEffort: 'low', // Simple creative task, low effort is sufficient
     verbosity: 'low', // Balanced output - concise but clear topic ideas
+    model: 'gpt-3.5-turbo', // Fast & cheap - keyword research doesn't need advanced reasoning
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -41,7 +42,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'keyword',
     temperature: 0.5,
     maxTokens: 1200,
-    model: 'gpt-4o-mini', // Fast & cheap - keyword research doesn't need advanced reasoning
+    model: 'gpt-3.5-turbo', // Fast & cheap - keyword research doesn't need advanced reasoning
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -56,6 +57,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     maxTokens: 1000,
     reasoningEffort: 'low', // Outlining benefits from structured thinking
     verbosity: 'low', // Balanced - clear structure without excessive detail
+    model: 'gpt-3.5-turbo', // Fast & cheap - keyword research doesn't need advanced reasoning
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -68,6 +70,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'content',
     temperature: 0.7,
     maxTokens: 4000,
+    model: 'gpt-5-nano',
     reasoningEffort: 'medium', // Content writing benefits from deeper reasoning for quality
     verbosity: 'low', // High verbosity for rich, detailed, SEO-optimised content with examples and context
     createdAt: new Date(),

@@ -30,6 +30,24 @@ import OpenAIService from './openaiService';
 // Image Models
 const IMAGE_MODELS: ImageModel[] = [
   {
+    id: 'gpt-image-1',
+    name: 'GPT Image 1',
+    provider: 'image',
+    description: 'Advanced image generation with GPT-5 architecture',
+    category: 'image',
+    supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
+    supportedFormats: ['png', 'jpeg']
+  } as any,
+  {
+    id: 'gpt-image-1-mini',
+    name: 'GPT Image 1 Mini',
+    provider: 'image',
+    description: 'Fast image generation with GPT-5 architecture',
+    category: 'image',
+    supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
+    supportedFormats: ['png', 'jpeg']
+  } as any,
+  {
     id: 'dall-e-3',
     name: 'DALL-E 3',
     provider: 'image',
@@ -37,7 +55,7 @@ const IMAGE_MODELS: ImageModel[] = [
     category: 'image',
     supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
     supportedFormats: ['png', 'jpeg']
-  } as any, // Type casting as any to avoid TypeScript error with ImageModel
+  } as any,
   {
     id: 'dall-e-2',
     name: 'DALL-E 2',
@@ -46,7 +64,7 @@ const IMAGE_MODELS: ImageModel[] = [
     category: 'image',
     supportedSizes: ['256x256', '512x512', '1024x1024'],
     supportedFormats: ['png', 'jpeg']
-  } as any // Type casting as any to avoid TypeScript error with ImageModel
+  } as any
 ];
 
 /**
@@ -75,7 +93,7 @@ class ImageServiceImpl implements AIService {
    * Get the default model for image generation
    */
   getDefaultModel(): AIModel {
-    return IMAGE_MODELS.find(model => model.id === 'dall-e-3') || IMAGE_MODELS[0];
+    return IMAGE_MODELS.find(model => model.id === 'gpt-image-1') || IMAGE_MODELS[0];
   }
   
   /**
@@ -108,12 +126,18 @@ class ImageServiceImpl implements AIService {
       // Get the current API call count from localStorage
       const apiCallCount = parseInt(localStorage.getItem(this.apiCallCountKey) || '0', 10);
       
+      // Determine which API to use based on model
+      const isDallE = /^dall-e(-\d)?/i.test(options.model);
+      const usesResponsesAPI = options.model.startsWith('gpt-image-') ||
+                               options.model.startsWith('gpt-5') ||
+                               options.model.startsWith('gpt-4o');
+      
       // Prepare headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-API-Call-Count': apiCallCount.toString(),
-        'X-Provider': 'openai', // We use OpenAI's DALL-E under the hood
-        'X-Request-Type': 'image' // Indicate this is an image generation request
+        'X-Provider': 'openai',
+        'X-Request-Type': 'image'
       };
       
       // Add API key if available
@@ -122,22 +146,51 @@ class ImageServiceImpl implements AIService {
         headers['X-API-Key'] = apiKey;
       }
       
-      // Prepare request body
-      const requestBody = {
-        model: options.model,
-        prompt: options.prompt,
-        size: options.size || '1024x1024',
-        n: options.n || 1,
-        response_format: 'url' // Get URLs instead of base64
-      };
+      let response: Response;
       
-      // Use the Netlify function proxy
-      const response = await fetch('/.netlify/functions/openai-proxy/image', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(60000)
-      });
+      if (isDallE) {
+        // For DALL-E models: use Images API
+        console.log('[ImageService] Using Images API for', options.model);
+        const requestBody = {
+          model: options.model,
+          prompt: options.prompt,
+          size: options.size || '1024x1024',
+          quality: options.quality || 'standard',
+          n: options.n || 1,
+          response_format: options.responseFormat || 'url' // Support both 'url' and 'b64_json'
+        };
+        
+        response = await fetch('/.netlify/functions/openai-proxy/image', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(60000)
+        });
+      } else if (usesResponsesAPI) {
+        // For gpt-image-1, gpt-5*, gpt-4o*: use Responses API
+        console.log('[ImageService] Using Responses API for', options.model);
+        const requestBody = {
+          model: options.model,
+          input: options.prompt,
+          tools: [{ type: 'image_generation' }],
+          image: {
+            size: options.size || '1024x1024',
+            quality: options.quality || 'standard',
+            background: options.background || 'transparent',
+            n: options.n || 1
+          },
+          max_output_tokens: 1
+        };
+        
+        response = await fetch('/.netlify/functions/openai-proxy/responses', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(60000)
+        });
+      } else {
+        throw new Error(`Unsupported image model: ${options.model}`);
+      }
       
       // Extract rate limit information from headers
       const rateLimit: RateLimitInfo = {
@@ -150,7 +203,7 @@ class ImageServiceImpl implements AIService {
       // Handle errors
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error response text:", errorText);
+        console.error('[ImageService] Error response:', errorText);
         throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
       }
       
@@ -170,9 +223,41 @@ class ImageServiceImpl implements AIService {
         timestamp: new Date().toISOString()
       }));
       
-      // Format the response
+      // Format the response - handle both URL and base64 outputs
+      let images: string[];
+      
+      if (isDallE) {
+        // DALL-E response format: { data: [{ url?: string, b64_json?: string }] }
+        images = responseData.data.map((item: any) => {
+          if (item.b64_json) {
+            return `data:image/png;base64,${item.b64_json}`;
+          }
+          return item.url;
+        });
+      } else if (usesResponsesAPI) {
+        // Responses API format: extract images from tool calls
+        // Response structure: { choices: [{ message: { tool_calls: [...] } }] }
+        const toolCalls = responseData.choices?.[0]?.message?.tool_calls || [];
+        const imageToolCall = toolCalls.find((tc: any) => tc.type === 'image_generation');
+        
+        if (imageToolCall?.image) {
+          const imageData = imageToolCall.image;
+          if (imageData.b64_json) {
+            images = [`data:image/png;base64,${imageData.b64_json}`];
+          } else if (imageData.url) {
+            images = [imageData.url];
+          } else {
+            throw new Error('No image data found in response');
+          }
+        } else {
+          throw new Error('No image generation tool call found in response');
+        }
+      } else {
+        throw new Error('Unable to parse response');
+      }
+      
       const formattedResponse: ImageGenerationResponse = {
-        images: responseData.data.map((item: any) => item.url),
+        images,
         model: options.model
       };
       
@@ -181,7 +266,7 @@ class ImageServiceImpl implements AIService {
         rateLimit
       };
     } catch (error) {
-      console.error("Error in createImage:", error);
+      console.error('[ImageService] Error in createImage:', error);
       if (error instanceof Error) {
         throw error;
       }
