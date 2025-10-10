@@ -1,6 +1,6 @@
 /**
  * Article AI Core Adapter
- * 
+ *
  * This adapter bridges the original Article Smasher AI service interface
  * with the new AI-Core system, allowing seamless integration without
  * rewriting all the existing code.
@@ -9,6 +9,13 @@
 import AICore from '../../../../core/AICore';
 import { Message } from '../../../../core/interfaces/IProvider';
 import { PromptTemplate, KeywordData, OutlineItem, ArticleContent } from '../types';
+import {
+  parseTopicsFromResponse,
+  parseKeywordsFromResponse,
+  parseOutlineFromResponse,
+  parseListFromResponse,
+  cleanAIResponse
+} from '../utils/responseFormatter';
 
 class ArticleAICoreAdapter {
   private aiCore: AICore;
@@ -65,13 +72,8 @@ class ArticleAICoreAdapter {
       // Extract content
       const content = AICore.extractContent(response);
 
-      // Parse the response - expecting a list of topics
-      const topics = content
-        .split('\n')
-        .filter(line => line.trim())
-        .map(line => line.replace(/^[\d\-\.\*\s]+/, '').trim())
-        .filter(line => line.length > 0)
-        .slice(0, 4); // Return top 4 topics
+      // Parse the response using the robust formatter
+      const topics = parseTopicsFromResponse(content, 5);
 
       return topics.length > 0 ? topics : [
         `${articleType} about ${niche}`,
@@ -120,7 +122,7 @@ class ArticleAICoreAdapter {
 
       const content = AICore.extractContent(response);
 
-      // Try to parse JSON response
+      // Try to parse JSON response first
       try {
         const parsed = JSON.parse(content);
         if (Array.isArray(parsed)) {
@@ -132,21 +134,11 @@ class ArticleAICoreAdapter {
           }));
         }
       } catch (e) {
-        // If not JSON, parse as text list
-        const keywords = content
-          .split('\n')
-          .filter(line => line.trim())
-          .map(line => line.replace(/^[\d\-\.\*\s]+/, '').trim())
-          .filter(line => line.length > 0)
-          .slice(0, 10)
-          .map((keyword, index) => ({
-            keyword,
-            volume: Math.floor(Math.random() * 1000) + 100,
-            difficulty: Math.floor(Math.random() * 10) + 1,
-            cpc: parseFloat((Math.random() * 3).toFixed(2))
-          }));
-
-        return keywords;
+        // If not JSON, parse using the robust formatter
+        const keywords = parseKeywordsFromResponse(content);
+        if (keywords.length > 0) {
+          return keywords;
+        }
       }
 
       // Fallback
@@ -196,9 +188,14 @@ class ArticleAICoreAdapter {
 
       const content = AICore.extractContent(response);
 
-      // Parse outline from response
-      const outline = this.parseOutline(content);
-      return outline;
+      // Parse outline using the robust formatter
+      const outline = parseOutlineFromResponse(content);
+
+      return outline.length > 0 ? outline : [
+        { id: 'intro', title: 'Introduction', level: 1, children: [] },
+        { id: 'main', title: 'Main Content', level: 1, children: [] },
+        { id: 'conclusion', title: 'Conclusion', level: 1, children: [] }
+      ];
     } catch (error) {
       console.error('Error generating outline:', error);
       throw error;
@@ -244,9 +241,12 @@ class ArticleAICoreAdapter {
         this.appId
       );
 
-      const html = AICore.extractContent(response);
+      const rawContent = AICore.extractContent(response);
+
+      // Clean the response before processing
+      const html = cleanAIResponse(rawContent);
       const text = html.replace(/<[^>]*>/g, '');
-      
+
       // Extract sections
       const sections = this.extractSections(html);
 
@@ -298,13 +298,12 @@ class ArticleAICoreAdapter {
 
       const content = AICore.extractContent(response);
 
-      // Parse image prompts
-      const prompts = content
-        .split('\n')
-        .filter(line => line.trim())
-        .map(line => line.replace(/^[\d\-\.\*\s]+/, '').trim())
-        .filter(line => line.length > 0)
-        .slice(0, 3); // Return top 3 image prompts
+      // Parse image prompts using the robust formatter
+      const prompts = parseListFromResponse(content, {
+        maxItems: 3,
+        minLength: 10,
+        removeFormatting: true
+      });
 
       return prompts.length > 0 ? prompts : [
         `Professional illustration of ${topic}`,
@@ -362,42 +361,6 @@ class ArticleAICoreAdapter {
   }
 
   // Helper methods
-
-  private parseOutline(content: string): OutlineItem[] {
-    const lines = content.split('\n').filter(line => line.trim());
-    const outline: OutlineItem[] = [];
-    let currentH1: OutlineItem | null = null;
-
-    lines.forEach((line, index) => {
-      const trimmed = line.trim();
-      
-      // Detect heading level
-      if (trimmed.match(/^#{1,3}\s/)) {
-        const level = (trimmed.match(/^#+/) || [''])[0].length;
-        const title = trimmed.replace(/^#+\s*/, '');
-        
-        const item: OutlineItem = {
-          id: `section-${index}`,
-          title,
-          level,
-          children: []
-        };
-
-        if (level === 1) {
-          outline.push(item);
-          currentH1 = item;
-        } else if (level === 2 && currentH1) {
-          currentH1.children.push(item);
-        }
-      }
-    });
-
-    return outline.length > 0 ? outline : [
-      { id: 'intro', title: 'Introduction', level: 1, children: [] },
-      { id: 'main', title: 'Main Content', level: 1, children: [] },
-      { id: 'conclusion', title: 'Conclusion', level: 1, children: [] }
-    ];
-  }
 
   private outlineToText(outline: OutlineItem[]): string {
     let text = '';

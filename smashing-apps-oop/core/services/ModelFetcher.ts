@@ -38,10 +38,14 @@ class ModelFetcher {
   }
   
   /**
-   * Check if model ID has a date suffix (e.g., "2025-06-03")
+   * Check if model ID has a date suffix (e.g., "2025-06-03" or "-1106" for Nov 2023)
    */
   private hasDateSuffix(id: string): boolean {
-    return /\b20\d{2}-\d{2}-\d{2}\b/.test(id);
+    // Full date format: 2025-06-03
+    if (/\b20\d{2}-\d{2}-\d{2}\b/.test(id)) return true;
+    // Short date format: -1106, -0125, etc (MMDD or YYMM format)
+    if (/-\d{4}$/.test(id)) return true;
+    return false;
   }
   
   /**
@@ -73,18 +77,19 @@ class ModelFetcher {
    * Check if OpenAI model is a chat/text model
    */
   private isOpenAIChatModel(id: string): boolean {
-    // Exclude: audio, realtime, tts, transcribe, embedding, image-only, whisper
-    if (/(audio|realtime|tts|transcribe|embed|embedding|whisper)/i.test(id)) return false;
+    // Exclude: audio, realtime, tts, transcribe, embedding, image-only, whisper, instruct, code-specific
+    if (/(audio|realtime|tts|transcribe|embed|embedding|whisper|instruct|codex)/i.test(id)) return false;
     if (/^(gpt-image-1|dall-e)/i.test(id)) return false; // image-only models
     return /^(gpt-|o\d|chatgpt-)/i.test(id);
   }
   
   /**
    * Check if OpenAI model is an image generation model
+   * Multimodal models that support image generation: GPT-5, GPT-4o, GPT-image-1, DALL-E
    */
   private isOpenAIImageModel(id: string): boolean {
-    if (/(audio|realtime|tts|transcribe|embed|embedding)/i.test(id)) return false;
-    return /^(gpt-image-1|dall-e|gpt-4o|chatgpt-4o)/i.test(id);
+    if (/(audio|realtime|tts|transcribe|embed|embedding|instruct|codex)/i.test(id)) return false;
+    return /^(gpt-5|gpt-image-1|dall-e|gpt-4o|chatgpt-4o)/i.test(id);
   }
   
   /**
@@ -119,18 +124,27 @@ class ModelFetcher {
       }
       
       const data = await response.json();
-      const filterFn = type === 'chat' ? this.isOpenAIChatModel : this.isOpenAIImageModel;
       
+      // Filter models dynamically based on capabilities
       return data.data
+        .filter((m: any) => {
+          // First: filter to canonical versions only
+          if (!this.isCanonical(m.id)) return false;
+          
+          // Second: apply type-specific filtering
+          if (type === 'chat') {
+            return this.isOpenAIChatModel(m.id);
+          } else {
+            return this.isOpenAIImageModel(m.id);
+          }
+        })
         .map((m: any) => ({
           provider: 'openai',
           id: m.id,
           displayName: m.id,
           created: this.toTimestamp(m.created),
           type
-        }))
-        .filter((m: FetchedModel) => filterFn.call(this, m.id))
-        .filter((m: FetchedModel) => this.isCanonical(m.id));
+        }));
     } catch (error) {
       console.error('[ModelFetcher] Error fetching OpenAI models:', error);
       return [];

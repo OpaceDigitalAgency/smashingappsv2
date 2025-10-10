@@ -7,6 +7,12 @@ import {
   OutlineItem,
   ArticleContent
 } from '../types';
+import {
+  parseTopicsFromResponse,
+  parseKeywordsFromResponse,
+  parseOutlineFromResponse,
+  cleanAIResponse
+} from '../utils/responseFormatter';
 
 /**
  * Hook for generating article content using AI
@@ -84,7 +90,7 @@ export const useArticleAI = () => {
         articleType,
         niche: subject
       });
-      
+
       // Execute the AI request
       const result = await execute({
         model,
@@ -93,14 +99,14 @@ export const useArticleAI = () => {
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens
       });
-      
-      // Parse the result into an array of topics
-      const topics = result.content
-        .split(/\d+\./)
-        .map(topic => topic.trim())
-        .filter(topic => topic.length > 0);
-      
-      return topics;
+
+      // Parse the result using the robust formatter
+      // This handles various formats from different models (GPT-5, GPT-4, O-series, etc.)
+      const topics = parseTopicsFromResponse(result.content, 5);
+
+      console.log('[useArticleAI] Generated topics:', topics);
+
+      return topics.length > 0 ? topics : ['No topics generated'];
     } catch (error) {
       console.error('Error generating topics:', error);
       throw error;
@@ -130,96 +136,14 @@ export const useArticleAI = () => {
         maxTokens: prompt.maxTokens
       });
 
-      // Parse the result into keyword data
-      // The AI returns keywords in a numbered list format like:
-      // 1. **AI SEO Tools**
-      //    - **Search Volume**: Medium
-      //    - **Difficulty Score**: 6
-      //    - **CPC Value**: $5.50
-
-      const keywords: KeywordData[] = [];
-      const lines = result.content.split('\n');
-
-      let currentKeyword: Partial<KeywordData> | null = null;
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-
-        // Skip obvious prompt echoes/headings
-        if (/^keywords?:/i.test(trimmed)) continue;
-
-        // Match numbered lines (e.g., "1. **AI SEO Tools**")
-        const numberMatch = trimmed.match(/^\d+\.\s+\*?\*?(.+?)\*?\*?$/);
-        // Match bullet lines (e.g., "- AI SEO Tools" or "• AI SEO Tools")
-        const bulletMatch = trimmed.match(/^[\-•\*]\s+\*?\*?(.+?)\*?\*?$/);
-        const plainMatch = trimmed.match(/^([A-Za-z].{2,})$/); // simple plain line fallback
-
-        const title = (numberMatch?.[1] || bulletMatch?.[1] || '').trim();
-        if (title) {
-          // Save previous keyword if exists
-          if (currentKeyword && currentKeyword.keyword) {
-            keywords.push({
-              keyword: currentKeyword.keyword,
-              volume: currentKeyword.volume ?? 500,
-              difficulty: currentKeyword.difficulty ?? 5,
-              cpc: currentKeyword.cpc ?? 3.0
-            });
-          }
-
-          currentKeyword = {
-            keyword: title,
-            volume: 500,
-            difficulty: 5,
-            cpc: 3.0
-          };
-          continue;
-        }
-
-        // If we didn't catch a title but line looks like a plain keyword and we have fewer than 10, use it
-        if (!numberMatch && !bulletMatch && plainMatch && (!currentKeyword || currentKeyword.keyword)) {
-          const possible = plainMatch[1].trim();
-          if (possible && possible.length < 80) {
-            keywords.push({ keyword: possible, volume: 500, difficulty: 5, cpc: 3.0 });
-            continue;
-          }
-        }
-
-        // Check for metadata lines (Search Volume, Difficulty Score, CPC Value)
-        if (currentKeyword) {
-          const volumeMatch = trimmed.match(/Search Volume[:\s]+(\w+)/i);
-          if (volumeMatch) {
-            const vol = volumeMatch[1].toLowerCase();
-            currentKeyword.volume = vol === 'high' ? 1000 : vol === 'medium' ? 500 : 100;
-            continue;
-          }
-
-          const difficultyMatch = trimmed.match(/Difficulty (Score|Level)[:\s]+(\d+)/i);
-          if (difficultyMatch) {
-            currentKeyword.difficulty = parseInt(difficultyMatch[2]);
-            continue;
-          }
-
-          const cpcMatch = trimmed.match(/CPC (Value)?[:\s]+\$?(\d+\.?\d*)/i);
-          if (cpcMatch) {
-            currentKeyword.cpc = parseFloat(cpcMatch[2]);
-            continue;
-          }
-        }
-      }
-
-      // Don't forget the last keyword
-      if (currentKeyword && currentKeyword.keyword) {
-        keywords.push({
-          keyword: currentKeyword.keyword,
-          volume: currentKeyword.volume ?? 500,
-          difficulty: currentKeyword.difficulty ?? 5,
-          cpc: currentKeyword.cpc ?? 3.0
-        });
-      }
+      // Parse the result using the robust formatter
+      // This handles various formats from different models
+      const keywords = parseKeywordsFromResponse(result.content);
 
       console.log('[useArticleAI] Parsed keywords:', keywords);
-      return keywords;
+      return keywords.length > 0 ? keywords : [
+        { keyword: title, volume: 500, difficulty: 5, cpc: 3.0 }
+      ];
     } catch (error) {
       console.error('Error generating keywords:', error);
       throw error;
@@ -241,7 +165,7 @@ export const useArticleAI = () => {
         title,
         keywords: keywords.join(', ')
       });
-      
+
       // Execute the AI request
       const result = await execute({
         model,
@@ -250,9 +174,17 @@ export const useArticleAI = () => {
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens
       });
-      
-      // Parse the result into outline items
-      return parseOutlineFromText(result.content);
+
+      // Parse the result using the robust formatter
+      const outline = parseOutlineFromResponse(result.content);
+
+      console.log('[useArticleAI] Parsed outline:', outline);
+
+      return outline.length > 0 ? outline : [
+        { id: 'intro', title: 'Introduction', level: 1, children: [] },
+        { id: 'main', title: 'Main Content', level: 1, children: [] },
+        { id: 'conclusion', title: 'Conclusion', level: 1, children: [] }
+      ];
     } catch (error) {
       console.error('Error generating outline:', error);
       throw error;
@@ -318,8 +250,11 @@ export const useArticleAI = () => {
         maxTokens: prompt.maxTokens
       });
 
+      // Clean the response before parsing
+      const cleanedContent = cleanAIResponse(result.content);
+
       // Parse the result into article content
-      return parseContentFromText(result.content);
+      return parseContentFromText(cleanedContent);
     } catch (error) {
       console.error('Error generating content:', error);
       throw error;
@@ -341,7 +276,7 @@ export const useArticleAI = () => {
         title,
         keywords: keywords.join(', ')
       });
-      
+
       // Execute the AI request
       const result = await execute({
         model,
@@ -350,13 +285,22 @@ export const useArticleAI = () => {
         temperature: prompt.temperature,
         maxTokens: prompt.maxTokens
       });
-      
-      // Parse the result into image prompts
-      const promptLines = result.content.split(/\d+\./)
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-      
-      return promptLines;
+
+      // Parse the result using the robust formatter
+      const { parseListFromResponse } = await import('../utils/responseFormatter');
+      const prompts = parseListFromResponse(result.content, {
+        maxItems: 3,
+        minLength: 10,
+        removeFormatting: true
+      });
+
+      console.log('[useArticleAI] Parsed image prompts:', prompts);
+
+      return prompts.length > 0 ? prompts : [
+        `Professional illustration of ${title}`,
+        `Modern graphic representing ${keywords[0] || title}`,
+        `High-quality image showcasing ${title}`
+      ];
     } catch (error) {
       console.error('Error generating image prompts:', error);
       throw error;
@@ -390,74 +334,6 @@ export const useArticleAI = () => {
       throw error;
     }
   }, [execute]);
-
-  /**
-   * Parse outline from text
-   * This is a simplified implementation - in a real-world scenario,
-   * you would need more robust parsing based on the AI's response format
-   */
-  const parseOutlineFromText = (text: string): OutlineItem[] => {
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-    const outline: OutlineItem[] = [];
-    const stack: OutlineItem[] = [];
-    
-    lines.forEach(line => {
-      const trimmedLine = line.trim();
-      
-      // Skip lines that don't look like outline items
-      if (!trimmedLine.match(/^[I\d]+\.|^[A-Z]\.|^•|^-|^Introduction|^Conclusion/i)) {
-        return;
-      }
-      
-      // Determine the level based on indentation or numbering
-      let level = 1;
-      if (trimmedLine.match(/^\s+/)) {
-        level = Math.ceil(trimmedLine.match(/^\s+/)![0].length / 2);
-      } else if (trimmedLine.match(/^[A-Z]\./)) {
-        level = 2;
-      } else if (trimmedLine.match(/^[a-z]\./)) {
-        level = 3;
-      } else if (trimmedLine.match(/^•|^-/)) {
-        level = stack.length > 0 ? stack[stack.length - 1].level + 1 : 2;
-      }
-      
-      // Extract the title (remove numbering/bullets but preserve internal spaces)
-      const title = trimmedLine
-        .replace(/^[I\d]+\.\s*/, '')  // Remove Roman/Arabic numerals with dot
-        .replace(/^[A-Za-z]\.\s*/, '') // Remove letter with dot
-        .replace(/^[•\-\*]\s*/, '')    // Remove bullets/dashes
-        .trim();
-      
-      const item: OutlineItem = {
-        id: `outline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        title,
-        level,
-        children: []
-      };
-      
-      // Add to the appropriate parent based on level
-      if (level === 1) {
-        outline.push(item);
-        stack.length = 0;
-        stack.push(item);
-      } else {
-        // Find the appropriate parent
-        while (stack.length > 0 && stack[stack.length - 1].level >= level) {
-          stack.pop();
-        }
-        
-        if (stack.length === 0) {
-          outline.push(item);
-        } else {
-          stack[stack.length - 1].children.push(item);
-        }
-        
-        stack.push(item);
-      }
-    });
-    
-    return outline;
-  };
 
   /**
    * Convert outline to text format
