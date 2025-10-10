@@ -32,6 +32,7 @@ export const useArticleAI = () => {
     userPrompt: string;
     temperature?: number;
     maxTokens?: number;
+    reasoningEffort?: 'low' | 'medium' | 'high';
   }): Promise<{ content: string }> => {
     setIsLoading(true);
     setError(null);
@@ -48,6 +49,19 @@ export const useArticleAI = () => {
 
       console.log('[useArticleAI] Using model:', modelToUse, 'from options:', options.model, 'AI-Core default:', settings.defaultModel);
 
+      // Build request options
+      const requestOptions: any = {
+        temperature: options.temperature ?? 0.7,
+        maxTokens: options.maxTokens || 2000
+      };
+
+      // Only add reasoning for models that support it (GPT-5, o1, etc.)
+      // and only if reasoningEffort is explicitly provided
+      if (options.reasoningEffort && modelToUse.match(/^(gpt-5|o1|o3)/i)) {
+        requestOptions.reasoning = { effort: options.reasoningEffort };
+        console.log('[useArticleAI] Adding reasoning effort:', options.reasoningEffort, 'for model:', modelToUse);
+      }
+
       // Send request using AI-Core
       const response = await aiCore.sendTextRequest(
         modelToUse,
@@ -55,11 +69,7 @@ export const useArticleAI = () => {
           { role: 'system', content: options.systemPrompt },
           { role: 'user', content: options.userPrompt }
         ],
-        {
-          temperature: options.temperature ?? 0.7,
-          maxTokens: options.maxTokens || 2000,
-          reasoning: { effort: 'medium' }
-        },
+        requestOptions,
         'article-smasher'
       );
 
@@ -98,7 +108,8 @@ export const useArticleAI = () => {
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
+        maxTokens: prompt.maxTokens,
+        reasoningEffort: prompt.reasoningEffort
       });
 
       // Parse the result using the robust formatter
@@ -134,7 +145,8 @@ export const useArticleAI = () => {
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
+        maxTokens: prompt.maxTokens,
+        reasoningEffort: prompt.reasoningEffort
       });
 
       // Parse the result using the robust formatter
@@ -173,7 +185,8 @@ export const useArticleAI = () => {
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
+        maxTokens: prompt.maxTokens,
+        reasoningEffort: prompt.reasoningEffort
       });
 
       // Parse the result using the robust formatter
@@ -248,7 +261,8 @@ export const useArticleAI = () => {
         systemPrompt: prompt.systemPrompt,
         userPrompt,
         temperature: prompt.temperature,
-        maxTokens: prompt.maxTokens
+        maxTokens: prompt.maxTokens,
+        reasoningEffort: prompt.reasoningEffort
       });
 
       // Clean the response before parsing

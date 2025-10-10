@@ -22,6 +22,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'topic',
     temperature: 0.8,
     maxTokens: 500,
+    reasoningEffort: 'low', // Simple creative task, low effort is sufficient
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -34,6 +35,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'keyword',
     temperature: 0.5,
     maxTokens: 800,
+    reasoningEffort: 'low', // Keyword research is straightforward
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -46,6 +48,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'outline',
     temperature: 0.6,
     maxTokens: 1000,
+    reasoningEffort: 'medium', // Outlining benefits from structured thinking
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -58,6 +61,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'content',
     temperature: 0.7,
     maxTokens: 4000,
+    reasoningEffort: 'medium', // Content writing benefits from deeper reasoning for quality
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -70,6 +74,7 @@ const DEFAULT_PROMPTS: PromptTemplate[] = [
     category: 'image',
     temperature: 0.8,
     maxTokens: 1000,
+    reasoningEffort: undefined, // No reasoning needed - simple prompt generation
     createdAt: new Date(),
     updatedAt: new Date()
   }

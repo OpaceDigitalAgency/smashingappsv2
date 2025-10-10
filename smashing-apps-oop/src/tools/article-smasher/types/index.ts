@@ -10,6 +10,7 @@ export interface PromptTemplate {
   category: 'topic' | 'keyword' | 'outline' | 'content' | 'image';
   temperature: number;
   maxTokens?: number;
+  reasoningEffort?: 'low' | 'medium' | 'high'; // For reasoning models like GPT-5
   createdAt: Date;
   updatedAt: Date;
 }

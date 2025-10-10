@@ -63,11 +63,11 @@ class OpenAIProvider implements IProvider {
           requestBody.max_output_tokens = 2000;
         }
 
-        // Add reasoning effort parameter for GPT-5 and reasoning models
-        // Use the effort level passed in options, or default to "low" for faster responses
-        if (options.model.startsWith('gpt-5')) {
-          const effortLevel = (options as any).reasoning?.effort || "low";
-          requestBody.reasoning = { effort: effortLevel };
+        // Add reasoning effort parameter if provided in options
+        // Only for models that support reasoning (GPT-5, o1, o3, etc.)
+        if ((options as any).reasoning?.effort) {
+          requestBody.reasoning = { effort: (options as any).reasoning.effort };
+          console.log('[OpenAIProvider] Using reasoning effort:', requestBody.reasoning.effort, 'for model:', options.model);
         }
 
         // Note: temperature is not supported for these models (only default 1.0)
