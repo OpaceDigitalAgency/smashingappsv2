@@ -26,6 +26,10 @@ const Layout: React.FC = () => {
   const settings = aiCore.getSettings();
   const activeProvider = settings.defaultProvider || 'Not set';
   const activeModel = settings.defaultModel || 'Not set';
+  const activeImageModel = settings.defaultImageModel || 'Not set';
+
+  // Check if we're on Article Smasher to show image model
+  const isArticleSmasher = location.pathname.startsWith('/tools/article-smasher');
 
   const navigation = [
     { name: 'Home', path: '/' },
@@ -94,6 +98,7 @@ const Layout: React.FC = () => {
                   {configuredProviders.length > 0 && (
                     <span className={`text-xs mt-1 ${isGraphicsDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       {activeProvider} • {activeModel}
+                      {isArticleSmasher && activeImageModel !== 'Not set' && ` • Img: ${activeImageModel}`}
                     </span>
                   )}
                 </div>
@@ -177,6 +182,9 @@ const Layout: React.FC = () => {
                     {configuredProviders.length > 0 && (
                       <div className={`text-xs ${isGraphicsDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         {activeProvider} • {activeModel}
+                        {isArticleSmasher && activeImageModel !== 'Not set' && (
+                          <div>Img: {activeImageModel}</div>
+                        )}
                       </div>
                     )}
                   </div>

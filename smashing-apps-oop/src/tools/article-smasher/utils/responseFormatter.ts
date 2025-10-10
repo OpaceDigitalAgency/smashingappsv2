@@ -246,7 +246,9 @@ export const parseKeywordsFromResponse = (text: string): Array<{
 
       // Remove any inline metadata that might be on the same line
       // e.g., "keyword | Volume: High | Difficulty: 8/10 | CPC: $5.50"
-      potentialKeyword = potentialKeyword.split(/\s*\|\s*/)[0].trim();
+      // or "keyword — Volume: High — Difficulty: 8/10"
+      // or "keyword - Volume: High"
+      potentialKeyword = potentialKeyword.split(/\s*[\|—\-]\s*(?:Volume|Difficulty|CPC|Search)/i)[0].trim();
 
       // Remove trailing metadata in parentheses or brackets
       potentialKeyword = potentialKeyword.replace(/\s*[\(\[].*?[\)\]]\s*$/g, '');
