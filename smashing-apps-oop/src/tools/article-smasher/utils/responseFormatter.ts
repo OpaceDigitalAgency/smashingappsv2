@@ -217,14 +217,14 @@ export const parseKeywordsFromResponse = (text: string): Array<{
 }> => {
   const cleaned = cleanAIResponse(text);
   const lines = cleaned.split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
-  
+
   const keywords: Array<{
     keyword: string;
     volume?: number;
     difficulty?: number;
     cpc?: number;
   }> = [];
-  
+
   let currentKeyword: {
     keyword: string;
     volume?: number;
@@ -232,21 +232,23 @@ export const parseKeywordsFromResponse = (text: string): Array<{
     cpc?: number;
   } | null = null;
 
-  for (const line of lines) {
-    // Skip obvious headers and tips
-    if (/^(keywords?|search terms?|seo keywords?|tip:)[\s:]/i.test(line)) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Skip obvious headers, tips, and notes
+    if (/^(keywords?|search terms?|seo keywords?|tip:|note:|here are)/i.test(line)) {
       continue;
     }
 
-    // Try to match a keyword line with metadata
+    // Try to match a keyword line with inline metadata
     // Match: "- keyword — Volume: High | Difficulty: 8/10 | CPC: $4.50"
-    const metadataMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(.+?)\s+[\u2014\|\-]\s*Volume:\s*([^\|]+)(?:\s*\|\s*Difficulty:\s*([^\|]+))?(?:\s*\|\s*CPC:\s*\$?([\d\.]+))?/i);
+    const inlineMetadataMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(.+?)\s+[\u2014\|\-]\s*Volume:\s*([^\|]+)(?:\s*\|\s*Difficulty:\s*([^\|]+))?(?:\s*\|\s*CPC:\s*\$?([\d\.]+))?/i);
 
-    if (metadataMatch) {
-      const keyword = metadataMatch[1].trim();
-      const volumeStr = metadataMatch[2]?.trim().toLowerCase();
-      const difficultyStr = metadataMatch[3]?.trim();
-      const cpcStr = metadataMatch[4]?.trim();
+    if (inlineMetadataMatch) {
+      const keyword = inlineMetadataMatch[1].trim();
+      const volumeStr = inlineMetadataMatch[2]?.trim().toLowerCase();
+      const difficultyStr = inlineMetadataMatch[3]?.trim();
+      const cpcStr = inlineMetadataMatch[4]?.trim();
 
       // Parse volume
       let volume = 500;
@@ -272,18 +274,71 @@ export const parseKeywordsFromResponse = (text: string): Array<{
       }
 
       if (keyword.length > 2 && keyword.length < 100) {
-        keywords.push({
-          keyword,
-          volume,
-          difficulty,
-          cpc
-        });
+        keywords.push({ keyword, volume, difficulty, cpc });
       }
       continue;
     }
 
+    // Try to match numbered keyword format: "1) keyword" or "1. keyword"
+    const numberedKeywordMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
+
+    if (numberedKeywordMatch) {
+      const keyword = numberedKeywordMatch[2].trim();
+
+      // Initialize current keyword with defaults
+      currentKeyword = {
+        keyword,
+        volume: 500,
+        difficulty: 5,
+        cpc: 1.0
+      };
+
+      // Look ahead for metadata on the next few lines
+      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+        const nextLine = lines[j];
+
+        // Stop if we hit another numbered keyword
+        if (/^\d+[\.\)]/.test(nextLine)) {
+          break;
+        }
+
+        // Parse search volume
+        const volumeMatch = nextLine.match(/^[\-\*•]?\s*(?:Search\s+)?Volume:\s*(.+)$/i);
+        if (volumeMatch && currentKeyword) {
+          const volumeStr = volumeMatch[1].trim().toLowerCase();
+          if (volumeStr.includes('high')) currentKeyword.volume = 1000;
+          else if (volumeStr.includes('medium')) currentKeyword.volume = 500;
+          else if (volumeStr.includes('low')) currentKeyword.volume = 100;
+          continue;
+        }
+
+        // Parse difficulty
+        const difficultyMatch = nextLine.match(/^[\-\*•]?\s*Difficulty:\s*(.+)$/i);
+        if (difficultyMatch && currentKeyword) {
+          const diffStr = difficultyMatch[1].trim();
+          const diffNum = diffStr.match(/(\d+)/);
+          if (diffNum) currentKeyword.difficulty = parseInt(diffNum[1]);
+          continue;
+        }
+
+        // Parse CPC
+        const cpcMatch = nextLine.match(/^[\-\*•]?\s*CPC:\s*\$?([\d\.]+)$/i);
+        if (cpcMatch && currentKeyword) {
+          currentKeyword.cpc = parseFloat(cpcMatch[1]);
+          continue;
+        }
+      }
+
+      // Add the keyword with its metadata
+      if (currentKeyword && currentKeyword.keyword.length > 2 && currentKeyword.keyword.length < 100) {
+        keywords.push(currentKeyword);
+      }
+      currentKeyword = null;
+      continue;
+    }
+
     // Fallback: Try to match a simple keyword line without metadata
-    const keywordMatch = line.match(/^(?:\d+[\.\)]\s*)?(?:[\-\*•]\s*)?(?:\*\*)?([^*\n]+?)(?:\*\*)?$/);
+    const keywordMatch = line.match(/^(?:[\-\*•]\s*)?(?:\*\*)?([^*\n]+?)(?:\*\*)?$/);
 
     if (keywordMatch) {
       let potentialKeyword = keywordMatch[1].trim();
