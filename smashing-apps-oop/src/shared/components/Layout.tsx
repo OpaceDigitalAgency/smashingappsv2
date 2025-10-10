@@ -24,7 +24,8 @@ const Layout: React.FC = () => {
 
   // Get active provider and model from settings
   const settings = aiCore.getSettings();
-  const activeModel = settings.model || 'Not set';
+  const activeProvider = settings.defaultProvider || 'Not set';
+  const activeModel = settings.defaultModel || 'Not set';
 
   const navigation = [
     { name: 'Home', path: '/' },
@@ -92,7 +93,7 @@ const Layout: React.FC = () => {
                   </div>
                   {configuredProviders.length > 0 && (
                     <span className={`text-xs mt-1 ${isGraphicsDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {activeModel}
+                      {activeProvider} • {activeModel}
                     </span>
                   )}
                 </div>
@@ -175,7 +176,7 @@ const Layout: React.FC = () => {
                     </div>
                     {configuredProviders.length > 0 && (
                       <div className={`text-xs ${isGraphicsDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Model: {activeModel}
+                        {activeProvider} • {activeModel}
                       </div>
                     )}
                   </div>

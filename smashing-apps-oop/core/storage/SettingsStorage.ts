@@ -76,7 +76,7 @@ class SettingsStorage {
           displayName: 'OpenAI',
           enabled: false,
           apiKey: '',
-          defaultModel: 'gpt-5-pro',
+          defaultModel: 'gpt-5',
           supportsImages: true,
           supportsStreaming: true
         },
@@ -103,13 +103,13 @@ class SettingsStorage {
           displayName: 'OpenRouter',
           enabled: false,
           apiKey: '',
-          defaultModel: 'openai/gpt-5-pro',
+          defaultModel: 'openai/gpt-5',
           supportsImages: true,
           supportsStreaming: true
         }
       },
       defaultProvider: 'openai',
-      defaultModel: 'gpt-5-pro',
+      defaultModel: 'gpt-5',
       defaultImageModel: 'gpt-image-1',
       enableStats: true,
       enableCaching: true,
@@ -127,9 +127,12 @@ class SettingsStorage {
         return this.getDefaultSettings();
       }
       
-      const settings = JSON.parse(stored) as AISettings;
+      let settings = JSON.parse(stored) as AISettings;
       
-      // Migrate if needed
+      // Migrate gpt-5-pro to gpt-5 (always check for this)
+      settings = this.migrateGPT5Pro(settings);
+      
+      // Migrate if version changed
       if (settings.version !== SETTINGS_VERSION) {
         return this.migrateSettings(settings);
       }
@@ -156,6 +159,18 @@ class SettingsStorage {
     } catch (error) {
       console.error('[SettingsStorage] Error saving settings:', error);
       throw new Error('Failed to save settings');
+    }
+  }
+  
+  /**
+   * Save settings to storage without dispatching events (for internal use during migrations)
+   */
+  private saveSettingsQuietly(settings: AISettings): void {
+    try {
+      settings.version = SETTINGS_VERSION;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.error('[SettingsStorage] Error saving settings:', error);
     }
   }
   
@@ -280,6 +295,41 @@ class SettingsStorage {
       byApp: {},
       lastReset: new Date()
     };
+  }
+  
+  /**
+   * Migrate gpt-5-pro references to gpt-5
+   */
+  private migrateGPT5Pro(settings: AISettings): AISettings {
+    let modified = false;
+    
+    // Check global default model
+    if (settings.defaultModel === 'gpt-5-pro') {
+      settings.defaultModel = 'gpt-5';
+      modified = true;
+      console.log('[SettingsStorage] Migrated defaultModel from gpt-5-pro to gpt-5');
+    }
+    
+    // Check provider default models
+    if (settings.providers.openai?.defaultModel === 'gpt-5-pro') {
+      settings.providers.openai.defaultModel = 'gpt-5';
+      modified = true;
+      console.log('[SettingsStorage] Migrated OpenAI defaultModel from gpt-5-pro to gpt-5');
+    }
+    
+    if (settings.providers.openrouter?.defaultModel === 'openai/gpt-5-pro') {
+      settings.providers.openrouter.defaultModel = 'openai/gpt-5';
+      modified = true;
+      console.log('[SettingsStorage] Migrated OpenRouter defaultModel from openai/gpt-5-pro to openai/gpt-5');
+    }
+    
+    // Save quietly if modified (no events during load)
+    if (modified) {
+      this.saveSettingsQuietly(settings);
+      console.log('[SettingsStorage] Settings migration saved to localStorage');
+    }
+    
+    return settings;
   }
   
   /**

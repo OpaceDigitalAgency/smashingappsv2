@@ -55,7 +55,7 @@ class ModelRegistry {
       id: 'gpt-5',
       provider: 'openai',
       name: 'GPT-5',
-      description: 'Latest GPT-5 model with advanced reasoning',
+      description: 'Latest and most capable GPT-5 model with advanced reasoning',
       type: 'chat',
       capabilities: {
         maxTokens: 16384,
@@ -70,27 +70,6 @@ class ModelRegistry {
         currency: 'USD'
       },
       releaseDate: '2025-08-07'
-    });
-
-    this.registerModel({
-      id: 'gpt-5-pro',
-      provider: 'openai',
-      name: 'GPT-5 Pro',
-      description: 'Most capable GPT-5 model',
-      type: 'chat',
-      capabilities: {
-        maxTokens: 32768,
-        supportsImages: true,
-        supportsFunctions: true,
-        supportsStreaming: true,
-        contextWindow: 512000
-      },
-      pricing: {
-        inputCostPer1kTokens: 0.02,
-        outputCostPer1kTokens: 0.06,
-        currency: 'USD'
-      },
-      releaseDate: '2025-10-06'
     });
 
     this.registerModel({

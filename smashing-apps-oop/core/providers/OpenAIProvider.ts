@@ -64,7 +64,7 @@ class OpenAIProvider implements IProvider {
         }
 
         // Add reasoning effort parameter for GPT-5 and reasoning models
-        // Use "low" effort for faster responses on simple prompts
+        // Use "low" effort for faster responses
         if (options.model.startsWith('gpt-5')) {
           requestBody.reasoning = { effort: "low" };
         }
@@ -224,7 +224,6 @@ class OpenAIProvider implements IProvider {
       console.error('[OpenAIProvider] Failed to fetch models:', error);
       return [
         'gpt-5',
-        'gpt-5-pro',
         'gpt-5-mini',
         'gpt-5-nano',
         'o3',

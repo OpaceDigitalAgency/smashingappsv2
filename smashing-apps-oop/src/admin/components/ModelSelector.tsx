@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AICore from '../../../core/AICore';
 import ModelRegistry from '../../../core/registry/ModelRegistry';
+import ModelFetcher, { FetchedModel } from '../../../core/services/ModelFetcher';
 
 interface ModelSelectorProps {
   aiCore: AICore;
@@ -9,12 +10,13 @@ interface ModelSelectorProps {
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => {
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [models, setModels] = useState<any[]>([]);
+  const [models, setModels] = useState<FetchedModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [defaultModel, setDefaultModel] = useState<string>('');
   const [defaultImageModel, setDefaultImageModel] = useState<string>('');
   const [activeType, setActiveType] = useState<'chat' | 'image'>('chat');
   const modelRegistry = ModelRegistry.getInstance();
+  const modelFetcher = ModelFetcher.getInstance();
 
   const configuredProviders = aiCore.getConfiguredProviders();
   const settings = aiCore.getSettings();
@@ -37,100 +39,31 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
   const loadModels = async () => {
     setLoading(true);
     try {
-      // Get models from registry
-      const registryModels = modelRegistry.getModelsByProvider(selectedProvider);
-
-      // Try to get live models from provider
-      try {
-        const liveModels = await aiCore.getAvailableModels(selectedProvider);
-
-        // Combine registry and live models
-        const allModelIds = new Set([
-          ...registryModels.map(m => m.id),
-          ...liveModels
-        ]);
-
-        const combinedModels = Array.from(allModelIds).map(id => {
-          const registryModel = registryModels.find(m => m.id === id);
-          if (registryModel) {
-            return registryModel;
-          }
-
-          // For unknown models, infer capabilities from model ID
-          const inferCapabilities = (modelId: string) => {
-            // GPT-5 models
-            if (modelId.includes('gpt-5-pro')) {
-              return { maxTokens: 32768, contextWindow: 512000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
-            }
-            if (modelId.includes('gpt-5')) {
-              return { maxTokens: 16384, contextWindow: 256000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
-            }
-
-            // O3 models
-            if (modelId.includes('o3-pro')) {
-              return { maxTokens: 100000, contextWindow: 200000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
-            }
-            if (modelId.includes('o3')) {
-              return { maxTokens: 65536, contextWindow: 200000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
-            }
-
-            // GPT-4.1 models
-            if (modelId.includes('gpt-4.1')) {
-              return { maxTokens: 16384, contextWindow: 256000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
-            }
-
-            // GPT-4o models
-            if (modelId.includes('gpt-4o')) {
-              return { maxTokens: 16384, contextWindow: 128000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
-            }
-
-            // O1 models
-            if (modelId.includes('o1-pro')) {
-              return { maxTokens: 100000, contextWindow: 200000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
-            }
-            if (modelId.includes('o1')) {
-              return { maxTokens: 65536, contextWindow: 128000, supportsImages: false, supportsFunctions: false, supportsStreaming: true };
-            }
-
-            // GPT-4 models
-            if (modelId.includes('gpt-4-turbo')) {
-              return { maxTokens: 4096, contextWindow: 128000, supportsImages: true, supportsFunctions: true, supportsStreaming: true };
-            }
-            if (modelId.includes('gpt-4')) {
-              return { maxTokens: 8192, contextWindow: 8192, supportsImages: false, supportsFunctions: true, supportsStreaming: true };
-            }
-
-            // GPT-3.5 models
-            if (modelId.includes('gpt-3.5-turbo-16k')) {
-              return { maxTokens: 4096, contextWindow: 16384, supportsImages: false, supportsFunctions: true, supportsStreaming: true };
-            }
-            if (modelId.includes('gpt-3.5')) {
-              return { maxTokens: 4096, contextWindow: 16385, supportsImages: false, supportsFunctions: true, supportsStreaming: true };
-            }
-
-            // Default fallback
-            return { maxTokens: 4096, contextWindow: 8192, supportsImages: false, supportsFunctions: false, supportsStreaming: false };
-          };
-
-          const capabilities = inferCapabilities(id);
-
-          return {
-            id,
-            provider: selectedProvider,
-            name: id,
-            description: 'Model from provider API',
-            type: 'chat' as const,
-            capabilities
-          };
-        });
-
-        setModels(combinedModels);
-      } catch (error) {
-        // If live fetch fails, use registry models
-        setModels(registryModels);
+      const settings = aiCore.getSettings();
+      const providerConfig = settings.providers[selectedProvider];
+      
+      if (!providerConfig?.apiKey) {
+        console.warn('[ModelSelector] No API key for provider:', selectedProvider);
+        setModels([]);
+        setLoading(false);
+        return;
       }
+
+      // Fetch models for both types
+      const chatModels = await modelFetcher.fetchAllModels(
+        new Map([[selectedProvider, { apiKey: providerConfig.apiKey, provider: aiCore.getProviderForModel('gpt-4o') }]]),
+        'chat'
+      );
+      
+      const imageModels = await modelFetcher.fetchAllModels(
+        new Map([[selectedProvider, { apiKey: providerConfig.apiKey, provider: aiCore.getProviderForModel('gpt-4o') }]]),
+        'image'
+      );
+
+      // Combine and set models
+      setModels([...chatModels, ...imageModels]);
     } catch (error) {
-      console.error('Failed to load models:', error);
+      console.error('[ModelSelector] Failed to load models:', error);
       setModels([]);
     } finally {
       setLoading(false);
@@ -229,12 +162,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {models
-            .filter((model) => (activeType === 'chat' ? model.type === 'chat' : model.type === 'image'))
+            .filter((model) => model.type === activeType)
             .map((model) => (
             <div
               key={model.id}
               className={`bg-white rounded-lg border-2 p-6 hover:shadow-md transition-all ${
-                defaultModel === model.id
+                (activeType === 'chat' ? defaultModel : defaultImageModel) === model.id
                   ? 'border-indigo-500 shadow-md'
                   : 'border-gray-200'
               }`}
@@ -242,19 +175,20 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-gray-900">{model.name}</h3>
-                    {defaultModel === model.id && (
+                    <h3 className="font-bold text-gray-900">{model.displayName}</h3>
+                    {(activeType === 'chat' ? defaultModel : defaultImageModel) === model.id && (
                       <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-800 rounded">
                         Default
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{model.description}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {model.created ? `Released ${new Date(model.created).toLocaleDateString()}` : 'Latest version'}
+                  </p>
                 </div>
                 <span className={`px-2 py-1 text-xs font-medium rounded ${
                   model.type === 'chat' ? 'bg-blue-100 text-blue-800' :
-                  model.type === 'image' ? 'bg-purple-100 text-purple-800' :
-                  'bg-gray-100 text-gray-800'
+                  'bg-purple-100 text-purple-800'
                 }`}>
                   {model.type}
                 </span>
@@ -263,54 +197,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ aiCore, refreshKey }) => 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between text-gray-600">
                   <span>Model ID:</span>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">{model.id}</code>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{model.id}</code>
                 </div>
-
-                {model.capabilities && (
-                  <>
-                    <div className="flex items-center justify-between text-gray-600">
-                      <span>Max Tokens:</span>
-                      <span className="font-medium">{model.capabilities.maxTokens.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600">
-                      <span>Context Window:</span>
-                      <span className="font-medium">{model.capabilities.contextWindow.toLocaleString()}</span>
-                    </div>
-                  </>
-                )}
-
-                {model.pricing && (
-                  <div className="pt-2 border-t border-gray-200">
-                    <div className="flex items-center justify-between text-gray-600">
-                      <span>Input:</span>
-                      <span className="font-medium">${model.pricing.inputCostPer1kTokens.toFixed(4)}/1K</span>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600">
-                      <span>Output:</span>
-                      <span className="font-medium">${model.pricing.outputCostPer1kTokens.toFixed(4)}/1K</span>
-                    </div>
-                  </div>
-                )}
-
-                {model.capabilities && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {model.capabilities.supportsImages && (
-                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                        Images
-                      </span>
-                    )}
-                    {model.capabilities.supportsFunctions && (
-                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                        Functions
-                      </span>
-                    )}
-                    {model.capabilities.supportsStreaming && (
-                      <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
-                        Streaming
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Set as Default Button */}
